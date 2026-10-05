@@ -18,6 +18,7 @@
   <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
 
@@ -384,7 +385,8 @@
 
     table.items-table td { padding: 10px; color: var(--text); vertical-align: middle; }
 
-    table.items-table input.qty-input {
+    table.items-table input.qty-input,
+    table.items-table input.discount-request-input {
       width: 90px;
       padding: 8px 10px;
       font-family: inherit;
@@ -398,7 +400,8 @@
       outline: none;
       transition: all 0.2s;
     }
-    table.items-table input.qty-input:focus { border-color: var(--accent); background: var(--card); box-shadow: 0 0 0 3px rgba(20,184,166,0.1); }
+    table.items-table input.qty-input:focus,
+    table.items-table input.discount-request-input:focus { border-color: var(--accent); background: var(--card); box-shadow: 0 0 0 3px rgba(20,184,166,0.1); }
 
     .product-name-cell { font-weight: 700; color: var(--text); }
     .product-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
@@ -495,6 +498,7 @@
       flex: 1;
       min-width: 240px;
     }
+    #requestBarcodeReader video { width: 100% !important; border-radius: 10px; }
     .product-search-wrap input {
       width: 100%;
       padding: 10px 42px 10px 14px;
@@ -818,8 +822,11 @@
               <i data-lucide="search"></i>
               <div class="search-results" id="searchResults"></div>
             </div>
-            <button class="btn btn-outline btn-sm" id="addAllProductsBtn" title="إضافة كل الأصناف">
-              <i data-lucide="package-plus"></i> إضافة الكل
+            <button type="button" class="btn btn-outline btn-sm" id="requestCameraScanBtn" title="مسح باركود الصنف بالكاميرا">
+              <i data-lucide="camera"></i> مسح باركود
+            </button>
+            <button type="button" class="btn btn-outline btn-sm" id="addAllProductsBtn" title="إضافة الأصناف التي تحتاج إلى إعادة طلب">
+              <i data-lucide="package-plus"></i> إضافة المقترح
             </button>
           </div>
         </div>
@@ -834,12 +841,14 @@
                 <th>أعلى خصم شراء</th>
                 <th>معدل البيع (90 يوم)</th>
                 <th>الكمية المطلوبة</th>
+                <th>الخصم المطلوب %</th>
+                <th>رد المورد</th>
                 <th style="width:60px;"></th>
               </tr>
             </thead>
             <tbody id="itemsBody">
               <tr class="empty-row">
-                <td colspan="7">
+                <td colspan="9">
                   <i data-lucide="package-open"></i>
                   <p>لم تضف أي أصناف بعد. ابدأ بالبحث أعلاه.</p>
                 </td>
@@ -860,7 +869,38 @@
         </div>
       </div>
 
+      <div class="card" id="supplierResponseHistoryCard" style="display:none;">
+        <div class="card-header">
+          <h3><i data-lucide="history"></i> سجل عروض المورد</h3>
+        </div>
+        <div class="items-table-wrap">
+          <table class="items-table">
+            <thead><tr><th>الصنف</th><th>سعر المورد</th><th>خصم المورد</th><th>تاريخ الرد</th></tr></thead>
+            <tbody id="supplierResponseHistoryBody"></tbody>
+          </table>
+        </div>
+      </div>
+
     </main>
+  </div>
+
+  <!-- Modal: Camera barcode scanner -->
+  <div class="modal-backdrop" id="requestScanModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3><i data-lucide="scan-barcode"></i> مسح باركود الأصناف</h3>
+        <button type="button" class="modal-close" id="closeRequestScanBtn" aria-label="إغلاق"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body">
+        <div id="requestBarcodeReader"></div>
+        <p id="requestScanStatus" style="text-align:center;color:var(--text-muted);font-size:13px;margin-top:12px;">
+          كل عملية مسح تضيف وحدة إلى كمية الصنف المطلوبة.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" id="stopRequestScanBtn">إيقاف الكاميرا</button>
+      </div>
+    </div>
   </div>
 
   <!-- Modal: Share -->
@@ -899,6 +939,7 @@
   <input type="file" id="excelInput" accept=".xlsx,.xls,.csv" style="display:none;">
 
   <script src="refad-core.js"></script>
+  <script src="refad-camera-scanner.js"></script>
   <script src="refad-auth.js"></script>
   <script>
     (function () {
@@ -918,6 +959,8 @@
       // ============================================================
       const requestId = parseInt(Refad.getParam('id'), 10) || null;
       const isEdit = !!requestId;
+      const smartMode = Refad.getParam('smart') === '1';
+      const SMART_PURCHASE_KEY = 'refad_purchase_suggestions';
 
       // ============================================================
       // 3) State
@@ -926,7 +969,11 @@
         suppliers: [],
         products: [],
         allProducts: [],
-        items: [],          // { product_id, product, requested_qty, last_discount, max_discount, sale_rate }
+        stockByProduct: {},
+        barcodeMap: {},
+        items: [],
+        originalItemIds: [],
+        supplierResponses: [],
         requestNumber: null,
         shareToken: null,
         status: 'draft'
@@ -1078,17 +1125,24 @@
       // ============================================================
       async function loadProducts() {
         try {
-          const [products, discounts] = await Promise.all([
+          const [products, discounts, barcodes] = await Promise.all([
             Refad.db.select('products', {
-              columns: 'id, name, name_en, form, unit',
+              columns: 'id, name, name_en, form, unit, reorder_level, min_order_qty',
               eq: { company_id: session.company_id, is_active: true },
               order: { column: 'name', ascending: true }
             }),
             Refad.db.select('product_discounts', {
               columns: 'product_id, last_purchase_discount, max_purchase_discount'
+            }),
+            Refad.db.select('product_barcodes', {
+              columns: 'barcode, product_id'
             })
           ]);
 
+          state.barcodeMap = {};
+          barcodes.forEach(row => {
+            if (row.barcode) state.barcodeMap[String(row.barcode).trim().toUpperCase()] = row.product_id;
+          });
           const discountMap = {};
           discounts.forEach(d => { discountMap[d.product_id] = d; });
 
@@ -1097,6 +1151,18 @@
             last_purchase_discount: discountMap[p.id]?.last_purchase_discount || 0,
             max_purchase_discount: discountMap[p.id]?.max_purchase_discount || 0
           }));
+          const stockRows = await Refad.db.select('batches', {
+            columns: 'product_id, quantity_left, expiry_date',
+            eq: { company_id: session.company_id },
+            gt: { quantity_left: 0 }
+          });
+          state.stockByProduct = {};
+          const today = Refad.date.today();
+          stockRows.forEach(batch => {
+            if (batch.expiry_date && batch.expiry_date < today) return;
+            state.stockByProduct[batch.product_id] =
+              (state.stockByProduct[batch.product_id] || 0) + (Number(batch.quantity_left) || 0);
+          });
         } catch (e) {
           console.error('Products load failed:', e);
           Refad.toast.error('تعذّر تحميل الأصناف');
@@ -1111,10 +1177,11 @@
         try {
           const fromDate = Refad.date.addDays(Refad.date.today(), -90);
           const rows = await Refad.db.select('sales_invoice_items', {
-            columns: 'product_id, quantity, sales_invoices!inner(invoice_date, company_id, status)',
+            columns: 'product_id, quantity, sales_invoices!inner(invoice_date, company_id, status, invoice_type)',
             in: { product_id: productIds },
             gte: { 'sales_invoices.invoice_date': fromDate },
-            eq: { 'sales_invoices.company_id': session.company_id, 'sales_invoices.status': 'paid' }
+            eq: { 'sales_invoices.company_id': session.company_id, 'sales_invoices.invoice_type': 'sale' },
+            neq: { 'sales_invoices.status': 'cancelled' }
           }).catch(() => []);
 
           const totals = {};
@@ -1133,6 +1200,72 @@
         }
       }
 
+      function suggestedPurchaseQty(product, dailyRate) {
+        const currentStock = Number(state.stockByProduct[product.id]) || 0;
+        const reorderLevel = Number(product.reorder_level) || 0;
+        const targetStock = Math.max(reorderLevel, Math.ceil((Number(dailyRate) || 0) * 30));
+        const needed = Math.max(0, targetStock - currentStock);
+        return needed > 0 ? Math.max(Number(product.min_order_qty) || 1, needed) : 0;
+      }
+
+      async function applySmartSuggestions() {
+        let payload;
+        try {
+          const stored = sessionStorage.getItem(SMART_PURCHASE_KEY);
+          if (!stored) throw new Error('لا توجد توصيات محفوظة؛ أعد فتح التوصيات من تقرير المخزون');
+          payload = JSON.parse(stored);
+        } catch (error) {
+          console.error('[Purchase request] Smart suggestions could not be read:', error);
+          Refad.toast.error(error.message || 'تعذّر قراءة توصيات الشراء');
+          return;
+        }
+
+        if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+          sessionStorage.removeItem(SMART_PURCHASE_KEY);
+          Refad.toast.error('بيانات توصيات الشراء غير صالحة');
+          return;
+        }
+
+        const age = Date.now() - Number(payload.createdAt);
+        if (Number(payload.companyId) !== Number(session.company_id) ||
+            !Number.isFinite(age) || age < 0 || age > 30 * 60 * 1000) {
+          sessionStorage.removeItem(SMART_PURCHASE_KEY);
+          Refad.toast.error('انتهت صلاحية توصيات الشراء أو أنها تخص شركة أخرى');
+          return;
+        }
+
+        const productsById = new Map(state.allProducts.map(product => [String(product.id), product]));
+        const items = (Array.isArray(payload.items) ? payload.items : [])
+          .map(item => ({
+            product: productsById.get(String(item.product_id)),
+            quantity: Number(item.quantity),
+            dailyRate: Number(item.daily_rate)
+          }))
+          .filter(item => item.product && Number.isInteger(item.quantity) && item.quantity > 0 &&
+            Number.isFinite(item.dailyRate) && item.dailyRate >= 0);
+        if (!items.length) {
+          sessionStorage.removeItem(SMART_PURCHASE_KEY);
+          Refad.toast.warning('لا توجد أصناف صالحة ضمن التوصيات');
+          return;
+        }
+
+        items.forEach(({ product, quantity, dailyRate }) => {
+          if (state.items.some(existing => existing.product_id === product.id)) return;
+          state.items.push({
+            product_id: product.id,
+            product,
+            requested_qty: quantity,
+            last_discount: product.last_purchase_discount || 0,
+            max_discount: product.max_purchase_discount || 0,
+            requested_discount: 0,
+            sale_rate: dailyRate
+          });
+        });
+        sessionStorage.removeItem(SMART_PURCHASE_KEY);
+        renderItems();
+        Refad.toast.success('تم تجهيز مسودة طلب شراء بالكميات المقترحة؛ راجعها قبل الحفظ');
+      }
+
       // ============================================================
       // 9) Product search
       // ============================================================
@@ -1140,8 +1273,16 @@
         const input = document.getElementById('productSearch');
         const results = document.getElementById('searchResults');
 
-        const handler = Refad.debounce(v => {
+        const handler = Refad.debounce(async v => {
+          if (input.value.trim() !== v.trim()) return;
           if (!v || v.length < 1) { results.classList.remove('show'); return; }
+          const barcodeProductId = state.barcodeMap[v.trim().toUpperCase()];
+          if (barcodeProductId) {
+            await addProductByBarcode(v.trim().toUpperCase());
+            input.value = '';
+            results.classList.remove('show');
+            return;
+          }
           const q = v.toLowerCase();
           const matches = state.allProducts
             .filter(p => !state.items.some(it => it.product_id === p.id))
@@ -1173,6 +1314,28 @@
 
         input.addEventListener('input', e => handler(e.target.value));
         input.addEventListener('focus', () => { if (input.value) results.classList.add('show'); });
+        input.addEventListener('keydown', async event => {
+          if (event.key !== 'Enter') return;
+          event.preventDefault();
+          const code = input.value.trim();
+          if (!code) return;
+          const productId = state.barcodeMap[code.toUpperCase()];
+          if (productId) {
+            await addProductByBarcode(code.toUpperCase());
+            input.value = '';
+            results.classList.remove('show');
+          } else if (/^\d{8,14}$/.test(code)) {
+            Refad.toast.warning('الباركود غير مسجل لأي صنف');
+            input.select();
+          } else {
+            const first = results.querySelector('.search-result-item');
+            if (first) {
+              await addProductById(parseInt(first.dataset.id, 10));
+              input.value = '';
+              results.classList.remove('show');
+            }
+          }
+        });
 
         results.addEventListener('click', async e => {
           const item = e.target.closest('.search-result-item');
@@ -1185,6 +1348,67 @@
 
         document.addEventListener('click', e => {
           if (!e.target.closest('.product-search-wrap')) results.classList.remove('show');
+        });
+      }
+
+      async function addProductByBarcode(code) {
+        const productId = state.barcodeMap[String(code || '').trim().toUpperCase()];
+        if (!productId) {
+          Refad.toast.warning('الباركود غير مسجل لأي صنف');
+          return;
+        }
+        const existing = state.items.find(item => String(item.product_id) === String(productId));
+        if (existing) {
+          existing.requested_qty = (Number(existing.requested_qty) || 0) + 1;
+          renderItems();
+        } else {
+          await addProductById(productId);
+        }
+        if (navigator.vibrate) navigator.vibrate(70);
+      }
+
+      async function stopRequestCameraScan(closeModal) {
+        try {
+          await window.RefadCameraScanner.stop();
+        } catch (error) {
+          console.error('[PurchaseRequests] Camera stop failed:', error);
+          Refad.toast.warning('تعذّر إيقاف الكاميرا بشكل سليم');
+        } finally {
+          if (closeModal) document.getElementById('requestScanModal').classList.remove('show');
+        }
+      }
+
+      function setupRequestCameraScanner() {
+        const modal = document.getElementById('requestScanModal');
+        document.getElementById('requestCameraScanBtn').addEventListener('click', async () => {
+          modal.classList.add('show');
+          document.getElementById('requestScanStatus').textContent = 'جارٍ تشغيل الكاميرا...';
+          if (window.lucide) lucide.createIcons();
+          try {
+            await window.RefadCameraScanner.start('requestBarcodeReader', async code => {
+              const normalizedCode = String(code || '').trim().toUpperCase();
+              const exists = Boolean(state.barcodeMap[normalizedCode]);
+              await addProductByBarcode(normalizedCode);
+              document.getElementById('requestScanStatus').textContent = exists
+                ? `تمت قراءة ${code}. وجّه الكاميرا إلى الصنف التالي.`
+                : `الباركود غير مسجل: ${code}`;
+            });
+            document.getElementById('requestScanStatus').textContent = 'كل عملية مسح تضيف وحدة إلى كمية الصنف المطلوبة.';
+          } catch (error) {
+            console.error('[PurchaseRequests] Camera start failed:', error);
+            document.getElementById('requestScanStatus').textContent = error.message || 'تعذّر تشغيل الكاميرا';
+            Refad.toast.error(error.message || 'تعذّر تشغيل الكاميرا');
+          }
+        });
+        document.getElementById('stopRequestScanBtn').addEventListener('click', () => stopRequestCameraScan(true));
+        document.getElementById('closeRequestScanBtn').addEventListener('click', () => stopRequestCameraScan(true));
+        modal.addEventListener('click', event => {
+          if (event.target === modal) stopRequestCameraScan(true);
+        });
+        document.addEventListener('keydown', event => {
+          if (event.key === 'Escape' && modal.classList.contains('show')) {
+            stopRequestCameraScan(true);
+          }
         });
       }
 
@@ -1208,6 +1432,7 @@
           requested_qty: 1,
           last_discount: p.last_purchase_discount || 0,
           max_discount: p.max_purchase_discount || 0,
+          requested_discount: 0,
           sale_rate: rates[pid] || 0
         });
         renderItems();
@@ -1221,7 +1446,7 @@
         if (!state.items.length) {
           tbody.innerHTML = `
             <tr class="empty-row">
-              <td colspan="7">
+              <td colspan="9">
                 <i data-lucide="package-open"></i>
                 <p>لم تضف أي أصناف بعد. ابدأ بالبحث أعلاه.</p>
               </td>
@@ -1253,6 +1478,12 @@
             <td>
               <input type="number" class="qty-input" value="${it.requested_qty}" min="1" max="99999" data-idx="${i}">
             </td>
+            <td><input type="number" class="discount-request-input" value="${Number(it.requested_discount) || 0}" min="0" max="100" step="0.1" data-idx="${i}" aria-label="الخصم المطلوب"></td>
+            <td>
+              ${it.supplier_response_at
+                ? `<span class="discount-chip high">خصم ${Refad.format.number(it.supplier_discount || 0, 1)}%</span><div class="product-sub">${it.supplier_price !== null && it.supplier_price !== undefined ? `سعر ${Refad.format.money(it.supplier_price)} • ` : ''}${Refad.format.datetime(it.supplier_response_at)}</div>`
+                : '<span style="color:var(--text-muted);font-size:12px;">لم يرد بعد</span>'}
+            </td>
             <td>
               <button class="action-btn danger" data-remove="${i}" title="حذف">
                 <i data-lucide="trash-2"></i>
@@ -1278,6 +1509,20 @@
             state.items[idx].requested_qty = Math.max(1, v);
           });
         });
+        tbody.querySelectorAll('.discount-request-input').forEach(inp => {
+          const updateDiscount = () => {
+            const idx = Number(inp.dataset.idx);
+            const value = Number(inp.value);
+            if (!Number.isFinite(value) || value < 0 || value > 100) {
+              inp.setCustomValidity('أدخل خصماً بين 0 و100');
+              return;
+            }
+            inp.setCustomValidity('');
+            state.items[idx].requested_discount = value;
+          };
+          inp.addEventListener('input', updateDiscount);
+          inp.addEventListener('change', updateDiscount);
+        });
 
         tbody.querySelectorAll('[data-remove]').forEach(btn => {
           btn.addEventListener('click', () => {
@@ -1297,39 +1542,48 @@
       }
 
       // ============================================================
-      // 12) Add All Products (بكمية = معدل البيع × 30)
+      // 12) Add products that need replenishment
       // ============================================================
       async function addAllProducts() {
         if (!state.allProducts.length) {
           Refad.toast.warning('لا توجد أصناف');
           return;
         }
+        const candidates = state.allProducts.filter(product =>
+          !state.items.some(item => item.product_id === product.id)
+        );
+        const rates = await calcSaleRates(candidates.map(product => product.id));
+        const suggestions = candidates
+          .map(product => ({
+            product,
+            rate: rates[product.id] || 0,
+            quantity: suggestedPurchaseQty(product, rates[product.id] || 0)
+          }))
+          .filter(item => item.quantity > 0);
+        if (!suggestions.length) {
+          Refad.toast.info('المخزون الحالي يغطي حد إعادة الطلب والتغطية المقترحة');
+          return;
+        }
         const ok = await Refad.alert.confirm(
-          'إضافة كل الأصناف',
-          `سيتم إضافة ${state.allProducts.length} صنف بكمية مقترحة. هل تريد المتابعة؟`,
-          'إضافة الكل'
+          'إضافة توصيات الشراء',
+          `سيتم تجهيز ${suggestions.length} صنفاً حسب المخزون ومعدل البيع؛ راجع الكميات قبل الحفظ.`,
+          'إضافة التوصيات'
         );
         if (!ok) return;
 
-        // احسب معدلات البيع
-        const rates = await calcSaleRates(state.allProducts.map(p => p.id));
-
-        state.allProducts.forEach(p => {
-          if (state.items.some(it => it.product_id === p.id)) return;
-          const rate = rates[p.id] || 0;
-          const suggestedQty = rate > 0 ? Math.max(1, Math.round(rate * 30)) : 1;
-
+        suggestions.forEach(({ product, rate, quantity }) => {
           state.items.push({
-            product_id: p.id,
-            product: p,
-            requested_qty: suggestedQty,
-            last_discount: p.last_purchase_discount || 0,
-            max_discount: p.max_purchase_discount || 0,
+            product_id: product.id,
+            product,
+            requested_qty: quantity,
+            last_discount: product.last_purchase_discount || 0,
+            max_discount: product.max_purchase_discount || 0,
+            requested_discount: 0,
             sale_rate: rate
           });
         });
         renderItems();
-        Refad.toast.success('تم إضافة كل الأصناف');
+        Refad.toast.success('تم تجهيز الكميات المقترحة للمراجعة');
       }
 
       // ============================================================
@@ -1380,6 +1634,7 @@
                   requested_qty: item.qty,
                   last_discount: p.last_purchase_discount || 0,
                   max_discount: p.max_purchase_discount || 0,
+                  requested_discount: 0,
                   sale_rate: rates[p.id] || 0
                 });
                 added++;
@@ -1426,6 +1681,12 @@
       // 15) Save
       // ============================================================
       async function save() {
+        const invalidDiscount = document.querySelector('.discount-request-input:invalid');
+        if (invalidDiscount) {
+          invalidDiscount.focus();
+          Refad.toast.warning('أدخل الخصم المطلوب بنسبة من 0 إلى 100');
+          return;
+        }
         const supplierId = parseInt(document.getElementById('supplierSelect').value, 10);
         const notes = document.getElementById('requestNotes').value.trim() || null;
         const reqDate = document.getElementById('requestDate').value || Refad.date.today();
@@ -1473,19 +1734,31 @@
             });
           }
 
-          // 2. حذف الأصناف القديمة
-          await Refad.db.removeWhere('purchase_request_items', { request_id: rid });
+          // Keep item IDs stable so shared supplier responses remain attached to the request.
+          const currentIds = state.items.filter(item => item.id).map(item => item.id);
+          for (const oldId of state.originalItemIds) {
+            if (!currentIds.some(id => String(id) === String(oldId))) {
+              await Refad.db.remove('purchase_request_items', oldId);
+            }
+          }
 
-          // 3. إضافة الأصناف الجديدة
-          const items = state.items.map(it => ({
-            request_id: rid,
-            product_id: it.product_id,
-            requested_qty: it.requested_qty,
-            received_qty: 0,
-            avg_sale_rate: it.sale_rate || 0,
-            last_discount: it.last_discount || 0
-          }));
-          await Refad.db.insertMany('purchase_request_items', items);
+          for (const item of state.items) {
+            const payload = {
+              request_id: rid,
+              product_id: item.product_id,
+              requested_qty: item.requested_qty,
+              avg_sale_rate: item.sale_rate || 0,
+              last_discount: item.last_discount || 0,
+              requested_discount: Number(item.requested_discount) || 0
+            };
+            if (item.id) {
+              await Refad.db.update('purchase_request_items', item.id, payload);
+            } else {
+              const createdItem = await Refad.db.insert('purchase_request_items', payload);
+              item.id = createdItem.id;
+            }
+          }
+          state.originalItemIds = state.items.filter(item => item.id).map(item => item.id);
 
           await Refad.logActivity(
             requestId ? 'update_purchase_request' : 'create_purchase_request',
@@ -1564,9 +1837,15 @@
 
           // جلب الأصناف
           const items = await Refad.db.select('purchase_request_items', {
-            columns: 'id, product_id, requested_qty, last_discount, avg_sale_rate, products(id, name, name_en, form, unit)',
+            columns: 'id, product_id, requested_qty, last_discount, requested_discount, avg_sale_rate, supplier_price, supplier_discount, supplier_response_at, products(id, name, name_en, form, unit)',
             eq: { request_id: requestId },
             order: { column: 'id', ascending: true }
+          });
+          state.supplierResponses = await Refad.db.select('purchase_request_responses', {
+            columns: 'id, product_id, supplier_price, supplier_discount, submitted_at',
+            eq: { request_id: requestId },
+            order: { column: 'submitted_at', ascending: false },
+            limit: 500
           });
 
           // ابحث عن أعلى خصم لكل صنف
@@ -1577,20 +1856,47 @@
           const dMap = {};
           discounts.forEach(d => { dMap[d.product_id] = d.max_purchase_discount || 0; });
 
+          state.originalItemIds = items.map(item => item.id);
           state.items = items.filter(it => it.products).map(it => ({
+            id: it.id,
             product_id: it.product_id,
             product: it.products,
             requested_qty: it.requested_qty || 1,
             last_discount: it.last_discount || 0,
+            requested_discount: it.requested_discount || 0,
+            supplier_price: it.supplier_price,
+            supplier_discount: it.supplier_discount,
+            supplier_response_at: it.supplier_response_at,
             max_discount: dMap[it.product_id] || 0,
             sale_rate: it.avg_sale_rate || 0
           }));
 
           renderItems();
+          renderSupplierResponseHistory();
         } catch (e) {
           console.error('Load request failed:', e);
           Refad.toast.error('تعذّر تحميل الطلب: ' + e.message);
         }
+      }
+
+      function renderSupplierResponseHistory() {
+        const card = document.getElementById('supplierResponseHistoryCard');
+        const body = document.getElementById('supplierResponseHistoryBody');
+        if (!state.supplierResponses.length) {
+          card.style.display = 'none';
+          return;
+        }
+        const productNames = new Map(state.items.map(item => [String(item.product_id), item.product.name]));
+        body.innerHTML = state.supplierResponses.map(response => `
+          <tr>
+            <td>${Refad.escapeHtml(productNames.get(String(response.product_id)) || 'صنف محذوف')}</td>
+            <td>${response.supplier_price === null || response.supplier_price === undefined ? '—' : Refad.format.money(response.supplier_price)}</td>
+            <td>${response.supplier_discount === null || response.supplier_discount === undefined ? '—' : `${Refad.format.number(response.supplier_discount, 1)}%`}</td>
+            <td>${Refad.format.datetime(response.submitted_at)}</td>
+          </tr>
+        `).join('');
+        card.style.display = 'block';
+        if (window.lucide) lucide.createIcons();
       }
 
       function updateStatusBadge(status) {
@@ -1617,6 +1923,19 @@
           state.status = 'sent';
           updateStatusBadge('sent');
           document.getElementById('sendBtn').style.display = 'none';
+          try {
+            await Refad.notifyCompany(
+              session.company_id,
+              'تم إرسال طلب شراء للمورد',
+              `تم إرسال طلب الشراء ${state.requestNumber} إلى المورد.`,
+              'purchase',
+              requestId,
+              session.user_id
+            );
+          } catch (notificationError) {
+            console.error('[PurchaseRequests] Notification failed:', notificationError);
+            Refad.toast.warning('تم إرسال الطلب، لكن تعذّر إرسال الإشعار');
+          }
           Refad.toast.success('تم إرسال الطلب');
         } catch (e) {
           Refad.toast.error('فشل: ' + e.message);
@@ -1787,6 +2106,7 @@
         setupUserMenu();
         setupNotifBtn();
         setupProductSearch();
+        setupRequestCameraScanner();
         setupShareModal();
         setupExcelImport();
         bindEvents();
@@ -1796,6 +2116,8 @@
 
         if (isEdit) {
           await loadRequest();
+        } else if (smartMode) {
+          await applySmartSuggestions();
         }
 
         Refad.registerServiceWorker();

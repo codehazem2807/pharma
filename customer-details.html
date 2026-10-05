@@ -418,7 +418,7 @@
               limit: 100
             }).catch(() => []),
             Refad.db.select('sales_orders', {
-              columns: 'id, order_number, order_date, net_amount, status',
+              columns: 'id, order_number, created_at, total_amount, status',
               eq: { customer_id: customerId },
               order: { column: 'created_at', ascending: false },
               limit: 100
@@ -614,13 +614,13 @@
                       ${state.orders.slice(0, 20).map(o => `
                         <tr>
                           <td><strong>${Refad.escapeHtml(o.order_number)}</strong></td>
-                          <td>${Refad.format.date(o.order_date)}</td>
-                          <td class="money accent">${Refad.format.money(o.net_amount)}</td>
+                          <td>${Refad.format.date(o.created_at)}</td>
+                          <td class="money accent">${Refad.format.money(o.total_amount)}</td>
                           <td>
-                            <span class="badge-tag ${o.status === 'completed' ? 'green' : (o.status === 'cancelled' ? 'gray' : 'blue')}">
+                            <span class="badge-tag ${o.status === 'invoiced' ? 'green' : (o.status === 'cancelled' ? 'gray' : 'blue')}">
                               ${o.status === 'draft' ? 'مسودة' :
                                 o.status === 'confirmed' ? 'مؤكد' :
-                                o.status === 'completed' ? 'مكتمل' :
+                                o.status === 'invoiced' ? 'تم إصدار الفاتورة' :
                                 o.status === 'cancelled' ? 'ملغي' : o.status}
                             </span>
                           </td>

@@ -13,6 +13,8 @@ const PRECACHE_URLS = [
   '/',
   '/index.html',
   '/dashboard.html',
+  '/refad-camera-scanner.js',
+  '/refad-print.js',
   '/logo.png',
   '/icon-192.png',
   '/icon-512.png',

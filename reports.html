@@ -732,7 +732,8 @@
         dateFrom: null,
         dateTo: null,
         data: null,
-        charts: []
+        charts: [],
+        purchaseRecommendations: []
       };
 
       // ============================================================
@@ -1025,7 +1026,7 @@
         const invoices = await Refad.db.select('sales_invoices', {
           columns: `id, invoice_number, invoice_date, grand_total, total_profit, discount_total,
                     customers(id, name)`,
-          eq: { company_id: session.company_id, status: 'paid' },
+          eq: { company_id: session.company_id, status: 'paid', invoice_type: 'sale' },
           gte: { invoice_date: from },
           lte: { invoice_date: to },
           order: { column: 'invoice_date', ascending: false }
@@ -1035,6 +1036,8 @@
         const totalProfit = invoices.reduce((s, i) => s + (Number(i.total_profit) || 0), 0);
         const totalDiscount = invoices.reduce((s, i) => s + (Number(i.discount_total) || 0), 0);
         const avgInvoice = invoices.length ? totalSales / invoices.length : 0;
+        const lossInvoices = invoices.filter(invoice => (Number(invoice.total_profit) || 0) < 0);
+        const totalLoss = lossInvoices.reduce((sum, invoice) => sum + Math.abs(Number(invoice.total_profit) || 0), 0);
 
         // Group by day
         const byDay = {};
@@ -1056,7 +1059,8 @@
             { label: 'إجمالي المبيعات', value: Refad.format.money(totalSales), icon: 'dollar-sign', color: 'green' },
             { label: 'عدد الفواتير', value: Refad.format.number(invoices.length), icon: 'receipt', color: 'blue', sub: `متوسط الفاتورة: ${Refad.format.money(avgInvoice)}` },
             { label: 'إجمالي الربح', value: Refad.format.money(totalProfit), icon: 'trending-up', color: 'gold' },
-            { label: 'إجمالي الخصم', value: Refad.format.money(totalDiscount), icon: 'percent', color: 'red' }
+            { label: 'إجمالي الخصم', value: Refad.format.money(totalDiscount), icon: 'percent', color: 'red' },
+            { label: 'فواتير بربح سلبي', value: Refad.format.number(lossInvoices.length), icon: 'circle-alert', color: 'red', sub: `إجمالي الخسارة: ${Refad.format.money(totalLoss)}` }
           ],
           charts: [
             { id: 'salesChart', title: 'المبيعات اليومية', icon: 'bar-chart-3', type: 'line', span: 'wide' },
@@ -1072,9 +1076,23 @@
               Refad.escapeHtml(inv.customers?.name || 'نقدي'),
               `<span class="money-cell accent">${Refad.format.money(inv.grand_total)}</span>`,
               `<span class="money-cell red">${Refad.format.money(inv.discount_total)}</span>`,
-              `<span class="money-cell green">${Refad.format.money(inv.total_profit)}</span>`
+              `<span class="money-cell ${Number(inv.total_profit) < 0 ? 'red' : 'green'}">${Refad.format.money(inv.total_profit)}</span>`
             ])
-          }
+          },
+          additionalTables: [{
+            title: 'مراجعة فواتير المبيعات ذات الربح السلبي',
+            icon: 'circle-alert',
+            emptyTitle: 'لا توجد فواتير بربح سلبي',
+            emptyMessage: 'لا تظهر فواتير خاسرة في الفترة المحددة.',
+            columns: ['رقم الفاتورة', 'التاريخ', 'العميل', 'قيمة البيع', 'الخسارة'],
+            rows: lossInvoices.map(invoice => [
+              `<a href="invoices.html?id=${Number(invoice.id)}" style="color:var(--accent);font-weight:700;">${Refad.escapeHtml(invoice.invoice_number)}</a>`,
+              Refad.format.date(invoice.invoice_date),
+              Refad.escapeHtml(invoice.customers?.name || 'نقدي'),
+              Refad.format.money(invoice.grand_total),
+              `<strong style="color:var(--danger);">${Refad.format.money(Math.abs(Number(invoice.total_profit) || 0))}</strong>`
+            ])
+          }]
         });
 
         // Chart 1: Sales by day (line)
@@ -1342,42 +1360,97 @@
       async function renderInventoryReport() {
         const [products, batches] = await Promise.all([
           Refad.db.select('products', {
-            columns: 'id, name, name_en, form, unit, reorder_level, is_active',
+            columns: 'id, name, name_en, form, unit, reorder_level, min_order_qty, is_active',
             eq: { company_id: session.company_id, is_active: true }
           }),
           Refad.db.select('batches', {
-            columns: 'id, product_id, quantity_left, cost_price, sale_price, expiry_date',
+            columns: 'id, product_id, batch_number, quantity_left, cost_price, sale_price, expiry_date',
             eq: { company_id: session.company_id },
             gt: { quantity_left: 0 }
-          }).catch(() => [])
+          })
         ]);
+        const salesSince = Refad.date.addDays(Refad.date.today(), -90);
+        const soldItems = await Refad.db.select('sales_invoice_items', {
+          columns: 'product_id, quantity, sales_invoices!inner(invoice_date, company_id, status, invoice_type)',
+          gte: { 'sales_invoices.invoice_date': salesSince },
+          eq: { 'sales_invoices.company_id': session.company_id, 'sales_invoices.invoice_type': 'sale' },
+          neq: { 'sales_invoices.status': 'cancelled' },
+          limit: 10000
+        });
 
         const byProduct = {};
         batches.forEach(b => {
           if (!byProduct[b.product_id]) byProduct[b.product_id] = [];
           byProduct[b.product_id].push(b);
         });
+        const salesByProduct = {};
+        soldItems.forEach(item => {
+          salesByProduct[item.product_id] = (salesByProduct[item.product_id] || 0) + (Number(item.quantity) || 0);
+        });
 
+        const today = Refad.date.today();
+        const expiryWindow = Refad.date.addDays(today, 30);
         const productStats = products.map(p => {
           const pbs = byProduct[p.id] || [];
-          const qty = pbs.reduce((s, b) => s + (b.quantity_left || 0), 0);
-          const costValue = pbs.reduce((s, b) => s + (b.quantity_left || 0) * (b.cost_price || 0), 0);
+          const qty = pbs.reduce((sum, batch) => sum + (Number(batch.quantity_left) || 0), 0);
+          const expiredQty = pbs
+            .filter(batch => batch.expiry_date && batch.expiry_date < today)
+            .reduce((sum, batch) => sum + (Number(batch.quantity_left) || 0), 0);
+          const sellableQty = qty - expiredQty;
+          const expiringQty = pbs
+            .filter(batch => batch.expiry_date && batch.expiry_date >= today && batch.expiry_date <= expiryWindow)
+            .reduce((sum, batch) => sum + (Number(batch.quantity_left) || 0), 0);
+          const costValue = pbs.reduce((sum, batch) =>
+            sum + (Number(batch.quantity_left) || 0) * (Number(batch.cost_price) || 0), 0);
           let nearest = null;
           pbs.forEach(b => {
-            if (!b.expiry_date) return;
+            if (!b.expiry_date || b.expiry_date < today) return;
             if (!nearest || b.expiry_date < nearest) nearest = b.expiry_date;
           });
           let status = 'ok';
-          if (qty === 0) status = 'out';
-          else if (qty <= (p.reorder_level || 0)) status = 'low';
-          return { ...p, total_qty: qty, cost_value: costValue, nearest_expiry: nearest, status };
+          if (sellableQty === 0) status = 'out';
+          else if (sellableQty <= (p.reorder_level || 0)) status = 'low';
+          const dailySales = (salesByProduct[p.id] || 0) / 90;
+          const targetStock = Math.max(Number(p.reorder_level) || 0, Math.ceil(dailySales * 30));
+          const needed = Math.max(0, targetStock - sellableQty);
+          return {
+            ...p,
+            total_qty: qty,
+            sellable_qty: sellableQty,
+            expired_qty: expiredQty,
+            expiring_qty: expiringQty,
+            cost_value: costValue,
+            nearest_expiry: nearest,
+            status,
+            daily_sales: dailySales,
+            recommended_order_qty: needed > 0
+              ? Math.max(Number(p.min_order_qty) || 1, needed)
+              : 0
+          };
         });
+        const purchaseRecommendations = productStats
+          .filter(product => product.recommended_order_qty > 0)
+          .sort((a, b) => b.recommended_order_qty - a.recommended_order_qty);
 
         const totalProducts = productStats.length;
         const inStock = productStats.filter(p => p.status === 'ok').length;
         const lowStock = productStats.filter(p => p.status === 'low').length;
         const outOfStock = productStats.filter(p => p.status === 'out').length;
         const totalValue = productStats.reduce((s, p) => s + p.cost_value, 0);
+        const expiredBatches = batches
+          .filter(batch => batch.expiry_date && batch.expiry_date <= expiryWindow)
+          .map(batch => ({
+            ...batch,
+            product: products.find(product => product.id === batch.product_id),
+            is_expired: batch.expiry_date < today
+          }))
+          .filter(batch => batch.product)
+          .sort((a, b) => a.expiry_date.localeCompare(b.expiry_date));
+        state.purchaseRecommendations = purchaseRecommendations.map(product => ({
+          product_id: product.id,
+          quantity: product.recommended_order_qty,
+          daily_rate: product.daily_sales
+        }));
 
         renderReportLayout({
           title: 'تقرير المخزون',
@@ -1387,7 +1460,8 @@
             { label: 'متوفر', value: Refad.format.number(inStock), icon: 'check-circle', color: 'green' },
             { label: 'مخزون منخفض', value: Refad.format.number(lowStock), icon: 'alert-triangle', color: 'gold' },
             { label: 'نفد', value: Refad.format.number(outOfStock), icon: 'x-circle', color: 'red' },
-            { label: 'قيمة المخزون', value: Refad.format.money(totalValue), icon: 'dollar-sign', color: 'teal' }
+            { label: 'قيمة المخزون', value: Refad.format.money(totalValue), icon: 'dollar-sign', color: 'teal' },
+            { label: 'كمية الشراء المقترحة', value: Refad.format.number(purchaseRecommendations.reduce((sum, product) => sum + product.recommended_order_qty, 0)), icon: 'shopping-cart', color: 'blue' }
           ],
           charts: [
             { id: 'inventoryChart', title: 'حالة المخزون', icon: 'pie-chart', type: 'doughnut', span: 'narrow' },
@@ -1396,7 +1470,7 @@
           table: {
             title: 'الأصناف',
             icon: 'list',
-            columns: ['الصنف', 'الشكل', 'المخزون', 'حد الطلب', 'قيمة المخزون', 'الحالة'],
+            columns: ['الصنف', 'الشكل', 'الرصيد القابل للبيع', 'منتهي الصلاحية', 'حد الطلب', 'قيمة المخزون', 'الحالة'],
             rows: productStats.sort((a, b) => b.cost_value - a.cost_value).map(p => {
               const statusMap = {
                 ok:   '<span class="badge-tag green">متوفر</span>',
@@ -1406,13 +1480,50 @@
               return [
                 Refad.escapeHtml(p.name),
                 Refad.escapeHtml(p.form || '—'),
-                Refad.format.number(p.total_qty),
+                Refad.format.number(p.sellable_qty),
+                p.expired_qty > 0
+                  ? `<span class="badge-tag red">${Refad.format.number(p.expired_qty)}</span>`
+                  : Refad.format.number(0),
                 Refad.format.number(p.reorder_level || 0),
                 `<span class="money-cell accent">${Refad.format.money(p.cost_value)}</span>`,
                 statusMap[p.status]
               ];
             })
-          }
+          },
+          additionalTables: [{
+            title: 'أصناف مرشحة للشراء',
+            icon: 'shopping-cart',
+            action: Refad.Session.has('purchases.create') && purchaseRecommendations.length
+              ? { key: 'purchase-suggestions', label: 'إنشاء مسودة طلب شراء' }
+              : null,
+            emptyTitle: 'لا توجد توصيات شراء',
+            emptyMessage: 'الأرصدة الحالية تغطي حد إعادة الطلب أو التغطية التقديرية لمدة 30 يوماً.',
+            columns: ['الصنف', 'الرصيد القابل للبيع', 'حد إعادة الطلب', 'متوسط البيع اليومي', 'سبب التوصية', 'الكمية المقترح شراؤها'],
+            rows: purchaseRecommendations.map(product => [
+              Refad.escapeHtml(product.name),
+              Refad.format.number(product.sellable_qty),
+              Refad.format.number(product.reorder_level || 0),
+              Refad.format.number(product.daily_sales, 1),
+              product.sellable_qty <= 0 ? 'نفد المخزون' :
+                product.sellable_qty <= (Number(product.reorder_level) || 0) ? 'وصل لحد إعادة الطلب' : 'التغطية أقل من 30 يوماً',
+              `<strong style="color:var(--accent);">${Refad.format.number(product.recommended_order_qty)}</strong>`
+            ])
+          }, {
+            title: 'تنبيهات الصلاحية',
+            icon: 'calendar-clock',
+            emptyTitle: 'لا توجد تنبيهات صلاحية',
+            emptyMessage: 'لا توجد تشغيلات منتهية أو تنتهي خلال الثلاثين يوماً القادمة.',
+            columns: ['الصنف', 'رقم التشغيلة', 'تاريخ الانتهاء', 'الكمية', 'الحالة'],
+            rows: expiredBatches.map(batch => [
+              Refad.escapeHtml(batch.product.name),
+              Refad.escapeHtml(batch.batch_number || '—'),
+              Refad.format.date(batch.expiry_date),
+              Refad.format.number(batch.quantity_left),
+              batch.is_expired
+                ? '<span class="badge-tag red">منتهي</span>'
+                : '<span class="badge-tag gold">قارب على الانتهاء</span>'
+            ])
+          }]
         });
 
         // Chart 1: Status doughnut
@@ -1852,7 +1963,7 @@
       // ============================================================
       // 17) Layout renderer
       // ============================================================
-      function renderReportLayout({ title, icon, cards, charts, table }) {
+      function renderReportLayout({ title, icon, cards, charts, table, additionalTables = [] }) {
         const content = document.getElementById('reportContent');
 
         const cardsHtml = cards.map(c => `
@@ -1931,11 +2042,39 @@
             </div>
           </div>
         ` : '';
+        const additionalTablesHtml = additionalTables.map(extraTable => `
+          <div class="table-wrap">
+            <div class="table-header">
+              <h3><i data-lucide="${extraTable.icon}"></i> ${Refad.escapeHtml(extraTable.title)}</h3>
+              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                ${extraTable.action && extraTable.rows.length
+                  ? `<button type="button" class="btn btn-primary btn-sm" data-report-action="${Refad.escapeHtml(extraTable.action.key)}"><i data-lucide="shopping-cart"></i> ${Refad.escapeHtml(extraTable.action.label)}</button>`
+                  : ''}
+                <span style="font-size:12px;color:var(--text-muted);font-weight:600;">${extraTable.rows.length} صنف</span>
+              </div>
+            </div>
+            <div class="table-scroll">
+              ${extraTable.rows.length === 0 ? `
+                <div class="empty-state">
+                  <i data-lucide="check-circle-2"></i>
+                  <h3>${Refad.escapeHtml(extraTable.emptyTitle || 'لا توجد بيانات')}</h3>
+                  <p>${Refad.escapeHtml(extraTable.emptyMessage || 'لا توجد سجلات حالياً.')}</p>
+                </div>
+              ` : `
+                <table>
+                  <thead><tr>${extraTable.columns.map(column => `<th>${Refad.escapeHtml(column)}</th>`).join('')}</tr></thead>
+                  <tbody>${extraTable.rows.slice(0, 500).map(row => `<tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>`).join('')}</tbody>
+                </table>
+              `}
+            </div>
+          </div>
+        `).join('');
 
         content.innerHTML = `
           <div class="summary-cards">${cardsHtml}</div>
           ${chartsHtml}
           ${tableHtml}
+          ${additionalTablesHtml}
         `;
 
         if (window.lucide) lucide.createIcons();
@@ -2031,15 +2170,19 @@
       // ============================================================
       function exportCurrentReport() {
         const content = document.getElementById('reportContent');
-        const table = content.querySelector('table');
-        if (!table) {
+        const tables = Array.from(content.querySelectorAll('table'));
+        if (!tables.length) {
           Refad.toast.warning('لا توجد بيانات للتصدير');
           return;
         }
 
-        const ws = XLSX.utils.table_to_sheet(table);
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'Report');
+        tables.forEach((table, index) => {
+          const title = table.closest('.table-wrap')?.querySelector('.table-header h3')?.textContent?.trim();
+          const sheetName = (title || (index ? `Report ${index + 1}` : 'Report')).replace(/[\\/?*[\]:]/g, '').slice(0, 31) || `Report ${index + 1}`;
+          const ws = XLSX.utils.table_to_sheet(table);
+          XLSX.utils.book_append_sheet(wb, ws, sheetName);
+        });
         const { from, to } = getDateRange();
         XLSX.writeFile(wb, `report-${state.currentReport}-${from}-${to}.xlsx`);
         Refad.toast.success('تم التصدير');
@@ -2055,6 +2198,29 @@
       function bindEvents() {
         document.getElementById('exportBtn').addEventListener('click', exportCurrentReport);
         document.getElementById('printBtn').addEventListener('click', printCurrentReport);
+        document.getElementById('reportContent').addEventListener('click', event => {
+          const button = event.target.closest('[data-report-action="purchase-suggestions"]');
+          if (!button) return;
+          if (!Refad.Session.has('purchases.create')) {
+            Refad.toast.error('ليس لديك صلاحية إنشاء طلب شراء');
+            return;
+          }
+          if (!state.purchaseRecommendations.length) {
+            Refad.toast.info('لا توجد أصناف مقترحة لإعادة الطلب');
+            return;
+          }
+          try {
+            sessionStorage.setItem('refad_purchase_suggestions', JSON.stringify({
+              companyId: session.company_id,
+              createdAt: Date.now(),
+              items: state.purchaseRecommendations
+            }));
+            window.location.href = 'purchase-request-form.html?smart=1';
+          } catch (error) {
+            console.error('[Reports] Could not stage purchase recommendations:', error);
+            Refad.toast.error('تعذّر تجهيز مسودة طلب الشراء: ' + error.message);
+          }
+        });
       }
 
       // ============================================================

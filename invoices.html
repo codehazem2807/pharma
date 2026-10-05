@@ -1018,7 +1018,8 @@
         filterStatus: '',
         filterCustomer: '',
         filterPeriod: '',
-        currentInvoice: null
+        currentInvoice: null,
+        company: null
       };
 
       // ============================================================
@@ -1416,11 +1417,18 @@
       // ============================================================
       // 9) Reprint Invoice
       // ============================================================
-      function reprintInvoice() {
+      function reprintInvoice(windowRef) {
         const { invoice, items, customer } = state.currentInvoice;
         if (!invoice) return;
+        if (!state.company) {
+          Refad.toast.error('بيانات الشركة غير متاحة؛ تعذّرت طباعة الفاتورة');
+          if (windowRef) windowRef.close();
+          return;
+        }
 
-        const w = window.open('', '_blank', 'width=400,height=600');
+        const w = windowRef || window.open('', '_blank', 'width=400,height=600');
+        if (!w) return Refad.toast.warning('اسمح بالنوافذ المنبثقة لإعادة طباعة الفاتورة');
+        w.document.open();
         w.document.write(`
           <!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8">
           <title>فاتورة ${invoice.invoice_number}</title>
@@ -1442,7 +1450,11 @@
             .footer { text-align: center; font-size: 10px; color: #94a3b8; margin-top: 12px; padding-top: 8px; border-top: 1px dashed #cbd5e1; }
           </style></head><body>
           <div class="header">
-            <h1>رفاد</h1>
+            ${state.company.logo_url ? `<img src="${Refad.escapeHtml(state.company.logo_url)}" alt="${Refad.escapeHtml(state.company.name || '')}" style="max-width:72px;max-height:56px;object-fit:contain;margin:0 auto 4px;">` : ''}
+            <h1>${Refad.escapeHtml(state.company.name || '')}</h1>
+            <p>${Refad.escapeHtml(state.company.address || '')}</p>
+            <p>${state.company.phone ? `الهاتف: ${Refad.escapeHtml(state.company.phone)}` : ''}${state.company.email ? ` • ${Refad.escapeHtml(state.company.email)}` : ''}</p>
+            ${state.company.tax_number ? `<p>الرقم الضريبي: ${Refad.escapeHtml(state.company.tax_number)}</p>` : ''}
             <p>فاتورة بيع</p>
             <div class="inv-num">${invoice.invoice_number}</div>
           </div>
@@ -1596,7 +1608,21 @@
 
           if (action === 'view') viewInvoice(id);
           else if (action === 'print') {
-            viewInvoice(id).then(() => setTimeout(reprintInvoice, 300));
+            if (!state.company) {
+              Refad.toast.error('بيانات الشركة غير متاحة؛ تعذّرت طباعة الفاتورة');
+              return;
+            }
+            const printWindow = window.open('', '_blank');
+            if (!printWindow) {
+              Refad.toast.warning('اسمح بالنوافذ المنبثقة لإعادة طباعة الفاتورة');
+              return;
+            }
+            printWindow.document.write('<!DOCTYPE html><html dir="rtl"><meta charset="UTF-8"><body>جارٍ تجهيز الفاتورة...</body></html>');
+            state.currentInvoice = null;
+            viewInvoice(id).then(() => {
+              if (state.currentInvoice?.invoice.id === id) reprintInvoice(printWindow);
+              else printWindow.close();
+            });
           }
           else if (action === 'delete') deleteInvoice(id, inv);
         });
@@ -1653,6 +1679,17 @@
         setupUserMenu();
         setupNotifBtn();
         bindEvents();
+
+        try {
+          state.company = await Refad.db.selectOne('companies', {
+            columns: 'id, name, logo_url, phone, email, address, tax_number, notes',
+            eq: { id: session.company_id }
+          });
+          if (!state.company) throw new Error('الشركة غير موجودة');
+        } catch (error) {
+          console.error('[Invoices] Company details load failed:', error);
+          Refad.toast.error('تعذّر تحميل بيانات الشركة للطباعة: ' + error.message);
+        }
 
         await loadCustomersFilter();
         await loadInvoices();

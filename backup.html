@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>النسخ الاحتياطي - رفاد</title>
+  <link rel="icon" type="image/png" href="logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    * { box-sizing: border-box; }
+    :root { --primary:#0B2C4D; --accent:#14B8A6; --bg:#F1F5F9; --card:#fff; --text:#0f172a; --muted:#64748b; --border:#e2e8f0; --success:#10b981; --warning:#f59e0b; --radius:14px; }
+    [data-theme="dark"] { --bg:#0a1628; --card:#0f2137; --text:#f1f5f9; --muted:#94a3b8; --border:#1e3a5f; }
+    body { margin:0; min-height:100vh; background:var(--bg); color:var(--text); font-family:'Cairo',sans-serif; }
+    .topbar { height:64px; display:flex; align-items:center; padding:0 max(20px,calc((100vw - 1120px)/2)); background:var(--card); border-bottom:1px solid var(--border); }
+    .brand { color:var(--primary); font-size:18px; font-weight:800; text-decoration:none; }
+    [data-theme="dark"] .brand { color:var(--text); }
+    main { width:min(100% - 32px,900px); margin:28px auto; }
+    .page-head { margin-bottom:18px; }
+    h1 { margin:0 0 6px; font-size:24px; }
+    .muted { color:var(--muted); }
+    .card { padding:22px; margin-bottom:16px; border:1px solid var(--border); border-radius:var(--radius); background:var(--card); box-shadow:0 4px 20px rgba(11,44,77,.06); }
+    .card h2 { display:flex; align-items:center; gap:9px; margin:0 0 10px; font-size:17px; }
+    .card h2 svg { width:20px; color:var(--accent); }
+    .form-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin-top:16px; }
+    label { display:flex; flex-direction:column; gap:6px; font-size:12px; font-weight:700; color:var(--muted); }
+    input { width:100%; padding:11px 12px; border:1px solid var(--border); border-radius:9px; background:var(--bg); color:var(--text); font:inherit; }
+    input:focus { outline:2px solid rgba(20,184,166,.25); border-color:var(--accent); }
+    .btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:42px; padding:9px 15px; border:0; border-radius:9px; background:var(--accent); color:white; font:700 14px 'Cairo',sans-serif; cursor:pointer; }
+    .btn:disabled { opacity:.6; cursor:wait; }
+    .btn svg { width:17px; }
+    .status { min-height:24px; margin-top:14px; font-size:13px; font-weight:700; }
+    .notice { padding:12px 14px; margin-top:14px; border-radius:10px; background:rgba(245,158,11,.1); color:var(--text); font-size:12px; line-height:1.8; }
+    .steps { margin:10px 0 0; padding-right:20px; color:var(--muted); line-height:1.9; font-size:13px; }
+    .steps code { direction:ltr; display:inline-block; padding:1px 5px; border-radius:4px; background:var(--bg); }
+    @media (max-width:600px) { .form-grid { grid-template-columns:1fr; } .card { padding:16px; } h1 { font-size:20px; } }
+  </style>
+</head>
+<body>
+  <header class="topbar"><a class="brand" href="dashboard.html">رفاد</a></header>
+  <main>
+    <div class="page-head">
+      <h1>النسخ الاحتياطي</h1>
+      <div class="muted">نسخة مشفّرة لبيانات الشركة، مع أرشفة سحابية يومية بعد إعداد الخدمة.</div>
+    </div>
+    <section class="card">
+      <h2><i data-lucide="lock-keyhole"></i> تنزيل نسخة مشفّرة الآن</h2>
+      <p class="muted" style="font-size:13px;line-height:1.8;margin:0;">
+        تُشفّر النسخة في متصفحك قبل تنزيلها باستخدام AES‑GCM، ولا يُرسل مفتاح التشفير إلى الخادم.
+        احتفظ بكلمة المرور في مكان آمن؛ لا يمكن استرجاعها إذا فُقدت.
+      </p>
+      <div class="form-grid">
+        <label>كلمة مرور التشفير
+          <input type="password" id="backupPassword" minlength="12" autocomplete="new-password" placeholder="12 حرفاً على الأقل">
+        </label>
+        <label>تأكيد كلمة المرور
+          <input type="password" id="backupPasswordConfirm" minlength="12" autocomplete="new-password" placeholder="أعد كتابة كلمة المرور">
+        </label>
+      </div>
+      <button class="btn" id="downloadBackupBtn" type="button" style="margin-top:16px;">
+        <i data-lucide="download"></i> إنشاء وتنزيل النسخة
+      </button>
+      <div class="status" id="backupStatus" role="status" aria-live="polite"></div>
+      <div class="notice">
+        تتضمن النسخة سجلات الشركة التجارية والموظفين دون كلمات المرور. وهي لا تتضمن الملفات الثنائية المخزنة خارج قاعدة البيانات. الملف أرشيف بيانات مشفّر؛ لا تتوفر حالياً استعادة مباشرة من داخل النظام.
+      </div>
+    </section>
+    <section class="card">
+      <h2><i data-lucide="cloud"></i> النسخ السحابي اليومي</h2>
+      <p class="muted" style="font-size:13px;line-height:1.8;margin:0;">
+        النسخ المجدول يُرفع إلى حاوية Supabase Storage خاصة، ويُحتفظ بآخر 30 يوماً. لأسباب أمنية لا تحفظ الواجهة مفاتيح الخدمة؛ يلزم نشر Edge Function وإعداد سرّ الجدولة مرة واحدة.
+      </p>
+      <ol class="steps">
+        <li>شغّل <code>purchase-request-response-setup.sql</code> أولاً إذا لم تكن قد فعلت سجل ردود الموردين.</li>
+        <li>انشر <code>supabase/functions/refad-backup</code>، واضبط السر نفسه باسم <code>BACKUP_CRON_SECRET</code> في إعدادات الدالة وفي Supabase Vault باسم <code>refad_backup_cron_secret</code>.</li>
+        <li>عدّل عنوان مشروعك في <code>backup-schedule-setup.sql</code> ثم شغّله في SQL Editor. يعمل الجدول يومياً الساعة 02:00 UTC.</li>
+      </ol>
+      <div class="notice">تظهر حالة النسخ السحابي ونتائجه في Supabase Edge Function Logs وملفات الحاوية الخاصة؛ لا يُعدّ الجدول مفعّلاً حتى تنفّذ خطوات النشر والجدولة.</div>
+    </section>
+  </main>
+  <script src="refad-core.js"></script>
+  <script src="refad-auth.js"></script>
+  <script>
+    (function () {
+      'use strict';
+      const session = Refad.Auth.guardPage('company.owner');
+      if (!session) return;
+
+      const PAGE_SIZE = 1000;
+      const ID_CHUNK = 100;
+      const directTables = [
+        'roles', 'users', 'products', 'suppliers', 'customers',
+        'supplier_transactions', 'purchase_requests', 'receipts', 'batches',
+        'sales_orders', 'sales_invoices', 'inventory_movements', 'stock_adjustments',
+        'attendance', 'payroll', 'deductions', 'bonuses', 'expenses',
+        'notifications', 'activity_log', 'chat_conversations', 'share_links', 'admin_payments'
+      ];
+
+      async function selectAll(table, options) {
+        const result = [];
+        for (let offset = 0; ; offset += PAGE_SIZE) {
+          const page = await Refad.db.select(table, {
+            ...(options || {}),
+            range: [offset, offset + PAGE_SIZE - 1]
+          });
+          result.push(...page);
+          if (page.length < PAGE_SIZE) return result;
+        }
+      }
+
+      async function selectByIds(table, column, ids) {
+        const result = [];
+        for (let offset = 0; offset < ids.length; offset += ID_CHUNK) {
+          const batch = ids.slice(offset, offset + ID_CHUNK);
+          result.push(...await selectAll(table, { in: { [column]: batch } }));
+        }
+        return result;
+      }
+
+      async function createBackup() {
+        const password = document.getElementById('backupPassword').value;
+        const confirmation = document.getElementById('backupPasswordConfirm').value;
+        if (password.length < 12) {
+          Refad.toast.warning('كلمة المرور يجب أن تكون 12 حرفاً على الأقل');
+          return;
+        }
+        if (password !== confirmation) {
+          Refad.toast.warning('كلمتا المرور غير متطابقتين');
+          return;
+        }
+        if (!window.crypto?.subtle || !window.isSecureContext) {
+          Refad.toast.error('التشفير الآمن يتطلب اتصال HTTPS أو localhost');
+          return;
+        }
+
+        const button = document.getElementById('downloadBackupBtn');
+        const status = document.getElementById('backupStatus');
+        button.disabled = true;
+        status.textContent = 'جارٍ جمع بيانات الشركة...';
+        try {
+          const companyId = session.company_id;
+          const tables = {};
+          for (const table of directTables) {
+            tables[table] = await selectAll(table, {
+              eq: { company_id: companyId }
+            });
+          }
+          tables.companies = await selectAll('companies', { eq: { id: companyId } });
+
+          const productIds = tables.products.map(row => row.id);
+          const supplierIds = tables.suppliers.map(row => row.id);
+          const requestIds = tables.purchase_requests.map(row => row.id);
+          const receiptIds = tables.receipts.map(row => row.id);
+          const orderIds = tables.sales_orders.map(row => row.id);
+          const invoiceIds = tables.sales_invoices.map(row => row.id);
+          const adjustmentIds = tables.stock_adjustments.map(row => row.id);
+          const conversationIds = tables.chat_conversations.map(row => row.id);
+          const roleIds = tables.roles.map(row => row.id);
+
+          const dependentData = await Promise.all([
+            selectByIds('product_barcodes', 'product_id', productIds),
+            selectByIds('product_discounts', 'product_id', productIds),
+            selectByIds('purchase_request_items', 'request_id', requestIds),
+            selectByIds('purchase_request_responses', 'request_id', requestIds),
+            selectByIds('receipt_items', 'receipt_id', receiptIds),
+            selectByIds('sales_order_items', 'order_id', orderIds),
+            selectByIds('sales_invoice_items', 'invoice_id', invoiceIds),
+            selectByIds('stock_adjustment_items', 'adjustment_id', adjustmentIds),
+            selectByIds('chat_participants', 'conversation_id', conversationIds),
+            selectByIds('chat_messages', 'conversation_id', conversationIds),
+            selectByIds('role_permissions', 'role_id', roleIds),
+            selectAll('permissions')
+          ]);
+          [
+            tables.product_barcodes,
+            tables.product_discounts,
+            tables.purchase_request_items,
+            tables.purchase_request_responses,
+            tables.receipt_items,
+            tables.sales_order_items,
+            tables.sales_invoice_items,
+            tables.stock_adjustment_items,
+            tables.chat_participants,
+            tables.chat_messages,
+            tables.role_permissions,
+            tables.permissions
+          ] = dependentData;
+
+          const messageIds = tables.chat_messages.map(row => row.id);
+          tables.chat_files = await selectByIds('chat_files', 'message_id', messageIds);
+          tables.users = tables.users.map(({ password, failed_attempts, locked_until, ...user }) => user);
+
+          const backup = {
+            format: 'refad-company-backup',
+            version: 1,
+            company_id: companyId,
+            created_at: new Date().toISOString(),
+            encryption: 'PBKDF2-SHA-256/AES-256-GCM',
+            tables
+          };
+          status.textContent = 'جارٍ تشفير النسخة...';
+          const salt = crypto.getRandomValues(new Uint8Array(16));
+          const iv = crypto.getRandomValues(new Uint8Array(12));
+          const keyMaterial = await crypto.subtle.importKey(
+            'raw',
+            new TextEncoder().encode(password),
+            'PBKDF2',
+            false,
+            ['deriveKey']
+          );
+          const key = await crypto.subtle.deriveKey(
+            { name: 'PBKDF2', salt, iterations: 310000, hash: 'SHA-256' },
+            keyMaterial,
+            { name: 'AES-GCM', length: 256 },
+            false,
+            ['encrypt']
+          );
+          const ciphertext = await crypto.subtle.encrypt(
+            { name: 'AES-GCM', iv },
+            key,
+            new TextEncoder().encode(JSON.stringify(backup))
+          );
+          const toBase64 = bytes => {
+            let binary = '';
+            const chunkSize = 0x8000;
+            for (let offset = 0; offset < bytes.length; offset += chunkSize) {
+              binary += String.fromCharCode(...bytes.subarray(offset, offset + chunkSize));
+            }
+            return btoa(binary);
+          };
+          const encryptedFile = {
+            format: 'refad-encrypted-backup',
+            version: 1,
+            kdf: { name: 'PBKDF2', hash: 'SHA-256', iterations: 310000, salt: toBase64(salt) },
+            cipher: { name: 'AES-GCM', iv: toBase64(iv), data: toBase64(new Uint8Array(ciphertext)) }
+          };
+          const blob = new Blob([JSON.stringify(encryptedFile)], { type: 'application/vnd.refad.backup+json' });
+          const date = new Date().toISOString().replace(/[:.]/g, '-');
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `refad-company-${companyId}-${date}.refadbackup`;
+          link.click();
+          URL.revokeObjectURL(url);
+          status.textContent = 'تم إنشاء النسخة المشفّرة وتنزيلها.';
+          await Refad.logActivity('download_company_backup', 'system', `نسخة احتياطية مشفّرة للشركة ${companyId}`);
+        } catch (error) {
+          console.error('[Backup] Create failed:', error);
+          status.textContent = 'تعذّر إنشاء النسخة. راجع وحدة التحكم للتفاصيل.';
+          Refad.toast.error('فشل النسخ الاحتياطي: ' + error.message);
+        } finally {
+          button.disabled = false;
+        }
+      }
+
+      document.getElementById('downloadBackupBtn').addEventListener('click', createBackup);
+      if (window.lucide) lucide.createIcons();
+      Refad.registerServiceWorker();
+    })();
+  </script>
+</body>
+</html>

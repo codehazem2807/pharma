@@ -18,6 +18,7 @@
   <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
 
   <style>
@@ -213,7 +214,7 @@
     .pos-body {
       flex: 1;
       display: grid;
-      grid-template-columns: 1fr 420px;
+      grid-template-columns: minmax(0, 1fr) minmax(460px, min(38vw, 560px));
       gap: 16px;
       padding: 16px;
       min-height: 0;
@@ -236,6 +237,10 @@
       transition: all 0.2s;
       flex-shrink: 0;
     }
+    .pos-search-row { display: flex; align-items: stretch; gap: 8px; }
+    .pos-search-row .pos-search { flex: 1; min-width: 0; }
+    .scan-camera-btn { flex-shrink: 0; }
+    #posBarcodeReader video { width: 100% !important; border-radius: 10px; }
     .pos-search:focus-within {
       border-color: var(--accent);
       box-shadow: 0 0 0 4px rgba(20,184,166,0.1);
@@ -472,14 +477,15 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      height: 100%;
+      min-height: 220px;
       color: var(--text-muted);
-      padding: 30px 20px;
+      padding: 36px 20px;
       text-align: center;
     }
-    .cart-empty i { width: 48px; height: 48px; opacity: 0.3; margin-bottom: 12px; }
-    .cart-empty p { font-size: 13px; font-weight: 600; }
-    .cart-empty small { font-size: 11px; margin-top: 4px; }
+    .cart-empty i,
+    .cart-empty svg { width: 52px; height: 52px; opacity: 0.45; margin-bottom: 14px; }
+    .cart-empty p { font-size: 16px; font-weight: 700; }
+    .cart-empty small { font-size: 13px; margin-top: 6px; }
 
     .cart-item {
       background: var(--bg);
@@ -808,7 +814,7 @@
 
     /* Responsive */
     @media (max-width: 1100px) {
-      .pos-body { grid-template-columns: 1fr 360px; }
+      .pos-body { grid-template-columns: minmax(0, 1fr) 440px; }
     }
 
     @media (max-width: 900px) {
@@ -816,8 +822,10 @@
       .sidebar.open { transform: translateX(0); }
       .main { margin-right: 0; }
       .menu-toggle { display: flex; }
-      .pos-body { grid-template-columns: 1fr; }
-      .cart-panel { max-height: 50vh; }
+      html, body { height: auto; min-height: 100vh; overflow: auto; }
+      .main { height: auto; min-height: 100vh; }
+      .pos-body { grid-template-columns: 1fr; grid-template-rows: minmax(360px, 45vh) minmax(500px, 65vh); overflow: visible; }
+      .cart-panel { min-height: 500px; max-height: none; }
     }
 
     @media (max-width: 640px) {
@@ -825,6 +833,8 @@
       .topbar { padding: 0 12px; }
       .topbar-title { font-size: 15px; }
       .pos-search input { padding: 14px 46px 14px 80px; font-size: 14px; }
+      .scan-camera-btn { padding: 10px 12px; }
+      .scan-camera-btn .scan-label { display: none; }
       .products-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
     }
   </style>
@@ -873,13 +883,18 @@
       <div class="products-panel">
 
         <!-- Search -->
-        <div class="pos-search">
-          <input type="text" id="searchInput" placeholder="ابحث بالاسم أو امسح الباركود..." autofocus autocomplete="off">
-          <i data-lucide="search" class="search-icon"></i>
-          <div class="hint">
-            <span class="kbd-hint">Enter</span>
-            <span class="kbd-hint">F2</span>
+        <div class="pos-search-row">
+          <div class="pos-search">
+            <input type="text" id="searchInput" placeholder="ابحث بالاسم أو امسح الباركود..." autofocus autocomplete="off">
+            <i data-lucide="search" class="search-icon"></i>
+            <div class="hint">
+              <span class="kbd-hint">Enter</span>
+              <span class="kbd-hint">F2</span>
+            </div>
           </div>
+          <button type="button" class="btn btn-outline scan-camera-btn" id="cameraScanBtn" title="مسح الباركود بكاميرا الجهاز">
+            <i data-lucide="camera"></i><span class="scan-label">الكاميرا</span>
+          </button>
         </div>
 
         <!-- Category chips -->
@@ -966,6 +981,25 @@
 
   </div>
 
+  <!-- Modal: Camera barcode scanner -->
+  <div class="modal-backdrop" id="posScanModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3><i data-lucide="scan-barcode"></i> مسح باركود الأصناف</h3>
+        <button type="button" class="modal-close" id="closePosScanBtn" aria-label="إغلاق"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body">
+        <div id="posBarcodeReader"></div>
+        <p id="posScanStatus" style="text-align:center;color:var(--text-muted);font-size:13px;margin-top:12px;">
+          وجّه كاميرا الجهاز إلى باركود الصنف. تقدر تمسح عدة أصناف وراء بعض.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" id="stopPosScanBtn">إيقاف الكاميرا</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Modal: Success -->
   <div class="modal-backdrop" id="successModal">
     <div class="modal">
@@ -992,6 +1026,8 @@
   </div>
 
   <script src="refad-core.js"></script>
+  <script src="refad-print.js"></script>
+  <script src="refad-camera-scanner.js"></script>
   <script src="refad-auth.js"></script>
   <script>
     (function () {
@@ -1007,6 +1043,7 @@
       // 2) State
       // ============================================================
       const state = {
+        company: null,
         customers: [],
         products: [],
         allProducts: [],
@@ -1150,13 +1187,17 @@
         try {
           const [products, barcodes, batches, discounts] = await Promise.all([
             Refad.db.select('products', {
-              columns: 'id, name, name_en, form, unit, default_price, category',
+              columns: 'id, name, name_en, form, unit, default_price, category, reorder_level',
               eq: { company_id: session.company_id, is_active: true },
               order: { column: 'name', ascending: true }
             }),
             Refad.db.select('product_barcodes', {
               columns: 'barcode, product_id'
-            }).catch(() => []),
+            }).catch(error => {
+              console.error('[POS] Barcode load failed:', error);
+              Refad.toast.warning('تعذّر تحميل بيانات الباركود؛ راجع اتصال قاعدة البيانات');
+              return [];
+            }),
             Refad.db.select('batches', {
               columns: 'id, product_id, batch_number, quantity_left, cost_price, sale_price, expiry_date, purchase_discount',
               eq: { company_id: session.company_id },
@@ -1171,7 +1212,7 @@
           // barcode map
           state.barcodeMap = {};
           barcodes.forEach(b => {
-            if (b.barcode) state.barcodeMap[b.barcode.trim()] = b.product_id;
+            if (b.barcode) state.barcodeMap[String(b.barcode).trim().toUpperCase()] = b.product_id;
           });
 
           // batches per product
@@ -1554,9 +1595,10 @@
       // ============================================================
       function setupSearch() {
         const input = document.getElementById('searchInput');
-        const handler = Refad.debounce(v => {
+        const processSearch = Refad.debounce(v => {
+          if (input.value.trim() !== v.trim()) return;
           // 1. هل هو باركود كامل؟
-          const barcodeMatch = state.barcodeMap[v.trim()];
+          const barcodeMatch = state.barcodeMap[v.trim().toUpperCase()];
           if (barcodeMatch) {
             const p = state.allProducts.find(x => x.id === barcodeMatch);
             if (p) {
@@ -1566,23 +1608,25 @@
               return;
             }
           }
-          // 2. بحث عادي
           renderProductsGrid();
         }, 250);
 
-        input.addEventListener('input', e => handler(e.target.value));
+        input.addEventListener('input', e => processSearch(e.target.value));
 
         input.addEventListener('keydown', e => {
           if (e.key === 'Enter') {
             e.preventDefault();
             const q = input.value.trim();
-            const barcodeMatch = state.barcodeMap[q];
+            if (!q) return;
+            const barcodeMatch = state.barcodeMap[q.toUpperCase()];
             if (barcodeMatch) {
               addProduct(barcodeMatch);
               input.value = '';
               renderProductsGrid();
+            } else if (/^\d{8,14}$/.test(q)) {
+              Refad.toast.warning('الباركود غير مسجل لأي صنف');
+              input.select();
             } else {
-              // أضف أول نتيجة
               const first = document.querySelector('.product-card:not(.out-of-stock)');
               if (first) {
                 addProduct(parseInt(first.dataset.id, 10));
@@ -1591,6 +1635,51 @@
               }
             }
           }
+        });
+      }
+
+      async function handleScannedBarcode(code) {
+        const productId = state.barcodeMap[String(code || '').trim().toUpperCase()];
+        if (!productId) {
+          document.getElementById('posScanStatus').textContent = `باركود غير مسجل: ${code}`;
+          Refad.toast.warning('الباركود غير مسجل لأي صنف');
+          return;
+        }
+        addProduct(productId);
+        document.getElementById('posScanStatus').textContent = 'تمت قراءة الباركود. وجّه الكاميرا إلى الصنف التالي.';
+        if (navigator.vibrate) navigator.vibrate(80);
+      }
+
+      async function stopPosCameraScan(closeModal) {
+        try {
+          await window.RefadCameraScanner.stop();
+        } catch (error) {
+          console.error('[POS] Camera stop failed:', error);
+          Refad.toast.warning('تعذّر إيقاف الكاميرا بشكل سليم');
+        } finally {
+          if (closeModal) document.getElementById('posScanModal').classList.remove('show');
+        }
+      }
+
+      function setupCameraScanner() {
+        const modal = document.getElementById('posScanModal');
+        document.getElementById('cameraScanBtn').addEventListener('click', async () => {
+          modal.classList.add('show');
+          document.getElementById('posScanStatus').textContent = 'جارٍ تشغيل الكاميرا...';
+          if (window.lucide) lucide.createIcons();
+          try {
+            await window.RefadCameraScanner.start('posBarcodeReader', handleScannedBarcode);
+            document.getElementById('posScanStatus').textContent = 'وجّه كاميرا الجهاز إلى باركود الصنف. تقدر تمسح عدة أصناف وراء بعض.';
+          } catch (error) {
+            console.error('[POS] Camera start failed:', error);
+            document.getElementById('posScanStatus').textContent = error.message || 'تعذّر تشغيل الكاميرا';
+            Refad.toast.error(error.message || 'تعذّر تشغيل الكاميرا');
+          }
+        });
+        document.getElementById('stopPosScanBtn').addEventListener('click', () => stopPosCameraScan(true));
+        document.getElementById('closePosScanBtn').addEventListener('click', () => stopPosCameraScan(true));
+        modal.addEventListener('click', event => {
+          if (event.target === modal) stopPosCameraScan(true);
         });
       }
 
@@ -1605,6 +1694,7 @@
 
         const btn = document.getElementById('checkoutBtn');
         btn.disabled = true;
+        const lowStockCrossings = [];
 
         try {
           // 1. رقم الفاتورة
@@ -1673,12 +1763,20 @@
             // خصم من التشغيلة
             const batch = await Refad.db.selectOne('batches', { eq: { id: it.batch_id } });
             if (batch) {
+              const productBatches = state.batchesByProduct[it.product_id] || [];
+              const oldProductQty = productBatches.reduce((sum, item) => sum + (Number(item.quantity_left) || 0), 0);
+              const newBatchQty = Math.max(0, (Number(batch.quantity_left) || 0) - it.quantity);
               await Refad.db.update('batches', it.batch_id, {
-                quantity_left: Math.max(0, (batch.quantity_left || 0) - it.quantity)
+                quantity_left: newBatchQty
               });
               // حدّث الحالة المحلية
-              const localBatch = (state.batchesByProduct[it.product_id] || []).find(b => b.id === it.batch_id);
-              if (localBatch) localBatch.quantity_left = Math.max(0, localBatch.quantity_left - it.quantity);
+              const localBatch = productBatches.find(b => b.id === it.batch_id);
+              if (localBatch) localBatch.quantity_left = newBatchQty;
+              const newProductQty = productBatches.reduce((sum, item) => sum + (Number(item.quantity_left) || 0), 0);
+              const reorderLevel = Number(it.product?.reorder_level) || 0;
+              if (reorderLevel > 0 && oldProductQty > reorderLevel && newProductQty <= reorderLevel) {
+                lowStockCrossings.push(it.product);
+              }
             }
 
             // حدّث خصم البيع
@@ -1715,12 +1813,37 @@
 
           // 6. تسجيل النشاط
           await Refad.logActivity('pos_sale', 'sales', `فاتورة POS ${invoiceNumber}`, invoice.id);
+          const notificationResults = await Promise.allSettled([
+            Refad.notifyCompany(
+              session.company_id,
+              'تم إصدار فاتورة بيع جديدة',
+              `تم إصدار الفاتورة ${invoiceNumber} بقيمة ${Refad.format.money(total)}.`,
+              'invoice',
+              invoice.id,
+              session.user_id
+            ),
+            ...lowStockCrossings.map(product => Refad.notifyCompany(
+              session.company_id,
+              'مخزون صنف منخفض',
+              `وصل رصيد ${product.name} إلى حد إعادة الطلب أو أقل.`,
+              'low_stock',
+              product.id,
+              session.user_id
+            ))
+          ]);
+          const notificationErrors = notificationResults.filter(result => result.status === 'rejected');
+          notificationErrors.forEach(result => console.error('[POS] Notification failed:', result.reason));
+          if (notificationErrors.length) Refad.toast.warning('تم البيع، لكن تعذّر إرسال بعض الإشعارات');
 
           // 7. حفظ آخر فاتورة
           state.lastInvoice = {
             id: invoice.id,
             number: invoiceNumber,
+            date: invoice.invoice_date,
+            subtotal,
+            discount: discountTotal,
             total,
+            paid_amount: total,
             items: [...state.cart],
             customer: state.customers.find(c => c.id === customerId)
           };
@@ -1759,70 +1882,22 @@
         const inv = state.lastInvoice;
         if (!inv) return Refad.toast.warning('لا توجد فاتورة للطباعة');
 
-        const subtotal = inv.items.reduce((s, it) => s + ((it.quantity || 0) * (it.sale_price || 0)), 0);
-        const discount = inv.items.reduce((s, it) => {
-          const st = (it.quantity || 0) * (it.sale_price || 0);
-          return s + st * ((it.sale_discount || 0) / 100);
-        }, 0);
-
-        const w = window.open('', '_blank', 'width=400,height=600');
-        w.document.write(`
-          <!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8">
-          <title>فاتورة ${inv.number}</title>
-          <style>
-            * { margin: 0; padding: 0; box-sizing: border-box; }
-            body { font-family: Cairo, Arial; padding: 12px; color: #0f172a; width: 300px; }
-            .header { text-align: center; border-bottom: 2px dashed #0B2C4D; padding-bottom: 8px; margin-bottom: 10px; }
-            .header h1 { font-size: 20px; color: #0B2C4D; margin-bottom: 4px; }
-            .header p { font-size: 11px; color: #64748b; }
-            .inv-num { font-family: 'Courier New', monospace; font-size: 13px; font-weight: 800; color: #14B8A6; margin: 4px 0; }
-            .info { font-size: 11px; margin-bottom: 10px; }
-            .info div { display: flex; justify-content: space-between; padding: 2px 0; }
-            table { width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 10px; }
-            th { background: #F1F5F9; padding: 4px; text-align: right; border-bottom: 1px solid #cbd5e1; }
-            td { padding: 4px; border-bottom: 1px solid #f1f5f9; }
-            .totals { border-top: 2px dashed #0B2C4D; padding-top: 8px; font-size: 11px; }
-            .totals .row { display: flex; justify-content: space-between; padding: 2px 0; }
-            .totals .grand { font-size: 16px; font-weight: 800; color: #14B8A6; padding-top: 6px; border-top: 1px solid #cbd5e1; margin-top: 4px; }
-            .footer { text-align: center; font-size: 10px; color: #94a3b8; margin-top: 12px; padding-top: 8px; border-top: 1px dashed #cbd5e1; }
-          </style></head><body>
-          <div class="header">
-            <h1>رفاد</h1>
-            <p>فاتورة بيع</p>
-            <div class="inv-num">${inv.number}</div>
-          </div>
-          <div class="info">
-            <div><span>التاريخ:</span> <span>${Refad.format.date(new Date())}</span></div>
-            <div><span>العميل:</span> <span>${Refad.escapeHtml(inv.customer?.name || 'نقدي')}</span></div>
-          </div>
-          <table>
-            <thead><tr>
-              <th>الصنف</th><th>كمية</th><th>سعر</th><th>إجمالي</th>
-            </tr></thead>
-            <tbody>
-              ${inv.items.map(it => `
-                <tr>
-                  <td>${Refad.escapeHtml(it.product.name.substring(0, 20))}</td>
-                  <td>${it.quantity}</td>
-                  <td>${Refad.format.number(it.sale_price, 2)}</td>
-                  <td>${Refad.format.number(calcLineTotal(it), 2)}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-          <div class="totals">
-            <div class="row"><span>المجموع:</span> <span>${Refad.format.number(subtotal, 2)}</span></div>
-            <div class="row"><span>الخصم:</span> <span>${Refad.format.number(discount, 2)}</span></div>
-            <div class="row grand"><span>الإجمالي:</span> <span>${Refad.format.number(inv.total, 2)}</span></div>
-          </div>
-          <div class="footer">
-            شكراً لتعاملكم معنا<br>
-            نظام رفاد
-          </div>
-          <script>window.onload = () => setTimeout(() => window.print(), 300);<\/script>
-          </body></html>
-        `);
-        w.document.close();
+        Refad.Print.invoice({
+          number: inv.number,
+          date: inv.date,
+          subtotal: inv.subtotal,
+          discount: inv.discount,
+          total: inv.total,
+          paid_amount: inv.paid_amount,
+          customer: inv.customer,
+          items: inv.items.map(item => ({
+            name: item.product?.name || '—',
+            quantity: item.quantity,
+            price: item.sale_price,
+            discount: item.sale_discount,
+            total: calcLineTotal(item)
+          }))
+        }, { company: state.company, pageSize: '80mm' });
       }
 
       // ============================================================
@@ -1907,7 +1982,10 @@
           }
           // ESC - close modals
           if (e.key === 'Escape') {
-            document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.remove('show'));
+            if (document.getElementById('posScanModal').classList.contains('show')) {
+              stopPosCameraScan(true);
+            }
+            document.getElementById('successModal').classList.remove('show');
           }
         });
       }
@@ -1922,6 +2000,7 @@
         setupSidebarMobile();
         setupNotifBtn();
         setupSearch();
+        setupCameraScanner();
         setupShortcuts();
         renderCategories();
 
@@ -1934,6 +2013,18 @@
           document.getElementById('successModal').classList.remove('show');
           document.getElementById('searchInput').focus();
         });
+
+        try {
+          state.company = await Refad.db.selectOne('companies', {
+            columns: 'id, name, logo_url, phone, email, address, tax_number, notes',
+            eq: { id: session.company_id }
+          });
+          if (!state.company) throw new Error('الشركة غير موجودة');
+          Refad.company = state.company;
+        } catch (error) {
+          console.error('[POS] Company details load failed:', error);
+          Refad.toast.error('تعذّر تحميل بيانات الشركة للطباعة: ' + error.message);
+        }
 
         await loadCustomers();
         await loadProductsAndBatches();

@@ -875,6 +875,7 @@
   </div>
 
   <script src="refad-core.js"></script>
+  <script src="refad-camera-scanner.js"></script>
   <script src="refad-auth.js"></script>
   <script>
     (function () {
@@ -904,7 +905,6 @@
         poItems: [],              // أصناف الطلب المحدد
         items: [],
         receiptNumber: null,
-        html5QrCode: null
       };
 
       // ============================================================
@@ -1060,13 +1060,17 @@
             }),
             Refad.db.select('product_barcodes', {
               columns: 'barcode, product_id'
-            }).catch(() => [])
+            }).catch(error => {
+              console.error('[Receipt] Barcode load failed:', error);
+              Refad.toast.warning('تعذّر تحميل بيانات الباركود؛ راجع اتصال قاعدة البيانات');
+              return [];
+            })
           ]);
 
           state.allProducts = products;
 
           barcodes.forEach(b => {
-            if (b.barcode) state.barcodeMap[b.barcode.trim()] = b.product_id;
+            if (b.barcode) state.barcodeMap[String(b.barcode).trim().toUpperCase()] = b.product_id;
           });
         } catch (e) {
           console.error('Products load failed:', e);
@@ -1161,11 +1165,13 @@
         const results = document.getElementById('searchResults');
 
         const handler = Refad.debounce(v => {
+          if (input.value.trim() !== v.trim()) return;
           if (!v || v.length < 1) { results.classList.remove('show'); return; }
+          const code = v.trim().toUpperCase();
           const q = v.toLowerCase().trim();
 
           // 1. هل هو باركود؟
-          const barcodeMatch = state.barcodeMap[q];
+          const barcodeMatch = state.barcodeMap[code];
           if (barcodeMatch) {
             const p = state.allProducts.find(x => x.id === barcodeMatch);
             if (p) {
@@ -1210,12 +1216,16 @@
           if (e.key === 'Enter') {
             e.preventDefault();
             const q = input.value.trim().toLowerCase();
+            if (!q) return;
             // لو باركود
-            const bm = state.barcodeMap[q];
+            const bm = state.barcodeMap[q.toUpperCase()];
             if (bm) {
               addProductToReceipt(bm);
               input.value = '';
               results.classList.remove('show');
+            } else if (/^\d{8,14}$/.test(q)) {
+              Refad.toast.warning('الباركود غير مسجل لأي صنف');
+              input.select();
             } else {
               // أضف أول نتيجة
               const first = results.querySelector('.search-result-item');
@@ -1402,16 +1412,16 @@
       function setupScanner() {
         document.getElementById('scanBtn').addEventListener('click', startScanner);
         document.getElementById('stopScanBtn').addEventListener('click', stopScanner);
-        document.querySelectorAll('[data-close]').forEach(b => {
+        document.querySelectorAll('#scanModal [data-close]').forEach(b => {
           b.addEventListener('click', () => {
             stopScanner();
-            document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.remove('show'));
+            document.getElementById('scanModal').classList.remove('show');
           });
         });
         document.addEventListener('keydown', e => {
           if (e.key === 'Escape') {
             stopScanner();
-            document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.remove('show'));
+            document.getElementById('scanModal').classList.remove('show');
           }
         });
         document.getElementById('scanModal').addEventListener('click', e => {
@@ -1423,41 +1433,27 @@
       }
 
       async function startScanner() {
-        if (typeof Html5Qrcode === 'undefined') {
-          Refad.toast.error('مكتبة قراءة الباركود غير محمّلة');
-          return;
-        }
         document.getElementById('scanModal').classList.add('show');
         if (window.lucide) lucide.createIcons();
 
         try {
-          state.html5QrCode = new Html5Qrcode('barcodeReader');
-          await state.html5QrCode.start(
-            { facingMode: 'environment' },
-            { fps: 10, qrbox: { width: 250, height: 150 } },
-            (decodedText) => {
-              onBarcodeScanned(decodedText);
-            },
-            () => {} // errors ignored
-          );
+          await window.RefadCameraScanner.start('barcodeReader', onBarcodeScanned);
         } catch (err) {
           console.error('Scanner start failed:', err);
-          Refad.toast.error('تعذّر تشغيل الكاميرا');
+          Refad.toast.error(err.message || 'تعذّر تشغيل الكاميرا');
           stopScanner();
         }
       }
 
       async function stopScanner() {
-        if (state.html5QrCode) {
-          try {
-            await state.html5QrCode.stop();
-          } catch (e) {}
-          try {
-            await state.html5QrCode.clear();
-          } catch (e) {}
-          state.html5QrCode = null;
+        try {
+          await window.RefadCameraScanner.stop();
+        } catch (error) {
+          console.error('[Receipt] Camera stop failed:', error);
+          Refad.toast.warning('تعذّر إيقاف الكاميرا بشكل سليم');
+        } finally {
+          document.getElementById('barcodeReader').innerHTML = '';
         }
-        document.getElementById('barcodeReader').innerHTML = '';
       }
 
       async function onBarcodeScanned(code) {
@@ -1676,6 +1672,22 @@
             `فاتورة ${state.receiptNumber || newReceiptNumber}`,
             rid
           );
+
+          if (!receiptId) {
+            try {
+              await Refad.notifyCompany(
+                session.company_id,
+                'تم تسجيل فاتورة استلام',
+                `تم تسجيل فاتورة الاستلام ${state.receiptNumber || newReceiptNumber}.`,
+                'receipt',
+                rid,
+                session.user_id
+              );
+            } catch (notificationError) {
+              console.error('[Receipt] Notification failed:', notificationError);
+              Refad.toast.warning('تم حفظ الفاتورة، لكن تعذّر إرسال الإشعار');
+            }
+          }
 
           Refad.toast.success('تم حفظ الفاتورة');
 

@@ -36,6 +36,8 @@
   // ============================================================
   // 3) Session Manager
   // ============================================================
+  let notificationRealtimeChannel = null;
+
   const Session = {
     get() {
       try {
@@ -70,10 +72,17 @@
         last_activity: now
       };
       localStorage.setItem(CONFIG.SESSION_KEY, JSON.stringify(session));
+      startNotificationRealtime();
       return session;
     },
 
     clear() {
+      if (notificationRealtimeChannel) {
+        sb.removeChannel(notificationRealtimeChannel).catch(error => {
+          console.warn('[Refad] Notification channel cleanup failed:', error.message);
+        });
+        notificationRealtimeChannel = null;
+      }
       localStorage.removeItem(CONFIG.SESSION_KEY);
     },
 
@@ -577,6 +586,9 @@
       eq: { id: userId }
     });
     if (!user) throw new Error('لا يمكن إرسال إشعار لمستخدم غير موجود');
+    if (String(user.company_id) !== String(companyId)) {
+      throw new Error('لا يمكن إرسال إشعار بين شركات مختلفة');
+    }
 
     const [role, rolePermissions] = await Promise.all([
       user.role_id ? db.selectOne('roles', {
@@ -594,6 +606,9 @@
       low_stock: 'inventory.view',
       invoice: 'sales.view',
       message: 'chat.use',
+      purchase: 'purchases.view',
+      receipt: 'purchases.view',
+      stock: 'inventory.view',
       payment: 'company.owner'
     };
     const requiredPermission = requiredByType[type];
@@ -612,6 +627,68 @@
       type: type || 'system',
       reference_id: referenceId || null
     });
+  }
+
+  async function notifyCompany(companyId, title, body, type, referenceId, excludeUserId) {
+    const users = await db.select('users', {
+      columns: 'id',
+      eq: { company_id: companyId, is_active: true }
+    });
+    const notifications = await Promise.all(users
+      .filter(user => String(user.id) !== String(excludeUserId || ''))
+      .map(user => notify(user.id, companyId, title, body, type, referenceId)));
+    return notifications.filter(Boolean);
+  }
+
+  function startNotificationRealtime() {
+    const session = Session.get();
+    if (!session?.user_id || !session.company_id || !Session.has('notifications.view') || notificationRealtimeChannel) return;
+
+    const requiredByType = {
+      expiry: 'inventory.view',
+      low_stock: 'inventory.view',
+      invoice: 'sales.view',
+      message: 'chat.use',
+      purchase: 'purchases.view',
+      receipt: 'purchases.view',
+      stock: 'inventory.view',
+      payment: 'company.owner'
+    };
+    notificationRealtimeChannel = sb
+      .channel(`refad-notifications-${session.user_id}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'notifications',
+        filter: `user_id=eq.${session.user_id}`
+      }, payload => {
+        const notification = payload.new;
+        if (String(notification.company_id) !== String(session.company_id)) return;
+        const requiredPermission = requiredByType[notification.type];
+        if (requiredPermission === 'company.owner' && !Session.has('company.owner')) return;
+        if (requiredPermission && requiredPermission !== 'company.owner' && !Session.has(requiredPermission)) return;
+
+        const message = [notification.title, notification.body].filter(Boolean).join(' — ');
+        if (!window.location.pathname.endsWith('/notifications.html')) {
+          toast.info(message, 6000);
+        }
+        if (window.Notification?.permission === 'granted' && !window.location.pathname.endsWith('/notifications.html')) {
+          try {
+            new window.Notification(notification.title, {
+              body: notification.body || '',
+              icon: 'logo.png'
+            });
+          } catch (error) {
+            console.warn('[Refad] Browser notification failed:', error.message);
+          }
+        }
+      })
+      .subscribe(status => {
+        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          console.warn(`[Refad] Notification realtime subscription status: ${status}`);
+          toast.warning('تعذّر الاتصال بالإشعارات الفورية؛ راجع إعدادات Supabase Realtime واتصال الإنترنت');
+        }
+      });
   }
 
   // ============================================================
@@ -744,6 +821,7 @@
     // utils
     logActivity,
     notify,
+    notifyCompany,
     debounce,
     throttle,
     paginate,
@@ -760,6 +838,75 @@
   };
 
   window.Refad = Refad;
+  startNotificationRealtime();
+
+  const responsiveStyle = document.createElement('style');
+  responsiveStyle.textContent = `
+    .modal-backdrop {
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      padding-block: 16px;
+    }
+    .modal-backdrop .modal {
+      max-height: calc(100vh - 32px);
+      overflow-y: auto;
+      overscroll-behavior: contain;
+    }
+    .modal-backdrop .modal-body {
+      min-height: 0;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+    }
+    @media (max-width: 768px) {
+      html, body {
+        max-width: 100%;
+        overflow-x: hidden;
+      }
+      .main, .content {
+        min-width: 0;
+      }
+      .table-wrap {
+        max-width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      .table-wrap table {
+        min-width: 640px;
+      }
+      .modal-backdrop .modal {
+        max-width: calc(100vw - 24px);
+      }
+    }
+    @media (max-width: 640px) {
+      .content {
+        padding: 12px;
+      }
+      .topbar {
+        gap: 8px;
+        padding-inline: 12px;
+      }
+      .form-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .form-group.span-2 {
+        grid-column: 1 / -1;
+      }
+      .card-body {
+        padding: 14px;
+      }
+      .modal-backdrop {
+        padding: 12px;
+      }
+      .modal-backdrop .modal {
+        width: 100%;
+        max-height: calc(100dvh - 24px);
+      }
+      .modal-backdrop .modal-footer {
+        flex-wrap: wrap;
+      }
+    }
+  `;
+  document.head.appendChild(responsiveStyle);
 
   // Auto-init theme on load
   theme.init();

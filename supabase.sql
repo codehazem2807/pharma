@@ -216,10 +216,25 @@ CREATE TABLE purchase_request_items (
   received_qty    INTEGER DEFAULT 0,
   avg_sale_rate   REAL DEFAULT 0,
   last_discount   REAL DEFAULT 0,
+  requested_discount REAL DEFAULT 0,
+  supplier_price  REAL,
+  supplier_discount REAL,
+  supplier_response_at TIMESTAMPTZ,
   notes           VARCHAR(255)
 );
 CREATE INDEX idx_pri_request ON purchase_request_items(request_id);
 CREATE INDEX idx_pri_product ON purchase_request_items(product_id);
+
+CREATE TABLE purchase_request_responses (
+  id              BIGSERIAL PRIMARY KEY,
+  request_id      BIGINT NOT NULL REFERENCES purchase_requests(id) ON DELETE CASCADE,
+  product_id      BIGINT REFERENCES products(id) ON DELETE SET NULL,
+  supplier_id     BIGINT REFERENCES suppliers(id) ON DELETE SET NULL,
+  supplier_price  REAL,
+  supplier_discount REAL,
+  submitted_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX idx_prr_request ON purchase_request_responses(request_id, submitted_at DESC);
 
 -- ============================================================
 -- 5) الاستلامات (Receipts) والتشغيلات (Batches)
@@ -769,6 +784,20 @@ CREATE INDEX idx_batches_qty_left ON batches(quantity_left) WHERE quantity_left 
 CREATE INDEX idx_invoices_status ON sales_invoices(status);
 CREATE INDEX idx_receipts_date ON receipts(receipt_date);
 CREATE INDEX idx_im_ref ON inventory_movements(reference_type, reference_id);
+
+DO $realtime$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime'
+      AND schemaname = 'public'
+      AND tablename = 'notifications'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.notifications;
+  END IF;
+END
+$realtime$;
 
 -- ============================================================
 -- ✅ انتهى الملف

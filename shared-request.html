@@ -486,6 +486,7 @@
               <th>الوحدة</th>
               <th>الكمية المطلوبة</th>
               <th>آخر خصم</th>
+              <th>الخصم المطلوب</th>
               <th>السعر (اختياري)</th>
               <th>الخصم % (اختياري)</th>
             </tr>
@@ -603,7 +604,7 @@
 
           // 4. جلب الأصناف
           const items = await Refad.db.select('purchase_request_items', {
-            columns: 'id, product_id, requested_qty, received_qty, avg_sale_rate, last_discount, notes, products(id, name, name_en, form, unit)',
+            columns: 'id, product_id, requested_qty, received_qty, avg_sale_rate, last_discount, requested_discount, supplier_price, supplier_discount, supplier_response_at, notes, products(id, name, name_en, form, unit)',
             eq: { request_id: req.id },
             order: { column: 'id', ascending: true }
           }).catch(() => []);
@@ -680,14 +681,18 @@
         if (!state.items.length) {
           tbody.innerHTML = `
             <tr>
-              <td colspan="8" style="text-align:center;padding:40px;color:var(--text-muted);">
+              <td colspan="9" style="text-align:center;padding:40px;color:var(--text-muted);">
                 لا توجد أصناف في هذا الطلب
               </td>
             </tr>`;
           return;
         }
 
-        tbody.innerHTML = state.items.map((it, i) => `
+        tbody.innerHTML = state.items.map((it, i) => {
+          const legacyOffer = parseLegacyOffer(it.notes);
+          const supplierPrice = it.supplier_price ?? legacyOffer.supplier_price ?? '';
+          const supplierDiscount = it.supplier_discount ?? legacyOffer.supplier_discount ?? '';
+          return `
           <tr data-idx="${i}" data-item-id="${it.id}">
             <td style="color:var(--text-muted);font-weight:700;text-align:center;">${i + 1}</td>
             <td>
@@ -698,16 +703,29 @@
             <td>${Refad.escapeHtml(it.products.unit || '—')}</td>
             <td class="num-cell">${Refad.format.number(it.requested_qty)}</td>
             <td class="num-cell" style="color:var(--info);">${Refad.format.number(it.last_discount || 0, 1)}%</td>
+            <td class="num-cell" style="color:var(--success);font-weight:700;">${Refad.format.number(it.requested_discount || 0, 1)}%</td>
             <td>
-              <input type="number" class="price-input" min="0" step="0.01" placeholder="0.00" data-idx="${i}" data-field="price">
+              <input type="number" class="price-input" min="0" step="0.01" placeholder="سعر الوحدة" value="${supplierPrice}" data-idx="${i}" data-field="price">
             </td>
             <td>
-              <input type="number" class="discount-input" min="0" max="100" step="0.1" placeholder="0" data-idx="${i}" data-field="discount">
+              <input type="number" class="discount-input" min="0" max="100" step="0.1" placeholder="خصم المورد" value="${supplierDiscount}" data-idx="${i}" data-field="discount">
             </td>
           </tr>
-        `).join('');
+        `}).join('');
 
         if (window.lucide) lucide.createIcons();
+      }
+
+      function parseLegacyOffer(notes) {
+        try {
+          const parsed = JSON.parse(notes || '{}');
+          return {
+            supplier_price: Number.isFinite(Number(parsed.supplier_price)) ? Number(parsed.supplier_price) : null,
+            supplier_discount: Number.isFinite(Number(parsed.supplier_discount)) ? Number(parsed.supplier_discount) : null
+          };
+        } catch (error) {
+          return { supplier_price: null, supplier_discount: null };
+        }
       }
 
       // ============================================================
@@ -716,6 +734,7 @@
       async function saveChanges() {
         const inputs = document.querySelectorAll('.price-input, .discount-input');
         const updates = [];  // [{ id, sale_price?, discount? }]
+        let invalidInput = false;
 
         // نجمع التعديلات
         state.items.forEach((it, i) => {
@@ -725,6 +744,12 @@
           const discount = discInput.value.trim() === '' ? null : Refad.toNum(discInput.value);
 
           if (price !== null || discount !== null) {
+            if ((price !== null && (!Number.isFinite(price) || price < 0)) ||
+                (discount !== null && (!Number.isFinite(discount) || discount < 0 || discount > 100))) {
+              Refad.toast.warning('راجع سعر الوحدة والخصم؛ الخصم يجب أن يكون من 0 إلى 100');
+              invalidInput = true;
+              return;
+            }
             updates.push({
               id: it.id,
               product_id: it.product_id,
@@ -734,6 +759,7 @@
           }
         });
 
+        if (invalidInput) return;
         if (!updates.length) {
           Refad.toast.warning('لم تقم بإدخال أي أسعار أو خصومات');
           return;
@@ -745,39 +771,51 @@
         document.getElementById('saveBtnText').textContent = 'جارٍ الحفظ...';
 
         try {
-          // نحدّث العناصر واحداً واحداً
-          // ملاحظة: نخزّن السعر والخصم في notes (لأن الجدول لا يحتوي على هذه الأعمدة من الأصل)
-          // سنستخدم notes كـ JSON خفيف
+          const submittedAt = new Date().toISOString();
+          const historyRows = [];
           for (const u of updates) {
             const item = state.items.find(x => x.id === u.id);
-            let notesObj = {};
-            try {
-              if (item.notes) notesObj = JSON.parse(item.notes);
-            } catch (e) { notesObj = {}; }
-
-            if (u.price !== null) notesObj.supplier_price = u.price;
-            if (u.discount !== null) notesObj.supplier_discount = u.discount;
-
             await Refad.db.update('purchase_request_items', u.id, {
-              notes: JSON.stringify(notesObj),
-              last_discount: u.discount !== null ? u.discount : (item.last_discount || 0)
+              supplier_price: u.price,
+              supplier_discount: u.discount,
+              supplier_response_at: submittedAt
             });
 
-            // حدّث الحالة المحلية
-            item.notes = JSON.stringify(notesObj);
-            if (u.discount !== null) item.last_discount = u.discount;
+            item.supplier_price = u.price;
+            item.supplier_discount = u.discount;
+            item.supplier_response_at = submittedAt;
+            historyRows.push({
+              request_id: state.request.id,
+              product_id: u.product_id,
+              supplier_id: state.request.supplier_id || null,
+              supplier_price: u.price,
+              supplier_discount: u.discount,
+              submitted_at: submittedAt
+            });
+          }
+          await Refad.db.insertMany('purchase_request_responses', historyRows);
+
+          try {
+            await Refad.notifyCompany(
+              state.request.company_id,
+              'وصل رد المورد على طلب شراء',
+              `أرسل المورد تعديلات على طلب الشراء ${state.request.request_number}.`,
+              'purchase',
+              state.request.id
+            );
+          } catch (notificationError) {
+            console.error('[Shared] Notification failed:', notificationError);
+            Refad.toast.warning('تم حفظ عروضك، لكن تعذّر إرسال إشعار للشركة');
           }
 
-          Refad.toast.success('تم حفظ التعديلات بنجاح');
+          renderItems();
+          Refad.toast.success('تم حفظ عروض الأسعار والخصومات');
           btn.disabled = false;
           document.getElementById('saveBtnText').textContent = originalText;
 
           // أخبر المستخدم
           setTimeout(() => {
-            Refad.alert.success('شكراً لك', 'تم استلام أسعارك وخصوماتك. سيتواصل معك فريق الشركة قريباً.').then(() => {
-              // امسح الحقول لتأكيد الحفظ
-              document.querySelectorAll('.price-input, .discount-input').forEach(inp => inp.value = '');
-            });
+            Refad.alert.success('شكراً لك', 'تم استلام أسعارك وخصوماتك. سيتواصل معك فريق الشركة قريباً.');
           }, 400);
 
         } catch (err) {
@@ -813,6 +851,7 @@
             'الوحدة': it.products.unit || '',
             'الكمية المطلوبة': it.requested_qty,
             'آخر خصم %': it.last_discount || 0,
+            'الخصم المطلوب %': it.requested_discount || 0,
             'السعر': priceInput?.value || '',
             'الخصم %': discInput?.value || ''
           };
