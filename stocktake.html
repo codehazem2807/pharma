@@ -1,0 +1,1911 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0B2C4D">
+  <title>الجرد - رفاد</title>
+
+  <link rel="icon" type="image/png" href="logo.png">
+  <link rel="manifest" href="manifest.json">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --primary: #0B2C4D;
+      --primary-light: #1e4a73;
+      --accent: #14B8A6;
+      --accent-dark: #0d9488;
+      --gold: #F59E0B;
+      --bg: #F1F5F9;
+      --card: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --danger: #ef4444;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --info: #3b82f6;
+      --sidebar-bg: #0B2C4D;
+      --sidebar-text: #cbd5e1;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+      --shadow: 0 4px 20px rgba(11, 44, 77, 0.08);
+      --shadow-lg: 0 10px 40px rgba(11, 44, 77, 0.12);
+      --radius: 14px;
+      --radius-sm: 10px;
+      --sidebar-w: 260px;
+      --topbar-h: 64px;
+    }
+
+    [data-theme="dark"] {
+      --bg: #0a1628;
+      --card: #0f2137;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --border: #1e3a5f;
+      --sidebar-bg: #061a2e;
+      --sidebar-text: #94a3b8;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Cairo', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      transition: background 0.3s, color 0.3s;
+    }
+
+    body { display: flex; min-height: 100vh; overflow-x: hidden; }
+
+    /* ============================================================
+       Sidebar
+       ============================================================ */
+    .sidebar {
+      width: var(--sidebar-w);
+      height: 100vh;
+      background: var(--sidebar-bg);
+      color: var(--sidebar-text);
+      position: fixed;
+      top: 0;
+      right: 0;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: -4px 0 20px rgba(0,0,0,0.1);
+    }
+
+    .sidebar-header {
+      padding: 20px 22px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      height: var(--topbar-h);
+      box-sizing: border-box;
+    }
+
+    .sidebar-logo {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 4px 12px rgba(20,184,166,0.4);
+    }
+    .sidebar-logo img { width: 70%; height: 70%; object-fit: contain; }
+    .sidebar-logo .fallback { color: white; font-weight: 800; font-size: 18px; }
+
+    .sidebar-brand h2 { color: white; font-size: 20px; font-weight: 800; letter-spacing: -0.5px; line-height: 1.2; }
+    .sidebar-brand p { font-size: 10px; color: var(--sidebar-text); opacity: 0.7; font-weight: 500; margin-top: 2px; }
+
+    .sidebar-nav { flex: 1; overflow-y: auto; padding: 12px 0; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.15) transparent; }
+    .sidebar-nav::-webkit-scrollbar { width: 5px; }
+    .sidebar-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 10px; }
+
+    .nav-section { padding: 8px 20px 4px; font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 1px; margin-top: 8px; }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 22px;
+      color: var(--sidebar-text);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      border-right: 3px solid transparent;
+      transition: all 0.2s;
+      position: relative;
+      cursor: pointer;
+    }
+    .nav-item:hover { background: rgba(255,255,255,0.05); color: white; border-right-color: rgba(20,184,166,0.5); }
+    .nav-item.active { background: rgba(20,184,166,0.12); color: white; border-right-color: var(--accent); font-weight: 600; }
+    .nav-item.active::before { content: ''; position: absolute; right: 0; top: 50%; transform: translateY(-50%); width: 3px; height: 60%; background: var(--accent); border-radius: 0 4px 4px 0; }
+    .nav-item i, .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; opacity: 0.85; }
+    .nav-item .badge { margin-right: auto; background: var(--danger); color: white; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
+    .nav-item .badge.teal { background: var(--accent); }
+    .nav-item .badge.gold { background: var(--gold); }
+
+    /* ============================================================
+       Main
+       ============================================================ */
+    .main { flex: 1; margin-right: var(--sidebar-w); min-width: 0; display: flex; flex-direction: column; }
+
+    .topbar {
+      height: var(--topbar-h);
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 0 24px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .menu-toggle { display: none; background: transparent; border: none; color: var(--text); cursor: pointer; padding: 8px; border-radius: 8px; }
+    .menu-toggle:hover { background: var(--bg); }
+
+    .topbar-title { font-size: 18px; font-weight: 700; color: var(--text); flex-shrink: 0; }
+    .topbar-actions { display: flex; align-items: center; gap: 8px; margin-right: auto; }
+
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      transition: all 0.2s;
+    }
+    .icon-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .icon-btn i, .icon-btn svg { width: 18px; height: 18px; }
+    .icon-btn .dot { position: absolute; top: 8px; left: 8px; width: 8px; height: 8px; background: var(--danger); border-radius: 50%; border: 2px solid var(--card); }
+
+    .user-menu {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 5px 12px 5px 5px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.2s;
+      border: 1px solid var(--border);
+      background: var(--card);
+    }
+    .user-menu:hover { background: var(--bg); }
+
+    .user-avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 700;
+      font-size: 14px;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .user-info { display: flex; flex-direction: column; line-height: 1.2; }
+    .user-info .name { font-size: 13px; font-weight: 700; color: var(--text); }
+    .user-info .role { font-size: 11px; color: var(--text-muted); }
+
+    .dropdown { position: absolute; top: calc(100% + 8px); left: 0; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: var(--shadow-lg); min-width: 200px; padding: 6px; opacity: 0; visibility: hidden; transform: translateY(-8px); transition: all 0.2s; z-index: 100; }
+    .dropdown.show { opacity: 1; visibility: visible; transform: translateY(0); }
+    .dropdown-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; color: var(--text); font-size: 13px; font-weight: 500; cursor: pointer; transition: background 0.15s; text-decoration: none; }
+    .dropdown-item:hover { background: var(--bg); }
+    .dropdown-item.danger { color: var(--danger); }
+    .dropdown-item.danger:hover { background: rgba(239,68,68,0.08); }
+    .dropdown-item i { width: 16px; height: 16px; }
+    .dropdown-divider { height: 1px; background: var(--border); margin: 6px 0; }
+
+    /* ============================================================
+       Content
+       ============================================================ */
+    .content { padding: 24px; flex: 1; }
+
+    .page-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .page-head h1 { font-size: 24px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+    .page-head p { font-size: 13px; color: var(--text-muted); }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: var(--radius-sm);
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn i { width: 16px; height: 16px; }
+
+    .btn-primary { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; }
+    .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(20,184,166,0.35); }
+
+    .btn-outline { background: var(--card); color: var(--text); border: 1px solid var(--border); }
+    .btn-outline:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+
+    .btn-success { background: var(--success); color: white; }
+    .btn-success:hover:not(:disabled) { background: #047857; }
+
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-danger:hover:not(:disabled) { background: #b91c1c; }
+
+    .btn-warning { background: var(--warning); color: white; }
+    .btn-warning:hover:not(:disabled) { background: #d97706; }
+
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 6px;
+      margin-bottom: 16px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      box-shadow: var(--shadow-sm);
+    }
+    .tabs::-webkit-scrollbar { display: none; }
+
+    .tab {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: transparent;
+      border: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .tab:hover { background: var(--bg); color: var(--text); }
+    .tab.active { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; box-shadow: 0 4px 12px rgba(20,184,166,0.3); }
+    .tab i { width: 16px; height: 16px; }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; animation: fadeIn 0.3s; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Card */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+
+    .card-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .card-header h3 { font-size: 15px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px; }
+    .card-header h3 i { width: 18px; height: 18px; color: var(--accent); }
+
+    .card-body { padding: 18px; }
+
+    /* Empty state */
+    .empty-state {
+      padding: 60px 20px;
+      text-align: center;
+      color: var(--text-muted);
+    }
+    .empty-state i { width: 56px; height: 56px; opacity: 0.3; margin-bottom: 12px; }
+    .empty-state h2 { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+    .empty-state p { font-size: 13px; }
+
+    /* Summary cards */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .summary-item {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: all 0.2s;
+      box-shadow: var(--shadow-sm);
+    }
+    .summary-item:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+
+    .summary-item .s-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .summary-item .s-icon i { width: 20px; height: 20px; color: white; }
+    .summary-item .s-icon.blue { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+    .summary-item .s-icon.green { background: linear-gradient(135deg, #10b981, #047857); }
+    .summary-item .s-icon.red { background: linear-gradient(135deg, #ef4444, #b91c1c); }
+    .summary-item .s-icon.gold { background: linear-gradient(135deg, #F59E0B, #d97706); }
+
+    .summary-item .s-body { flex: 1; min-width: 0; }
+    .summary-item .s-label { font-size: 11px; color: var(--text-muted); font-weight: 600; margin-bottom: 2px; }
+    .summary-item .s-value { font-size: 18px; font-weight: 800; color: var(--text); line-height: 1; }
+
+    /* Toolbar */
+    .toolbar {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .search-input { position: relative; flex: 1; min-width: 220px; }
+    .search-input input {
+      width: 100%;
+      padding: 10px 42px 10px 14px;
+      font-family: inherit;
+      font-size: 14px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      outline: none;
+      transition: all 0.2s;
+    }
+    .search-input input:focus { border-color: var(--accent); background: var(--card); box-shadow: 0 0 0 3px rgba(20,184,166,0.1); }
+    .search-input i { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--text-muted); pointer-events: none; }
+
+    .select-wrap { position: relative; min-width: 150px; }
+    .select-wrap select {
+      width: 100%;
+      padding: 10px 14px 10px 32px;
+      font-family: inherit;
+      font-size: 14px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      outline: none;
+      cursor: pointer;
+      appearance: none;
+      transition: all 0.2s;
+    }
+    .select-wrap select:focus { border-color: var(--accent); background: var(--card); }
+    .select-wrap::after {
+      content: '';
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 0;
+      height: 0;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-top: 5px solid var(--text-muted);
+      pointer-events: none;
+    }
+
+    /* Table */
+    .table-wrap {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+    }
+
+    .table-scroll { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      min-width: 900px;
+    }
+
+    thead { background: var(--bg); border-bottom: 1px solid var(--border); }
+
+    th {
+      text-align: right;
+      padding: 14px 16px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+
+    tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--bg); }
+
+    td { padding: 12px 16px; color: var(--text); vertical-align: middle; }
+
+    .product-name-cell { font-weight: 700; color: var(--text); font-size: 13px; }
+    .product-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+    .batch-cell {
+      font-family: 'Courier New', monospace;
+      font-weight: 700;
+      font-size: 12px;
+    }
+
+    .num-input {
+      width: 100%;
+      max-width: 100px;
+      padding: 8px 10px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 700;
+      text-align: center;
+      background: var(--card);
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      outline: none;
+      transition: all 0.2s;
+    }
+    .num-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(20,184,166,0.1); }
+    .num-input.has-diff { border-color: var(--warning); background: rgba(245,158,11,0.06); }
+    .num-input.has-diff.positive { border-color: var(--success); background: rgba(16,185,129,0.06); }
+    .num-input.has-diff.negative { border-color: var(--danger); background: rgba(239,68,68,0.06); }
+
+    .diff-cell {
+      font-weight: 800;
+      font-size: 15px;
+      text-align: center;
+    }
+    .diff-cell.zero { color: var(--text-muted); }
+    .diff-cell.positive { color: var(--success); }
+    .diff-cell.negative { color: var(--danger); }
+
+    .value-cell {
+      font-weight: 700;
+      text-align: center;
+    }
+
+    /* Sessions list */
+    .session-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+      cursor: pointer;
+    }
+    .session-item:last-child { border-bottom: none; }
+    .session-item:hover { background: var(--bg); }
+
+    .session-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .session-icon i { width: 22px; height: 22px; color: white; }
+    .session-icon.draft { background: linear-gradient(135deg, #94a3b8, #64748b); }
+    .session-icon.approved { background: linear-gradient(135deg, #10b981, #047857); }
+    .session-icon.cancelled { background: linear-gradient(135deg, #ef4444, #b91c1c); }
+
+    .session-body { flex: 1; min-width: 0; }
+    .session-body .title { font-weight: 700; font-size: 14px; color: var(--text); }
+    .session-body .sub { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+
+    .session-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+    .badge-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      border-radius: 20px;
+      white-space: nowrap;
+    }
+    .badge-tag.green  { background: rgba(16,185,129,0.12); color: var(--success); }
+    .badge-tag.red    { background: rgba(239,68,68,0.12); color: var(--danger); }
+    .badge-tag.gold   { background: rgba(245,158,11,0.12); color: var(--warning); }
+    .badge-tag.gray   { background: rgba(148,163,184,0.15); color: var(--text-muted); }
+    .badge-tag.blue   { background: rgba(59,130,246,0.12); color: var(--info); }
+
+    .action-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    .action-btn:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
+    .action-btn.danger:hover { border-color: var(--danger); color: var(--danger); background: rgba(239,68,68,0.06); }
+    .action-btn i { width: 15px; height: 15px; }
+
+    /* Modal with scroll */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(11, 44, 77, 0.5);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .modal-backdrop.show { display: flex; opacity: 1; }
+
+    .modal {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-lg);
+      width: 100%;
+      max-width: 560px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      transform: scale(0.95);
+      transition: transform 0.2s;
+      overflow: hidden;
+    }
+    .modal.modal-lg { max-width: 800px; }
+    .modal-backdrop.show .modal { transform: scale(1); }
+
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+    .modal-header h3 { font-size: 16px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px; }
+    .modal-header h3 i { width: 18px; height: 18px; color: var(--accent); }
+
+    .modal-close {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    .modal-close:hover { background: var(--bg); color: var(--danger); }
+    .modal-close i { width: 18px; height: 18px; }
+
+    /* ⭐ السكرول */
+    .modal-body {
+      padding: 20px;
+      overflow-y: auto;
+      flex: 1;
+      min-height: 0;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+    .modal-body::-webkit-scrollbar { width: 8px; }
+    .modal-body::-webkit-scrollbar-track { background: transparent; }
+    .modal-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+    .modal-body::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+    .modal-footer {
+      padding: 14px 20px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      background: var(--bg);
+      flex-shrink: 0;
+    }
+
+    .form-group { margin-bottom: 14px; }
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+    .form-group input,
+    .form-group textarea {
+      width: 100%;
+      padding: 10px 14px;
+      font-family: inherit;
+      font-size: 14px;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      outline: none;
+      transition: all 0.2s;
+    }
+    .form-group input:focus,
+    .form-group textarea:focus {
+      border-color: var(--accent);
+      background: var(--card);
+      box-shadow: 0 0 0 3px rgba(20,184,166,0.1);
+    }
+    .form-group textarea { resize: vertical; min-height: 70px; }
+
+    /* Overlay (mobile) */
+    .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; opacity: 0; transition: opacity 0.3s; }
+    .overlay.show { display: block; opacity: 1; }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .sidebar { transform: translateX(100%); }
+      .sidebar.open { transform: translateX(0); }
+      .main { margin-right: 0; }
+      .menu-toggle { display: flex; }
+      .user-info { display: none; }
+    }
+
+    @media (max-width: 640px) {
+      .content { padding: 16px; }
+      .topbar { padding: 0 14px; gap: 10px; }
+      .topbar-title { font-size: 15px; }
+      .page-head { flex-direction: column; align-items: stretch; }
+      .page-head h1 { font-size: 20px; }
+      .toolbar { padding: 12px; }
+      .search-input { min-width: 100%; }
+      .tabs { padding: 4px; }
+      .tab { padding: 8px 12px; font-size: 12px; }
+      .modal-footer { flex-direction: column-reverse; }
+      .modal-footer .btn { width: 100%; justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <img src="logo.png" alt="رفاد" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=fallback>R</span>';">
+      </div>
+      <div class="sidebar-brand">
+        <h2>رفاد</h2>
+        <p>نظام إدارة الأدوية</p>
+      </div>
+    </div>
+    <nav class="sidebar-nav" id="sidebarNav"></nav>
+  </aside>
+
+  <div class="overlay" id="overlay"></div>
+
+  <!-- Main -->
+  <div class="main">
+
+    <header class="topbar">
+      <button class="menu-toggle" id="menuToggle"><i data-lucide="menu"></i></button>
+      <div class="topbar-title">الجرد</div>
+      <div class="topbar-actions">
+        <button class="icon-btn" id="themeToggle" title="الوضع الليلي/النهاري">
+          <i data-lucide="moon" id="themeIcon"></i>
+        </button>
+        <button class="icon-btn" id="notifBtn" title="الإشعارات" style="position:relative;">
+          <i data-lucide="bell"></i>
+          <span class="dot" id="notifDot" style="display:none;"></span>
+        </button>
+        <div style="position:relative;">
+          <div class="user-menu" id="userMenu">
+            <div class="user-avatar" id="userAvatar">م</div>
+            <div class="user-info">
+              <span class="name" id="userName">—</span>
+              <span class="role" id="userRole">—</span>
+            </div>
+            <i data-lucide="chevron-down" style="width:14px;height:14px;opacity:0.5;"></i>
+          </div>
+          <div class="dropdown" id="userDropdown">
+            <a href="company-settings.html" class="dropdown-item"><i data-lucide="settings"></i> الإعدادات</a>
+            <a href="employees.html" class="dropdown-item"><i data-lucide="user-cog"></i> الملف الشخصي</a>
+            <div class="dropdown-divider"></div>
+            <div class="dropdown-item danger" id="logoutBtn"><i data-lucide="log-out"></i> تسجيل الخروج</div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="content">
+
+      <div class="page-head">
+        <div>
+          <h1>الجرد</h1>
+          <p>جرد كامل للمخزون ومقارنة الكميات الفعلية بالنظامية</p>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn btn-outline" id="exportBtn">
+            <i data-lucide="download"></i> تصدير
+          </button>
+          <button class="btn btn-primary" id="newSessionBtn">
+            <i data-lucide="plus"></i> جرد جديد
+          </button>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tabs">
+        <button class="tab active" data-tab="active"><i data-lucide="clipboard-check"></i> الجلسة الحالية</button>
+        <button class="tab" data-tab="sessions"><i data-lucide="history"></i> الجلسات السابقة</button>
+      </div>
+
+      <!-- Panel: Current Session -->
+      <div class="tab-panel active" data-panel="active" id="currentSessionPanel">
+        <div class="empty-state" id="noSessionState">
+          <i data-lucide="clipboard-x"></i>
+          <h2>لا توجد جلسة جرد نشطة</h2>
+          <p>اضغط "جرد جديد" لبدء جلسة جرد كامل</p>
+          <button class="btn btn-primary" id="startBtn" style="margin-top:20px;">
+            <i data-lucide="play"></i> بدء جرد جديد
+          </button>
+        </div>
+
+        <div id="sessionContent" style="display:none;">
+          <!-- Summary -->
+          <div class="summary-grid">
+            <div class="summary-item">
+              <div class="s-icon blue"><i data-lucide="package"></i></div>
+              <div class="s-body">
+                <div class="s-label">إجمالي الأصناف</div>
+                <div class="s-value" id="sumItems">—</div>
+              </div>
+            </div>
+            <div class="summary-item">
+              <div class="s-icon gold"><i data-lucide="layers"></i></div>
+              <div class="s-body">
+                <div class="s-label">عدد التشغيلات</div>
+                <div class="s-value" id="sumBatches">—</div>
+              </div>
+            </div>
+            <div class="summary-item">
+              <div class="s-icon green"><i data-lucide="check-circle-2"></i></div>
+              <div class="s-body">
+                <div class="s-label">مطابق</div>
+                <div class="s-value" id="sumMatched">—</div>
+              </div>
+            </div>
+            <div class="summary-item">
+              <div class="s-icon red"><i data-lucide="alert-triangle"></i></div>
+              <div class="s-body">
+                <div class="s-label">به فروق</div>
+                <div class="s-value" id="sumDiff">—</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Toolbar -->
+          <div class="toolbar">
+            <div class="search-input">
+              <input type="text" id="searchInput" placeholder="ابحث بالاسم أو الباركود أو رقم التشغيلة...">
+              <i data-lucide="search"></i>
+            </div>
+            <div class="select-wrap">
+              <select id="filterStatus">
+                <option value="">كل الحالات</option>
+                <option value="matched">مطابق</option>
+                <option value="diff">به فرق</option>
+                <option value="pending">لم يُجرد</option>
+              </select>
+            </div>
+            <button class="btn btn-outline btn-sm" id="clearCountsBtn">
+              <i data-lucide="x-circle"></i> مسح الأعداد
+            </button>
+            <button class="btn btn-outline btn-sm" id="fillSystemBtn">
+              <i data-lucide="wand-2"></i> ملء بالكميات النظامية
+            </button>
+          </div>
+
+          <!-- Table -->
+          <div class="table-wrap">
+            <div class="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th>الصنف</th>
+                    <th>التشغيلة</th>
+                    <th>الصلاحية</th>
+                    <th>الكمية النظامية</th>
+                    <th>الكمية الفعلية</th>
+                    <th>الفرق</th>
+                    <th>القيمة</th>
+                  </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:16px;flex-wrap:wrap;">
+            <button class="btn btn-outline" id="cancelSessionBtn">
+              <i data-lucide="x"></i> إلغاء الجلسة
+            </button>
+            <button class="btn btn-warning" id="saveSessionBtn">
+              <i data-lucide="save"></i> حفظ كمسودة
+            </button>
+            <button class="btn btn-success" id="approveSessionBtn">
+              <i data-lucide="check-circle-2"></i> اعتماد الجرد
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel: Sessions History -->
+      <div class="tab-panel" data-panel="sessions">
+        <div class="card">
+          <div class="card-header">
+            <h3><i data-lucide="history"></i> الجلسات السابقة</h3>
+          </div>
+          <div id="sessionsList">
+            <div class="empty-state">
+              <i data-lucide="loader-2"></i>
+              <p>جارٍ التحميل...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Modal: New Session -->
+  <div class="modal-backdrop" id="newSessionModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3><i data-lucide="clipboard-check"></i> بدء جلسة جرد جديدة</h3>
+        <button class="modal-close" data-close><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>اسم الجلسة (اختياري)</label>
+          <input type="text" id="sessionName" maxlength="100" placeholder="مثال: جرد شهر يناير 2025">
+        </div>
+        <div class="form-group">
+          <label>ملاحظات</label>
+          <textarea id="sessionNotes" maxlength="255" placeholder="ملاحظات عن الجلسة..."></textarea>
+        </div>
+        <p style="font-size:12px;color:var(--text-muted);padding:10px;background:var(--bg);border-radius:8px;line-height:1.7;">
+          <i data-lucide="info" style="width:14px;height:14px;display:inline-block;vertical-align:middle;"></i>
+          سيتم أخذ نسخة من كل التشغيلات الحالية. يمكنك إدخال الكميات الفعلية واعتماد الجرد لاحقاً.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" data-close>إلغاء</button>
+        <button type="button" class="btn btn-primary" id="confirmStartBtn">
+          <i data-lucide="play"></i> بدء الجرد
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="refad-core.js"></script>
+  <script src="refad-auth.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      // ============================================================
+      // 1) Guard
+      // ============================================================
+      const session = Refad.Auth.guardPage('inventory.stocktake');
+      if (!session) return;
+
+      const canApprove = Refad.Session.has('inventory.stocktake');
+
+      // ============================================================
+      // 2) State
+      // ============================================================
+      const state = {
+        currentSession: null,
+        items: [],           // عناصر الجلسة
+        filtered: [],
+        allSessions: [],
+        search: '',
+        filterStatus: ''
+      };
+
+      const DRAFT_KEY = 'refad_stocktake_draft_' + session.company_id;
+
+      // ============================================================
+      // 3) Sidebar
+      // ============================================================
+      const MENU = [
+        { section: 'الرئيسية', items: [
+          { label: 'لوحة التحكم', icon: 'layout-dashboard', href: 'dashboard.html' },
+          { label: 'الشات', icon: 'message-circle', href: 'chat.html', permission: 'chat.use' },
+          { label: 'الإشعارات', icon: 'bell', href: 'notifications.html', permission: 'notifications.view' }
+        ]},
+        { section: 'العمليات', items: [
+          { label: 'الأصناف', icon: 'package', href: 'products.html', permission: 'products.view' },
+          { label: 'المخزون', icon: 'warehouse', href: 'inventory.html', permission: 'inventory.view' },
+          { label: 'طلبات الشراء', icon: 'clipboard-list', href: 'purchase-requests.html', permission: 'purchases.view' },
+          { label: 'الاستلامات', icon: 'package-check', href: 'receipts.html', permission: 'purchases.receive' },
+          { label: 'طلبات البيع', icon: 'shopping-cart', href: 'sales-orders.html', permission: 'sales.view' },
+          { label: 'نقطة البيع', icon: 'scan-barcode', href: 'pos.html', permission: 'sales.pos', badge: 'POS', badgeClass: 'teal' },
+          { label: 'الفواتير', icon: 'receipt', href: 'invoices.html', permission: 'sales.view' }
+        ]},
+        { section: 'الأطراف', items: [
+          { label: 'الموردين', icon: 'truck', href: 'suppliers.html', permission: 'suppliers.view' },
+          { label: 'العملاء', icon: 'users', href: 'customers.html', permission: 'customers.view' }
+        ]},
+        { section: 'المخزون', items: [
+          { label: 'الجرد', icon: 'clipboard-check', href: 'stocktake.html', permission: 'inventory.stocktake' },
+          { label: 'التسويات', icon: 'sliders-horizontal', href: 'adjustments.html', permission: 'inventory.adjust' }
+        ]},
+        { section: 'الموارد البشرية', items: [
+          { label: 'الموظفين', icon: 'user-cog', href: 'employees.html', permission: 'employees.view' },
+          { label: 'الصلاحيات', icon: 'shield-check', href: 'permissions.html', permission: 'permissions.manage' },
+          { label: 'الحضور', icon: 'calendar-check', href: 'attendance.html', permission: 'attendance.view' },
+          { label: 'الرواتب', icon: 'wallet', href: 'payroll.html', permission: 'payroll.view' }
+        ]},
+        { section: 'المالية', items: [
+          { label: 'المصاريف', icon: 'banknote', href: 'expenses.html', permission: 'expenses.view' },
+          { label: 'التقارير', icon: 'bar-chart-3', href: 'reports.html', permission: 'reports.view' }
+        ]},
+        { section: 'النظام', items: [
+          { label: 'إعدادات الشركة', icon: 'settings', href: 'company-settings.html', permission: 'settings.view' },
+          { label: 'شاشة الأدمن', icon: 'shield', href: 'admin.html', permission: 'admin.full', badge: 'Admin', badgeClass: 'gold' }
+        ]}
+      ];
+
+      function buildSidebar() {
+        const nav = document.getElementById('sidebarNav');
+        const currentPage = 'stocktake.html';
+        const frag = document.createDocumentFragment();
+        MENU.forEach(group => {
+          const allowed = group.items.filter(it => !it.permission || Refad.Session.has(it.permission));
+          if (!allowed.length) return;
+          frag.appendChild(Refad.el('div', { class: 'nav-section' }, group.section));
+          allowed.forEach(item => {
+            const a = Refad.el('a', {
+              href: item.href,
+              class: 'nav-item' + (item.href === currentPage ? ' active' : '')
+            });
+            a.innerHTML = `<i data-lucide="${item.icon}"></i><span>${Refad.escapeHtml(item.label)}</span>${item.badge ? `<span class="badge ${item.badgeClass || ''}">${item.badge}</span>` : ''}`;
+            frag.appendChild(a);
+          });
+        });
+        nav.innerHTML = '';
+        nav.appendChild(frag);
+        if (window.lucide) lucide.createIcons();
+      }
+
+      // ============================================================
+      // 4) UI helpers
+      // ============================================================
+      function fillUser() {
+        const av = document.getElementById('userAvatar');
+        const initial = (session.full_name || '؟').trim().charAt(0);
+        if (session.avatar_url) av.innerHTML = `<img src="${Refad.escapeHtml(session.avatar_url)}" alt="">`;
+        else av.textContent = initial;
+        document.getElementById('userName').textContent = session.full_name;
+        document.getElementById('userRole').textContent = Refad.Session.has('company.owner') ? 'صاحب الشركة' : 'موظف';
+      }
+
+      function setupTheme() {
+        const btn = document.getElementById('themeToggle');
+        const icon = document.getElementById('themeIcon');
+        const refresh = () => {
+          const isDark = Refad.theme.get() === 'dark';
+          icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+          if (window.lucide) lucide.createIcons();
+        };
+        refresh();
+        btn.addEventListener('click', () => { Refad.theme.toggle(); refresh(); });
+      }
+
+      function setupSidebarMobile() {
+        const sb = document.getElementById('sidebar');
+        const ov = document.getElementById('overlay');
+        document.getElementById('menuToggle').addEventListener('click', () => {
+          sb.classList.add('open'); ov.classList.add('show');
+        });
+        ov.addEventListener('click', () => {
+          sb.classList.remove('open'); ov.classList.remove('show');
+        });
+      }
+
+      function setupUserMenu() {
+        const m = document.getElementById('userMenu');
+        const d = document.getElementById('userDropdown');
+        m.addEventListener('click', e => { e.stopPropagation(); d.classList.toggle('show'); });
+        document.addEventListener('click', () => d.classList.remove('show'));
+        d.addEventListener('click', e => e.stopPropagation());
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+          if (await Refad.alert.confirm('تسجيل الخروج', 'هل تريد الخروج؟', 'خروج')) {
+            await Refad.Auth.logout();
+          }
+        });
+      }
+
+      function setupNotifBtn() {
+        document.getElementById('notifBtn').addEventListener('click', () => {
+          window.location.href = 'notifications.html';
+        });
+      }
+
+      // ============================================================
+      // 5) Tabs
+      // ============================================================
+      function setupTabs() {
+        document.querySelectorAll('.tab').forEach(tab => {
+          tab.addEventListener('click', () => {
+            const name = tab.dataset.tab;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            tab.classList.add('active');
+            document.querySelector(`.tab-panel[data-panel="${name}"]`).classList.add('active');
+
+            if (name === 'sessions') {
+              loadSessionsHistory();
+            }
+          });
+        });
+      }
+
+      // ============================================================
+      // 6) Load current session (from localStorage or DB draft)
+      // ============================================================
+      async function loadCurrentSession() {
+        // 1. جرب localStorage أولاً
+        const draftRaw = localStorage.getItem(DRAFT_KEY);
+        if (draftRaw) {
+          try {
+            const draft = JSON.parse(draftRaw);
+            if (draft.session && draft.items) {
+              state.currentSession = draft.session;
+              state.items = draft.items;
+              showSession();
+              return;
+            }
+          } catch (e) { /* ignore */ }
+        }
+
+        // 2. ابحث في DB عن جلسة draft
+        try {
+          const sessions = await Refad.db.select('stock_adjustments', {
+            columns: 'id, adjustment_number, type, status, notes, created_at',
+            eq: { company_id: session.company_id, type: 'count_diff', status: 'pending' },
+            order: { column: 'created_at', ascending: false },
+            limit: 1
+          });
+
+          if (sessions.length > 0) {
+            const s = sessions[0];
+            // جلب العناصر
+            const items = await Refad.db.select('stock_adjustment_items', {
+              columns: `id, product_id, batch_id, system_qty, actual_qty, difference, unit_cost,
+                        products(id, name, name_en, form, unit),
+                        batches(batch_number, expiry_date)`,
+              eq: { adjustment_id: s.id },
+              order: { column: 'id', ascending: true }
+            });
+
+            state.currentSession = {
+              id: s.id,
+              number: s.adjustment_number,
+              name: s.notes || 'جلسة جرد',
+              notes: s.notes,
+              created_at: s.created_at,
+              status: s.status
+            };
+
+            state.items = items.map(it => ({
+              id: it.id,
+              product_id: it.product_id,
+              product: it.products,
+              batch_id: it.batch_id,
+              batch: it.batches,
+              system_qty: it.system_qty || 0,
+              actual_qty: it.actual_qty,
+              difference: it.difference,
+              unit_cost: it.unit_cost || 0
+            }));
+
+            showSession();
+            return;
+          }
+        } catch (e) {
+          console.warn('DB session lookup failed:', e.message);
+        }
+
+        // 3. مفيش جلسة
+        showEmpty();
+      }
+
+      function showEmpty() {
+        document.getElementById('noSessionState').style.display = 'block';
+        document.getElementById('sessionContent').style.display = 'none';
+      }
+
+      function showSession() {
+        document.getElementById('noSessionState').style.display = 'none';
+        document.getElementById('sessionContent').style.display = 'block';
+        renderSummary();
+        renderTable();
+      }
+
+      // ============================================================
+      // 7) Start new session
+      // ============================================================
+      function openNewSessionModal() {
+        document.getElementById('sessionName').value = '';
+        document.getElementById('sessionNotes').value = '';
+        document.getElementById('newSessionModal').classList.add('show');
+        if (window.lucide) lucide.createIcons();
+        setTimeout(() => document.getElementById('sessionName').focus(), 100);
+      }
+
+      async function startNewSession() {
+        const name = document.getElementById('sessionName').value.trim() || 'جلسة جرد';
+        const notes = document.getElementById('sessionNotes').value.trim();
+
+        if (state.currentSession || state.items.length) {
+          const ok = await Refad.alert.confirm('استبدال الجلسة', 'يوجد جلسة نشطة بالفعل. هل تريد استبدالها؟', 'استبدال');
+          if (!ok) return;
+        }
+
+        // جلب كل batches
+        const btn = document.getElementById('confirmStartBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i data-lucide="loader-2"></i> جارٍ التحميل...';
+        if (window.lucide) lucide.createIcons();
+
+        try {
+          const batches = await Refad.db.select('batches', {
+            columns: `id, product_id, batch_number, quantity_left, cost_price, expiry_date,
+                      products(id, name, name_en, form, unit)`,
+            eq: { company_id: session.company_id },
+            order: { column: 'expiry_date', ascending: true }
+          });
+
+          // Filter: فقط التشغيلات اللي عندها كمية أو كانت عندها (نستبعد اللي quantity_in = 0)
+          const validBatches = batches.filter(b => b.products);
+
+          const sessionNumber = await generateSessionNumber();
+
+          state.currentSession = {
+            id: null,
+            number: sessionNumber,
+            name,
+            notes,
+            created_at: new Date().toISOString(),
+            status: 'pending'
+          };
+
+          state.items = validBatches.map(b => ({
+            id: null,
+            product_id: b.product_id,
+            product: b.products,
+            batch_id: b.id,
+            batch: {
+              batch_number: b.batch_number,
+              expiry_date: b.expiry_date
+            },
+            system_qty: b.quantity_left || 0,
+            actual_qty: null,
+            difference: null,
+            unit_cost: b.cost_price || 0
+          }));
+
+          // احفظ في localStorage
+          saveDraft();
+
+          document.getElementById('newSessionModal').classList.remove('show');
+          showSession();
+          Refad.toast.success(`تم إنشاء جلسة ${sessionNumber} — ${state.items.length} تشغيلة`);
+        } catch (e) {
+          console.error('Start session failed:', e);
+          Refad.toast.error('فشل بدء الجلسة: ' + e.message);
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = '<i data-lucide="play"></i> بدء الجرد';
+          if (window.lucide) lucide.createIcons();
+        }
+      }
+
+      async function generateSessionNumber() {
+        try {
+          const count = await Refad.db.count('stock_adjustments', {
+            eq: { company_id: session.company_id }
+          });
+          const year = new Date().getFullYear();
+          return `ST-${year}-${String(count + 1).padStart(4, '0')}`;
+        } catch (e) {
+          return `ST-${Date.now()}`;
+        }
+      }
+
+      // ============================================================
+      // 8) Draft management
+      // ============================================================
+      function saveDraft() {
+        try {
+          localStorage.setItem(DRAFT_KEY, JSON.stringify({
+            session: state.currentSession,
+            items: state.items
+          }));
+        } catch (e) {
+          console.warn('Draft save failed:', e.message);
+        }
+      }
+
+      function clearDraft() {
+        localStorage.removeItem(DRAFT_KEY);
+      }
+
+      // ============================================================
+      // 9) Render summary
+      // ============================================================
+      function renderSummary() {
+        const total = state.items.length;
+        const batches = new Set(state.items.map(it => it.batch_id)).size;
+        const matched = state.items.filter(it => it.actual_qty !== null && it.difference === 0).length;
+        const diff = state.items.filter(it => it.actual_qty !== null && it.difference !== 0).length;
+
+        document.getElementById('sumItems').textContent = Refad.format.number(total);
+        document.getElementById('sumBatches').textContent = Refad.format.number(batches);
+        document.getElementById('sumMatched').textContent = Refad.format.number(matched);
+        document.getElementById('sumDiff').textContent = Refad.format.number(diff);
+      }
+
+      // ============================================================
+      // 10) Render table
+      // ============================================================
+      function applyFilters() {
+        const q = state.search.toLowerCase().trim();
+        state.filtered = state.items.filter(it => {
+          // فلتر الحالة
+          if (state.filterStatus === 'matched') {
+            if (it.actual_qty === null || it.difference !== 0) return false;
+          } else if (state.filterStatus === 'diff') {
+            if (it.actual_qty === null || it.difference === 0) return false;
+          } else if (state.filterStatus === 'pending') {
+            if (it.actual_qty !== null) return false;
+          }
+
+          if (!q) return true;
+          return (
+            (it.product?.name || '').toLowerCase().includes(q) ||
+            (it.product?.name_en || '').toLowerCase().includes(q) ||
+            (it.batch?.batch_number || '').toLowerCase().includes(q)
+          );
+        });
+        renderTable();
+      }
+
+      function renderTable() {
+        const tbody = document.getElementById('tableBody');
+        const list = state.filtered.length || state.search || state.filterStatus
+          ? state.filtered
+          : state.items;
+
+        if (!list.length) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="7" style="padding:60px 20px;text-align:center;color:var(--text-muted);">
+                <i data-lucide="package-open" style="width:42px;height:42px;opacity:0.4;margin-bottom:10px;"></i>
+                <p style="font-size:13px;font-weight:600;">لا توجد تشغيلات مطابقة</p>
+              </td>
+            </tr>
+          `;
+          if (window.lucide) lucide.createIcons();
+          return;
+        }
+
+        // نعرض أول 200 للتأداء
+        const displayed = list.slice(0, 200);
+
+        tbody.innerHTML = displayed.map((it, idx) => {
+          const realIdx = state.items.indexOf(it);
+          const hasDiff = it.actual_qty !== null && it.difference !== 0;
+          const diffCls = it.difference === null
+            ? 'zero'
+            : it.difference > 0 ? 'positive' : it.difference < 0 ? 'negative' : 'zero';
+
+          const inputCls = it.actual_qty === null
+            ? ''
+            : it.difference === 0
+              ? ''
+              : it.difference > 0 ? 'has-diff positive' : 'has-diff negative';
+
+          const diffText = it.difference === null
+            ? '—'
+            : it.difference === 0 ? '0' : (it.difference > 0 ? '+' + it.difference : it.difference);
+
+          const value = (it.unit_cost || 0) * Math.abs(it.difference || 0);
+
+          // expiry tag
+          let expiryTxt = '—';
+          if (it.batch?.expiry_date) {
+            const days = Refad.format.daysLeft(it.batch.expiry_date);
+            const d = Refad.format.date(it.batch.expiry_date);
+            if (days !== null && days < 0) {
+              expiryTxt = `<span style="color:var(--danger);font-weight:700;">${d}</span>`;
+            } else if (days !== null && days <= 30) {
+              expiryTxt = `<span style="color:var(--warning);font-weight:700;">${d}</span>`;
+            } else {
+              expiryTxt = d;
+            }
+          }
+
+          return `
+            <tr>
+              <td>
+                <div class="product-name-cell">${Refad.escapeHtml(it.product?.name || '—')}</div>
+                <div class="product-sub">${Refad.escapeHtml([it.product?.form, it.product?.unit].filter(Boolean).join(' • ') || '')}</div>
+              </td>
+              <td class="batch-cell">${Refad.escapeHtml(it.batch?.batch_number || '—')}</td>
+              <td>${expiryTxt}</td>
+              <td class="value-cell">${Refad.format.number(it.system_qty)}</td>
+              <td>
+                <input type="number"
+                       class="num-input ${inputCls}"
+                       data-idx="${realIdx}"
+                       value="${it.actual_qty !== null ? it.actual_qty : ''}"
+                       placeholder="—"
+                       min="0"
+                       step="1">
+              </td>
+              <td class="diff-cell ${diffCls}">${diffText}</td>
+              <td class="value-cell">${value > 0 ? Refad.format.money(value) : '—'}</td>
+            </tr>
+          `;
+        }).join('');
+
+        if (list.length > 200) {
+          tbody.innerHTML += `
+            <tr>
+              <td colspan="7" style="padding:20px;text-align:center;color:var(--text-muted);font-size:12px;">
+                يتم عرض 200 فقط من ${list.length} — استخدم البحث لتضييق النتائج
+              </td>
+            </tr>
+          `;
+        }
+
+        if (window.lucide) lucide.createIcons();
+
+        // ربط الحقول
+        tbody.querySelectorAll('.num-input').forEach(inp => {
+          inp.addEventListener('input', e => {
+            const idx = parseInt(e.target.dataset.idx, 10);
+            const it = state.items[idx];
+            if (!it) return;
+
+            const val = e.target.value.trim();
+            if (val === '') {
+              it.actual_qty = null;
+              it.difference = null;
+            } else {
+              const num = parseInt(val, 10);
+              if (isNaN(num) || num < 0) { e.target.value = ''; return; }
+              it.actual_qty = num;
+              it.difference = num - it.system_qty;
+            }
+
+            // حدّث الخلية + الألوان
+            const row = e.target.closest('tr');
+            const diffCell = row.querySelector('.diff-cell');
+            if (diffCell) {
+              const cls = it.difference === null ? 'zero' : it.difference > 0 ? 'positive' : it.difference < 0 ? 'negative' : 'zero';
+              const txt = it.difference === null ? '—' : it.difference === 0 ? '0' : (it.difference > 0 ? '+' + it.difference : it.difference);
+              diffCell.className = 'diff-cell ' + cls;
+              diffCell.textContent = txt;
+            }
+
+            // حدّث class الحقل
+            e.target.className = 'num-input';
+            if (it.actual_qty !== null && it.difference !== 0) {
+              e.target.classList.add('has-diff');
+              e.target.classList.add(it.difference > 0 ? 'positive' : 'negative');
+            }
+
+            // حدّث Summary + احفظ draft
+            renderSummary();
+            saveDraft();
+          });
+
+          inp.addEventListener('keydown', e => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              const inputs = Array.from(document.querySelectorAll('.num-input'));
+              const curIdx = inputs.indexOf(e.target);
+              if (curIdx >= 0 && curIdx < inputs.length - 1) {
+                inputs[curIdx + 1].focus();
+                inputs[curIdx + 1].select();
+              }
+            }
+          });
+        });
+      }
+
+      // ============================================================
+      // 11) Save draft to DB
+      // ============================================================
+      async function saveSessionDraft(silent) {
+        if (!state.currentSession || !state.items.length) return null;
+
+        try {
+          let adjId = state.currentSession.id;
+
+          if (!adjId) {
+            // أنشئ جلسة جديدة
+            const created = await Refad.db.insert('stock_adjustments', {
+              company_id: session.company_id,
+              adjustment_number: state.currentSession.number,
+              type: 'count_diff',
+              status: 'pending',
+              notes: state.currentSession.name + (state.currentSession.notes ? ' — ' + state.currentSession.notes : ''),
+              created_by: session.user_id
+            });
+            adjId = created.id;
+            state.currentSession.id = adjId;
+
+            // أضف العناصر
+            const itemsToInsert = state.items.map(it => ({
+              adjustment_id: adjId,
+              product_id: it.product_id,
+              batch_id: it.batch_id,
+              system_qty: it.system_qty,
+              actual_qty: it.actual_qty,
+              difference: it.difference,
+              unit_cost: it.unit_cost
+            }));
+            await Refad.db.insertMany('stock_adjustment_items', itemsToInsert);
+          } else {
+            // حدّث
+            await Refad.db.update('stock_adjustments', adjId, {
+              notes: state.currentSession.name + (state.currentSession.notes ? ' — ' + state.currentSession.notes : '')
+            });
+
+            // احذف وأعد الإدراج
+            await Refad.db.removeWhere('stock_adjustment_items', { adjustment_id: adjId });
+
+            const itemsToInsert = state.items.map(it => ({
+              adjustment_id: adjId,
+              product_id: it.product_id,
+              batch_id: it.batch_id,
+              system_qty: it.system_qty,
+              actual_qty: it.actual_qty,
+              difference: it.difference,
+              unit_cost: it.unit_cost
+            }));
+            await Refad.db.insertMany('stock_adjustment_items', itemsToInsert);
+          }
+
+          saveDraft();
+          if (!silent) Refad.toast.success('تم حفظ الجلسة كمسودة');
+          return adjId;
+        } catch (e) {
+          console.error('Save draft failed:', e);
+          if (!silent) Refad.toast.error('فشل الحفظ: ' + e.message);
+          return null;
+        }
+      }
+
+      // ============================================================
+      // 12) Approve session
+      // ============================================================
+      async function approveSession() {
+        if (!state.items.length) return Refad.toast.warning('لا يوجد جلسة نشطة');
+
+        const withDiff = state.items.filter(it => it.actual_qty !== null && it.difference !== 0);
+        const pending = state.items.filter(it => it.actual_qty === null).length;
+
+        if (withDiff.length === 0 && pending === 0) {
+          return Refad.toast.info('لا توجد فروق للاعتماد');
+        }
+
+        const ok = await Refad.alert.confirm(
+          'اعتماد الجرد',
+          `سيتم تطبيق ${withDiff.length} تسوية على المخزون. متابعة؟`,
+          'اعتماد'
+        );
+        if (!ok) return;
+
+        const btn = document.getElementById('approveSessionBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i data-lucide="loader-2"></i> جارٍ الاعتماد...';
+        if (window.lucide) lucide.createIcons();
+
+        try {
+          // 1. احفظ الجلسة أولاً
+          const adjId = await saveSessionDraft(true);
+          if (!adjId) throw new Error('فشل حفظ الجلسة');
+
+          // 2. طبّق التسويات
+          for (const it of state.items) {
+            if (it.actual_qty === null || it.difference === 0) continue;
+
+            // حدّث الكمية في batch
+            await Refad.db.update('batches', it.batch_id, {
+              quantity_left: it.actual_qty
+            });
+
+            // سجّل حركة تسوية
+            await Refad.db.insert('inventory_movements', {
+              company_id: session.company_id,
+              product_id: it.product_id,
+              batch_id: it.batch_id,
+              movement_type: 'adjust',
+              reference_type: 'stocktake',
+              reference_id: adjId,
+              quantity: it.difference,
+              unit_cost: it.unit_cost,
+              notes: `جرد ${state.currentSession.number}: ${it.difference > 0 ? 'زيادة' : 'نقص'}`,
+              user_id: session.user_id
+            });
+          }
+
+          // 3. اعتمد الجلسة
+          await Refad.db.update('stock_adjustments', adjId, {
+            status: 'approved',
+            approved_by: session.user_id
+          });
+
+          await Refad.logActivity('approve_stocktake', 'inventory',
+            `اعتماد جرد ${state.currentSession.number} - ${withDiff.length} تسوية`, adjId);
+
+          Refad.toast.success('تم اعتماد الجرد وتطبيق التسويات');
+
+          // 4. نظّف
+          clearDraft();
+          state.currentSession = null;
+          state.items = [];
+          state.filtered = [];
+          showEmpty();
+
+          // 5. حدّث جلسات
+          setTimeout(() => loadSessionsHistory(), 500);
+        } catch (e) {
+          console.error('Approve failed:', e);
+          Refad.toast.error('فشل الاعتماد: ' + e.message);
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = '<i data-lucide="check-circle-2"></i> اعتماد الجرد';
+          if (window.lucide) lucide.createIcons();
+        }
+      }
+
+      // ============================================================
+      // 13) Cancel session
+      // ============================================================
+      async function cancelSession() {
+        const ok = await Refad.alert.confirm(
+          'إلغاء الجلسة',
+          'سيتم فقدان كل البيانات المدخلة. هل أنت متأكد؟',
+          'إلغاء الجلسة'
+        );
+        if (!ok) return;
+
+        if (state.currentSession?.id) {
+          try {
+            await Refad.db.removeWhere('stock_adjustment_items', { adjustment_id: state.currentSession.id });
+            await Refad.db.remove('stock_adjustments', state.currentSession.id);
+          } catch (e) { /* ignore */ }
+        }
+
+        clearDraft();
+        state.currentSession = null;
+        state.items = [];
+        state.filtered = [];
+        showEmpty();
+        Refad.toast.info('تم إلغاء الجلسة');
+      }
+
+      // ============================================================
+      // 14) Sessions History
+      // ============================================================
+      async function loadSessionsHistory() {
+        const container = document.getElementById('sessionsList');
+        container.innerHTML = `<div class="empty-state"><i data-lucide="loader-2"></i><p>جارٍ التحميل...</p></div>`;
+        if (window.lucide) lucide.createIcons();
+
+        try {
+          const rows = await Refad.db.select('stock_adjustments', {
+            columns: `id, adjustment_number, type, status, notes, created_at, updated_at, approved_by,
+                      stock_adjustment_items(id, difference)`,
+            eq: { company_id: session.company_id, type: 'count_diff' },
+            order: { column: 'created_at', ascending: false },
+            limit: 100
+          });
+
+          state.allSessions = rows;
+
+          if (!rows.length) {
+            container.innerHTML = `
+              <div class="empty-state">
+                <i data-lucide="clipboard-x"></i>
+                <h2>لا توجد جلسات سابقة</h2>
+                <p>ابدأ جردك الأول</p>
+              </div>
+            `;
+            if (window.lucide) lucide.createIcons();
+            return;
+          }
+
+          const STATUS = {
+            'pending':   { label: 'مسودة',   cls: 'gray',   icon: 'draft' },
+            'approved':  { label: 'معتمد',   cls: 'green',  icon: 'approved' },
+            'cancelled': { label: 'ملغي',    cls: 'red',    icon: 'cancelled' }
+          };
+
+          container.innerHTML = rows.map(s => {
+            const st = STATUS[s.status] || STATUS.pending;
+            const itemsCount = s.stock_adjustment_items?.length || 0;
+            const diffCount = s.stock_adjustment_items?.filter(i => i.difference && i.difference !== 0).length || 0;
+
+            return `
+              <div class="session-item" data-session-id="${s.id}">
+                <div class="session-icon ${st.icon}">
+                  <i data-lucide="${st.icon === 'approved' ? 'check-circle' : st.icon === 'draft' ? 'file-edit' : 'x-circle'}"></i>
+                </div>
+                <div class="session-body">
+                  <div class="title">${Refad.escapeHtml(s.adjustment_number)} — ${Refad.escapeHtml(s.notes || 'بدون اسم')}</div>
+                  <div class="sub">
+                    ${Refad.format.datetime(s.created_at)} • ${itemsCount} تشغيلة • ${diffCount} فرق
+                  </div>
+                </div>
+                <div style="display:flex;gap:6px;align-items:center;">
+                  <span class="badge-tag ${st.cls}">${st.label}</span>
+                  <button class="action-btn danger" data-delete-session="${s.id}" title="حذف">
+                    <i data-lucide="trash-2"></i>
+                  </button>
+                </div>
+              </div>
+            `;
+          }).join('');
+
+          if (window.lucide) lucide.createIcons();
+
+          // حذف جلسة
+          container.querySelectorAll('[data-delete-session]').forEach(btn => {
+            btn.addEventListener('click', e => {
+              e.stopPropagation();
+              deleteSession(parseInt(btn.dataset.deleteSession, 10));
+            });
+          });
+        } catch (e) {
+          console.error('Sessions load failed:', e);
+          container.innerHTML = `<div class="empty-state"><p style="color:var(--danger);">تعذّر التحميل</p></div>`;
+        }
+      }
+
+      async function deleteSession(id) {
+        const ok = await Refad.alert.confirm('حذف الجلسة', 'هل تريد حذف هذه الجلسة نهائياً؟', 'حذف');
+        if (!ok) return;
+
+        try {
+          await Refad.db.removeWhere('stock_adjustment_items', { adjustment_id: id });
+          await Refad.db.remove('stock_adjustments', id);
+          Refad.toast.success('تم الحذف');
+          await loadSessionsHistory();
+        } catch (e) {
+          Refad.toast.error('فشل الحذف: ' + e.message);
+        }
+      }
+
+      // ============================================================
+      // 15) Events
+      // ============================================================
+      function bindEvents() {
+        document.getElementById('newSessionBtn').addEventListener('click', openNewSessionModal);
+        document.getElementById('startBtn').addEventListener('click', openNewSessionModal);
+        document.getElementById('confirmStartBtn').addEventListener('click', startNewSession);
+        document.getElementById('cancelSessionBtn').addEventListener('click', cancelSession);
+        document.getElementById('saveSessionBtn').addEventListener('click', () => saveSessionDraft(false));
+        document.getElementById('approveSessionBtn').addEventListener('click', approveSession);
+
+        // Search
+        const searchHandler = Refad.debounce(v => {
+          state.search = v;
+          applyFilters();
+        }, 250);
+        document.getElementById('searchInput').addEventListener('input', e => searchHandler(e.target.value));
+
+        // Filter
+        document.getElementById('filterStatus').addEventListener('change', e => {
+          state.filterStatus = e.target.value;
+          applyFilters();
+        });
+
+        // Clear counts
+        document.getElementById('clearCountsBtn').addEventListener('click', async () => {
+          const ok = await Refad.alert.confirm('مسح الأعداد', 'سيتم مسح كل الأعداد المُدخلة. متابعة؟', 'مسح');
+          if (!ok) return;
+          state.items.forEach(it => { it.actual_qty = null; it.difference = null; });
+          saveDraft();
+          renderSummary();
+          applyFilters();
+          Refad.toast.success('تم المسح');
+        });
+
+        // Fill with system quantities
+        document.getElementById('fillSystemBtn').addEventListener('click', async () => {
+          const ok = await Refad.alert.confirm('ملء بالكميات النظامية', 'سيتم وضع الكمية النظامية لكل تشغيلة فارغة. متابعة؟', 'ملء');
+          if (!ok) return;
+          state.items.forEach(it => {
+            if (it.actual_qty === null) {
+              it.actual_qty = it.system_qty;
+              it.difference = 0;
+            }
+          });
+          saveDraft();
+          renderSummary();
+          applyFilters();
+          Refad.toast.success('تم الملء');
+        });
+
+        // Export
+        document.getElementById('exportBtn').addEventListener('click', () => {
+          const list = state.currentSession ? state.items : state.allSessions;
+          if (!list.length) return Refad.toast.warning('لا توجد بيانات');
+
+          if (state.currentSession) {
+            const rows = state.items.map(it => ({
+              'الصنف': it.product?.name || '',
+              'التشغيلة': it.batch?.batch_number || '',
+              'الصلاحية': it.batch?.expiry_date || '',
+              'الكمية النظامية': it.system_qty,
+              'الكمية الفعلية': it.actual_qty ?? '',
+              'الفرق': it.difference ?? '',
+              'سعر التكلفة': it.unit_cost || 0,
+              'قيمة الفرق': (it.unit_cost || 0) * Math.abs(it.difference || 0)
+            }));
+            const ws = XLSX.utils.json_to_sheet(rows);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Stocktake');
+            XLSX.writeFile(wb, `stocktake-${state.currentSession.number}.xlsx`);
+          } else {
+            const rows = state.allSessions.map(s => ({
+              'رقم الجلسة': s.adjustment_number,
+              'التاريخ': Refad.format.datetime(s.created_at),
+              'الحالة': s.status,
+              'عدد التشغيلات': s.stock_adjustment_items?.length || 0,
+              'عدد الفروق': s.stock_adjustment_items?.filter(i => i.difference !== 0).length || 0
+            }));
+            const ws = XLSX.utils.json_to_sheet(rows);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Sessions');
+            XLSX.writeFile(wb, `stocktake-sessions.xlsx`);
+          }
+          Refad.toast.success('تم التصدير');
+        });
+
+        // Modal close
+        document.querySelectorAll('[data-close]').forEach(b => {
+          b.addEventListener('click', () => {
+            document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.remove('show'));
+          });
+        });
+        document.addEventListener('keydown', e => {
+          if (e.key === 'Escape') {
+            document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.remove('show'));
+          }
+        });
+        document.getElementById('newSessionModal').addEventListener('click', e => {
+          if (e.target.id === 'newSessionModal') e.target.classList.remove('show');
+        });
+      }
+
+      // ============================================================
+      // 16) Init
+      // ============================================================
+      async function init() {
+        buildSidebar();
+        fillUser();
+        setupTheme();
+        setupSidebarMobile();
+        setupUserMenu();
+        setupNotifBtn();
+        setupTabs();
+        bindEvents();
+
+        await loadCurrentSession();
+
+        Refad.registerServiceWorker();
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+
+      console.log('%c[Refad] Stocktake ready', 'color:#14B8A6;font-weight:bold');
+
+    })();
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+</body>
+</html>

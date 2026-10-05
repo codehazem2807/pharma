@@ -1,0 +1,1549 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0B2C4D">
+  <title>الرواتب - رفاد</title>
+
+  <link rel="icon" type="image/png" href="logo.png">
+  <link rel="manifest" href="manifest.json">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --primary: #0B2C4D;
+      --primary-light: #1e4a73;
+      --accent: #14B8A6;
+      --accent-dark: #0d9488;
+      --gold: #F59E0B;
+      --bg: #F1F5F9;
+      --card: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --danger: #ef4444;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --info: #3b82f6;
+      --sidebar-bg: #0B2C4D;
+      --sidebar-text: #cbd5e1;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+      --shadow: 0 4px 20px rgba(11, 44, 77, 0.08);
+      --shadow-lg: 0 10px 40px rgba(11, 44, 77, 0.12);
+      --radius: 14px;
+      --radius-sm: 10px;
+      --sidebar-w: 260px;
+      --topbar-h: 64px;
+    }
+
+    [data-theme="dark"] {
+      --bg: #0a1628;
+      --card: #0f2137;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --border: #1e3a5f;
+      --sidebar-bg: #061a2e;
+      --sidebar-text: #94a3b8;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Cairo', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      transition: background 0.3s, color 0.3s;
+    }
+
+    body { display: flex; min-height: 100vh; overflow-x: hidden; }
+
+    /* Sidebar */
+    .sidebar {
+      width: var(--sidebar-w);
+      height: 100vh;
+      background: var(--sidebar-bg);
+      color: var(--sidebar-text);
+      position: fixed;
+      top: 0;
+      right: 0;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: -4px 0 20px rgba(0,0,0,0.1);
+    }
+
+    .sidebar-header {
+      padding: 20px 22px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      height: var(--topbar-h);
+      box-sizing: border-box;
+    }
+
+    .sidebar-logo {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 4px 12px rgba(20,184,166,0.4);
+    }
+    .sidebar-logo img { width: 70%; height: 70%; object-fit: contain; }
+    .sidebar-logo .fallback { color: white; font-weight: 800; font-size: 18px; }
+
+    .sidebar-brand h2 { color: white; font-size: 20px; font-weight: 800; letter-spacing: -0.5px; line-height: 1.2; }
+    .sidebar-brand p { font-size: 10px; color: var(--sidebar-text); opacity: 0.7; font-weight: 500; margin-top: 2px; }
+
+    .sidebar-nav { flex: 1; overflow-y: auto; padding: 12px 0; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.15) transparent; }
+    .sidebar-nav::-webkit-scrollbar { width: 5px; }
+    .sidebar-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 10px; }
+
+    .nav-section { padding: 8px 20px 4px; font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 1px; margin-top: 8px; }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 22px;
+      color: var(--sidebar-text);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      border-right: 3px solid transparent;
+      transition: all 0.2s;
+      position: relative;
+      cursor: pointer;
+    }
+    .nav-item:hover { background: rgba(255,255,255,0.05); color: white; border-right-color: rgba(20,184,166,0.5); }
+    .nav-item.active { background: rgba(20,184,166,0.12); color: white; border-right-color: var(--accent); font-weight: 600; }
+    .nav-item.active::before { content: ''; position: absolute; right: 0; top: 50%; transform: translateY(-50%); width: 3px; height: 60%; background: var(--accent); border-radius: 0 4px 4px 0; }
+    .nav-item i, .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; opacity: 0.85; }
+    .nav-item .badge { margin-right: auto; background: var(--danger); color: white; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
+    .nav-item .badge.teal { background: var(--accent); }
+    .nav-item .badge.gold { background: var(--gold); }
+
+    /* Main */
+    .main { flex: 1; margin-right: var(--sidebar-w); min-width: 0; display: flex; flex-direction: column; }
+
+    .topbar {
+      height: var(--topbar-h);
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 0 24px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .menu-toggle { display: none; background: transparent; border: none; color: var(--text); cursor: pointer; padding: 8px; border-radius: 8px; }
+    .menu-toggle:hover { background: var(--bg); }
+
+    .topbar-title { font-size: 18px; font-weight: 700; color: var(--text); flex-shrink: 0; }
+    .topbar-actions { display: flex; align-items: center; gap: 8px; margin-right: auto; }
+
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      transition: all 0.2s;
+    }
+    .icon-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .icon-btn i, .icon-btn svg { width: 18px; height: 18px; }
+    .icon-btn .dot { position: absolute; top: 8px; left: 8px; width: 8px; height: 8px; background: var(--danger); border-radius: 50%; border: 2px solid var(--card); }
+
+    .user-menu {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 5px 12px 5px 5px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.2s;
+      border: 1px solid var(--border);
+      background: var(--card);
+    }
+    .user-menu:hover { background: var(--bg); }
+
+    .user-avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 700;
+      font-size: 14px;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .user-info { display: flex; flex-direction: column; line-height: 1.2; }
+    .user-info .name { font-size: 13px; font-weight: 700; color: var(--text); }
+    .user-info .role { font-size: 11px; color: var(--text-muted); }
+
+    .dropdown { position: absolute; top: calc(100% + 8px); left: 0; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: var(--shadow-lg); min-width: 200px; padding: 6px; opacity: 0; visibility: hidden; transform: translateY(-8px); transition: all 0.2s; z-index: 100; }
+    .dropdown.show { opacity: 1; visibility: visible; transform: translateY(0); }
+    .dropdown-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; color: var(--text); font-size: 13px; font-weight: 500; cursor: pointer; transition: background 0.15s; text-decoration: none; }
+    .dropdown-item:hover { background: var(--bg); }
+    .dropdown-item.danger { color: var(--danger); }
+    .dropdown-item.danger:hover { background: rgba(239,68,68,0.08); }
+    .dropdown-item i { width: 16px; height: 16px; }
+    .dropdown-divider { height: 1px; background: var(--border); margin: 6px 0; }
+
+    /* Content */
+    .content { padding: 24px; flex: 1; }
+
+    .page-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .page-head h1 { font-size: 24px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+    .page-head p { font-size: 13px; color: var(--text-muted); }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: var(--radius-sm);
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn i { width: 16px; height: 16px; }
+
+    .btn-primary { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; }
+    .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(20,184,166,0.35); }
+
+    .btn-outline { background: var(--card); color: var(--text); border: 1px solid var(--border); }
+    .btn-outline:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+
+    .btn-success { background: var(--success); color: white; }
+    .btn-success:hover:not(:disabled) { background: #047857; }
+
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-danger:hover:not(:disabled) { background: #b91c1c; }
+
+    .btn-warning { background: var(--warning); color: white; }
+    .btn-warning:hover:not(:disabled) { background: #d97706; }
+
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+    /* Month selector */
+    .month-selector {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      box-shadow: var(--shadow-sm);
+    }
+    .month-selector label {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .month-selector input[type="number"],
+    .month-selector select {
+      padding: 9px 14px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 700;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      outline: none;
+      cursor: pointer;
+    }
+    .month-selector input:focus,
+    .month-selector select:focus { border-color: var(--accent); }
+
+    /* Mini stats */
+    .mini-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .mini-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: all 0.2s;
+      box-shadow: var(--shadow-sm);
+    }
+    .mini-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: var(--shadow); }
+
+    .mini-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .mini-icon i { width: 20px; height: 20px; color: white; }
+    .mini-icon.blue   { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+    .mini-icon.green  { background: linear-gradient(135deg, #10b981, #047857); }
+    .mini-icon.red    { background: linear-gradient(135deg, #ef4444, #b91c1c); }
+    .mini-icon.gold   { background: linear-gradient(135deg, #F59E0B, #d97706); }
+    .mini-icon.purple { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
+
+    .mini-body { flex: 1; min-width: 0; }
+    .mini-body .label { font-size: 11px; color: var(--text-muted); font-weight: 600; margin-bottom: 2px; }
+    .mini-body .value { font-size: 18px; font-weight: 800; color: var(--text); line-height: 1; }
+
+    /* Empty state */
+    .empty-state {
+      padding: 60px 20px;
+      text-align: center;
+      color: var(--text-muted);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+    }
+    .empty-state i { width: 56px; height: 56px; opacity: 0.3; margin-bottom: 12px; }
+    .empty-state h2 { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+    .empty-state p { font-size: 13px; margin-bottom: 20px; }
+
+    /* Table */
+    .table-wrap {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+    }
+
+    .table-scroll { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      min-width: 1100px;
+    }
+
+    thead { background: var(--bg); border-bottom: 1px solid var(--border); }
+
+    th {
+      text-align: right;
+      padding: 14px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+
+    tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--bg); }
+
+    td { padding: 12px; color: var(--text); vertical-align: middle; }
+
+    .emp-cell { display: flex; align-items: center; gap: 10px; }
+    .emp-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 14px;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    .emp-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .emp-name { font-weight: 700; color: var(--text); font-size: 13px; }
+    .emp-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; font-family: monospace; }
+
+    .money-cell {
+      font-weight: 700;
+      text-align: center;
+      font-family: 'Courier New', monospace;
+    }
+    .money-cell.basic { color: var(--text); }
+    .money-cell.deductions { color: var(--danger); }
+    .money-cell.bonuses { color: var(--success); }
+    .money-cell.net {
+      color: var(--accent);
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    .badge-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      border-radius: 20px;
+      white-space: nowrap;
+    }
+    .badge-tag.green  { background: rgba(16,185,129,0.12); color: var(--success); }
+    .badge-tag.gold   { background: rgba(245,158,11,0.12); color: var(--warning); }
+    .badge-tag.gray   { background: rgba(148,163,184,0.15); color: var(--text-muted); }
+
+    .actions-cell { display: flex; gap: 6px; justify-content: flex-end; }
+
+    .action-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    .action-btn:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
+    .action-btn.danger:hover { border-color: var(--danger); color: var(--danger); background: rgba(239,68,68,0.06); }
+    .action-btn i { width: 15px; height: 15px; }
+
+    /* Summary footer */
+    .payroll-summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      padding: 16px 20px;
+      background: var(--bg);
+      border-top: 2px solid var(--accent);
+    }
+
+    .summary-box {
+      text-align: center;
+    }
+    .summary-box .label {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+    .summary-box .value {
+      font-size: 18px;
+      font-weight: 800;
+      font-family: 'Courier New', monospace;
+    }
+    .summary-box .value.basic { color: var(--text); }
+    .summary-box .value.deductions { color: var(--danger); }
+    .summary-box .value.bonuses { color: var(--success); }
+    .summary-box .value.net { color: var(--accent); font-size: 22px; }
+
+    /* Card */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+
+    .card-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .card-header h3 { font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+    .card-header h3 i { width: 18px; height: 18px; color: var(--accent); }
+
+    /* Pending banner */
+    .pending-banner {
+      background: linear-gradient(135deg, var(--warning), #d97706);
+      color: white;
+      padding: 14px 18px;
+      border-radius: var(--radius);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      box-shadow: var(--shadow);
+    }
+    .pending-banner .info { display: flex; align-items: center; gap: 12px; font-weight: 700; }
+    .pending-banner .info i { width: 22px; height: 22px; }
+    .pending-banner .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    /* Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(11, 44, 77, 0.5);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .modal-backdrop.show { display: flex; opacity: 1; }
+
+    .modal {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-lg);
+      width: 100%;
+      max-width: 520px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      transform: scale(0.95);
+      transition: transform 0.2s;
+      overflow: hidden;
+    }
+    .modal-backdrop.show .modal { transform: scale(1); }
+
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+    .modal-header h3 { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+    .modal-header h3 i { width: 18px; height: 18px; color: var(--accent); }
+
+    .modal-close {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    .modal-close:hover { background: var(--bg); color: var(--danger); }
+    .modal-close i { width: 18px; height: 18px; }
+
+    .modal-body {
+      padding: 20px;
+      overflow-y: auto;
+      flex: 1;
+      min-height: 0;
+    }
+    .modal-body::-webkit-scrollbar { width: 8px; }
+    .modal-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+
+    .modal-footer {
+      padding: 14px 20px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      background: var(--bg);
+      flex-shrink: 0;
+    }
+
+    .form-group { margin-bottom: 14px; }
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      padding: 10px 14px;
+      font-family: inherit;
+      font-size: 14px;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      outline: none;
+      transition: all 0.2s;
+    }
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+      border-color: var(--accent);
+      background: var(--card);
+      box-shadow: 0 0 0 3px rgba(20,184,166,0.1);
+    }
+
+    .emp-summary-box {
+      padding: 14px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      margin-bottom: 14px;
+    }
+    .emp-summary-box .row {
+      display: flex;
+      justify-content: space-between;
+      padding: 5px 0;
+      font-size: 13px;
+    }
+    .emp-summary-box .row .label { color: var(--text-muted); font-weight: 600; }
+    .emp-summary-box .row .value { font-weight: 700; font-family: 'Courier New', monospace; }
+
+    /* Overlay (mobile) */
+    .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; opacity: 0; transition: opacity 0.3s; }
+    .overlay.show { display: block; opacity: 1; }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .sidebar { transform: translateX(100%); }
+      .sidebar.open { transform: translateX(0); }
+      .main { margin-right: 0; }
+      .menu-toggle { display: flex; }
+      .user-info { display: none; }
+    }
+
+    @media (max-width: 640px) {
+      .content { padding: 16px; }
+      .topbar { padding: 0 14px; gap: 10px; }
+      .topbar-title { font-size: 15px; }
+      .page-head { flex-direction: column; align-items: stretch; }
+      .page-head h1 { font-size: 20px; }
+      .month-selector { padding: 12px; flex-direction: column; align-items: stretch; }
+      .modal-footer { flex-direction: column-reverse; }
+      .modal-footer .btn { width: 100%; justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <img src="logo.png" alt="رفاد" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=fallback>R</span>';">
+      </div>
+      <div class="sidebar-brand">
+        <h2>رفاد</h2>
+        <p>نظام إدارة الأدوية</p>
+      </div>
+    </div>
+    <nav class="sidebar-nav" id="sidebarNav"></nav>
+  </aside>
+
+  <div class="overlay" id="overlay"></div>
+
+  <!-- Main -->
+  <div class="main">
+
+    <header class="topbar">
+      <button class="menu-toggle" id="menuToggle"><i data-lucide="menu"></i></button>
+      <div class="topbar-title">الرواتب</div>
+      <div class="topbar-actions">
+        <button class="icon-btn" id="themeToggle" title="الوضع الليلي/النهاري">
+          <i data-lucide="moon" id="themeIcon"></i>
+        </button>
+        <button class="icon-btn" id="notifBtn" title="الإشعارات" style="position:relative;">
+          <i data-lucide="bell"></i>
+          <span class="dot" id="notifDot" style="display:none;"></span>
+        </button>
+        <div style="position:relative;">
+          <div class="user-menu" id="userMenu">
+            <div class="user-avatar" id="userAvatar">م</div>
+            <div class="user-info">
+              <span class="name" id="userName">—</span>
+              <span class="role" id="userRole">—</span>
+            </div>
+            <i data-lucide="chevron-down" style="width:14px;height:14px;opacity:0.5;"></i>
+          </div>
+          <div class="dropdown" id="userDropdown">
+            <a href="company-settings.html" class="dropdown-item"><i data-lucide="settings"></i> الإعدادات</a>
+            <a href="employees.html" class="dropdown-item"><i data-lucide="user-cog"></i> الملف الشخصي</a>
+            <div class="dropdown-divider"></div>
+            <div class="dropdown-item danger" id="logoutBtn"><i data-lucide="log-out"></i> تسجيل الخروج</div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="content">
+
+      <div class="page-head">
+        <div>
+          <h1>الرواتب</h1>
+          <p>إدارة كشوف الرواتب الشهرية</p>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn btn-outline" id="exportBtn">
+            <i data-lucide="download"></i> تصدير
+          </button>
+          <button class="btn btn-primary" id="generateBtn">
+            <i data-lucide="sparkles"></i> إنشاء كشف الشهر
+          </button>
+        </div>
+      </div>
+
+      <!-- Month selector -->
+      <div class="month-selector">
+        <i data-lucide="calendar" style="width:20px;height:20px;color:var(--accent);"></i>
+        <label>اختر الشهر:</label>
+        <select id="monthSelect"></select>
+        <input type="number" id="yearInput" min="2020" max="2100" style="width:100px;" dir="ltr">
+        <button class="btn btn-outline btn-sm" id="refreshBtn">
+          <i data-lucide="refresh-cw"></i> تحديث
+        </button>
+      </div>
+
+      <!-- Mini stats -->
+      <div class="mini-stats">
+        <div class="mini-card">
+          <div class="mini-icon blue"><i data-lucide="users"></i></div>
+          <div class="mini-body">
+            <div class="label">عدد الموظفين</div>
+            <div class="value" id="statCount">—</div>
+          </div>
+        </div>
+        <div class="mini-card">
+          <div class="mini-icon green"><i data-lucide="wallet"></i></div>
+          <div class="mini-body">
+            <div class="label">إجمالي الرواتب</div>
+            <div class="value" id="statTotal">—</div>
+          </div>
+        </div>
+        <div class="mini-card">
+          <div class="mini-icon red"><i data-lucide="trending-down"></i></div>
+          <div class="mini-body">
+            <div class="label">إجمالي الخصومات</div>
+            <div class="value" id="statDeductions">—</div>
+          </div>
+        </div>
+        <div class="mini-card">
+          <div class="mini-icon gold"><i data-lucide="trending-up"></i></div>
+          <div class="mini-body">
+            <div class="label">إجمالي الحوافز</div>
+            <div class="value" id="statBonuses">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty state (no data) -->
+      <div class="empty-state" id="emptyState" style="display:none;">
+        <i data-lucide="wallet"></i>
+        <h2>لا يوجد كشف رواتب لهذا الشهر</h2>
+        <p>اضغط "إنشاء كشف الشهر" لإنشاء الكشف من بيانات الموظفين</p>
+        <button class="btn btn-primary" id="generateBtn2">
+          <i data-lucide="sparkles"></i> إنشاء كشف الشهر
+        </button>
+      </div>
+
+      <!-- Content -->
+      <div id="payrollContent" style="display:none;">
+
+        <!-- Pending banner -->
+        <div class="pending-banner" id="pendingBanner" style="display:none;">
+          <div class="info">
+            <i data-lucide="alert-circle"></i>
+            <span>هذا الكشف <strong>معلق</strong> — لم يتم اعتماده بعد</span>
+          </div>
+          <div class="actions">
+            <button class="btn btn-success btn-sm" id="approveBtn">
+              <i data-lucide="check-circle-2"></i> اعتماد وصرف
+            </button>
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="table-wrap">
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>الموظف</th>
+                  <th>الراتب الأساسي</th>
+                  <th>الخصومات</th>
+                  <th>الحوافز</th>
+                  <th>الصافي</th>
+                  <th>الحالة</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="tableBody"></tbody>
+            </table>
+          </div>
+
+          <div class="payroll-summary" id="summary">
+            <div class="summary-box">
+              <div class="label">إجمالي الأساسي</div>
+              <div class="value basic" id="sumBasic">0.00</div>
+            </div>
+            <div class="summary-box">
+              <div class="label">إجمالي الخصومات</div>
+              <div class="value deductions" id="sumDeductions">0.00</div>
+            </div>
+            <div class="summary-box">
+              <div class="label">إجمالي الحوافز</div>
+              <div class="value bonuses" id="sumBonuses">0.00</div>
+            </div>
+            <div class="summary-box">
+              <div class="label">إجمالي الصافي</div>
+              <div class="value net" id="sumNet">0.00</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Modal: Edit Row -->
+  <div class="modal-backdrop" id="editModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3><i data-lucide="edit-3"></i> <span id="editModalTitle">تعديل الراتب</span></h3>
+        <button class="modal-close" data-close><i data-lucide="x"></i></button>
+      </div>
+      <form id="editForm">
+        <div class="modal-body">
+
+          <div class="emp-summary-box" id="empSummaryBox">
+            <!-- JS -->
+          </div>
+
+          <div class="form-group">
+            <label>الراتب الأساسي</label>
+            <input type="number" name="basic_salary" min="0" step="0.01" required>
+          </div>
+
+          <div class="form-group">
+            <label>الخصومات</label>
+            <input type="number" name="deductions" min="0" step="0.01" value="0">
+          </div>
+
+          <div class="form-group">
+            <label>الحوافز</label>
+            <input type="number" name="bonuses" min="0" step="0.01" value="0">
+          </div>
+
+          <div class="form-group">
+            <label>ملاحظات</label>
+            <textarea name="notes" maxlength="255" placeholder="ملاحظات إضافية..."></textarea>
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" data-close>إلغاء</button>
+          <button type="submit" class="btn btn-primary" id="saveBtn">
+            <i data-lucide="save"></i> <span id="saveBtnText">حفظ</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="refad-core.js"></script>
+  <script src="refad-auth.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      // ============================================================
+      // 1) Guard
+      // ============================================================
+      const session = Refad.Auth.guardPage('payroll.view');
+      if (!session) return;
+
+      const canManage = Refad.Session.has('payroll.manage');
+
+      // ============================================================
+      // 2) State
+      // ============================================================
+      const state = {
+        month: new Date().getMonth() + 1,
+        year: new Date().getFullYear(),
+        rows: [],
+        summary: { basic: 0, deductions: 0, bonuses: 0, net: 0 },
+        editingId: null,
+        currentRow: null
+      };
+
+      const MONTH_NAMES = [
+        'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
+        'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
+      ];
+
+      // ============================================================
+      // 3) Sidebar
+      // ============================================================
+      const MENU = [
+        { section: 'الرئيسية', items: [
+          { label: 'لوحة التحكم', icon: 'layout-dashboard', href: 'dashboard.html' },
+          { label: 'الشات', icon: 'message-circle', href: 'chat.html', permission: 'chat.use' },
+          { label: 'الإشعارات', icon: 'bell', href: 'notifications.html', permission: 'notifications.view' }
+        ]},
+        { section: 'العمليات', items: [
+          { label: 'الأصناف', icon: 'package', href: 'products.html', permission: 'products.view' },
+          { label: 'المخزون', icon: 'warehouse', href: 'inventory.html', permission: 'inventory.view' },
+          { label: 'طلبات الشراء', icon: 'clipboard-list', href: 'purchase-requests.html', permission: 'purchases.view' },
+          { label: 'الاستلامات', icon: 'package-check', href: 'receipts.html', permission: 'purchases.receive' },
+          { label: 'طلبات البيع', icon: 'shopping-cart', href: 'sales-orders.html', permission: 'sales.view' },
+          { label: 'نقطة البيع', icon: 'scan-barcode', href: 'pos.html', permission: 'sales.pos', badge: 'POS', badgeClass: 'teal' },
+          { label: 'الفواتير', icon: 'receipt', href: 'invoices.html', permission: 'sales.view' }
+        ]},
+        { section: 'الأطراف', items: [
+          { label: 'الموردين', icon: 'truck', href: 'suppliers.html', permission: 'suppliers.view' },
+          { label: 'العملاء', icon: 'users', href: 'customers.html', permission: 'customers.view' }
+        ]},
+        { section: 'المخزون', items: [
+          { label: 'الجرد', icon: 'clipboard-check', href: 'stocktake.html', permission: 'inventory.stocktake' },
+          { label: 'التسويات', icon: 'sliders-horizontal', href: 'adjustments.html', permission: 'inventory.adjust' }
+        ]},
+        { section: 'الموارد البشرية', items: [
+          { label: 'الموظفين', icon: 'user-cog', href: 'employees.html', permission: 'employees.view' },
+          { label: 'الصلاحيات', icon: 'shield-check', href: 'permissions.html', permission: 'permissions.manage' },
+          { label: 'الحضور', icon: 'calendar-check', href: 'attendance.html', permission: 'attendance.view' },
+          { label: 'الرواتب', icon: 'wallet', href: 'payroll.html', permission: 'payroll.view' }
+        ]},
+        { section: 'المالية', items: [
+          { label: 'المصاريف', icon: 'banknote', href: 'expenses.html', permission: 'expenses.view' },
+          { label: 'التقارير', icon: 'bar-chart-3', href: 'reports.html', permission: 'reports.view' }
+        ]},
+        { section: 'النظام', items: [
+          { label: 'إعدادات الشركة', icon: 'settings', href: 'company-settings.html', permission: 'settings.view' },
+          { label: 'شاشة الأدمن', icon: 'shield', href: 'admin.html', permission: 'admin.full', badge: 'Admin', badgeClass: 'gold' }
+        ]}
+      ];
+
+      function buildSidebar() {
+        const nav = document.getElementById('sidebarNav');
+        const currentPage = 'payroll.html';
+        const frag = document.createDocumentFragment();
+        MENU.forEach(group => {
+          const allowed = group.items.filter(it => !it.permission || Refad.Session.has(it.permission));
+          if (!allowed.length) return;
+          frag.appendChild(Refad.el('div', { class: 'nav-section' }, group.section));
+          allowed.forEach(item => {
+            const a = Refad.el('a', {
+              href: item.href,
+              class: 'nav-item' + (item.href === currentPage ? ' active' : '')
+            });
+            a.innerHTML = `<i data-lucide="${item.icon}"></i><span>${Refad.escapeHtml(item.label)}</span>${item.badge ? `<span class="badge ${item.badgeClass || ''}">${item.badge}</span>` : ''}`;
+            frag.appendChild(a);
+          });
+        });
+        nav.innerHTML = '';
+        nav.appendChild(frag);
+        if (window.lucide) lucide.createIcons();
+      }
+
+      // ============================================================
+      // 4) UI helpers
+      // ============================================================
+      function fillUser() {
+        const av = document.getElementById('userAvatar');
+        const initial = (session.full_name || '؟').trim().charAt(0);
+        if (session.avatar_url) av.innerHTML = `<img src="${Refad.escapeHtml(session.avatar_url)}" alt="">`;
+        else av.textContent = initial;
+        document.getElementById('userName').textContent = session.full_name;
+        document.getElementById('userRole').textContent = Refad.Session.has('company.owner') ? 'صاحب الشركة' : 'موظف';
+      }
+
+      function setupTheme() {
+        const btn = document.getElementById('themeToggle');
+        const icon = document.getElementById('themeIcon');
+        const refresh = () => {
+          const isDark = Refad.theme.get() === 'dark';
+          icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+          if (window.lucide) lucide.createIcons();
+        };
+        refresh();
+        btn.addEventListener('click', () => { Refad.theme.toggle(); refresh(); });
+      }
+
+      function setupSidebarMobile() {
+        const sb = document.getElementById('sidebar');
+        const ov = document.getElementById('overlay');
+        document.getElementById('menuToggle').addEventListener('click', () => {
+          sb.classList.add('open'); ov.classList.add('show');
+        });
+        ov.addEventListener('click', () => {
+          sb.classList.remove('open'); ov.classList.remove('show');
+        });
+      }
+
+      function setupUserMenu() {
+        const m = document.getElementById('userMenu');
+        const d = document.getElementById('userDropdown');
+        m.addEventListener('click', e => { e.stopPropagation(); d.classList.toggle('show'); });
+        document.addEventListener('click', () => d.classList.remove('show'));
+        d.addEventListener('click', e => e.stopPropagation());
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+          if (await Refad.alert.confirm('تسجيل الخروج', 'هل تريد الخروج؟', 'خروج')) {
+            await Refad.Auth.logout();
+          }
+        });
+      }
+
+      function setupNotifBtn() {
+        document.getElementById('notifBtn').addEventListener('click', () => {
+          window.location.href = 'notifications.html';
+        });
+      }
+
+      // ============================================================
+      // 5) Month selector
+      // ============================================================
+      function setupMonthSelector() {
+        const sel = document.getElementById('monthSelect');
+        sel.innerHTML = MONTH_NAMES.map((name, i) =>
+          `<option value="${i + 1}">${name}</option>`
+        ).join('');
+
+        sel.value = state.month;
+        document.getElementById('yearInput').value = state.year;
+
+        sel.addEventListener('change', e => {
+          state.month = parseInt(e.target.value, 10);
+          loadPayroll();
+        });
+        document.getElementById('yearInput').addEventListener('change', e => {
+          state.year = parseInt(e.target.value, 10) || new Date().getFullYear();
+          loadPayroll();
+        });
+        document.getElementById('refreshBtn').addEventListener('click', loadPayroll);
+      }
+
+      // ============================================================
+      // 6) Load payroll
+      // ============================================================
+      async function loadPayroll(silent) {
+        try {
+          const rows = await Refad.db.select('payroll', {
+            columns: `id, user_id, month, year, basic_salary, deductions, bonuses, overtime, net_salary,
+                      status, paid_at, notes,
+                      users(id, full_name, username, avatar_url, salary)`,
+            eq: { company_id: session.company_id, month: state.month, year: state.year },
+            order: { column: 'user_id', ascending: true }
+          });
+
+          state.rows = rows.filter(r => r.users);
+
+          if (state.rows.length === 0) {
+            showEmpty();
+            renderStats();
+          } else {
+            showContent();
+            renderTable();
+            renderStats();
+            checkPending();
+          }
+        } catch (e) {
+          console.error('[Payroll] load failed:', e);
+          Refad.toast.error('تعذّر التحميل: ' + e.message);
+          showEmpty();
+        }
+      }
+
+      function showEmpty() {
+        document.getElementById('emptyState').style.display = 'block';
+        document.getElementById('payrollContent').style.display = 'none';
+      }
+
+      function showContent() {
+        document.getElementById('emptyState').style.display = 'none';
+        document.getElementById('payrollContent').style.display = 'block';
+      }
+
+      function checkPending() {
+        const hasPending = state.rows.some(r => r.status === 'pending');
+        document.getElementById('pendingBanner').style.display = hasPending ? 'flex' : 'none';
+        if (window.lucide) lucide.createIcons();
+      }
+
+      function renderStats() {
+        const count = state.rows.length;
+        const total = state.rows.reduce((s, r) => s + (Number(r.net_salary) || 0), 0);
+        const deductions = state.rows.reduce((s, r) => s + (Number(r.deductions) || 0), 0);
+        const bonuses = state.rows.reduce((s, r) => s + (Number(r.bonuses) || 0) + (Number(r.overtime) || 0), 0);
+
+        document.getElementById('statCount').textContent = Refad.format.number(count);
+        document.getElementById('statTotal').textContent = Refad.format.money(total);
+        document.getElementById('statDeductions').textContent = Refad.format.money(deductions);
+        document.getElementById('statBonuses').textContent = Refad.format.money(bonuses);
+      }
+
+      // ============================================================
+      // 7) Render table
+      // ============================================================
+      function renderTable() {
+        const tbody = document.getElementById('tableBody');
+        if (!state.rows.length) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="7" style="padding:40px;text-align:center;color:var(--text-muted);">
+                لا توجد بيانات
+              </td>
+            </tr>
+          `;
+          return;
+        }
+
+        tbody.innerHTML = state.rows.map(r => {
+          const emp = r.users;
+          const initial = (emp.full_name || '؟').trim().charAt(0);
+          const statusTag = r.status === 'paid'
+            ? '<span class="badge-tag green">مدفوع</span>'
+            : '<span class="badge-tag gold">معلق</span>';
+
+          return `
+            <tr>
+              <td>
+                <div class="emp-cell">
+                  <div class="emp-avatar">
+                    ${emp.avatar_url ? `<img src="${Refad.escapeHtml(emp.avatar_url)}" alt="">` : Refad.escapeHtml(initial)}
+                  </div>
+                  <div>
+                    <div class="emp-name">${Refad.escapeHtml(emp.full_name)}</div>
+                    <div class="emp-sub">${Refad.escapeHtml(emp.username)}</div>
+                  </div>
+                </div>
+              </td>
+              <td class="money-cell basic">${Refad.format.number(r.basic_salary || 0, 2)}</td>
+              <td class="money-cell deductions">- ${Refad.format.number(r.deductions || 0, 2)}</td>
+              <td class="money-cell bonuses">+ ${Refad.format.number((r.bonuses || 0) + (r.overtime || 0), 2)}</td>
+              <td class="money-cell net">${Refad.format.number(r.net_salary || 0, 2)}</td>
+              <td>${statusTag}</td>
+              <td>
+                <div class="actions-cell">
+                  ${canManage && r.status !== 'paid' ? `
+                    <button class="action-btn" data-action="edit" data-id="${r.id}" title="تعديل">
+                      <i data-lucide="pencil"></i>
+                    </button>
+                  ` : ''}
+                  ${canManage && r.status !== 'paid' ? `
+                    <button class="action-btn danger" data-action="delete" data-id="${r.id}" title="حذف">
+                      <i data-lucide="trash-2"></i>
+                    </button>
+                  ` : ''}
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join('');
+
+        if (window.lucide) lucide.createIcons();
+        renderSummary();
+      }
+
+      function renderSummary() {
+        const basic = state.rows.reduce((s, r) => s + (Number(r.basic_salary) || 0), 0);
+        const deductions = state.rows.reduce((s, r) => s + (Number(r.deductions) || 0), 0);
+        const bonuses = state.rows.reduce((s, r) => s + (Number(r.bonuses) || 0) + (Number(r.overtime) || 0), 0);
+        const net = state.rows.reduce((s, r) => s + (Number(r.net_salary) || 0), 0);
+
+        document.getElementById('sumBasic').textContent = Refad.format.number(basic, 2);
+        document.getElementById('sumDeductions').textContent = Refad.format.number(deductions, 2);
+        document.getElementById('sumBonuses').textContent = Refad.format.number(bonuses, 2);
+        document.getElementById('sumNet').textContent = Refad.format.number(net, 2);
+      }
+
+      // ============================================================
+      // 8) Generate payroll
+      // ============================================================
+      async function generatePayroll() {
+        const ok = await Refad.alert.confirm(
+          'إنشاء كشف الشهر',
+          `سيتم إنشاء كشف رواتب لشهر ${MONTH_NAMES[state.month - 1]} ${state.year} لكل الموظفين النشطين. متابعة؟`,
+          'إنشاء'
+        );
+        if (!ok) return;
+
+        try {
+          // 1. تحقق أنه لم يتم الإنشاء مسبقاً
+          const existingCount = await Refad.db.count('payroll', {
+            eq: { company_id: session.company_id, month: state.month, year: state.year }
+          });
+
+          if (existingCount > 0) {
+            Refad.toast.warning('يوجد كشف لهذا الشهر بالفعل');
+            return;
+          }
+
+          // 2. جلب الموظفين النشطين
+          const employees = await Refad.db.select('users', {
+            columns: 'id, full_name, salary',
+            eq: { company_id: session.company_id, is_active: true }
+          });
+
+          if (!employees.length) {
+            Refad.toast.warning('لا يوجد موظفين نشطين');
+            return;
+          }
+
+          // 3. جلب الحضور للشهر (لحساب الخصومات للغياب)
+          const monthStart = `${state.year}-${String(state.month).padStart(2, '0')}-01`;
+          const monthEnd = dayjs(monthStart).endOf('month').format('YYYY-MM-DD');
+
+          const attendance = await Refad.db.select('attendance', {
+            columns: 'user_id, status, att_date',
+            eq: { company_id: session.company_id },
+            gte: { att_date: monthStart },
+            lte: { att_date: monthEnd }
+          }).catch(() => []);
+
+          // Count absences per employee
+          const absenceMap = {};
+          attendance.forEach(a => {
+            if (a.status === 'absent') {
+              absenceMap[a.user_id] = (absenceMap[a.user_id] || 0) + 1;
+            }
+          });
+
+          // 4. احسب الراتب لكل موظف
+          const rowsToInsert = employees.map(emp => {
+            const basic = Number(emp.salary) || 0;
+            const absences = absenceMap[emp.id] || 0;
+            // خصم الغياب = (الراتب / 30) × عدد الغياب
+            const absenceDeduction = absences > 0 ? (basic / 30) * absences : 0;
+            const deductions = Math.round(absenceDeduction * 100) / 100;
+            const bonuses = 0;
+            const overtime = 0;
+            const net = Math.round((basic + bonuses + overtime - deductions) * 100) / 100;
+
+            return {
+              company_id: session.company_id,
+              user_id: emp.id,
+              month: state.month,
+              year: state.year,
+              basic_salary: basic,
+              deductions,
+              bonuses,
+              overtime,
+              net_salary: net,
+              status: 'pending',
+              notes: absences > 0 ? `خصم ${absences} يوم غياب` : null
+            };
+          });
+
+          await Refad.db.insertMany('payroll', rowsToInsert);
+
+          await Refad.logActivity('generate_payroll', 'payroll',
+            `إنشاء كشف رواتب ${MONTH_NAMES[state.month - 1]} ${state.year}`, null);
+
+          Refad.toast.success('تم إنشاء كشف الرواتب');
+          await loadPayroll(true);
+        } catch (e) {
+          console.error('Generate failed:', e);
+          Refad.toast.error('فشل الإنشاء: ' + e.message);
+        }
+      }
+
+      // ============================================================
+      // 9) Edit row
+      // ============================================================
+      function openEditModal(row) {
+        state.editingId = row.id;
+        state.currentRow = row;
+
+        const emp = row.users;
+        const initial = (emp.full_name || '؟').trim().charAt(0);
+
+        document.getElementById('editModalTitle').textContent = `تعديل راتب ${emp.full_name}`;
+        document.getElementById('empSummaryBox').innerHTML = `
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+            <div class="emp-avatar" style="width:42px;height:42px;font-size:16px;">
+              ${emp.avatar_url ? `<img src="${Refad.escapeHtml(emp.avatar_url)}" alt="">` : Refad.escapeHtml(initial)}
+            </div>
+            <div>
+              <div style="font-weight:700;">${Refad.escapeHtml(emp.full_name)}</div>
+              <div style="font-size:11px;color:var(--text-muted);">${Refad.escapeHtml(emp.username)}</div>
+            </div>
+          </div>
+          <div class="row"><span class="label">الشهر:</span><span class="value">${MONTH_NAMES[state.month - 1]} ${state.year}</span></div>
+        `;
+
+        const form = document.getElementById('editForm');
+        form.basic_salary.value = row.basic_salary || 0;
+        form.deductions.value = row.deductions || 0;
+        form.bonuses.value = row.bonuses || 0;
+        form.notes.value = row.notes || '';
+
+        document.getElementById('editModal').classList.add('show');
+        if (window.lucide) lucide.createIcons();
+      }
+
+      function closeEditModal() {
+        document.getElementById('editModal').classList.remove('show');
+        state.editingId = null;
+        state.currentRow = null;
+      }
+
+      async function saveEdit(e) {
+        e.preventDefault();
+        const form = e.target;
+        const btn = document.getElementById('saveBtn');
+        const originalText = document.getElementById('saveBtnText').textContent;
+
+        const basic = Refad.toNum(form.basic_salary.value);
+        const deductions = Refad.toNum(form.deductions.value);
+        const bonuses = Refad.toNum(form.bonuses.value);
+        const notes = form.notes.value.trim() || null;
+
+        // overtime from current row
+        const overtime = state.currentRow?.overtime || 0;
+        const net = Math.round((basic + bonuses + overtime - deductions) * 100) / 100;
+
+        btn.disabled = true;
+        document.getElementById('saveBtnText').textContent = 'جارٍ الحفظ...';
+
+        try {
+          await Refad.db.update('payroll', state.editingId, {
+            basic_salary: basic,
+            deductions,
+            bonuses,
+            net_salary: net,
+            notes
+          });
+
+          await Refad.logActivity('update_payroll', 'payroll', 'تعديل راتب', state.editingId);
+          Refad.toast.success('تم الحفظ');
+          closeEditModal();
+          await loadPayroll(true);
+        } catch (err) {
+          console.error('Save failed:', err);
+          Refad.toast.error('فشل الحفظ: ' + err.message);
+        } finally {
+          btn.disabled = false;
+          document.getElementById('saveBtnText').textContent = originalText;
+        }
+      }
+
+      // ============================================================
+      // 10) Delete row
+      // ============================================================
+      async function deleteRow(id) {
+        const ok = await Refad.alert.confirm('حذف السطر', 'هل تريد حذف هذا السطر من الكشف؟', 'حذف');
+        if (!ok) return;
+
+        try {
+          await Refad.db.remove('payroll', id);
+          await Refad.logActivity('delete_payroll', 'payroll', 'حذف سطر راتب', id);
+          Refad.toast.success('تم الحذف');
+          await loadPayroll(true);
+        } catch (e) {
+          Refad.toast.error('فشل الحذف: ' + e.message);
+        }
+      }
+
+      // ============================================================
+      // 11) Approve & pay
+      // ============================================================
+      async function approveAll() {
+        const ok = await Refad.alert.confirm(
+          'اعتماد وصرف الرواتب',
+          `سيتم اعتماد كل رواتب شهر ${MONTH_NAMES[state.month - 1]} ${state.year} وتسجيلها كمصروف. متابعة؟`,
+          'اعتماد'
+        );
+        if (!ok) return;
+
+        const btn = document.getElementById('approveBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i data-lucide="loader-2"></i> جارٍ الاعتماد...';
+        if (window.lucide) lucide.createIcons();
+
+        try {
+          const totalNet = state.rows.reduce((s, r) => s + (Number(r.net_salary) || 0), 0);
+          const now = new Date().toISOString();
+
+          // 1. حدّث كل سطر
+          for (const r of state.rows) {
+            await Refad.db.update('payroll', r.id, {
+              status: 'paid',
+              paid_at: now
+            });
+          }
+
+          // 2. سجل مصروف
+          await Refad.db.insert('expenses', {
+            company_id: session.company_id,
+            category: 'salary',
+            amount: totalNet,
+            description: `رواتب ${MONTH_NAMES[state.month - 1]} ${state.year}`,
+            expense_date: Refad.date.today(),
+            user_id: session.user_id
+          });
+
+          await Refad.logActivity('approve_payroll', 'payroll',
+            `اعتماد رواتب ${MONTH_NAMES[state.month - 1]} ${state.year} - ${Refad.format.money(totalNet)}`, null);
+
+          Refad.toast.success(`تم الاعتماد — ${Refad.format.money(totalNet)}`);
+          await loadPayroll(true);
+        } catch (e) {
+          console.error('Approve failed:', e);
+          Refad.toast.error('فشل الاعتماد: ' + e.message);
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = '<i data-lucide="check-circle-2"></i> اعتماد وصرف';
+          if (window.lucide) lucide.createIcons();
+        }
+      }
+
+      // ============================================================
+      // 12) Events
+      // ============================================================
+      function bindEvents() {
+        document.getElementById('generateBtn').addEventListener('click', generatePayroll);
+        document.getElementById('generateBtn2').addEventListener('click', generatePayroll);
+        document.getElementById('approveBtn').addEventListener('click', approveAll);
+
+        document.getElementById('tableBody').addEventListener('click', e => {
+          const btn = e.target.closest('[data-action]');
+          if (!btn) return;
+          const action = btn.dataset.action;
+          const id = parseInt(btn.dataset.id, 10);
+          const row = state.rows.find(r => r.id === id);
+          if (!row) return;
+
+          if (action === 'edit') openEditModal(row);
+          else if (action === 'delete') deleteRow(id);
+        });
+
+        // Modal close
+        document.querySelectorAll('[data-close]').forEach(b => {
+          b.addEventListener('click', closeEditModal);
+        });
+        document.getElementById('editModal').addEventListener('click', e => {
+          if (e.target.id === 'editModal') closeEditModal();
+        });
+        document.addEventListener('keydown', e => {
+          if (e.key === 'Escape') closeEditModal();
+        });
+
+        document.getElementById('editForm').addEventListener('submit', saveEdit);
+
+        // Export
+        document.getElementById('exportBtn').addEventListener('click', () => {
+          if (!state.rows.length) {
+            Refad.toast.warning('لا توجد بيانات');
+            return;
+          }
+          const rows = state.rows.map(r => ({
+            'الموظف': r.users?.full_name || '',
+            'اسم المستخدم': r.users?.username || '',
+            'الراتب الأساسي': r.basic_salary || 0,
+            'الخصومات': r.deductions || 0,
+            'الحوافز': r.bonuses || 0,
+            'الإضافي': r.overtime || 0,
+            'الصافي': r.net_salary || 0,
+            'الحالة': r.status === 'paid' ? 'مدفوع' : 'معلق',
+            'ملاحظات': r.notes || ''
+          }));
+          const ws = XLSX.utils.json_to_sheet(rows);
+          const wb = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(wb, ws, 'Payroll');
+          XLSX.writeFile(wb, `payroll-${state.year}-${String(state.month).padStart(2, '0')}.xlsx`);
+          Refad.toast.success('تم التصدير');
+        });
+      }
+
+      // ============================================================
+      // 13) Init
+      // ============================================================
+      async function init() {
+        buildSidebar();
+        fillUser();
+        setupTheme();
+        setupSidebarMobile();
+        setupUserMenu();
+        setupNotifBtn();
+        setupMonthSelector();
+        bindEvents();
+
+        await loadPayroll();
+
+        Refad.registerServiceWorker();
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+
+      console.log('%c[Refad] Payroll ready', 'color:#14B8A6;font-weight:bold');
+
+    })();
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+</body>
+</html>

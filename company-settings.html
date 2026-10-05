@@ -1,0 +1,1816 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0B2C4D">
+  <title>إعدادات الشركة - رفاد</title>
+
+  <link rel="icon" type="image/png" href="logo.png">
+  <link rel="manifest" href="manifest.json">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --primary: #0B2C4D;
+      --primary-light: #1e4a73;
+      --accent: #14B8A6;
+      --accent-dark: #0d9488;
+      --gold: #F59E0B;
+      --bg: #F1F5F9;
+      --card: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --danger: #ef4444;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --info: #3b82f6;
+      --sidebar-bg: #0B2C4D;
+      --sidebar-text: #cbd5e1;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+      --shadow: 0 4px 20px rgba(11, 44, 77, 0.08);
+      --shadow-lg: 0 10px 40px rgba(11, 44, 77, 0.12);
+      --radius: 14px;
+      --radius-sm: 10px;
+      --sidebar-w: 260px;
+      --topbar-h: 64px;
+    }
+
+    [data-theme="dark"] {
+      --bg: #0a1628;
+      --card: #0f2137;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --border: #1e3a5f;
+      --sidebar-bg: #061a2e;
+      --sidebar-text: #94a3b8;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Cairo', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      transition: background 0.3s, color 0.3s;
+    }
+
+    body { display: flex; min-height: 100vh; overflow-x: hidden; }
+
+    /* ============================================================
+       Sidebar
+       ============================================================ */
+    .sidebar {
+      width: var(--sidebar-w);
+      height: 100vh;
+      background: var(--sidebar-bg);
+      color: var(--sidebar-text);
+      position: fixed;
+      top: 0;
+      right: 0;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: -4px 0 20px rgba(0,0,0,0.1);
+    }
+
+    .sidebar-header {
+      padding: 20px 22px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      height: var(--topbar-h);
+      box-sizing: border-box;
+    }
+
+    .sidebar-logo {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 4px 12px rgba(20,184,166,0.4);
+    }
+    .sidebar-logo img { width: 70%; height: 70%; object-fit: contain; }
+    .sidebar-logo .fallback { color: white; font-weight: 800; font-size: 18px; }
+
+    .sidebar-brand h2 { color: white; font-size: 20px; font-weight: 800; letter-spacing: -0.5px; line-height: 1.2; }
+    .sidebar-brand p { font-size: 10px; color: var(--sidebar-text); opacity: 0.7; font-weight: 500; margin-top: 2px; }
+
+    .sidebar-nav { flex: 1; overflow-y: auto; padding: 12px 0; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.15) transparent; }
+    .sidebar-nav::-webkit-scrollbar { width: 5px; }
+    .sidebar-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 10px; }
+
+    .nav-section { padding: 8px 20px 4px; font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 1px; margin-top: 8px; }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 22px;
+      color: var(--sidebar-text);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      border-right: 3px solid transparent;
+      transition: all 0.2s;
+      position: relative;
+      cursor: pointer;
+    }
+    .nav-item:hover { background: rgba(255,255,255,0.05); color: white; border-right-color: rgba(20,184,166,0.5); }
+    .nav-item.active { background: rgba(20,184,166,0.12); color: white; border-right-color: var(--accent); font-weight: 600; }
+    .nav-item.active::before { content: ''; position: absolute; right: 0; top: 50%; transform: translateY(-50%); width: 3px; height: 60%; background: var(--accent); border-radius: 0 4px 4px 0; }
+    .nav-item i, .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; opacity: 0.85; }
+    .nav-item .badge { margin-right: auto; background: var(--danger); color: white; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
+    .nav-item .badge.teal { background: var(--accent); }
+    .nav-item .badge.gold { background: var(--gold); }
+
+    /* ============================================================
+       Main
+       ============================================================ */
+    .main { flex: 1; margin-right: var(--sidebar-w); min-width: 0; display: flex; flex-direction: column; }
+
+    .topbar {
+      height: var(--topbar-h);
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 0 24px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .menu-toggle { display: none; background: transparent; border: none; color: var(--text); cursor: pointer; padding: 8px; border-radius: 8px; }
+    .menu-toggle:hover { background: var(--bg); }
+
+    .topbar-title { font-size: 18px; font-weight: 700; color: var(--text); flex-shrink: 0; }
+    .topbar-actions { display: flex; align-items: center; gap: 8px; margin-right: auto; }
+
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      transition: all 0.2s;
+    }
+    .icon-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .icon-btn i, .icon-btn svg { width: 18px; height: 18px; }
+    .icon-btn .dot { position: absolute; top: 8px; left: 8px; width: 8px; height: 8px; background: var(--danger); border-radius: 50%; border: 2px solid var(--card); }
+
+    .user-menu {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 5px 12px 5px 5px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.2s;
+      border: 1px solid var(--border);
+      background: var(--card);
+    }
+    .user-menu:hover { background: var(--bg); }
+
+    .user-avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 700;
+      font-size: 14px;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .user-info { display: flex; flex-direction: column; line-height: 1.2; }
+    .user-info .name { font-size: 13px; font-weight: 700; color: var(--text); }
+    .user-info .role { font-size: 11px; color: var(--text-muted); }
+
+    .dropdown { position: absolute; top: calc(100% + 8px); left: 0; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: var(--shadow-lg); min-width: 200px; padding: 6px; opacity: 0; visibility: hidden; transform: translateY(-8px); transition: all 0.2s; z-index: 100; }
+    .dropdown.show { opacity: 1; visibility: visible; transform: translateY(0); }
+    .dropdown-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; color: var(--text); font-size: 13px; font-weight: 500; cursor: pointer; transition: background 0.15s; text-decoration: none; }
+    .dropdown-item:hover { background: var(--bg); }
+    .dropdown-item.danger { color: var(--danger); }
+    .dropdown-item.danger:hover { background: rgba(239,68,68,0.08); }
+    .dropdown-item i { width: 16px; height: 16px; }
+    .dropdown-divider { height: 1px; background: var(--border); margin: 6px 0; }
+
+    /* ============================================================
+       Content
+       ============================================================ */
+    .content { padding: 24px; flex: 1; max-width: 1100px; margin: 0 auto; width: 100%; }
+
+    .page-head {
+      margin-bottom: 20px;
+    }
+    .page-head h1 { font-size: 24px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+    .page-head p { font-size: 13px; color: var(--text-muted); }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 6px;
+      margin-bottom: 20px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      box-shadow: var(--shadow-sm);
+    }
+    .tabs::-webkit-scrollbar { display: none; }
+
+    .tab {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: transparent;
+      border: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .tab:hover { background: var(--bg); color: var(--text); }
+    .tab.active { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; box-shadow: 0 4px 12px rgba(20,184,166,0.3); }
+    .tab i { width: 16px; height: 16px; }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; animation: fadeIn 0.3s; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Card */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+
+    .card-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .card-header h3 { font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+    .card-header h3 i { width: 18px; height: 18px; color: var(--accent); }
+
+    .card-body { padding: 18px; }
+
+    /* Form */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+    .form-group { display: flex; flex-direction: column; }
+    .form-group.full { grid-column: 1 / -1; }
+    .form-group label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .form-group label .req { color: var(--danger); }
+    .form-group label .hint {
+      font-size: 10px;
+      color: var(--text-muted);
+      font-weight: 500;
+      margin-right: auto;
+    }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      padding: 10px 14px;
+      font-family: inherit;
+      font-size: 14px;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      outline: none;
+      transition: all 0.2s;
+      width: 100%;
+    }
+    .form-group textarea { resize: vertical; min-height: 80px; }
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      border-color: var(--accent);
+      background: var(--card);
+      box-shadow: 0 0 0 3px rgba(20,184,166,0.1);
+    }
+
+    .help-text {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: var(--radius-sm);
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn i { width: 16px; height: 16px; }
+
+    .btn-primary { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; }
+    .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(20,184,166,0.35); }
+
+    .btn-outline { background: var(--card); color: var(--text); border: 1px solid var(--border); }
+    .btn-outline:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-danger:hover:not(:disabled) { background: #b91c1c; }
+
+    .btn-success { background: var(--success); color: white; }
+    .btn-success:hover:not(:disabled) { background: #047857; }
+
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+    /* Actions bar */
+    .actions-bar {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      padding: 14px 18px;
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+
+    /* Logo uploader */
+    .logo-uploader {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .logo-preview {
+      width: 120px;
+      height: 120px;
+      border-radius: var(--radius);
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      overflow: hidden;
+      position: relative;
+      box-shadow: var(--shadow);
+      border: 3px solid var(--border);
+    }
+    .logo-preview img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: white;
+      padding: 8px;
+    }
+    .logo-preview .fallback-logo {
+      color: white;
+      font-size: 42px;
+      font-weight: 800;
+      letter-spacing: -2px;
+    }
+
+    .logo-actions {
+      flex: 1;
+      min-width: 220px;
+    }
+    .logo-actions h4 {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+    .logo-actions p {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+      line-height: 1.6;
+    }
+
+    /* Toggle row */
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .toggle-row:last-child { border-bottom: none; }
+
+    .toggle-info { flex: 1; min-width: 0; }
+    .toggle-info h4 {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 3px;
+    }
+    .toggle-info p {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 46px;
+      height: 26px;
+      flex-shrink: 0;
+    }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .switch .slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background: #cbd5e1;
+      border-radius: 26px;
+      transition: 0.3s;
+    }
+    .switch .slider:before {
+      content: '';
+      position: absolute;
+      height: 20px;
+      width: 20px;
+      left: 3px;
+      bottom: 3px;
+      background: white;
+      border-radius: 50%;
+      transition: 0.3s;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    .switch input:checked + .slider { background: var(--accent); }
+    .switch input:checked + .slider:before { transform: translateX(20px); }
+
+    /* Info box */
+    .info-box {
+      background: rgba(59,130,246,0.06);
+      border: 1.5px solid rgba(59,130,246,0.25);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      margin-bottom: 16px;
+      display: flex;
+      gap: 12px;
+      font-size: 13px;
+      color: var(--text);
+      line-height: 1.7;
+    }
+    .info-box i {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+      color: var(--info);
+      margin-top: 2px;
+    }
+
+    .info-box.warning {
+      background: rgba(245,158,11,0.06);
+      border-color: rgba(245,158,11,0.25);
+    }
+    .info-box.warning i { color: var(--warning); }
+
+    /* Password change modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(11, 44, 77, 0.5);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .modal-backdrop.show { display: flex; opacity: 1; }
+
+    .modal {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-lg);
+      width: 100%;
+      max-width: 480px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      transform: scale(0.95);
+      transition: transform 0.2s;
+      overflow: hidden;
+    }
+    .modal-backdrop.show .modal { transform: scale(1); }
+
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+    .modal-header h3 { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+    .modal-header h3 i { width: 18px; height: 18px; color: var(--accent); }
+
+    .modal-close {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    .modal-close:hover { background: var(--bg); color: var(--danger); }
+    .modal-close i { width: 18px; height: 18px; }
+
+    .modal-body {
+      padding: 20px;
+      overflow-y: auto;
+      flex: 1;
+      min-height: 0;
+    }
+    .modal-body::-webkit-scrollbar { width: 8px; }
+    .modal-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+
+    .modal-footer {
+      padding: 14px 20px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      background: var(--bg);
+      flex-shrink: 0;
+    }
+
+    /* Overlay (mobile) */
+    .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; opacity: 0; transition: opacity 0.3s; }
+    .overlay.show { display: block; opacity: 1; }
+
+    /* Skeleton */
+    .skeleton {
+      background: linear-gradient(90deg, var(--border) 25%, var(--bg) 50%, var(--border) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+      border-radius: 6px;
+      color: transparent !important;
+    }
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .sidebar { transform: translateX(100%); }
+      .sidebar.open { transform: translateX(0); }
+      .main { margin-right: 0; }
+      .menu-toggle { display: flex; }
+      .user-info { display: none; }
+    }
+
+    @media (max-width: 640px) {
+      .content { padding: 16px; }
+      .topbar { padding: 0 14px; gap: 10px; }
+      .topbar-title { font-size: 15px; }
+      .page-head h1 { font-size: 20px; }
+      .form-grid { grid-template-columns: 1fr; }
+      .tabs { padding: 4px; }
+      .tab { padding: 8px 12px; font-size: 12px; }
+      .actions-bar { flex-direction: column-reverse; }
+      .actions-bar .btn { width: 100%; justify-content: center; }
+      .logo-uploader { flex-direction: column; text-align: center; }
+      .modal-footer { flex-direction: column-reverse; }
+      .modal-footer .btn { width: 100%; justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <img src="logo.png" alt="رفاد" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=fallback>R</span>';">
+      </div>
+      <div class="sidebar-brand">
+        <h2>رفاد</h2>
+        <p>نظام إدارة الأدوية</p>
+      </div>
+    </div>
+    <nav class="sidebar-nav" id="sidebarNav"></nav>
+  </aside>
+
+  <div class="overlay" id="overlay"></div>
+
+  <!-- Main -->
+  <div class="main">
+
+    <header class="topbar">
+      <button class="menu-toggle" id="menuToggle"><i data-lucide="menu"></i></button>
+      <div class="topbar-title">إعدادات الشركة</div>
+      <div class="topbar-actions">
+        <button class="icon-btn" id="themeToggle" title="الوضع الليلي/النهاري">
+          <i data-lucide="moon" id="themeIcon"></i>
+        </button>
+        <button class="icon-btn" id="notifBtn" title="الإشعارات" style="position:relative;">
+          <i data-lucide="bell"></i>
+          <span class="dot" id="notifDot" style="display:none;"></span>
+        </button>
+        <div style="position:relative;">
+          <div class="user-menu" id="userMenu">
+            <div class="user-avatar" id="userAvatar">م</div>
+            <div class="user-info">
+              <span class="name" id="userName">—</span>
+              <span class="role" id="userRole">—</span>
+            </div>
+            <i data-lucide="chevron-down" style="width:14px;height:14px;opacity:0.5;"></i>
+          </div>
+          <div class="dropdown" id="userDropdown">
+            <a href="company-settings.html" class="dropdown-item"><i data-lucide="settings"></i> الإعدادات</a>
+            <a href="employees.html" class="dropdown-item"><i data-lucide="user-cog"></i> الملف الشخصي</a>
+            <div class="dropdown-divider"></div>
+            <div class="dropdown-item danger" id="logoutBtn"><i data-lucide="log-out"></i> تسجيل الخروج</div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="content">
+
+      <div class="page-head">
+        <h1>إعدادات الشركة</h1>
+        <p>إدارة بيانات الشركة، الفواتير، النظام، وتفضيلاتك الشخصية</p>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tabs">
+        <button class="tab active" data-tab="company"><i data-lucide="building-2"></i> الشركة</button>
+        <button class="tab" data-tab="invoices"><i data-lucide="receipt"></i> الفواتير</button>
+        <button class="tab" data-tab="system"><i data-lucide="settings-2"></i> النظام</button>
+        <button class="tab" data-tab="preferences"><i data-lucide="user-cog"></i> تفضيلاتي</button>
+        <button class="tab" data-tab="account"><i data-lucide="shield"></i> حسابي</button>
+      </div>
+
+      <!-- Panel: Company -->
+      <div class="tab-panel active" data-panel="company">
+
+        <div class="card">
+          <div class="card-header">
+            <h3><i data-lucide="image"></i> شعار الشركة</h3>
+          </div>
+          <div class="card-body">
+            <div class="logo-uploader">
+              <div class="logo-preview" id="logoPreview">
+                <span class="fallback-logo">R</span>
+              </div>
+              <div class="logo-actions">
+                <h4>رفع شعار الشركة</h4>
+                <p>
+                  الصيغ المدعومة: PNG, JPG, WebP<br>
+                  الحد الأقصى للحجم: 5 MB — سيتم الضغط تلقائياً<br>
+                  الأبعاد المثالية: مربع 512×512 أو أعلى
+                </p>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                  <input type="file" id="logoInput" accept="image/*" style="display:none;">
+                  <button class="btn btn-primary btn-sm" id="uploadLogoBtn">
+                    <i data-lucide="upload"></i> اختيار صورة
+                  </button>
+                  <button class="btn btn-outline btn-sm" id="removeLogoBtn" style="display:none;">
+                    <i data-lucide="trash-2"></i> إزالة الشعار
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3><i data-lucide="building-2"></i> بيانات الشركة</h3>
+          </div>
+          <form id="companyForm">
+            <div class="card-body">
+              <div class="form-grid">
+
+                <div class="form-group full">
+                  <label>اسم الشركة <span class="req">*</span></label>
+                  <input type="text" name="name" required maxlength="150" placeholder="شركة رفاد للأدوية">
+                </div>
+
+                <div class="form-group">
+                  <label>رقم الهاتف</label>
+                  <input type="tel" name="phone" maxlength="30" placeholder="01000000000" dir="ltr">
+                </div>
+
+                <div class="form-group">
+                  <label>البريد الإلكتروني</label>
+                  <input type="email" name="email" maxlength="120" placeholder="info@company.com" dir="ltr">
+                </div>
+
+                <div class="form-group">
+                  <label>الرقم الضريبي</label>
+                  <input type="text" name="tax_number" maxlength="50" placeholder="123-456-789" dir="ltr">
+                </div>
+
+                <div class="form-group">
+                  <label>السجل التجاري</label>
+                  <input type="text" name="commercial_register" maxlength="50" placeholder="اختياري" dir="ltr">
+                </div>
+
+                <div class="form-group full">
+                  <label>العنوان</label>
+                  <textarea name="address" maxlength="255" placeholder="القاهرة، مصر — شارع..."></textarea>
+                </div>
+
+                <div class="form-group full">
+                  <label>ملاحظات داخلية</label>
+                  <textarea name="notes" maxlength="255" placeholder="ملاحظات إضافية..."></textarea>
+                </div>
+
+              </div>
+            </div>
+            <div class="actions-bar">
+              <button type="reset" class="btn btn-outline">
+                <i data-lucide="rotate-ccw"></i> إعادة تعيين
+              </button>
+              <button type="submit" class="btn btn-primary" id="saveCompanyBtn">
+                <i data-lucide="save"></i> <span>حفظ التعديلات</span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+      </div>
+
+      <!-- Panel: Invoices -->
+      <div class="tab-panel" data-panel="invoices">
+
+        <div class="info-box">
+          <i data-lucide="info"></i>
+          <div>
+            هذه الإعدادات تُطبق على الفواتير الجديدة. الفواتير القديمة لن تتأثر.
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3><i data-lucide="hash"></i> ترقيم الفواتير</h3>
+          </div>
+          <form id="invoiceForm">
+            <div class="card-body">
+              <div class="form-grid">
+
+                <div class="form-group">
+                  <label>بادئة فاتورة البيع <span class="hint">مثال: INV</span></label>
+                  <input type="text" name="invoice_prefix" maxlength="10" placeholder="INV" dir="ltr">
+                </div>
+
+                <div class="form-group">
+                  <label>بادئة فاتورة الشراء <span class="hint">مثال: PUR</span></label>
+                  <input type="text" name="purchase_prefix" maxlength="10" placeholder="PUR" dir="ltr">
+                </div>
+
+                <div class="form-group">
+                  <label>الرقم التالي للبيع</label>
+                  <input type="number" name="next_invoice_number" min="1" placeholder="1" dir="ltr">
+                </div>
+
+                <div class="form-group">
+                  <label>الرقم التالي للشراء</label>
+                  <input type="number" name="next_purchase_number" min="1" placeholder="1" dir="ltr">
+                </div>
+
+                <div class="form-group full">
+                  <label>تذييل الفاتورة</label>
+                  <textarea name="invoice_footer" maxlength="255" placeholder="شكراً لتعاملكم معنا — سيظهر أسفل كل فاتورة"></textarea>
+                </div>
+
+                <div class="form-group full">
+                  <label>الشروط والأحكام</label>
+                  <textarea name="invoice_terms" maxlength="500" placeholder="الشروط المطبوعة على الفواتير..."></textarea>
+                </div>
+
+              </div>
+            </div>
+            <div class="actions-bar">
+              <button type="submit" class="btn btn-primary" id="saveInvoiceBtn">
+                <i data-lucide="save"></i> حفظ إعدادات الفواتير
+              </button>
+            </div>
+          </form>
+        </div>
+
+      </div>
+
+      <!-- Panel: System -->
+      <div class="tab-panel" data-panel="system">
+
+        <div class="info-box warning">
+          <i data-lucide="alert-triangle"></i>
+          <div>
+            <strong>تنبيه:</strong> تعديل هذه الإعدادات يؤثر على جميع مستخدمي النظام.
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3><i data-lucide="shield"></i> الأمان والجلسات</h3>
+          </div>
+          <form id="systemForm">
+            <div class="card-body">
+              <div class="form-grid">
+
+                <div class="form-group">
+                  <label>مدة الجلسة (ساعات)</label>
+                  <input type="number" name="session_hours" min="1" max="72" value="8" dir="ltr">
+                  <div class="help-text">بعد هذه المدة يسجّل المستخدم خروجه تلقائياً</div>
+                </div>
+
+                <div class="form-group">
+                  <label>مدة الخمول قبل الخروج (دقيقة)</label>
+                  <input type="number" name="idle_timeout_min" min="5" max="180" value="30" dir="ltr">
+                </div>
+
+                <div class="form-group">
+                  <label>محاولات الدخول قبل القفل</label>
+                  <input type="number" name="max_login_attempts" min="3" max="10" value="5" dir="ltr">
+                </div>
+
+                <div class="form-group">
+                  <label>مدة القفل (دقيقة)</label>
+                  <input type="number" name="lock_duration_min" min="5" max="120" value="15" dir="ltr">
+                </div>
+
+              </div>
+            </div>
+            <div class="actions-bar">
+              <button type="submit" class="btn btn-primary" id="saveSystemBtn">
+                <i data-lucide="save"></i> حفظ إعدادات النظام
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3><i data-lucide="bell"></i> التنبيهات والصيانة</h3>
+          </div>
+          <div class="card-body" style="padding:0 18px;">
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <h4>تفعيل الإشعارات الفورية</h4>
+                <p>تنبيهات فورية عند وصول رسالة أو تنبيه جديد</p>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="realtimeNotifs" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <h4>تنبيهات انتهاء الصلاحية</h4>
+                <p>تنبيه عند اقتراب انتهاء صلاحية أي تشغيلة</p>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="expiryAlerts" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <h4>تنبيهات المخزون المنخفض</h4>
+                <p>تنبيه عندما يقل المخزون عن حد إعادة الطلب</p>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="lowStockAlerts" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Panel: Preferences -->
+      <div class="tab-panel" data-panel="preferences">
+
+        <div class="card">
+          <div class="card-header">
+            <h3><i data-lucide="palette"></i> تفضيلات العرض</h3>
+          </div>
+          <div class="card-body" style="padding:0 18px;">
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <h4>الوضع الليلي</h4>
+                <p>تبديل بين الوضع الفاتح والداكن</p>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="darkModeToggle">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <h4>الإشعارات الصوتية</h4>
+                <p>صوت عند وصول إشعار جديد</p>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="soundToggle" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <h4>تأكيد قبل الحذف</h4>
+                <p>طلب تأكيد قبل حذف أي عنصر</p>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="confirmDeleteToggle" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3><i data-lucide="building"></i> معلومات الشركة الحالية</h3>
+          </div>
+          <div class="card-body">
+            <div class="form-grid">
+              <div class="form-group">
+                <label>الشركة</label>
+                <div style="padding:10px 14px;background:var(--bg);border:1px solid var(--border);border-radius:10px;font-weight:700;" id="infoCompanyName">—</div>
+              </div>
+              <div class="form-group">
+                <label>الباقة</label>
+                <div style="padding:10px 14px;background:var(--bg);border:1px solid var(--border);border-radius:10px;" id="infoPlan">—</div>
+              </div>
+              <div class="form-group">
+                <label>تاريخ الانتهاء</label>
+                <div style="padding:10px 14px;background:var(--bg);border:1px solid var(--border);border-radius:10px;" id="infoExpiry">—</div>
+              </div>
+              <div class="form-group">
+                <label>الدور</label>
+                <div style="padding:10px 14px;background:var(--bg);border:1px solid var(--border);border-radius:10px;" id="infoRole">—</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Panel: Account -->
+      <div class="tab-panel" data-panel="account">
+
+        <div class="card">
+          <div class="card-header">
+            <h3><i data-lucide="user"></i> بياناتي الشخصية</h3>
+          </div>
+          <form id="profileForm">
+            <div class="card-body">
+              <div class="form-grid">
+
+                <div class="form-group full">
+                  <label>الاسم الكامل</label>
+                  <input type="text" name="full_name" maxlength="120" required>
+                </div>
+
+                <div class="form-group">
+                  <label>اسم المستخدم</label>
+                  <input type="text" name="username" maxlength="50" disabled dir="ltr">
+                  <div class="help-text">لا يمكن تغيير اسم المستخدم</div>
+                </div>
+
+                <div class="form-group">
+                  <label>الهاتف</label>
+                  <input type="tel" name="phone" maxlength="30" dir="ltr">
+                </div>
+
+                <div class="form-group full">
+                  <label>البريد الإلكتروني</label>
+                  <input type="email" name="email" maxlength="120" dir="ltr">
+                </div>
+
+              </div>
+            </div>
+            <div class="actions-bar">
+              <button type="submit" class="btn btn-primary" id="saveProfileBtn">
+                <i data-lucide="save"></i> حفظ بياناتي
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3><i data-lucide="key"></i> كلمة المرور</h3>
+          </div>
+          <div class="card-body">
+            <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px;line-height:1.7;">
+              يمكنك تغيير كلمة المرور في أي وقت. استخدم كلمة مرور قوية (4 أحرف على الأقل).
+            </p>
+            <button class="btn btn-primary" id="changePasswordBtn">
+              <i data-lucide="key-round"></i> تغيير كلمة المرور
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Modal: Change Password -->
+  <div class="modal-backdrop" id="passwordModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3><i data-lucide="key-round"></i> تغيير كلمة المرور</h3>
+        <button class="modal-close" data-close><i data-lucide="x"></i></button>
+      </div>
+      <form id="passwordForm">
+        <div class="modal-body">
+          <div class="form-group" style="margin-bottom:14px;">
+            <label>كلمة المرور الحالية <span style="color:var(--danger);">*</span></label>
+            <input type="password" name="old_password" required dir="ltr">
+          </div>
+          <div class="form-group" style="margin-bottom:14px;">
+            <label>كلمة المرور الجديدة <span style="color:var(--danger);">*</span></label>
+            <input type="password" name="new_password" required minlength="4" dir="ltr">
+          </div>
+          <div class="form-group" style="margin-bottom:14px;">
+            <label>تأكيد كلمة المرور <span style="color:var(--danger);">*</span></label>
+            <input type="password" name="confirm_password" required minlength="4" dir="ltr">
+          </div>
+          <div class="info-box warning" style="margin-bottom:0;">
+            <i data-lucide="alert-triangle"></i>
+            <div>سيتم تسجيل خروجك من جميع الأجهزة الأخرى بعد التغيير.</div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" data-close>إلغاء</button>
+          <button type="submit" class="btn btn-primary" id="savePasswordBtn">
+            <i data-lucide="save"></i> <span>تغيير كلمة المرور</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="refad-core.js"></script>
+  <script src="refad-auth.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      // ============================================================
+      // 1) Guard
+      // ============================================================
+      const session = Refad.Auth.guardPage();
+      if (!session) return;
+
+      // ============================================================
+      // 2) State
+      // ============================================================
+      const state = {
+        company: null,
+        systemSettings: {},
+        me: null,
+        pendingLogoBlob: null,
+        pendingLogoRemove: false
+      };
+
+      // ============================================================
+      // 3) Sidebar
+      // ============================================================
+      const MENU = [
+        { section: 'الرئيسية', items: [
+          { label: 'لوحة التحكم', icon: 'layout-dashboard', href: 'dashboard.html' },
+          { label: 'الشات', icon: 'message-circle', href: 'chat.html', permission: 'chat.use' },
+          { label: 'الإشعارات', icon: 'bell', href: 'notifications.html', permission: 'notifications.view' }
+        ]},
+        { section: 'العمليات', items: [
+          { label: 'الأصناف', icon: 'package', href: 'products.html', permission: 'products.view' },
+          { label: 'المخزون', icon: 'warehouse', href: 'inventory.html', permission: 'inventory.view' },
+          { label: 'طلبات الشراء', icon: 'clipboard-list', href: 'purchase-requests.html', permission: 'purchases.view' },
+          { label: 'الاستلامات', icon: 'package-check', href: 'receipts.html', permission: 'purchases.receive' },
+          { label: 'طلبات البيع', icon: 'shopping-cart', href: 'sales-orders.html', permission: 'sales.view' },
+          { label: 'نقطة البيع', icon: 'scan-barcode', href: 'pos.html', permission: 'sales.pos', badge: 'POS', badgeClass: 'teal' },
+          { label: 'الفواتير', icon: 'receipt', href: 'invoices.html', permission: 'sales.view' }
+        ]},
+        { section: 'الأطراف', items: [
+          { label: 'الموردين', icon: 'truck', href: 'suppliers.html', permission: 'suppliers.view' },
+          { label: 'العملاء', icon: 'users', href: 'customers.html', permission: 'customers.view' }
+        ]},
+        { section: 'المخزون', items: [
+          { label: 'الجرد', icon: 'clipboard-check', href: 'stocktake.html', permission: 'inventory.stocktake' },
+          { label: 'التسويات', icon: 'sliders-horizontal', href: 'adjustments.html', permission: 'inventory.adjust' }
+        ]},
+        { section: 'الموارد البشرية', items: [
+          { label: 'الموظفين', icon: 'user-cog', href: 'employees.html', permission: 'employees.view' },
+          { label: 'الصلاحيات', icon: 'shield-check', href: 'permissions.html', permission: 'permissions.manage' },
+          { label: 'الحضور', icon: 'calendar-check', href: 'attendance.html', permission: 'attendance.view' },
+          { label: 'الرواتب', icon: 'wallet', href: 'payroll.html', permission: 'payroll.view' }
+        ]},
+        { section: 'المالية', items: [
+          { label: 'المصاريف', icon: 'banknote', href: 'expenses.html', permission: 'expenses.view' },
+          { label: 'التقارير', icon: 'bar-chart-3', href: 'reports.html', permission: 'reports.view' }
+        ]},
+        { section: 'النظام', items: [
+          { label: 'إعدادات الشركة', icon: 'settings', href: 'company-settings.html', permission: 'settings.view' },
+          { label: 'شاشة الأدمن', icon: 'shield', href: 'admin.html', permission: 'admin.full', badge: 'Admin', badgeClass: 'gold' }
+        ]}
+      ];
+
+      function buildSidebar() {
+        const nav = document.getElementById('sidebarNav');
+        const currentPage = 'company-settings.html';
+        const frag = document.createDocumentFragment();
+        MENU.forEach(group => {
+          const allowed = group.items.filter(it => !it.permission || Refad.Session.has(it.permission));
+          if (!allowed.length) return;
+          frag.appendChild(Refad.el('div', { class: 'nav-section' }, group.section));
+          allowed.forEach(item => {
+            const a = Refad.el('a', {
+              href: item.href,
+              class: 'nav-item' + (item.href === currentPage ? ' active' : '')
+            });
+            a.innerHTML = `<i data-lucide="${item.icon}"></i><span>${Refad.escapeHtml(item.label)}</span>${item.badge ? `<span class="badge ${item.badgeClass || ''}">${item.badge}</span>` : ''}`;
+            frag.appendChild(a);
+          });
+        });
+        nav.innerHTML = '';
+        nav.appendChild(frag);
+        if (window.lucide) lucide.createIcons();
+      }
+
+      // ============================================================
+      // 4) UI helpers
+      // ============================================================
+      function fillUser() {
+        const av = document.getElementById('userAvatar');
+        const initial = (session.full_name || '؟').trim().charAt(0);
+        if (session.avatar_url) av.innerHTML = `<img src="${Refad.escapeHtml(session.avatar_url)}" alt="">`;
+        else av.textContent = initial;
+        document.getElementById('userName').textContent = session.full_name;
+        document.getElementById('userRole').textContent = Refad.Session.has('company.owner') ? 'صاحب الشركة' : 'موظف';
+      }
+
+      function setupTheme() {
+        const btn = document.getElementById('themeToggle');
+        const icon = document.getElementById('themeIcon');
+        const toggle = document.getElementById('darkModeToggle');
+
+        const refresh = () => {
+          const isDark = Refad.theme.get() === 'dark';
+          icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+          if (toggle) toggle.checked = isDark;
+          if (window.lucide) lucide.createIcons();
+        };
+        refresh();
+
+        btn.addEventListener('click', () => { Refad.theme.toggle(); refresh(); });
+        if (toggle) {
+          toggle.addEventListener('change', () => {
+            Refad.theme.set(toggle.checked ? 'dark' : 'light');
+            refresh();
+          });
+        }
+      }
+
+      function setupSidebarMobile() {
+        const sb = document.getElementById('sidebar');
+        const ov = document.getElementById('overlay');
+        document.getElementById('menuToggle').addEventListener('click', () => {
+          sb.classList.add('open'); ov.classList.add('show');
+        });
+        ov.addEventListener('click', () => {
+          sb.classList.remove('open'); ov.classList.remove('show');
+        });
+      }
+
+      function setupUserMenu() {
+        const m = document.getElementById('userMenu');
+        const d = document.getElementById('userDropdown');
+        m.addEventListener('click', e => { e.stopPropagation(); d.classList.toggle('show'); });
+        document.addEventListener('click', () => d.classList.remove('show'));
+        d.addEventListener('click', e => e.stopPropagation());
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+          if (await Refad.alert.confirm('تسجيل الخروج', 'هل تريد الخروج؟', 'خروج')) {
+            await Refad.Auth.logout();
+          }
+        });
+      }
+
+      function setupNotifBtn() {
+        document.getElementById('notifBtn').addEventListener('click', () => {
+          window.location.href = 'notifications.html';
+        });
+      }
+
+      // ============================================================
+      // 5) Tabs
+      // ============================================================
+      function setupTabs() {
+        document.querySelectorAll('.tab').forEach(tab => {
+          tab.addEventListener('click', () => {
+            const name = tab.dataset.tab;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            tab.classList.add('active');
+            document.querySelector(`.tab-panel[data-panel="${name}"]`).classList.add('active');
+          });
+        });
+      }
+
+      // ============================================================
+      // 6) Load company data
+      // ============================================================
+      async function loadCompany() {
+        try {
+          state.company = await Refad.db.selectOne('companies', {
+            eq: { id: session.company_id }
+          });
+
+          if (!state.company) throw new Error('الشركة غير موجودة');
+
+          fillCompanyForm();
+          fillLogoPreview();
+          updateCompanyInfoBox();
+        } catch (e) {
+          console.error('Load company failed:', e);
+          Refad.toast.error('تعذّر تحميل بيانات الشركة: ' + e.message);
+        }
+      }
+
+      function fillCompanyForm() {
+        const c = state.company;
+        const form = document.getElementById('companyForm');
+
+        form.name.value = c.name || '';
+        form.phone.value = c.phone || '';
+        form.email.value = c.email || '';
+        form.tax_number.value = c.tax_number || '';
+        form.address.value = c.address || '';
+        form.notes.value = c.notes || '';
+        // commercial_register not in DB — leaving empty
+      }
+
+      function fillLogoPreview() {
+        const preview = document.getElementById('logoPreview');
+        const removeBtn = document.getElementById('removeLogoBtn');
+        const c = state.company;
+
+        if (state.pendingLogoRemove) {
+          preview.innerHTML = `<span class="fallback-logo">R</span>`;
+          removeBtn.style.display = 'none';
+        } else if (state.pendingLogoBlob) {
+          const url = URL.createObjectURL(state.pendingLogoBlob);
+          preview.innerHTML = `<img src="${url}" alt="">`;
+          removeBtn.style.display = 'inline-flex';
+        } else if (c?.logo_url) {
+          preview.innerHTML = `<img src="${Refad.escapeHtml(c.logo_url)}" alt="">`;
+          removeBtn.style.display = 'inline-flex';
+        } else {
+          preview.innerHTML = `<span class="fallback-logo">R</span>`;
+          removeBtn.style.display = 'none';
+        }
+      }
+
+      function updateCompanyInfoBox() {
+        const c = state.company;
+        document.getElementById('infoCompanyName').textContent = c?.name || '—';
+        document.getElementById('infoPlan').textContent = 'الباقة الأساسية';
+        document.getElementById('infoExpiry').textContent = c?.subscription_end
+          ? Refad.format.date(c.subscription_end)
+          : 'غير محدد';
+        document.getElementById('infoRole').textContent = Refad.Session.has('admin.full') ? 'المدير العام' : 'موظف';
+      }
+
+      // ============================================================
+      // 7) Save company
+      // ============================================================
+      async function saveCompany(e) {
+        e.preventDefault();
+        const form = e.target;
+        const btn = document.getElementById('saveCompanyBtn');
+        const originalHtml = btn.innerHTML;
+
+        btn.disabled = true;
+        btn.innerHTML = '<i data-lucide="loader-2"></i> جارٍ الحفظ...';
+        if (window.lucide) lucide.createIcons();
+
+        try {
+          // 1. Upload logo if pending
+          let logoUrl = state.company.logo_url;
+          if (state.pendingLogoRemove) {
+            // Delete old
+            if (state.company.logo_url) {
+              try {
+                const path = state.company.logo_url.split('/').slice(-2).join('/');
+                await Refad.storage.remove('logos', path);
+              } catch (err) { console.warn('Delete logo failed:', err.message); }
+            }
+            logoUrl = null;
+          } else if (state.pendingLogoBlob) {
+            // Upload new
+            const fileName = `company-${session.company_id}-${Date.now()}.jpg`;
+            logoUrl = await Refad.storage.upload('logos', fileName, state.pendingLogoBlob, {
+              contentType: 'image/jpeg',
+              upsert: true
+            });
+
+            // Update session logo if this is for current company
+            // (session.avatar_url is user's, not company's)
+          }
+
+          // 2. Update company
+          const payload = {
+            name: form.name.value.trim(),
+            phone: form.phone.value.trim() || null,
+            email: form.email.value.trim() || null,
+            tax_number: form.tax_number.value.trim() || null,
+            address: form.address.value.trim() || null,
+            notes: form.notes.value.trim() || null,
+            logo_url: logoUrl
+          };
+
+          if (!payload.name) throw new Error('اسم الشركة مطلوب');
+
+          await Refad.db.update('companies', session.company_id, payload);
+
+          await Refad.logActivity('update_company_settings', 'settings', 'تحديث إعدادات الشركة', session.company_id);
+
+          state.company = { ...state.company, ...payload };
+          state.pendingLogoBlob = null;
+          state.pendingLogoRemove = false;
+
+          Refad.toast.success('تم حفظ بيانات الشركة');
+          fillLogoPreview();
+          updateCompanyInfoBox();
+        } catch (err) {
+          console.error('Save company failed:', err);
+          Refad.toast.error('فشل الحفظ: ' + err.message);
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = originalHtml;
+          if (window.lucide) lucide.createIcons();
+        }
+      }
+
+      // ============================================================
+      // 8) Logo upload
+      // ============================================================
+      function setupLogoUploader() {
+        const input = document.getElementById('logoInput');
+        const uploadBtn = document.getElementById('uploadLogoBtn');
+        const removeBtn = document.getElementById('removeLogoBtn');
+
+        uploadBtn.addEventListener('click', () => input.click());
+
+        input.addEventListener('change', async e => {
+          const file = e.target.files[0];
+          if (!file) return;
+
+          if (file.size > 5 * 1024 * 1024) {
+            Refad.toast.error('الحد الأقصى 5 MB');
+            return;
+          }
+
+          if (!file.type.startsWith('image/')) {
+            Refad.toast.error('الملف ليس صورة');
+            return;
+          }
+
+          try {
+            Refad.toast.info('جارٍ ضغط الصورة...');
+            const compressed = await Refad.storage.compressImage(file, 800, 0.85);
+            state.pendingLogoBlob = compressed;
+            state.pendingLogoRemove = false;
+            fillLogoPreview();
+            Refad.toast.success('الصورة جاهزة — اضغط حفظ');
+          } catch (err) {
+            console.error('Compress failed:', err);
+            Refad.toast.error('فشل معالجة الصورة: ' + err.message);
+          }
+
+          input.value = '';
+        });
+
+        removeBtn.addEventListener('click', async () => {
+          const ok = await Refad.alert.confirm('إزالة الشعار', 'سيتم إزالة شعار الشركة عند الحفظ. متابعة؟', 'إزالة');
+          if (!ok) return;
+          state.pendingLogoRemove = true;
+          state.pendingLogoBlob = null;
+          fillLogoPreview();
+          Refad.toast.info('اضغط "حفظ التعديلات" لتأكيد الإزالة');
+        });
+      }
+
+      // ============================================================
+      // 9) Load system settings
+      // ============================================================
+      async function loadSystemSettings() {
+        try {
+          const rows = await Refad.db.select('system_settings', {
+            columns: 'key, value'
+          });
+
+          state.systemSettings = {};
+          rows.forEach(r => { state.systemSettings[r.key] = r.value; });
+
+          // Fill system form
+          const form = document.getElementById('systemForm');
+          form.session_hours.value = state.systemSettings.session_hours || 8;
+          form.idle_timeout_min.value = state.systemSettings.idle_timeout_min || 30;
+          form.max_login_attempts.value = state.systemSettings.max_login_attempts || 5;
+          form.lock_duration_min.value = state.systemSettings.lock_duration_min || 15;
+        } catch (e) {
+          console.error('Load system settings failed:', e);
+        }
+      }
+
+      async function saveSystemSettings(e) {
+        e.preventDefault();
+        const form = e.target;
+        const btn = document.getElementById('saveSystemBtn');
+        const originalHtml = btn.innerHTML;
+
+        btn.disabled = true;
+        btn.innerHTML = '<i data-lucide="loader-2"></i> جارٍ الحفظ...';
+        if (window.lucide) window.lucide.createIcons();
+
+        try {
+          const updates = [
+            ['session_hours', String(form.session_hours.value)],
+            ['idle_timeout_min', String(form.idle_timeout_min.value)],
+            ['max_login_attempts', String(form.max_login_attempts.value)],
+            ['lock_duration_min', String(form.lock_duration_min.value)]
+          ];
+
+          for (const [key, value] of updates) {
+            await Refad.db.updateWhere('system_settings', { key }, { value });
+          }
+
+          await Refad.logActivity('update_system_settings', 'settings', 'تحديث إعدادات النظام', null);
+          Refad.toast.success('تم حفظ إعدادات النظام');
+        } catch (err) {
+          console.error('Save system failed:', err);
+          Refad.toast.error('فشل الحفظ: ' + err.message);
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = originalHtml;
+          if (window.lucide) window.lucide.createIcons();
+        }
+      }
+
+      // ============================================================
+      // 10) Invoice settings (stored in company notes as JSON — mock)
+      // ============================================================
+      function loadInvoiceSettings() {
+        // We'll store as part of company.notes (JSON) — simplified approach
+        const form = document.getElementById('invoiceForm');
+        let settings = {};
+        try {
+          if (state.company.notes && state.company.notes.startsWith('{')) {
+            settings = JSON.parse(state.company.notes);
+          }
+        } catch (e) { settings = {}; }
+
+        form.invoice_prefix.value = settings.invoice_prefix || 'INV';
+        form.purchase_prefix.value = settings.purchase_prefix || 'PUR';
+        form.next_invoice_number.value = settings.next_invoice_number || 1;
+        form.next_purchase_number.value = settings.next_purchase_number || 1;
+        form.invoice_footer.value = settings.invoice_footer || '';
+        form.invoice_terms.value = settings.invoice_terms || '';
+      }
+
+      async function saveInvoiceSettings(e) {
+        e.preventDefault();
+        const form = e.target;
+        const btn = document.getElementById('saveInvoiceBtn');
+        const originalHtml = btn.innerHTML;
+
+        btn.disabled = true;
+        btn.innerHTML = '<i data-lucide="loader-2"></i> جارٍ الحفظ...';
+        if (window.lucide) window.lucide.createIcons();
+
+        try {
+          const settings = {
+            invoice_prefix: form.invoice_prefix.value.trim() || 'INV',
+            purchase_prefix: form.purchase_prefix.value.trim() || 'PUR',
+            next_invoice_number: parseInt(form.next_invoice_number.value, 10) || 1,
+            next_purchase_number: parseInt(form.next_purchase_number.value, 10) || 1,
+            invoice_footer: form.invoice_footer.value.trim(),
+            invoice_terms: form.invoice_terms.value.trim()
+          };
+
+          // Store in company notes (JSON) — simplified approach
+          const currentNotes = state.company.notes || '';
+          let preservedNotes = '';
+          try {
+            const parsed = currentNotes.startsWith('{') ? JSON.parse(currentNotes) : {};
+            preservedNotes = parsed.notes || currentNotes;
+          } catch (err) {
+            preservedNotes = currentNotes;
+          }
+
+          await Refad.db.update('companies', session.company_id, {
+            notes: JSON.stringify({ ...settings, notes: preservedNotes })
+          });
+
+          Refad.toast.success('تم حفظ إعدادات الفواتير');
+        } catch (err) {
+          console.error('Save invoice failed:', err);
+          Refad.toast.error('فشل الحفظ: ' + err.message);
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = originalHtml;
+          if (window.lucide) window.lucide.createIcons();
+        }
+      }
+
+      // ============================================================
+      // 11) User profile
+      // ============================================================
+      async function loadProfile() {
+        try {
+          state.me = await Refad.db.selectOne('users', {
+            columns: 'id, full_name, username, phone, email, avatar_url, theme',
+            eq: { id: session.user_id }
+          });
+
+          if (!state.me) return;
+
+          const form = document.getElementById('profileForm');
+          form.full_name.value = state.me.full_name || '';
+          form.username.value = state.me.username || '';
+          form.phone.value = state.me.phone || '';
+          form.email.value = state.me.email || '';
+        } catch (e) {
+          console.error('Load profile failed:', e);
+        }
+      }
+
+      async function saveProfile(e) {
+        e.preventDefault();
+        const form = e.target;
+        const btn = document.getElementById('saveProfileBtn');
+        const originalHtml = btn.innerHTML;
+
+        btn.disabled = true;
+        btn.innerHTML = '<i data-lucide="loader-2"></i> جارٍ الحفظ...';
+        if (window.lucide) window.lucide.createIcons();
+
+        try {
+          const payload = {
+            full_name: form.full_name.value.trim(),
+            phone: form.phone.value.trim() || null,
+            email: form.email.value.trim() || null
+          };
+
+          if (!payload.full_name) throw new Error('الاسم مطلوب');
+
+          await Refad.db.update('users', session.user_id, payload);
+
+          // Update session
+          const s = Refad.Session.get();
+          s.full_name = payload.full_name;
+          localStorage.setItem('refad_session', JSON.stringify(s));
+
+          await Refad.logActivity('update_profile', 'settings', 'تحديث الملف الشخصي', session.user_id);
+          Refad.toast.success('تم حفظ بياناتك');
+          fillUser();
+        } catch (err) {
+          console.error('Save profile failed:', err);
+          Refad.toast.error('فشل الحفظ: ' + err.message);
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = originalHtml;
+          if (window.lucide) window.lucide.createIcons();
+        }
+      }
+
+      // ============================================================
+      // 12) Change password
+      // ============================================================
+      function openPasswordModal() {
+        const form = document.getElementById('passwordForm');
+        form.reset();
+        document.getElementById('passwordModal').classList.add('show');
+        if (window.lucide) lucide.createIcons();
+        setTimeout(() => form.old_password.focus(), 100);
+      }
+
+      function closePasswordModal() {
+        document.getElementById('passwordModal').classList.remove('show');
+      }
+
+      async function changePassword(e) {
+        e.preventDefault();
+        const form = e.target;
+        const btn = document.getElementById('savePasswordBtn');
+        const originalHtml = btn.innerHTML;
+
+        const oldPass = form.old_password.value;
+        const newPass = form.new_password.value;
+        const confirmPass = form.confirm_password.value;
+
+        if (newPass !== confirmPass) {
+          Refad.toast.error('كلمتا المرور غير متطابقتين');
+          return;
+        }
+
+        if (newPass.length < 4) {
+          Refad.toast.error('كلمة المرور 4 أحرف على الأقل');
+          return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = '<i data-lucide="loader-2"></i> جارٍ التغيير...';
+        if (window.lucide) window.lucide.createIcons();
+
+        try {
+          // Verify old password
+          const user = await Refad.db.selectOne('users', {
+            columns: 'id, password',
+            eq: { id: session.user_id }
+          });
+
+          if (!user) throw new Error('المستخدم غير موجود');
+          if (user.password !== oldPass) throw new Error('كلمة المرور الحالية غير صحيحة');
+
+          // Update password
+          await Refad.db.update('users', session.user_id, { password: newPass });
+
+          await Refad.logActivity('change_password', 'settings', 'تغيير كلمة المرور', session.user_id);
+
+          Refad.toast.success('تم تغيير كلمة المرور');
+          closePasswordModal();
+        } catch (err) {
+          console.error('Change password failed:', err);
+          Refad.toast.error('فشل: ' + err.message);
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = originalHtml;
+          if (window.lucide) window.lucide.createIcons();
+        }
+      }
+
+      // ============================================================
+      // 13) Preferences (localStorage)
+      // ============================================================
+      function setupPreferences() {
+        const sound = document.getElementById('soundToggle');
+        const confirmDel = document.getElementById('confirmDeleteToggle');
+
+        // Load
+        sound.checked = localStorage.getItem('refad_sound') !== 'false';
+        confirmDel.checked = localStorage.getItem('refad_confirm_delete') !== 'false';
+
+        // Save
+        sound.addEventListener('change', () => {
+          localStorage.setItem('refad_sound', sound.checked);
+          Refad.toast.success(sound.checked ? 'الصوت مفعّل' : 'الصوت معطّل');
+        });
+        confirmDel.addEventListener('change', () => {
+          localStorage.setItem('refad_confirm_delete', confirmDel.checked);
+          Refad.toast.success(confirmDel.checked ? 'التأكيد مفعّل' : 'التأكيد معطّل');
+        });
+      }
+
+      // ============================================================
+      // 14) Events
+      // ============================================================
+      function bindEvents() {
+        document.getElementById('companyForm').addEventListener('submit', saveCompany);
+        document.getElementById('invoiceForm').addEventListener('submit', saveInvoiceSettings);
+        document.getElementById('systemForm').addEventListener('submit', saveSystemSettings);
+        document.getElementById('profileForm').addEventListener('submit', saveProfile);
+        document.getElementById('passwordForm').addEventListener('submit', changePassword);
+
+        document.getElementById('changePasswordBtn').addEventListener('click', openPasswordModal);
+
+        // Modal close
+        document.querySelectorAll('[data-close]').forEach(b => {
+          b.addEventListener('click', closePasswordModal);
+        });
+        document.getElementById('passwordModal').addEventListener('click', e => {
+          if (e.target.id === 'passwordModal') closePasswordModal();
+        });
+        document.addEventListener('keydown', e => {
+          if (e.key === 'Escape') closePasswordModal();
+        });
+      }
+
+      // ============================================================
+      // 15) Init
+      // ============================================================
+      async function init() {
+        buildSidebar();
+        fillUser();
+        setupTheme();
+        setupSidebarMobile();
+        setupUserMenu();
+        setupNotifBtn();
+        setupTabs();
+        setupLogoUploader();
+        setupPreferences();
+        bindEvents();
+
+        await Promise.all([
+          loadCompany(),
+          loadSystemSettings(),
+          loadProfile()
+        ]);
+
+        loadInvoiceSettings();
+
+        Refad.registerServiceWorker();
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+
+      console.log('%c[Refad] Company settings ready', 'color:#14B8A6;font-weight:bold');
+
+    })();
+  </script>
+
+</body>
+</html>

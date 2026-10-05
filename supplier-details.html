@@ -1,0 +1,1738 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0B2C4D">
+  <title>تفاصيل المورد - رفاد</title>
+
+  <link rel="icon" type="image/png" href="logo.png">
+  <link rel="manifest" href="manifest.json">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --primary: #0B2C4D;
+      --primary-light: #1e4a73;
+      --accent: #14B8A6;
+      --accent-dark: #0d9488;
+      --gold: #F59E0B;
+      --bg: #F1F5F9;
+      --card: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --danger: #ef4444;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --info: #3b82f6;
+      --sidebar-bg: #0B2C4D;
+      --sidebar-text: #cbd5e1;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+      --shadow: 0 4px 20px rgba(11, 44, 77, 0.08);
+      --shadow-lg: 0 10px 40px rgba(11, 44, 77, 0.12);
+      --radius: 14px;
+      --radius-sm: 10px;
+      --sidebar-w: 260px;
+      --topbar-h: 64px;
+    }
+
+    [data-theme="dark"] {
+      --bg: #0a1628;
+      --card: #0f2137;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --border: #1e3a5f;
+      --sidebar-bg: #061a2e;
+      --sidebar-text: #94a3b8;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Cairo', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      transition: background 0.3s, color 0.3s;
+    }
+
+    body { display: flex; min-height: 100vh; overflow-x: hidden; }
+
+    /* ============================================================
+       Sidebar
+       ============================================================ */
+    .sidebar {
+      width: var(--sidebar-w);
+      height: 100vh;
+      background: var(--sidebar-bg);
+      color: var(--sidebar-text);
+      position: fixed;
+      top: 0;
+      right: 0;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: -4px 0 20px rgba(0,0,0,0.1);
+    }
+
+    .sidebar-header {
+      padding: 20px 22px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      height: var(--topbar-h);
+      box-sizing: border-box;
+    }
+
+    .sidebar-logo {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 4px 12px rgba(20,184,166,0.4);
+    }
+    .sidebar-logo img { width: 70%; height: 70%; object-fit: contain; }
+    .sidebar-logo .fallback { color: white; font-weight: 800; font-size: 18px; }
+
+    .sidebar-brand h2 { color: white; font-size: 20px; font-weight: 800; letter-spacing: -0.5px; line-height: 1.2; }
+    .sidebar-brand p { font-size: 10px; color: var(--sidebar-text); opacity: 0.7; font-weight: 500; margin-top: 2px; }
+
+    .sidebar-nav { flex: 1; overflow-y: auto; padding: 12px 0; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.15) transparent; }
+    .sidebar-nav::-webkit-scrollbar { width: 5px; }
+    .sidebar-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 10px; }
+
+    .nav-section { padding: 8px 20px 4px; font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 1px; margin-top: 8px; }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 22px;
+      color: var(--sidebar-text);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      border-right: 3px solid transparent;
+      transition: all 0.2s;
+      position: relative;
+      cursor: pointer;
+    }
+    .nav-item:hover { background: rgba(255,255,255,0.05); color: white; border-right-color: rgba(20,184,166,0.5); }
+    .nav-item.active { background: rgba(20,184,166,0.12); color: white; border-right-color: var(--accent); font-weight: 600; }
+    .nav-item.active::before { content: ''; position: absolute; right: 0; top: 50%; transform: translateY(-50%); width: 3px; height: 60%; background: var(--accent); border-radius: 0 4px 4px 0; }
+    .nav-item i, .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; opacity: 0.85; }
+    .nav-item .badge { margin-right: auto; background: var(--danger); color: white; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
+    .nav-item .badge.teal { background: var(--accent); }
+    .nav-item .badge.gold { background: var(--gold); }
+
+    /* ============================================================
+       Main
+       ============================================================ */
+    .main { flex: 1; margin-right: var(--sidebar-w); min-width: 0; display: flex; flex-direction: column; }
+
+    .topbar {
+      height: var(--topbar-h);
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 0 24px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .menu-toggle { display: none; background: transparent; border: none; color: var(--text); cursor: pointer; padding: 8px; border-radius: 8px; }
+    .menu-toggle:hover { background: var(--bg); }
+
+    .topbar-title { font-size: 18px; font-weight: 700; color: var(--text); flex-shrink: 0; }
+    .topbar-actions { display: flex; align-items: center; gap: 8px; margin-right: auto; }
+
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      transition: all 0.2s;
+    }
+    .icon-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .icon-btn i, .icon-btn svg { width: 18px; height: 18px; }
+    .icon-btn .dot { position: absolute; top: 8px; left: 8px; width: 8px; height: 8px; background: var(--danger); border-radius: 50%; border: 2px solid var(--card); }
+
+    .user-menu {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 5px 12px 5px 5px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.2s;
+      border: 1px solid var(--border);
+      background: var(--card);
+    }
+    .user-menu:hover { background: var(--bg); }
+
+    .user-avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 700;
+      font-size: 14px;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .user-info { display: flex; flex-direction: column; line-height: 1.2; }
+    .user-info .name { font-size: 13px; font-weight: 700; color: var(--text); }
+    .user-info .role { font-size: 11px; color: var(--text-muted); }
+
+    .dropdown { position: absolute; top: calc(100% + 8px); left: 0; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: var(--shadow-lg); min-width: 200px; padding: 6px; opacity: 0; visibility: hidden; transform: translateY(-8px); transition: all 0.2s; z-index: 100; }
+    .dropdown.show { opacity: 1; visibility: visible; transform: translateY(0); }
+    .dropdown-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; color: var(--text); font-size: 13px; font-weight: 500; cursor: pointer; transition: background 0.15s; text-decoration: none; }
+    .dropdown-item:hover { background: var(--bg); }
+    .dropdown-item.danger { color: var(--danger); }
+    .dropdown-item.danger:hover { background: rgba(239,68,68,0.08); }
+    .dropdown-item i { width: 16px; height: 16px; }
+    .dropdown-divider { height: 1px; background: var(--border); margin: 6px 0; }
+
+    /* ============================================================
+       Content
+       ============================================================ */
+    .content { padding: 24px; flex: 1; }
+
+    .back-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .back-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .back-btn i { width: 14px; height: 14px; }
+
+    /* Hero */
+    .supplier-hero {
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      border-radius: var(--radius);
+      padding: 26px;
+      color: white;
+      margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+
+    .supplier-hero::before {
+      content: '';
+      position: absolute;
+      top: -50px;
+      left: -50px;
+      width: 200px;
+      height: 200px;
+      background: radial-gradient(circle, rgba(20,184,166,0.4), transparent 70%);
+      border-radius: 50%;
+    }
+
+    .supplier-hero-inner {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .hero-avatar {
+      width: 82px;
+      height: 82px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 34px;
+      font-weight: 800;
+      color: white;
+      flex-shrink: 0;
+      box-shadow: 0 10px 30px rgba(20,184,166,0.4);
+    }
+
+    .hero-info { flex: 1; min-width: 200px; }
+
+    .hero-info h1 {
+      font-size: 26px;
+      font-weight: 800;
+      margin-bottom: 6px;
+      letter-spacing: -0.5px;
+    }
+
+    .hero-info .sub { font-size: 14px; opacity: 0.85; margin-bottom: 10px; }
+
+    .hero-tags { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    .hero-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 12px;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      backdrop-filter: blur(4px);
+    }
+    .hero-tag i { width: 13px; height: 13px; }
+
+    .hero-tag.success { background: rgba(16,185,129,0.3); border-color: rgba(16,185,129,0.5); }
+    .hero-tag.danger  { background: rgba(239,68,68,0.3); border-color: rgba(239,68,68,0.5); }
+
+    .hero-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    .hero-actions .btn {
+      background: rgba(255,255,255,0.15);
+      color: white;
+      border: 1px solid rgba(255,255,255,0.2);
+      backdrop-filter: blur(4px);
+    }
+    .hero-actions .btn:hover { background: rgba(255,255,255,0.25); transform: translateY(-2px); }
+
+    /* Stats */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.2s;
+    }
+    .stat-card:hover { transform: translateY(-2px); border-color: var(--accent); box-shadow: var(--shadow); }
+
+    .stat-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .stat-icon i { width: 22px; height: 22px; color: white; }
+    .stat-icon.blue   { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+    .stat-icon.teal   { background: linear-gradient(135deg, #14B8A6, #0d9488); }
+    .stat-icon.gold   { background: linear-gradient(135deg, #F59E0B, #d97706); }
+    .stat-icon.red    { background: linear-gradient(135deg, #ef4444, #b91c1c); }
+    .stat-icon.green  { background: linear-gradient(135deg, #10b981, #047857); }
+    .stat-icon.purple { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
+
+    .stat-body { flex: 1; min-width: 0; }
+    .stat-body .label { font-size: 11px; color: var(--text-muted); font-weight: 600; margin-bottom: 3px; }
+    .stat-body .value { font-size: 19px; font-weight: 800; color: var(--text); line-height: 1.1; }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 6px;
+      margin-bottom: 16px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      box-shadow: var(--shadow-sm);
+    }
+    .tabs::-webkit-scrollbar { display: none; }
+
+    .tab {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: transparent;
+      border: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .tab:hover { background: var(--bg); color: var(--text); }
+    .tab.active { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; box-shadow: 0 4px 12px rgba(20,184,166,0.3); }
+    .tab i { width: 16px; height: 16px; }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; animation: fadeIn 0.3s; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Card */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+
+    .card-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .card-header h3 { font-size: 15px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px; }
+    .card-header h3 i { width: 18px; height: 18px; color: var(--accent); }
+
+    .card-body { padding: 18px; }
+
+    /* Table */
+    .table-wrap { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      min-width: 620px;
+    }
+
+    thead { background: var(--bg); border-bottom: 1px solid var(--border); }
+
+    th {
+      text-align: right;
+      padding: 12px 14px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+
+    tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--bg); }
+
+    td { padding: 12px 14px; color: var(--text); vertical-align: middle; }
+
+    .badge-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 9px;
+      font-size: 11px;
+      font-weight: 600;
+      border-radius: 20px;
+      white-space: nowrap;
+    }
+    .badge-tag.green  { background: rgba(16,185,129,0.12); color: var(--success); }
+    .badge-tag.red    { background: rgba(239,68,68,0.12); color: var(--danger); }
+    .badge-tag.gold   { background: rgba(245,158,11,0.12); color: var(--warning); }
+    .badge-tag.gray   { background: rgba(148,163,184,0.15); color: var(--text-muted); }
+    .badge-tag.blue   { background: rgba(59,130,246,0.12); color: var(--info); }
+
+    .empty-state { padding: 50px 20px; text-align: center; color: var(--text-muted); }
+    .empty-state i { width: 42px; height: 42px; opacity: 0.4; margin-bottom: 10px; }
+    .empty-state p { font-size: 13px; font-weight: 500; }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 16px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: var(--radius-sm);
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn i { width: 15px; height: 15px; }
+
+    .btn-primary { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; }
+    .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(20,184,166,0.35); }
+
+    .btn-outline { background: var(--card); color: var(--text); border: 1px solid var(--border); }
+    .btn-outline:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+    .action-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text-muted);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    .action-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .action-btn.danger:hover { border-color: var(--danger); color: var(--danger); }
+    .action-btn i { width: 14px; height: 14px; }
+
+    /* Info grid */
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+    }
+    .info-item {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+    }
+    .info-item .label { font-size: 11px; color: var(--text-muted); font-weight: 700; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .info-item .value { font-size: 14px; color: var(--text); font-weight: 600; word-break: break-word; }
+
+    /* Balance display */
+    .balance-display {
+      text-align: center;
+      padding: 24px;
+      border-radius: var(--radius-sm);
+      background: var(--bg);
+      border: 1px solid var(--border);
+    }
+    .balance-display .label { font-size: 12px; color: var(--text-muted); font-weight: 700; margin-bottom: 8px; }
+    .balance-display .value { font-size: 34px; font-weight: 800; line-height: 1.1; }
+    .balance-display .value.positive { color: var(--success); }
+    .balance-display .value.negative { color: var(--danger); }
+    .balance-display .value.zero { color: var(--text-muted); }
+    .balance-display .note { font-size: 12px; color: var(--text-muted); margin-top: 8px; }
+
+    /* ============================================================
+       Modal — مع السكرول
+       ============================================================ */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(11, 44, 77, 0.5);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .modal-backdrop.show { display: flex; opacity: 1; }
+
+    .modal {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-lg);
+      width: 100%;
+      max-width: 560px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      transform: scale(0.95);
+      transition: transform 0.2s;
+      overflow: hidden;
+    }
+    .modal.modal-lg { max-width: 720px; }
+    .modal-backdrop.show .modal { transform: scale(1); }
+
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .modal-header h3 { font-size: 16px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px; }
+    .modal-header h3 i { width: 18px; height: 18px; color: var(--accent); }
+
+    .modal-close {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    .modal-close:hover { background: var(--bg); color: var(--danger); }
+    .modal-close i { width: 18px; height: 18px; }
+
+    /* ⭐ السكرول في الـ body */
+    .modal-body {
+      padding: 20px;
+      overflow-y: auto;
+      flex: 1;
+      min-height: 0;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+    .modal-body::-webkit-scrollbar { width: 8px; }
+    .modal-body::-webkit-scrollbar-track { background: transparent; }
+    .modal-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+    .modal-body::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+    .modal-footer {
+      padding: 14px 20px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      background: var(--bg);
+      flex-shrink: 0;
+    }
+
+    /* Form */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
+
+    .form-group { display: flex; flex-direction: column; }
+    .form-group.full { grid-column: 1 / -1; }
+
+    .form-group label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .form-group label .req { color: var(--danger); }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      padding: 10px 12px;
+      font-family: inherit;
+      font-size: 14px;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      outline: none;
+      transition: all 0.2s;
+      width: 100%;
+    }
+
+    .form-group textarea { resize: vertical; min-height: 70px; }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      border-color: var(--accent);
+      background: var(--card);
+      box-shadow: 0 0 0 3px rgba(20,184,166,0.1);
+    }
+
+    /* Overlay (mobile) */
+    .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; opacity: 0; transition: opacity 0.3s; }
+    .overlay.show { display: block; opacity: 1; }
+
+    /* Skeleton */
+    .skeleton {
+      background: linear-gradient(90deg, var(--border) 25%, var(--bg) 50%, var(--border) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+      border-radius: 6px;
+      color: transparent !important;
+    }
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .sidebar { transform: translateX(100%); }
+      .sidebar.open { transform: translateX(0); }
+      .main { margin-right: 0; }
+      .menu-toggle { display: flex; }
+      .user-info { display: none; }
+    }
+
+    @media (max-width: 640px) {
+      .content { padding: 16px; }
+      .topbar { padding: 0 14px; }
+      .topbar-title { font-size: 15px; }
+      .supplier-hero { padding: 18px; }
+      .hero-avatar { width: 60px; height: 60px; font-size: 26px; }
+      .hero-info h1 { font-size: 20px; }
+      .form-grid { grid-template-columns: 1fr; }
+      .modal-footer { flex-direction: column-reverse; }
+      .modal-footer .btn { width: 100%; justify-content: center; }
+      .tabs { padding: 4px; }
+      .tab { padding: 8px 12px; font-size: 12px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <img src="logo.png" alt="رفاد" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=fallback>R</span>';">
+      </div>
+      <div class="sidebar-brand">
+        <h2>رفاد</h2>
+        <p>نظام إدارة الأدوية</p>
+      </div>
+    </div>
+    <nav class="sidebar-nav" id="sidebarNav"></nav>
+  </aside>
+
+  <div class="overlay" id="overlay"></div>
+
+  <!-- Main -->
+  <div class="main">
+
+    <header class="topbar">
+      <button class="menu-toggle" id="menuToggle"><i data-lucide="menu"></i></button>
+      <div class="topbar-title">تفاصيل المورد</div>
+      <div class="topbar-actions">
+        <button class="icon-btn" id="themeToggle" title="الوضع الليلي/النهاري">
+          <i data-lucide="moon" id="themeIcon"></i>
+        </button>
+        <button class="icon-btn" id="notifBtn" title="الإشعارات" style="position:relative;">
+          <i data-lucide="bell"></i>
+          <span class="dot" id="notifDot" style="display:none;"></span>
+        </button>
+        <div style="position:relative;">
+          <div class="user-menu" id="userMenu">
+            <div class="user-avatar" id="userAvatar">م</div>
+            <div class="user-info">
+              <span class="name" id="userName">—</span>
+              <span class="role" id="userRole">—</span>
+            </div>
+            <i data-lucide="chevron-down" style="width:14px;height:14px;opacity:0.5;"></i>
+          </div>
+          <div class="dropdown" id="userDropdown">
+            <a href="company-settings.html" class="dropdown-item"><i data-lucide="settings"></i> الإعدادات</a>
+            <a href="employees.html" class="dropdown-item"><i data-lucide="user-cog"></i> الملف الشخصي</a>
+            <div class="dropdown-divider"></div>
+            <div class="dropdown-item danger" id="logoutBtn"><i data-lucide="log-out"></i> تسجيل الخروج</div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="content">
+
+      <div class="back-bar">
+        <a href="suppliers.html" class="back-btn">
+          <i data-lucide="arrow-right"></i> رجوع للموردين
+        </a>
+      </div>
+
+      <!-- Hero -->
+      <div class="supplier-hero" id="supplierHero">
+        <div class="supplier-hero-inner">
+          <div class="hero-avatar skeleton" id="heroAvatar">&nbsp;</div>
+          <div class="hero-info">
+            <h1 id="heroName">جارٍ التحميل...</h1>
+            <div class="sub" id="heroSub">—</div>
+            <div class="hero-tags" id="heroTags"></div>
+          </div>
+          <div class="hero-actions">
+            <button class="btn" id="editSupplierBtn">
+              <i data-lucide="pencil"></i> تعديل
+            </button>
+            <button class="btn" id="addTransactionBtn">
+              <i data-lucide="plus-circle"></i> إضافة معاملة
+            </button>
+            <a class="btn btn-primary" id="sellToSupplierBtn" style="display:none;">
+              <i data-lucide="shopping-cart"></i> بيع للمورد
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-grid" id="statsGrid"></div>
+
+      <!-- Tabs -->
+      <div class="tabs">
+        <button class="tab active" data-tab="info"><i data-lucide="info"></i> معلومات</button>
+        <button class="tab" data-tab="transactions"><i data-lucide="receipt"></i> المعاملات</button>
+        <button class="tab" data-tab="receipts"><i data-lucide="package-check"></i> الاستلامات</button>
+        <button class="tab" data-tab="sales"><i data-lucide="shopping-cart"></i> فواتير البيع</button>
+        <button class="tab" data-tab="purchases"><i data-lucide="clipboard-list"></i> طلبات الشراء</button>
+      </div>
+
+      <!-- Info -->
+      <div class="tab-panel active" data-panel="info">
+        <div class="card">
+          <div class="card-header">
+            <h3><i data-lucide="info"></i> المعلومات الأساسية</h3>
+          </div>
+          <div class="card-body">
+            <div class="info-grid" id="infoGrid"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3><i data-lucide="wallet"></i> الرصيد الحالي</h3>
+          </div>
+          <div class="card-body">
+            <div class="balance-display" id="balanceDisplay">
+              <div class="label">الرصيد</div>
+              <div class="value">—</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Transactions -->
+      <div class="tab-panel" data-panel="transactions">
+        <div class="card">
+          <div class="card-header">
+            <h3><i data-lucide="receipt"></i> سجل المعاملات</h3>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>التاريخ</th>
+                  <th>النوع</th>
+                  <th>المبلغ</th>
+                  <th>الرصيد بعد</th>
+                  <th>ملاحظات</th>
+                </tr>
+              </thead>
+              <tbody id="transactionsBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Receipts -->
+      <div class="tab-panel" data-panel="receipts">
+        <div class="card">
+          <div class="card-header">
+            <h3><i data-lucide="package-check"></i> فواتير الاستلام</h3>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>رقم الفاتورة</th>
+                  <th>التاريخ</th>
+                  <th>الإجمالي</th>
+                  <th>المدفوع</th>
+                  <th>الحالة</th>
+                </tr>
+              </thead>
+              <tbody id="receiptsBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sales invoices -->
+      <div class="tab-panel" data-panel="sales">
+        <div class="card">
+          <div class="card-header">
+            <h3><i data-lucide="shopping-cart"></i> فواتير البيع لهذا المورد</h3>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>رقم الفاتورة</th>
+                  <th>التاريخ</th>
+                  <th>الإجمالي</th>
+                  <th>المدفوع</th>
+                  <th>الحالة</th>
+                </tr>
+              </thead>
+              <tbody id="salesInvoicesBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Purchases -->
+      <div class="tab-panel" data-panel="purchases">
+        <div class="card">
+          <div class="card-header">
+            <h3><i data-lucide="clipboard-list"></i> طلبات الشراء</h3>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>رقم الطلب</th>
+                  <th>التاريخ</th>
+                  <th>الحالة</th>
+                  <th>عدد الأصناف</th>
+                </tr>
+              </thead>
+              <tbody id="purchasesBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Modal: Add Transaction -->
+  <div class="modal-backdrop" id="transactionModal">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <h3><i data-lucide="plus-circle"></i> إضافة معاملة</h3>
+        <button class="modal-close" data-close><i data-lucide="x"></i></button>
+      </div>
+      <form id="transactionForm">
+        <div class="modal-body">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>نوع المعاملة <span class="req">*</span></label>
+              <select name="type" required>
+                <option value="payment">دفعة (سداد للمورد)</option>
+                <option value="collection">تحصيل دفعة من المورد</option>
+                <option value="invoice">فاتورة</option>
+                <option value="adjustment">تسوية</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>المبلغ <span class="req">*</span></label>
+              <input type="number" name="amount" required step="0.01" placeholder="0.00">
+            </div>
+
+            <div class="form-group full">
+              <label>ملاحظات</label>
+              <textarea name="notes" maxlength="255" placeholder="ملاحظات عن المعاملة..."></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" data-close>إلغاء</button>
+          <button type="submit" class="btn btn-primary">
+            <i data-lucide="save"></i> حفظ
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Edit Supplier -->
+  <div class="modal-backdrop" id="editModal">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <h3><i data-lucide="truck"></i> تعديل المورد</h3>
+        <button class="modal-close" data-close><i data-lucide="x"></i></button>
+      </div>
+      <form id="editForm">
+        <div class="modal-body">
+          <div class="form-grid">
+            <div class="form-group full">
+              <label>اسم المورد <span class="req">*</span></label>
+              <input type="text" name="name" required maxlength="150">
+            </div>
+            <div class="form-group">
+              <label>الهاتف</label>
+              <input type="tel" name="phone" maxlength="30">
+            </div>
+            <div class="form-group">
+              <label>البريد الإلكتروني</label>
+              <input type="email" name="email" maxlength="120">
+            </div>
+            <div class="form-group">
+              <label>الرقم الضريبي</label>
+              <input type="text" name="tax_number" maxlength="50">
+            </div>
+            <div class="form-group">
+              <label>الرصيد</label>
+              <input type="number" name="balance" step="0.01">
+            </div>
+            <div class="form-group full">
+              <label>العنوان</label>
+              <input type="text" name="address" maxlength="255">
+            </div>
+            <div class="form-group full">
+              <label>ملاحظات</label>
+              <textarea name="notes" maxlength="255"></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" data-close>إلغاء</button>
+          <button type="submit" class="btn btn-primary">
+            <i data-lucide="save"></i> تحديث
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="refad-core.js"></script>
+  <script src="refad-auth.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      // ============================================================
+      // 1) Guard
+      // ============================================================
+      const session = Refad.Auth.guardPage('suppliers.view');
+      if (!session) return;
+
+      const canEdit = Refad.Session.has('suppliers.edit');
+      const canCreateSales = Refad.Session.has('sales.view') && Refad.Session.has('sales.create');
+      const canViewSales = Refad.Session.has('sales.view');
+
+      // ============================================================
+      // 2) ID from URL
+      // ============================================================
+      const supplierId = parseInt(Refad.getParam('id'), 10);
+      if (!supplierId || isNaN(supplierId)) {
+        Refad.alert.error('خطأ', 'لم يتم تحديد المورد').then(() => location.href = 'suppliers.html');
+        return;
+      }
+
+      // ============================================================
+      // 3) State
+      // ============================================================
+      const state = {
+        supplier: null,
+        transactions: [],
+        receipts: [],
+        purchases: [],
+        salesInvoices: []
+      };
+
+      // ============================================================
+      // 4) Sidebar
+      // ============================================================
+      const MENU = [
+        { section: 'الرئيسية', items: [
+          { label: 'لوحة التحكم', icon: 'layout-dashboard', href: 'dashboard.html' },
+          { label: 'الشات', icon: 'message-circle', href: 'chat.html', permission: 'chat.use' },
+          { label: 'الإشعارات', icon: 'bell', href: 'notifications.html', permission: 'notifications.view' }
+        ]},
+        { section: 'العمليات', items: [
+          { label: 'الأصناف', icon: 'package', href: 'products.html', permission: 'products.view' },
+          { label: 'المخزون', icon: 'warehouse', href: 'inventory.html', permission: 'inventory.view' },
+          { label: 'طلبات الشراء', icon: 'clipboard-list', href: 'purchase-requests.html', permission: 'purchases.view' },
+          { label: 'الاستلامات', icon: 'package-check', href: 'receipts.html', permission: 'purchases.receive' },
+          { label: 'طلبات البيع', icon: 'shopping-cart', href: 'sales-orders.html', permission: 'sales.view' },
+          { label: 'نقطة البيع', icon: 'scan-barcode', href: 'pos.html', permission: 'sales.pos', badge: 'POS', badgeClass: 'teal' },
+          { label: 'الفواتير', icon: 'receipt', href: 'invoices.html', permission: 'sales.view' }
+        ]},
+        { section: 'الأطراف', items: [
+          { label: 'الموردين', icon: 'truck', href: 'suppliers.html', permission: 'suppliers.view' },
+          { label: 'العملاء', icon: 'users', href: 'customers.html', permission: 'customers.view' }
+        ]},
+        { section: 'المخزون', items: [
+          { label: 'الجرد', icon: 'clipboard-check', href: 'stocktake.html', permission: 'inventory.stocktake' },
+          { label: 'التسويات', icon: 'sliders-horizontal', href: 'adjustments.html', permission: 'inventory.adjust' }
+        ]},
+        { section: 'الموارد البشرية', items: [
+          { label: 'الموظفين', icon: 'user-cog', href: 'employees.html', permission: 'employees.view' },
+          { label: 'الصلاحيات', icon: 'shield-check', href: 'permissions.html', permission: 'permissions.manage' },
+          { label: 'الحضور', icon: 'calendar-check', href: 'attendance.html', permission: 'attendance.view' },
+          { label: 'الرواتب', icon: 'wallet', href: 'payroll.html', permission: 'payroll.view' }
+        ]},
+        { section: 'المالية', items: [
+          { label: 'المصاريف', icon: 'banknote', href: 'expenses.html', permission: 'expenses.view' },
+          { label: 'التقارير', icon: 'bar-chart-3', href: 'reports.html', permission: 'reports.view' }
+        ]},
+        { section: 'النظام', items: [
+          { label: 'إعدادات الشركة', icon: 'settings', href: 'company-settings.html', permission: 'settings.view' },
+          { label: 'شاشة الأدمن', icon: 'shield', href: 'admin.html', permission: 'admin.full', badge: 'Admin', badgeClass: 'gold' }
+        ]}
+      ];
+
+      function buildSidebar() {
+        const nav = document.getElementById('sidebarNav');
+        const frag = document.createDocumentFragment();
+        MENU.forEach(group => {
+          const allowed = group.items.filter(it => !it.permission || Refad.Session.has(it.permission));
+          if (!allowed.length) return;
+          frag.appendChild(Refad.el('div', { class: 'nav-section' }, group.section));
+          allowed.forEach(item => {
+            const a = Refad.el('a', {
+              href: item.href,
+              class: 'nav-item' + (item.href === 'suppliers.html' ? ' active' : '')
+            });
+            a.innerHTML = `<i data-lucide="${item.icon}"></i><span>${Refad.escapeHtml(item.label)}</span>${item.badge ? `<span class="badge ${item.badgeClass || ''}">${item.badge}</span>` : ''}`;
+            frag.appendChild(a);
+          });
+        });
+        nav.innerHTML = '';
+        nav.appendChild(frag);
+        if (window.lucide) lucide.createIcons();
+      }
+
+      // ============================================================
+      // 5) UI helpers
+      // ============================================================
+      function fillUser() {
+        const av = document.getElementById('userAvatar');
+        const initial = (session.full_name || '؟').trim().charAt(0);
+        if (session.avatar_url) av.innerHTML = `<img src="${Refad.escapeHtml(session.avatar_url)}" alt="">`;
+        else av.textContent = initial;
+        document.getElementById('userName').textContent = session.full_name;
+        document.getElementById('userRole').textContent = Refad.Session.has('company.owner') ? 'صاحب الشركة' : 'موظف';
+      }
+
+      function setupTheme() {
+        const btn = document.getElementById('themeToggle');
+        const icon = document.getElementById('themeIcon');
+        const refresh = () => {
+          const isDark = Refad.theme.get() === 'dark';
+          icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+          if (window.lucide) lucide.createIcons();
+        };
+        refresh();
+        btn.addEventListener('click', () => { Refad.theme.toggle(); refresh(); });
+      }
+
+      function setupSidebarMobile() {
+        const sb = document.getElementById('sidebar');
+        const ov = document.getElementById('overlay');
+        document.getElementById('menuToggle').addEventListener('click', () => {
+          sb.classList.add('open'); ov.classList.add('show');
+        });
+        ov.addEventListener('click', () => {
+          sb.classList.remove('open'); ov.classList.remove('show');
+        });
+      }
+
+      function setupUserMenu() {
+        const m = document.getElementById('userMenu');
+        const d = document.getElementById('userDropdown');
+        m.addEventListener('click', e => { e.stopPropagation(); d.classList.toggle('show'); });
+        document.addEventListener('click', () => d.classList.remove('show'));
+        d.addEventListener('click', e => e.stopPropagation());
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+          if (await Refad.alert.confirm('تسجيل الخروج', 'هل تريد الخروج؟', 'خروج')) {
+            await Refad.Auth.logout();
+          }
+        });
+      }
+
+      function setupNotifBtn() {
+        document.getElementById('notifBtn').addEventListener('click', () => {
+          window.location.href = 'notifications.html';
+        });
+      }
+
+      // ============================================================
+      // 6) Load supplier
+      // ============================================================
+      async function loadSupplier() {
+        try {
+          state.supplier = await Refad.db.selectOne('suppliers', { eq: { id: supplierId } });
+          if (!state.supplier || state.supplier.company_id !== session.company_id) {
+            Refad.alert.error('غير موجود', 'المورد غير موجود').then(() => location.href = 'suppliers.html');
+            return;
+          }
+          renderHero();
+          renderInfo();
+          renderBalance();
+        } catch (e) {
+          console.error('[SupplierDetails] load failed:', e);
+          Refad.toast.error('تعذّر التحميل: ' + e.message);
+        }
+      }
+
+      function renderHero() {
+        const s = state.supplier;
+        document.getElementById('heroAvatar').textContent = (s.name || '؟').charAt(0);
+        document.getElementById('heroAvatar').classList.remove('skeleton');
+        document.getElementById('heroName').textContent = s.name;
+
+        const subs = [];
+        if (s.phone) subs.push(s.phone);
+        if (s.email) subs.push(s.email);
+        document.getElementById('heroSub').textContent = subs.join(' • ') || '—';
+
+        const tags = [];
+        if (s.tax_number) tags.push({ icon: 'file-text', text: s.tax_number });
+        tags.push({
+          icon: s.is_active ? 'check-circle' : 'x-circle',
+          text: s.is_active ? 'نشط' : 'غير نشط'
+        });
+
+        if (s.balance > 0) tags.push({ icon: 'arrow-up-circle', text: 'مستحق للمورد', cls: 'success' });
+        else if (s.balance < 0) tags.push({ icon: 'arrow-down-circle', text: 'مستحق لنا', cls: 'danger' });
+
+        document.getElementById('heroTags').innerHTML = tags.map(t =>
+          `<span class="hero-tag ${t.cls || ''}"><i data-lucide="${t.icon}"></i> ${Refad.escapeHtml(t.text)}</span>`
+        ).join('');
+
+        if (window.lucide) lucide.createIcons();
+      }
+
+      function renderInfo() {
+        const s = state.supplier;
+        const rows = [
+          ['الاسم', s.name],
+          ['الهاتف', s.phone || '—'],
+          ['البريد', s.email || '—'],
+          ['الرقم الضريبي', s.tax_number || '—'],
+          ['العنوان', s.address || '—'],
+          ['الحالة', s.is_active ? 'نشط' : 'غير نشط'],
+          ['تاريخ الإضافة', Refad.format.datetime(s.created_at)],
+          ['آخر تحديث', Refad.format.datetime(s.updated_at)]
+        ];
+        document.getElementById('infoGrid').innerHTML = rows.map(([k, v]) => `
+          <div class="info-item">
+            <div class="label">${Refad.escapeHtml(k)}</div>
+            <div class="value">${Refad.escapeHtml(String(v))}</div>
+          </div>
+        `).join('');
+
+        if (s.notes) {
+          document.getElementById('infoGrid').innerHTML += `
+            <div class="info-item" style="grid-column:1/-1;">
+              <div class="label">ملاحظات</div>
+              <div class="value" style="line-height:1.7;">${Refad.escapeHtml(s.notes)}</div>
+            </div>
+          `;
+        }
+      }
+
+      function renderBalance() {
+        const b = state.supplier.balance || 0;
+        const el = document.getElementById('balanceDisplay');
+        let cls = 'zero', note = 'الرصيد مصفّر';
+
+        if (b > 0) { cls = 'positive'; note = 'مبلغ مستحق للمورد (علينا)'; }
+        else if (b < 0) { cls = 'negative'; note = 'مبلغ مستحق لنا عند المورد'; }
+
+        el.innerHTML = `
+          <div class="label">الرصيد الحالي</div>
+          <div class="value ${cls}">${b > 0 ? '+' : ''}${Refad.format.money(b)}</div>
+          <div class="note">${note}</div>
+        `;
+      }
+
+      // ============================================================
+      // 7) Load related data
+      // ============================================================
+      async function loadRelated() {
+        try {
+          const [transactions, receipts, purchases, salesInvoices] = await Promise.all([
+            Refad.db.select('supplier_transactions', {
+              eq: { supplier_id: supplierId },
+              order: { column: 'created_at', ascending: false },
+              limit: 100
+            }).catch(() => []),
+            Refad.db.select('receipts', {
+              columns: 'id, receipt_number, receipt_date, total_amount, paid_amount, status',
+              eq: { supplier_id: supplierId },
+              order: { column: 'receipt_date', ascending: false },
+              limit: 50
+            }).catch(() => []),
+            Refad.db.select('purchase_requests', {
+              columns: 'id, request_number, status, created_at, purchase_request_items(id)',
+              eq: { supplier_id: supplierId },
+              order: { column: 'created_at', ascending: false },
+              limit: 50
+            }).catch(() => []),
+            canViewSales ? Refad.db.select('sales_invoices', {
+                columns: 'id, invoice_number, invoice_date, grand_total, paid_amount, status',
+                eq: { supplier_id: supplierId, company_id: session.company_id },
+                order: { column: 'invoice_date', ascending: false },
+                limit: 100
+              }) : Promise.resolve([])
+          ]);
+
+          state.transactions = transactions;
+          state.receipts = receipts;
+          state.purchases = purchases;
+          state.salesInvoices = salesInvoices;
+
+          renderStats();
+          renderTransactions();
+          renderReceipts();
+          renderSalesInvoices();
+          renderPurchases();
+        } catch (e) {
+          console.error('[SupplierDetails] related failed:', e);
+        }
+      }
+
+      function renderStats() {
+        const totalReceipts = state.receipts.reduce((s, r) => s + (Number(r.total_amount) || 0), 0);
+        const totalPaid = state.receipts.reduce((s, r) => s + (Number(r.paid_amount) || 0), 0);
+
+        const cards = [
+          { label: 'الرصيد الحالي', value: Refad.format.money(state.supplier.balance || 0), icon: 'wallet', cls: 'gold' },
+          { label: 'إجمالي الفواتير', value: Refad.format.money(totalReceipts), icon: 'receipt', cls: 'blue' },
+          { label: 'إجمالي المدفوع', value: Refad.format.money(totalPaid), icon: 'check-circle', cls: 'green' },
+          { label: 'عدد المعاملات', value: Refad.format.number(state.transactions.length), icon: 'list', cls: 'purple' },
+          { label: 'فواتير البيع', value: Refad.format.number(state.salesInvoices.length), icon: 'shopping-cart', cls: 'teal' },
+          { label: 'طلبات الشراء', value: Refad.format.number(state.purchases.length), icon: 'clipboard-list', cls: 'teal' }
+        ];
+
+        document.getElementById('statsGrid').innerHTML = cards.map(c => `
+          <div class="stat-card">
+            <div class="stat-icon ${c.cls}"><i data-lucide="${c.icon}"></i></div>
+            <div class="stat-body">
+              <div class="label">${Refad.escapeHtml(c.label)}</div>
+              <div class="value">${Refad.escapeHtml(c.value)}</div>
+            </div>
+          </div>
+        `).join('');
+        if (window.lucide) lucide.createIcons();
+      }
+
+      // ============================================================
+      // 8) Render transactions
+      // ============================================================
+      function renderTransactions() {
+        const body = document.getElementById('transactionsBody');
+        if (!state.transactions.length) {
+          body.innerHTML = `
+            <tr style="border:none;">
+              <td colspan="5">
+                <div class="empty-state">
+                  <i data-lucide="receipt"></i>
+                  <p>لا توجد معاملات بعد</p>
+                </div>
+              </td>
+            </tr>`;
+          if (window.lucide) lucide.createIcons();
+          return;
+        }
+
+        const TYPES = {
+          'payment': { label: 'دفعة', cls: 'green' },
+          'collection': { label: 'تحصيل من المورد', cls: 'teal' },
+          'invoice': { label: 'فاتورة', cls: 'blue' },
+          'sale': { label: 'بيع للمورد', cls: 'purple' },
+          'adjustment': { label: 'تسوية', cls: 'gold' }
+        };
+
+        body.innerHTML = state.transactions.map(t => {
+          const type = TYPES[t.type] || { label: t.type, cls: 'gray' };
+          return `
+            <tr>
+              <td>${Refad.format.datetime(t.created_at)}</td>
+              <td><span class="badge-tag ${type.cls}">${Refad.escapeHtml(type.label)}</span></td>
+              <td><strong>${Refad.format.money(t.amount)}</strong></td>
+              <td>${t.balance_after !== null && t.balance_after !== undefined ? Refad.format.money(t.balance_after) : '—'}</td>
+              <td>${Refad.escapeHtml(t.notes || '—')}</td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      function renderReceipts() {
+        const body = document.getElementById('receiptsBody');
+        if (!state.receipts.length) {
+          body.innerHTML = `
+            <tr style="border:none;">
+              <td colspan="5">
+                <div class="empty-state">
+                  <i data-lucide="package-check"></i>
+                  <p>لا توجد فواتير استلام بعد</p>
+                </div>
+              </td>
+            </tr>`;
+          if (window.lucide) lucide.createIcons();
+          return;
+        }
+
+        const STATUS = {
+          'completed': { label: 'مكتمل', cls: 'green' },
+          'partial': { label: 'جزئي', cls: 'gold' },
+          'pending': { label: 'معلق', cls: 'gray' }
+        };
+
+        body.innerHTML = state.receipts.map(r => {
+          const st = STATUS[r.status] || { label: r.status, cls: 'gray' };
+          return `
+            <tr>
+              <td><strong>${Refad.escapeHtml(r.receipt_number)}</strong></td>
+              <td>${Refad.format.date(r.receipt_date)}</td>
+              <td>${Refad.format.money(r.total_amount)}</td>
+              <td>${Refad.format.money(r.paid_amount)}</td>
+              <td><span class="badge-tag ${st.cls}">${Refad.escapeHtml(st.label)}</span></td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      function renderPurchases() {
+        const body = document.getElementById('purchasesBody');
+        if (!state.purchases.length) {
+          body.innerHTML = `
+            <tr style="border:none;">
+              <td colspan="4">
+                <div class="empty-state">
+                  <i data-lucide="clipboard-list"></i>
+                  <p>لا توجد طلبات شراء بعد</p>
+                </div>
+              </td>
+            </tr>`;
+          if (window.lucide) lucide.createIcons();
+          return;
+        }
+
+        const STATUS = {
+          'draft': { label: 'مسودة', cls: 'gray' },
+          'sent': { label: 'مُرسل', cls: 'blue' },
+          'partial': { label: 'جزئي', cls: 'gold' },
+          'received': { label: 'مستلم', cls: 'green' },
+          'cancelled': { label: 'ملغي', cls: 'red' }
+        };
+
+        body.innerHTML = state.purchases.map(p => {
+          const st = STATUS[p.status] || { label: p.status, cls: 'gray' };
+          const count = p.purchase_request_items?.length || 0;
+          return `
+            <tr style="cursor:pointer;" onclick="location.href='purchase-request-form.html?id=${p.id}'">
+              <td><strong>${Refad.escapeHtml(p.request_number)}</strong></td>
+              <td>${Refad.format.date(p.created_at)}</td>
+              <td><span class="badge-tag ${st.cls}">${Refad.escapeHtml(st.label)}</span></td>
+              <td>${Refad.format.number(count)}</td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      function renderSalesInvoices() {
+        const body = document.getElementById('salesInvoicesBody');
+        if (!state.salesInvoices.length) {
+          body.innerHTML = `
+            <tr style="border:none;">
+              <td colspan="5">
+                <div class="empty-state">
+                  <i data-lucide="shopping-cart"></i>
+                  <p>لا توجد فواتير بيع لهذا المورد بعد</p>
+                </div>
+              </td>
+            </tr>`;
+          if (window.lucide) lucide.createIcons();
+          return;
+        }
+
+        const statuses = {
+          paid: { label: 'مدفوعة', cls: 'green' },
+          partial: { label: 'جزئي', cls: 'gold' },
+          unpaid: { label: 'آجلة', cls: 'blue' },
+          cancelled: { label: 'ملغية', cls: 'red' }
+        };
+        body.innerHTML = state.salesInvoices.map(invoice => {
+          const status = statuses[invoice.status] || { label: invoice.status, cls: 'gray' };
+          return `
+            <tr>
+              <td>${canViewSales
+                ? `<a href="invoices.html?id=${invoice.id}" class="invoice-link"><strong>${Refad.escapeHtml(invoice.invoice_number)}</strong></a>`
+                : `<strong>${Refad.escapeHtml(invoice.invoice_number)}</strong>`}</td>
+              <td>${Refad.format.date(invoice.invoice_date)}</td>
+              <td>${Refad.format.money(invoice.grand_total)}</td>
+              <td>${Refad.format.money(invoice.paid_amount)}</td>
+              <td><span class="badge-tag ${status.cls}">${Refad.escapeHtml(status.label)}</span></td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      // ============================================================
+      // 9) Modal helpers
+      // ============================================================
+      function closeAllModals() {
+        document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.remove('show'));
+      }
+
+      function setupModals() {
+        document.querySelectorAll('[data-close]').forEach(btn => {
+          btn.addEventListener('click', closeAllModals);
+        });
+        document.addEventListener('keydown', e => {
+          if (e.key === 'Escape') closeAllModals();
+        });
+        document.querySelectorAll('.modal-backdrop').forEach(m => {
+          m.addEventListener('click', e => {
+            if (e.target === m) closeAllModals();
+          });
+        });
+      }
+
+      // ============================================================
+      // 10) Add Transaction
+      // ============================================================
+      function openTransactionModal() {
+        document.getElementById('transactionForm').reset();
+        document.getElementById('transactionModal').classList.add('show');
+        if (window.lucide) lucide.createIcons();
+        setTimeout(() => document.querySelector('#transactionForm [name=amount]').focus(), 100);
+      }
+
+      async function saveTransaction(e) {
+        e.preventDefault();
+        const form = e.target;
+        const type = form.type.value;
+        const amount = Refad.toNum(form.amount.value);
+        const notes = form.notes.value.trim() || null;
+
+        if (!amount || amount <= 0) {
+          Refad.toast.warning('يجب إدخال مبلغ صحيح');
+          return;
+        }
+
+        try {
+          // حساب الرصيد الجديد
+          const currentBalance = state.supplier.balance || 0;
+          let newBalance = currentBalance;
+          let txAmount = amount;
+
+          if (type === 'payment') {
+            // دفعة → الرصيد يقل (ندفع له)
+            newBalance = currentBalance - amount;
+          } else if (type === 'collection') {
+            // تحصيل من المورد → الرصيد يزيد باتجاه التسوية
+            newBalance = currentBalance + amount;
+            let remaining = amount;
+            const invoices = await Refad.db.select('sales_invoices', {
+              columns: 'id, grand_total, paid_amount, invoice_date',
+              eq: { supplier_id: supplierId, company_id: session.company_id },
+              order: { column: 'invoice_date', ascending: true }
+            });
+            for (const invoice of invoices) {
+              if (remaining <= 0) break;
+              const due = Math.max(0, (Number(invoice.grand_total) || 0) - (Number(invoice.paid_amount) || 0));
+              if (!due) continue;
+              const paidAmount = (Number(invoice.paid_amount) || 0) + Math.min(due, remaining);
+              remaining -= Math.min(due, remaining);
+              await Refad.db.update('sales_invoices', invoice.id, {
+                paid_amount: paidAmount,
+                status: paidAmount >= Number(invoice.grand_total) ? 'paid' : 'partial'
+              });
+            }
+          } else if (type === 'invoice') {
+            // فاتورة → الرصيد يزيد (استلمنا بضاعة)
+            newBalance = currentBalance + amount;
+          } else if (type === 'adjustment') {
+            // تسوية → المبلغ مباشر (بإشارته)
+            newBalance = currentBalance + amount;
+          }
+
+          // إضافة المعاملة
+          await Refad.db.insert('supplier_transactions', {
+            supplier_id: supplierId,
+            company_id: session.company_id,
+            type,
+            amount: txAmount,
+            balance_after: newBalance,
+            notes,
+            user_id: session.user_id
+          });
+
+          // تحديث رصيد المورد
+          await Refad.db.update('suppliers', supplierId, { balance: newBalance });
+
+          await Refad.logActivity('add_supplier_transaction', 'suppliers',
+            `معاملة ${type} بمبلغ ${amount}`, supplierId);
+
+          closeAllModals();
+          Refad.toast.success('تم إضافة المعاملة');
+          await loadSupplier();
+          await loadRelated();
+        } catch (err) {
+          console.error('[Transaction] save failed:', err);
+          Refad.toast.error('فشل الحفظ: ' + err.message);
+        }
+      }
+
+      // ============================================================
+      // 11) Edit Supplier
+      // ============================================================
+      function openEditModal() {
+        const s = state.supplier;
+        if (!s) return;
+        const form = document.getElementById('editForm');
+        ['name','phone','email','tax_number','balance','address','notes'].forEach(k => {
+          if (form[k]) form[k].value = s[k] ?? '';
+        });
+        document.getElementById('editModal').classList.add('show');
+        if (window.lucide) lucide.createIcons();
+      }
+
+      async function saveEdit(e) {
+        e.preventDefault();
+        const form = e.target;
+        const payload = {
+          name: form.name.value.trim(),
+          phone: form.phone.value.trim() || null,
+          email: form.email.value.trim() || null,
+          tax_number: form.tax_number.value.trim() || null,
+          balance: Refad.toNum(form.balance.value),
+          address: form.address.value.trim() || null,
+          notes: form.notes.value.trim() || null
+        };
+        if (!payload.name) {
+          Refad.toast.warning('الاسم مطلوب');
+          return;
+        }
+        try {
+          await Refad.db.update('suppliers', supplierId, payload);
+          await Refad.logActivity('update_supplier', 'suppliers', `تعديل: ${payload.name}`, supplierId);
+          closeAllModals();
+          Refad.toast.success('تم التحديث');
+          await loadSupplier();
+          document.title = `${payload.name} - رفاد`;
+        } catch (err) {
+          Refad.toast.error('فشل الحفظ: ' + err.message);
+        }
+      }
+
+      // ============================================================
+      // 12) Tabs
+      // ============================================================
+      function setupTabs() {
+        document.querySelectorAll('.tab').forEach(tab => {
+          tab.addEventListener('click', () => {
+            const name = tab.dataset.tab;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            tab.classList.add('active');
+            document.querySelector(`.tab-panel[data-panel="${name}"]`).classList.add('active');
+          });
+        });
+      }
+
+      // ============================================================
+      // 13) Events
+      // ============================================================
+      function bindEvents() {
+        if (canEdit) {
+          document.getElementById('editSupplierBtn').addEventListener('click', openEditModal);
+          document.getElementById('addTransactionBtn').addEventListener('click', openTransactionModal);
+        } else {
+          document.getElementById('editSupplierBtn').style.display = 'none';
+          document.getElementById('addTransactionBtn').style.display = 'none';
+        }
+        if (canCreateSales) {
+          const sellBtn = document.getElementById('sellToSupplierBtn');
+          sellBtn.href = `sales-order-form.html?supplier_id=${supplierId}`;
+          sellBtn.style.display = 'inline-flex';
+        }
+
+        document.getElementById('editForm').addEventListener('submit', saveEdit);
+        document.getElementById('transactionForm').addEventListener('submit', saveTransaction);
+      }
+
+      // ============================================================
+      // 14) Init
+      // ============================================================
+      async function init() {
+        buildSidebar();
+        fillUser();
+        setupTheme();
+        setupSidebarMobile();
+        setupUserMenu();
+        setupNotifBtn();
+        setupTabs();
+        setupModals();
+        bindEvents();
+        if (!canViewSales) {
+          document.querySelector('.tab[data-tab="sales"]').style.display = 'none';
+        }
+
+        await loadSupplier();
+        if (!state.supplier) return;
+        document.title = `${state.supplier.name} - رفاد`;
+        await loadRelated();
+
+        Refad.registerServiceWorker();
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+
+      console.log('%c[Refad] Supplier details ready', 'color:#14B8A6;font-weight:bold');
+
+    })();
+  </script>
+
+</body>
+</html>

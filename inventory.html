@@ -1,0 +1,2144 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0B2C4D">
+  <title>المخزون - رفاد</title>
+
+  <link rel="icon" type="image/png" href="logo.png">
+  <link rel="manifest" href="manifest.json">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --primary: #0B2C4D;
+      --primary-light: #1e4a73;
+      --accent: #14B8A6;
+      --accent-dark: #0d9488;
+      --gold: #F59E0B;
+      --bg: #F1F5F9;
+      --card: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --danger: #ef4444;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --info: #3b82f6;
+      --sidebar-bg: #0B2C4D;
+      --sidebar-text: #cbd5e1;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+      --shadow: 0 4px 20px rgba(11, 44, 77, 0.08);
+      --shadow-lg: 0 10px 40px rgba(11, 44, 77, 0.12);
+      --radius: 14px;
+      --radius-sm: 10px;
+      --sidebar-w: 260px;
+      --topbar-h: 64px;
+    }
+
+    [data-theme="dark"] {
+      --bg: #0a1628;
+      --card: #0f2137;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --border: #1e3a5f;
+      --sidebar-bg: #061a2e;
+      --sidebar-text: #94a3b8;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Cairo', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      transition: background 0.3s, color 0.3s;
+    }
+
+    body { display: flex; min-height: 100vh; overflow-x: hidden; }
+
+    /* ============================================================
+       Sidebar
+       ============================================================ */
+    .sidebar {
+      width: var(--sidebar-w);
+      height: 100vh;
+      background: var(--sidebar-bg);
+      color: var(--sidebar-text);
+      position: fixed;
+      top: 0;
+      right: 0;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: -4px 0 20px rgba(0,0,0,0.1);
+    }
+
+    .sidebar-header {
+      padding: 20px 22px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      height: var(--topbar-h);
+      box-sizing: border-box;
+    }
+
+    .sidebar-logo {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 4px 12px rgba(20,184,166,0.4);
+    }
+    .sidebar-logo img { width: 70%; height: 70%; object-fit: contain; }
+    .sidebar-logo .fallback { color: white; font-weight: 800; font-size: 18px; }
+
+    .sidebar-brand h2 { color: white; font-size: 20px; font-weight: 800; letter-spacing: -0.5px; line-height: 1.2; }
+    .sidebar-brand p { font-size: 10px; color: var(--sidebar-text); opacity: 0.7; font-weight: 500; margin-top: 2px; }
+
+    .sidebar-nav { flex: 1; overflow-y: auto; padding: 12px 0; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.15) transparent; }
+    .sidebar-nav::-webkit-scrollbar { width: 5px; }
+    .sidebar-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 10px; }
+
+    .nav-section { padding: 8px 20px 4px; font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 1px; margin-top: 8px; }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 22px;
+      color: var(--sidebar-text);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      border-right: 3px solid transparent;
+      transition: all 0.2s;
+      position: relative;
+      cursor: pointer;
+    }
+    .nav-item:hover { background: rgba(255,255,255,0.05); color: white; border-right-color: rgba(20,184,166,0.5); }
+    .nav-item.active { background: rgba(20,184,166,0.12); color: white; border-right-color: var(--accent); font-weight: 600; }
+    .nav-item.active::before { content: ''; position: absolute; right: 0; top: 50%; transform: translateY(-50%); width: 3px; height: 60%; background: var(--accent); border-radius: 0 4px 4px 0; }
+    .nav-item i, .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; opacity: 0.85; }
+    .nav-item .badge { margin-right: auto; background: var(--danger); color: white; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
+    .nav-item .badge.teal { background: var(--accent); }
+    .nav-item .badge.gold { background: var(--gold); }
+
+    /* ============================================================
+       Main
+       ============================================================ */
+    .main { flex: 1; margin-right: var(--sidebar-w); min-width: 0; display: flex; flex-direction: column; }
+
+    .topbar {
+      height: var(--topbar-h);
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 0 24px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .menu-toggle { display: none; background: transparent; border: none; color: var(--text); cursor: pointer; padding: 8px; border-radius: 8px; }
+    .menu-toggle:hover { background: var(--bg); }
+
+    .topbar-title { font-size: 18px; font-weight: 700; color: var(--text); flex-shrink: 0; }
+    .topbar-actions { display: flex; align-items: center; gap: 8px; margin-right: auto; }
+
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      transition: all 0.2s;
+    }
+    .icon-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .icon-btn i, .icon-btn svg { width: 18px; height: 18px; }
+    .icon-btn .dot { position: absolute; top: 8px; left: 8px; width: 8px; height: 8px; background: var(--danger); border-radius: 50%; border: 2px solid var(--card); }
+
+    .user-menu {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 5px 12px 5px 5px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.2s;
+      border: 1px solid var(--border);
+      background: var(--card);
+    }
+    .user-menu:hover { background: var(--bg); }
+
+    .user-avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 700;
+      font-size: 14px;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .user-info { display: flex; flex-direction: column; line-height: 1.2; }
+    .user-info .name { font-size: 13px; font-weight: 700; color: var(--text); }
+    .user-info .role { font-size: 11px; color: var(--text-muted); }
+
+    .dropdown { position: absolute; top: calc(100% + 8px); left: 0; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: var(--shadow-lg); min-width: 200px; padding: 6px; opacity: 0; visibility: hidden; transform: translateY(-8px); transition: all 0.2s; z-index: 100; }
+    .dropdown.show { opacity: 1; visibility: visible; transform: translateY(0); }
+    .dropdown-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; color: var(--text); font-size: 13px; font-weight: 500; cursor: pointer; transition: background 0.15s; text-decoration: none; }
+    .dropdown-item:hover { background: var(--bg); }
+    .dropdown-item.danger { color: var(--danger); }
+    .dropdown-item.danger:hover { background: rgba(239,68,68,0.08); }
+    .dropdown-item i { width: 16px; height: 16px; }
+    .dropdown-divider { height: 1px; background: var(--border); margin: 6px 0; }
+
+    /* ============================================================
+       Content
+       ============================================================ */
+    .content { padding: 24px; flex: 1; }
+
+    .page-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .page-head h1 { font-size: 24px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+    .page-head p { font-size: 13px; color: var(--text-muted); }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: var(--radius-sm);
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn i { width: 16px; height: 16px; }
+
+    .btn-primary { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; }
+    .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(20,184,166,0.35); }
+
+    .btn-outline { background: var(--card); color: var(--text); border: 1px solid var(--border); }
+    .btn-outline:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+    /* Mini stats */
+    .mini-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .mini-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: all 0.2s;
+      box-shadow: var(--shadow-sm);
+      cursor: pointer;
+    }
+    .mini-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: var(--shadow); }
+    .mini-card.active { border-color: var(--accent); background: rgba(20,184,166,0.05); }
+
+    .mini-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .mini-icon i { width: 20px; height: 20px; color: white; }
+    .mini-icon.blue   { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+    .mini-icon.teal   { background: linear-gradient(135deg, #14B8A6, #0d9488); }
+    .mini-icon.gold   { background: linear-gradient(135deg, #F59E0B, #d97706); }
+    .mini-icon.green  { background: linear-gradient(135deg, #10b981, #047857); }
+    .mini-icon.red    { background: linear-gradient(135deg, #ef4444, #b91c1c); }
+    .mini-icon.purple { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
+
+    .mini-body { flex: 1; min-width: 0; }
+    .mini-body .label { font-size: 11px; color: var(--text-muted); font-weight: 600; margin-bottom: 2px; }
+    .mini-body .value { font-size: 18px; font-weight: 800; color: var(--text); line-height: 1; }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 6px;
+      margin-bottom: 16px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      box-shadow: var(--shadow-sm);
+    }
+    .tabs::-webkit-scrollbar { display: none; }
+
+    .tab {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: transparent;
+      border: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .tab:hover { background: var(--bg); color: var(--text); }
+    .tab.active { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; box-shadow: 0 4px 12px rgba(20,184,166,0.3); }
+    .tab i { width: 16px; height: 16px; }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; animation: fadeIn 0.3s; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Toolbar */
+    .toolbar {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .search-input { position: relative; flex: 1; min-width: 220px; }
+    .search-input input {
+      width: 100%;
+      padding: 10px 42px 10px 14px;
+      font-family: inherit;
+      font-size: 14px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      outline: none;
+      transition: all 0.2s;
+    }
+    .search-input input:focus { border-color: var(--accent); background: var(--card); box-shadow: 0 0 0 3px rgba(20,184,166,0.1); }
+    .search-input i { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--text-muted); pointer-events: none; }
+
+    .select-wrap { position: relative; min-width: 150px; }
+    .select-wrap select {
+      width: 100%;
+      padding: 10px 14px 10px 32px;
+      font-family: inherit;
+      font-size: 14px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      outline: none;
+      cursor: pointer;
+      appearance: none;
+      transition: all 0.2s;
+    }
+    .select-wrap select:focus { border-color: var(--accent); background: var(--card); }
+    .select-wrap::after {
+      content: '';
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 0;
+      height: 0;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-top: 5px solid var(--text-muted);
+      pointer-events: none;
+    }
+
+    /* Table */
+    .table-wrap {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+    }
+
+    .table-scroll { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      min-width: 900px;
+    }
+
+    thead { background: var(--bg); border-bottom: 1px solid var(--border); }
+
+    th {
+      text-align: right;
+      padding: 14px 16px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+
+    tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--bg); }
+
+    td { padding: 14px 16px; color: var(--text); vertical-align: middle; }
+
+    .product-cell { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+    .product-cell:hover .product-name { color: var(--accent); }
+
+    .product-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 15px;
+      flex-shrink: 0;
+    }
+
+    .product-name { font-weight: 700; color: var(--text); transition: color 0.2s; }
+    .product-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+    .qty-value {
+      font-weight: 800;
+      font-size: 16px;
+      color: var(--text);
+    }
+    .qty-value.ok { color: var(--success); }
+    .qty-value.low { color: var(--warning); }
+    .qty-value.out { color: var(--danger); }
+
+    .badge-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      border-radius: 20px;
+      white-space: nowrap;
+    }
+    .badge-tag.green  { background: rgba(16,185,129,0.12); color: var(--success); }
+    .badge-tag.red    { background: rgba(239,68,68,0.12); color: var(--danger); }
+    .badge-tag.gold   { background: rgba(245,158,11,0.12); color: var(--warning); }
+    .badge-tag.gray   { background: rgba(148,163,184,0.15); color: var(--text-muted); }
+    .badge-tag.blue   { background: rgba(59,130,246,0.12); color: var(--info); }
+
+    .actions-cell { display: flex; gap: 6px; justify-content: flex-end; }
+
+    .action-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    .action-btn:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
+    .action-btn i { width: 15px; height: 15px; }
+
+    .empty-row td { padding: 60px 20px; text-align: center; color: var(--text-muted); }
+    .empty-row i { width: 48px; height: 48px; opacity: 0.4; margin-bottom: 10px; }
+    .empty-row p { font-size: 14px; font-weight: 500; }
+
+    .skeleton-row td { padding: 18px 16px; }
+    .skeleton-bar {
+      height: 14px;
+      background: linear-gradient(90deg, var(--border) 25%, var(--bg) 50%, var(--border) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+      border-radius: 6px;
+    }
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* Pagination */
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      border-top: 1px solid var(--border);
+      font-size: 13px;
+      color: var(--text-muted);
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .pagination .controls { display: flex; gap: 6px; align-items: center; }
+
+    .page-btn {
+      min-width: 34px;
+      height: 34px;
+      padding: 0 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .page-btn:hover:not(:disabled):not(.active) { border-color: var(--accent); color: var(--accent); }
+    .page-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+    .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .batch-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      background: rgba(15, 23, 42, 0.55);
+    }
+    .batch-modal-backdrop.show { display: flex; }
+    .batch-modal {
+      width: min(620px, 100%);
+      max-height: min(90vh, 760px);
+      overflow-y: auto;
+      background: var(--card);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-lg);
+    }
+    .batch-modal-header, .batch-modal-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .batch-modal-header h2 { font-size: 17px; }
+    .batch-modal-footer { justify-content: flex-start; border-top: 1px solid var(--border); border-bottom: 0; }
+    .batch-modal-body { padding: 20px; }
+    .batch-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+    .batch-form-field { display: flex; flex-direction: column; gap: 6px; }
+    .batch-form-field.full { grid-column: 1 / -1; }
+    .batch-form-field label { color: var(--text-muted); font-size: 12px; font-weight: 700; }
+    .batch-form-field input, .batch-form-field select {
+      width: 100%;
+      min-height: 42px;
+      padding: 9px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      background: var(--bg);
+      font: inherit;
+      outline: none;
+    }
+    .batch-form-field input:focus, .batch-form-field select:focus { border-color: var(--accent); }
+    .batch-modal-note { margin-top: 14px; color: var(--text-muted); font-size: 12px; line-height: 1.7; }
+    @media (max-width: 520px) {
+      .batch-form-grid { grid-template-columns: 1fr; }
+      .batch-form-field.full { grid-column: auto; }
+    }
+
+    /* Chart */
+    .chart-wrap {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow-sm);
+    }
+    .chart-wrap h3 {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .chart-wrap h3 i { width: 18px; height: 18px; color: var(--accent); }
+    .chart-inner { position: relative; height: 280px; }
+
+    /* Overlay (mobile) */
+    .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; opacity: 0; transition: opacity 0.3s; }
+    .overlay.show { display: block; opacity: 1; }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .sidebar { transform: translateX(100%); }
+      .sidebar.open { transform: translateX(0); }
+      .main { margin-right: 0; }
+      .menu-toggle { display: flex; }
+      .user-info { display: none; }
+    }
+
+    @media (max-width: 640px) {
+      .content { padding: 16px; }
+      .topbar { padding: 0 14px; gap: 10px; }
+      .topbar-title { font-size: 15px; }
+      .page-head { flex-direction: column; align-items: stretch; }
+      .page-head h1 { font-size: 20px; }
+      .toolbar { padding: 12px; }
+      .search-input { min-width: 100%; }
+      .tabs { padding: 4px; }
+      .tab { padding: 8px 12px; font-size: 12px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <img src="logo.png" alt="رفاد" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=fallback>R</span>';">
+      </div>
+      <div class="sidebar-brand">
+        <h2>رفاد</h2>
+        <p>نظام إدارة الأدوية</p>
+      </div>
+    </div>
+    <nav class="sidebar-nav" id="sidebarNav"></nav>
+  </aside>
+
+  <div class="overlay" id="overlay"></div>
+
+  <!-- Main -->
+  <div class="main">
+
+    <header class="topbar">
+      <button class="menu-toggle" id="menuToggle"><i data-lucide="menu"></i></button>
+      <div class="topbar-title">المخزون</div>
+      <div class="topbar-actions">
+        <button class="icon-btn" id="themeToggle" title="الوضع الليلي/النهاري">
+          <i data-lucide="moon" id="themeIcon"></i>
+        </button>
+        <button class="icon-btn" id="notifBtn" title="الإشعارات" style="position:relative;">
+          <i data-lucide="bell"></i>
+          <span class="dot" id="notifDot" style="display:none;"></span>
+        </button>
+        <div style="position:relative;">
+          <div class="user-menu" id="userMenu">
+            <div class="user-avatar" id="userAvatar">م</div>
+            <div class="user-info">
+              <span class="name" id="userName">—</span>
+              <span class="role" id="userRole">—</span>
+            </div>
+            <i data-lucide="chevron-down" style="width:14px;height:14px;opacity:0.5;"></i>
+          </div>
+          <div class="dropdown" id="userDropdown">
+            <a href="company-settings.html" class="dropdown-item"><i data-lucide="settings"></i> الإعدادات</a>
+            <a href="employees.html" class="dropdown-item"><i data-lucide="user-cog"></i> الملف الشخصي</a>
+            <div class="dropdown-divider"></div>
+            <div class="dropdown-item danger" id="logoutBtn"><i data-lucide="log-out"></i> تسجيل الخروج</div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="content">
+
+      <div class="page-head">
+        <div>
+          <h1>المخزون</h1>
+          <p>عرض شامل للمخزون والتشغيلات والحركات</p>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn btn-outline" id="printBtn">
+            <i data-lucide="printer"></i> طباعة
+          </button>
+          <button class="btn btn-outline" id="exportBtn">
+            <i data-lucide="download"></i> تصدير
+          </button>
+          <button class="btn btn-primary" id="refreshBtn">
+            <i data-lucide="refresh-cw"></i> تحديث
+          </button>
+        </div>
+      </div>
+
+      <!-- Mini stats (قابلة للنقر للفلترة) -->
+      <div class="mini-stats">
+        <div class="mini-card" data-filter="all">
+          <div class="mini-icon blue"><i data-lucide="package"></i></div>
+          <div class="mini-body">
+            <div class="label">إجمالي الأصناف</div>
+            <div class="value" id="statTotal">—</div>
+          </div>
+        </div>
+        <div class="mini-card" data-filter="in-stock">
+          <div class="mini-icon green"><i data-lucide="check-circle-2"></i></div>
+          <div class="mini-body">
+            <div class="label">متوفر</div>
+            <div class="value" id="statInStock">—</div>
+          </div>
+        </div>
+        <div class="mini-card" data-filter="low">
+          <div class="mini-icon gold"><i data-lucide="alert-triangle"></i></div>
+          <div class="mini-body">
+            <div class="label">مخزون منخفض</div>
+            <div class="value" id="statLow">—</div>
+          </div>
+        </div>
+        <div class="mini-card" data-filter="out">
+          <div class="mini-icon red"><i data-lucide="x-circle"></i></div>
+          <div class="mini-body">
+            <div class="label">نفد</div>
+            <div class="value" id="statOut">—</div>
+          </div>
+        </div>
+        <div class="mini-card" data-filter="expiring">
+          <div class="mini-icon purple"><i data-lucide="calendar-x"></i></div>
+          <div class="mini-body">
+            <div class="label">قريبة الانتهاء</div>
+            <div class="value" id="statExpiring">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tabs">
+        <button class="tab active" data-tab="products"><i data-lucide="package"></i> الأصناف</button>
+        <button class="tab" data-tab="batches"><i data-lucide="layers"></i> التشغيلات</button>
+        <button class="tab" data-tab="movements"><i data-lucide="activity"></i> الحركات</button>
+      </div>
+
+      <!-- Panel: Products -->
+      <div class="tab-panel active" data-panel="products">
+        <div class="toolbar">
+          <div class="search-input">
+            <input type="text" id="searchInput" placeholder="ابحث بالاسم أو التصنيف أو الشكل...">
+            <i data-lucide="search"></i>
+          </div>
+          <div class="select-wrap">
+            <select id="filterStatus">
+              <option value="">كل الحالات</option>
+              <option value="in-stock">متوفر</option>
+              <option value="low">منخفض</option>
+              <option value="out">نفد</option>
+            </select>
+          </div>
+          <div class="select-wrap">
+            <select id="filterSupplier">
+              <option value="">كل الموردين</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>الصنف</th>
+                  <th>المخزون الحالي</th>
+                  <th>حد إعادة الطلب</th>
+                  <th>عدد التشغيلات</th>
+                  <th>أقرب صلاحية</th>
+                  <th>الحالة</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="productsBody"></tbody>
+            </table>
+          </div>
+          <div class="pagination" id="productsPagination"></div>
+        </div>
+      </div>
+
+      <!-- Panel: Batches -->
+      <div class="tab-panel" data-panel="batches">
+        <div class="toolbar">
+          <div class="search-input">
+            <input type="text" id="batchSearch" placeholder="ابحث برقم التشغيلة أو الصنف...">
+            <i data-lucide="search"></i>
+          </div>
+          <div class="select-wrap">
+            <select id="batchFilterStatus">
+              <option value="">كل الحالات</option>
+              <option value="available">متوفر</option>
+              <option value="expiring">قريبة الانتهاء</option>
+              <option value="expired">منتهي</option>
+              <option value="empty">منتهي الكمية</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" id="addBatchBtn" type="button" style="display:none;">
+            <i data-lucide="plus"></i> إضافة تشغيلة
+          </button>
+        </div>
+
+        <div class="table-wrap">
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>الصنف</th>
+                  <th>رقم التشغيلة</th>
+                  <th>الكمية المتبقية</th>
+                  <th>سعر الشراء</th>
+                  <th>سعر البيع</th>
+                  <th>تاريخ الصلاحية</th>
+                  <th>الحالة</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="batchesBody"></tbody>
+            </table>
+          </div>
+          <div class="pagination" id="batchesPagination"></div>
+        </div>
+      </div>
+
+      <!-- Panel: Movements -->
+      <div class="tab-panel" data-panel="movements">
+        <div class="chart-wrap">
+          <h3><i data-lucide="bar-chart-3"></i> حركات آخر 30 يوم</h3>
+          <div class="chart-inner">
+            <canvas id="movementsChart"></canvas>
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <div class="search-input">
+            <input type="text" id="movSearch" placeholder="ابحث في الحركات...">
+            <i data-lucide="search"></i>
+          </div>
+          <div class="select-wrap">
+            <select id="movType">
+              <option value="">كل الأنواع</option>
+              <option value="in">إدخال</option>
+              <option value="out">إخراج</option>
+              <option value="adjust">تسوية</option>
+              <option value="loss">فاقد</option>
+              <option value="return">مرتجع</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>التاريخ</th>
+                  <th>الصنف</th>
+                  <th>النوع</th>
+                  <th>الكمية</th>
+                  <th>المرجع</th>
+                  <th>ملاحظات</th>
+                </tr>
+              </thead>
+              <tbody id="movementsBody"></tbody>
+            </table>
+          </div>
+          <div class="pagination" id="movementsPagination"></div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <div class="batch-modal-backdrop" id="batchModalBackdrop" aria-hidden="true">
+    <section class="batch-modal" role="dialog" aria-modal="true" aria-labelledby="batchModalTitle">
+      <form id="batchForm">
+        <header class="batch-modal-header">
+          <h2 id="batchModalTitle">إضافة تشغيلة جديدة</h2>
+          <button class="action-btn" type="button" id="closeBatchModalBtn" aria-label="إغلاق">
+            <i data-lucide="x"></i>
+          </button>
+        </header>
+        <div class="batch-modal-body">
+          <div class="batch-form-grid">
+            <div class="batch-form-field full">
+              <label for="batchProduct">الصنف <span style="color:var(--danger);">*</span></label>
+              <select id="batchProduct" required></select>
+            </div>
+            <div class="batch-form-field">
+              <label for="batchNumber">رقم التشغيلة</label>
+              <input id="batchNumber" type="text" maxlength="50" autocomplete="off">
+            </div>
+            <div class="batch-form-field">
+              <label for="batchSupplier">المورد</label>
+              <select id="batchSupplier"></select>
+            </div>
+            <div class="batch-form-field">
+              <label for="batchQuantity" id="batchQuantityLabel">الرصيد الحالي <span style="color:var(--danger);">*</span></label>
+              <input id="batchQuantity" type="number" min="0" step="1" required>
+            </div>
+            <div class="batch-form-field">
+              <label for="batchExpiry">تاريخ الصلاحية</label>
+              <input id="batchExpiry" type="date">
+            </div>
+            <div class="batch-form-field">
+              <label for="batchCostPrice">سعر الشراء للوحدة</label>
+              <input id="batchCostPrice" type="number" min="0" step="0.01" value="0">
+            </div>
+            <div class="batch-form-field">
+              <label for="batchSalePrice">سعر البيع للوحدة</label>
+              <input id="batchSalePrice" type="number" min="0" step="0.01" value="0">
+            </div>
+            <div class="batch-form-field">
+              <label for="batchPurchaseDiscount">خصم الشراء (%)</label>
+              <input id="batchPurchaseDiscount" type="number" min="0" max="100" step="0.01" value="0">
+            </div>
+          </div>
+          <p class="batch-modal-note" id="batchModalNote">سيتم تسجيل الكمية المضافة كحركة وارد للمخزون.</p>
+        </div>
+        <footer class="batch-modal-footer">
+          <button class="btn btn-outline" type="button" id="cancelBatchModalBtn">إلغاء</button>
+          <button class="btn btn-primary" type="submit" id="saveBatchBtn">
+            <i data-lucide="save"></i> حفظ التشغيلة
+          </button>
+        </footer>
+      </form>
+    </section>
+  </div>
+
+  <script src="refad-core.js"></script>
+  <script src="refad-auth.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      // ============================================================
+      // 1) Guard
+      // ============================================================
+      const session = Refad.Auth.guardPage('inventory.view');
+      if (!session) return;
+
+      // ============================================================
+      // 2) State
+      // ============================================================
+      const state = {
+        products: [],           // { ...product, total_qty, batches, nearest_expiry, status }
+        batches: [],
+        movements: [],
+        suppliers: [],
+
+        // Filters
+        productSearch: '',
+        productFilterStatus: '',
+        productFilterSupplier: '',
+
+        batchSearch: '',
+        batchFilterStatus: '',
+
+        movSearch: '',
+        movType: '',
+
+        // Pagination
+        productsPage: 1,
+        batchesPage: 1,
+        movementsPage: 1,
+        perPage: 15,
+
+        // Chart
+        movementsChart: null,
+        editingBatchId: null
+      };
+
+      // ============================================================
+      // 3) Sidebar
+      // ============================================================
+      const MENU = [
+        { section: 'الرئيسية', items: [
+          { label: 'لوحة التحكم', icon: 'layout-dashboard', href: 'dashboard.html' },
+          { label: 'الشات', icon: 'message-circle', href: 'chat.html', permission: 'chat.use' },
+          { label: 'الإشعارات', icon: 'bell', href: 'notifications.html', permission: 'notifications.view' }
+        ]},
+        { section: 'العمليات', items: [
+          { label: 'الأصناف', icon: 'package', href: 'products.html', permission: 'products.view' },
+          { label: 'المخزون', icon: 'warehouse', href: 'inventory.html', permission: 'inventory.view' },
+          { label: 'طلبات الشراء', icon: 'clipboard-list', href: 'purchase-requests.html', permission: 'purchases.view' },
+          { label: 'الاستلامات', icon: 'package-check', href: 'receipts.html', permission: 'purchases.receive' },
+          { label: 'طلبات البيع', icon: 'shopping-cart', href: 'sales-orders.html', permission: 'sales.view' },
+          { label: 'نقطة البيع', icon: 'scan-barcode', href: 'pos.html', permission: 'sales.pos', badge: 'POS', badgeClass: 'teal' },
+          { label: 'الفواتير', icon: 'receipt', href: 'invoices.html', permission: 'sales.view' }
+        ]},
+        { section: 'الأطراف', items: [
+          { label: 'الموردين', icon: 'truck', href: 'suppliers.html', permission: 'suppliers.view' },
+          { label: 'العملاء', icon: 'users', href: 'customers.html', permission: 'customers.view' }
+        ]},
+        { section: 'المخزون', items: [
+          { label: 'الجرد', icon: 'clipboard-check', href: 'stocktake.html', permission: 'inventory.stocktake' },
+          { label: 'التسويات', icon: 'sliders-horizontal', href: 'adjustments.html', permission: 'inventory.adjust' }
+        ]},
+        { section: 'الموارد البشرية', items: [
+          { label: 'الموظفين', icon: 'user-cog', href: 'employees.html', permission: 'employees.view' },
+          { label: 'الصلاحيات', icon: 'shield-check', href: 'permissions.html', permission: 'permissions.manage' },
+          { label: 'الحضور', icon: 'calendar-check', href: 'attendance.html', permission: 'attendance.view' },
+          { label: 'الرواتب', icon: 'wallet', href: 'payroll.html', permission: 'payroll.view' }
+        ]},
+        { section: 'المالية', items: [
+          { label: 'المصاريف', icon: 'banknote', href: 'expenses.html', permission: 'expenses.view' },
+          { label: 'التقارير', icon: 'bar-chart-3', href: 'reports.html', permission: 'reports.view' }
+        ]},
+        { section: 'النظام', items: [
+          { label: 'إعدادات الشركة', icon: 'settings', href: 'company-settings.html', permission: 'settings.view' },
+          { label: 'شاشة الأدمن', icon: 'shield', href: 'admin.html', permission: 'admin.full', badge: 'Admin', badgeClass: 'gold' }
+        ]}
+      ];
+
+      function buildSidebar() {
+        const nav = document.getElementById('sidebarNav');
+        const currentPage = 'inventory.html';
+        const frag = document.createDocumentFragment();
+        MENU.forEach(group => {
+          const allowed = group.items.filter(it => !it.permission || Refad.Session.has(it.permission));
+          if (!allowed.length) return;
+          frag.appendChild(Refad.el('div', { class: 'nav-section' }, group.section));
+          allowed.forEach(item => {
+            const a = Refad.el('a', {
+              href: item.href,
+              class: 'nav-item' + (item.href === currentPage ? ' active' : '')
+            });
+            a.innerHTML = `<i data-lucide="${item.icon}"></i><span>${Refad.escapeHtml(item.label)}</span>${item.badge ? `<span class="badge ${item.badgeClass || ''}">${item.badge}</span>` : ''}`;
+            frag.appendChild(a);
+          });
+        });
+        nav.innerHTML = '';
+        nav.appendChild(frag);
+        if (window.lucide) lucide.createIcons();
+      }
+
+      // ============================================================
+      // 4) UI helpers
+      // ============================================================
+      function fillUser() {
+        const av = document.getElementById('userAvatar');
+        const initial = (session.full_name || '؟').trim().charAt(0);
+        if (session.avatar_url) av.innerHTML = `<img src="${Refad.escapeHtml(session.avatar_url)}" alt="">`;
+        else av.textContent = initial;
+        document.getElementById('userName').textContent = session.full_name;
+        document.getElementById('userRole').textContent = Refad.Session.has('company.owner') ? 'صاحب الشركة' : 'موظف';
+      }
+
+      function setupTheme() {
+        const btn = document.getElementById('themeToggle');
+        const icon = document.getElementById('themeIcon');
+        const refresh = () => {
+          const isDark = Refad.theme.get() === 'dark';
+          icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+          if (window.lucide) lucide.createIcons();
+        };
+        refresh();
+        btn.addEventListener('click', () => {
+          Refad.theme.toggle();
+          refresh();
+          if (state.movementsChart) renderMovementsChart();
+        });
+      }
+
+      function setupSidebarMobile() {
+        const sb = document.getElementById('sidebar');
+        const ov = document.getElementById('overlay');
+        document.getElementById('menuToggle').addEventListener('click', () => {
+          sb.classList.add('open'); ov.classList.add('show');
+        });
+        ov.addEventListener('click', () => {
+          sb.classList.remove('open'); ov.classList.remove('show');
+        });
+      }
+
+      function setupUserMenu() {
+        const m = document.getElementById('userMenu');
+        const d = document.getElementById('userDropdown');
+        m.addEventListener('click', e => { e.stopPropagation(); d.classList.toggle('show'); });
+        document.addEventListener('click', () => d.classList.remove('show'));
+        d.addEventListener('click', e => e.stopPropagation());
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+          if (await Refad.alert.confirm('تسجيل الخروج', 'هل تريد الخروج؟', 'خروج')) {
+            await Refad.Auth.logout();
+          }
+        });
+      }
+
+      function setupNotifBtn() {
+        document.getElementById('notifBtn').addEventListener('click', () => {
+          window.location.href = 'notifications.html';
+        });
+      }
+
+      function openBatchModal(batch) {
+        if (!Refad.Auth.can('inventory.adjust')) {
+          Refad.toast.error('ليس لديك صلاحية إدارة التشغيلات');
+          return;
+        }
+
+        state.editingBatchId = batch?.id || null;
+        const productSelect = document.getElementById('batchProduct');
+        productSelect.innerHTML = '<option value="">اختر الصنف</option>' + state.products.map(product =>
+          `<option value="${product.id}">${Refad.escapeHtml(product.name)}</option>`
+        ).join('');
+
+        const supplierSelect = document.getElementById('batchSupplier');
+        supplierSelect.innerHTML = '<option value="">بدون مورد</option>' + state.suppliers.map(supplier =>
+          `<option value="${supplier.id}">${Refad.escapeHtml(supplier.name)}</option>`
+        ).join('');
+
+        document.getElementById('batchForm').reset();
+        document.getElementById('batchModalTitle').textContent = batch ? 'تعديل بيانات التشغيلة' : 'إضافة تشغيلة جديدة';
+        document.getElementById('batchQuantityLabel').innerHTML = batch
+          ? 'الرصيد الحالي <span style="color:var(--danger);">*</span>'
+          : 'الكمية المضافة <span style="color:var(--danger);">*</span>';
+        document.getElementById('batchModalNote').textContent = batch
+          ? 'تغيير الرصيد يسجل حركة تسوية تلقائيًا، ولا يغير كمية الاستلام الأصلية.'
+          : 'سيتم إنشاء التشغيلة بكمية ابتدائية وتسجيلها كحركة وارد للمخزون.';
+        productSelect.disabled = Boolean(batch);
+        document.getElementById('batchQuantity').min = batch ? '0' : '1';
+
+        if (batch) {
+          productSelect.value = String(batch.product_id);
+          document.getElementById('batchNumber').value = batch.batch_number || '';
+          supplierSelect.value = batch.supplier_id ? String(batch.supplier_id) : '';
+          document.getElementById('batchQuantity').value = Number(batch.quantity_left) || 0;
+          document.getElementById('batchExpiry').value = batch.expiry_date || '';
+          document.getElementById('batchCostPrice').value = Number(batch.cost_price) || 0;
+          document.getElementById('batchSalePrice').value = Number(batch.sale_price) || 0;
+          document.getElementById('batchPurchaseDiscount').value = Number(batch.purchase_discount) || 0;
+        } else {
+          document.getElementById('batchQuantity').value = '1';
+          document.getElementById('batchCostPrice').value = '0';
+          document.getElementById('batchSalePrice').value = '0';
+          document.getElementById('batchPurchaseDiscount').value = '0';
+        }
+
+        const backdrop = document.getElementById('batchModalBackdrop');
+        backdrop.classList.add('show');
+        backdrop.setAttribute('aria-hidden', 'false');
+        if (window.lucide) lucide.createIcons();
+      }
+
+      function closeBatchModal() {
+        const backdrop = document.getElementById('batchModalBackdrop');
+        backdrop.classList.remove('show');
+        backdrop.setAttribute('aria-hidden', 'true');
+        document.getElementById('batchProduct').disabled = false;
+        state.editingBatchId = null;
+      }
+
+      async function saveBatch(event) {
+        event.preventDefault();
+        if (!Refad.Auth.can('inventory.adjust')) {
+          Refad.toast.error('ليس لديك صلاحية إدارة التشغيلات');
+          return;
+        }
+
+        const editing = Boolean(state.editingBatchId);
+        const rawQty = document.getElementById('batchQuantity').value;
+        const quantity = Number(rawQty);
+        const productId = Number(document.getElementById('batchProduct').value);
+        const costPrice = Number(document.getElementById('batchCostPrice').value);
+        const salePrice = Number(document.getElementById('batchSalePrice').value);
+        const purchaseDiscount = Number(document.getElementById('batchPurchaseDiscount').value || 0);
+        if ((!editing && (!Number.isInteger(productId) || !state.products.some(product => Number(product.id) === productId))) ||
+            !Number.isInteger(quantity) || quantity < (editing ? 0 : 1) ||
+            !Number.isFinite(costPrice) || costPrice < 0 ||
+            !Number.isFinite(salePrice) || salePrice < 0 ||
+            !Number.isFinite(purchaseDiscount) || purchaseDiscount < 0 || purchaseDiscount > 100) {
+          Refad.toast.warning('راجع الصنف والكمية والأسعار والخصم المدخل');
+          return;
+        }
+
+        const supplierValue = document.getElementById('batchSupplier').value;
+        const payload = {
+          batch_number: document.getElementById('batchNumber').value.trim() || null,
+          supplier_id: supplierValue ? Number(supplierValue) : null,
+          cost_price: costPrice,
+          sale_price: salePrice,
+          purchase_discount: purchaseDiscount,
+          expiry_date: document.getElementById('batchExpiry').value || null
+        };
+        const saveButton = document.getElementById('saveBatchBtn');
+        const originalButton = saveButton.innerHTML;
+        saveButton.disabled = true;
+        saveButton.innerHTML = '<i data-lucide="loader-2"></i> جارٍ الحفظ...';
+        if (window.lucide) lucide.createIcons();
+
+        let savedEntity = false;
+        let movementSaved = false;
+        try {
+          let batch;
+          let movementQuantity = quantity;
+          let movementType = 'in';
+          let productForMovement = productId;
+
+          if (editing) {
+            const existing = state.batches.find(item => item.id === state.editingBatchId);
+            if (!existing) throw new Error('لم يتم العثور على التشغيلة المطلوبة');
+            productForMovement = existing.product_id;
+            movementQuantity = quantity - (Number(existing.quantity_left) || 0);
+            movementType = 'adjust';
+            batch = await Refad.db.update('batches', existing.id, { ...payload, quantity_left: quantity });
+          } else {
+            batch = await Refad.db.insert('batches', {
+              ...payload,
+              company_id: session.company_id,
+              product_id: productId,
+              quantity_in: quantity,
+              quantity_left: quantity,
+              receipt_id: null
+            });
+          }
+          if (!batch?.id) throw new Error('لم يتم تأكيد حفظ بيانات التشغيلة');
+          savedEntity = true;
+
+          if (movementQuantity !== 0) {
+            await Refad.db.insert('inventory_movements', {
+              company_id: session.company_id,
+              product_id: productForMovement,
+              batch_id: batch.id,
+              movement_type: movementType,
+              reference_type: 'batch',
+              reference_id: batch.id,
+              quantity: movementQuantity,
+              unit_cost: costPrice,
+              balance_after: quantity,
+              notes: editing ? 'تعديل رصيد التشغيلة' : 'إضافة تشغيلة جديدة',
+              user_id: session.user_id
+            });
+          }
+          movementSaved = true;
+
+          await Refad.logActivity(
+            editing ? 'update_batch' : 'create_batch',
+            'inventory',
+            `${editing ? 'تعديل' : 'إضافة'} تشغيلة ${payload.batch_number || batch.id}`,
+            batch.id
+          );
+
+          closeBatchModal();
+          await loadAll(true);
+          Refad.toast.success(editing ? 'تم تحديث بيانات التشغيلة' : 'تمت إضافة التشغيلة');
+        } catch (error) {
+          console.error('[Inventory] Batch save failed:', error);
+          if (savedEntity) {
+            closeBatchModal();
+            await loadAll(true);
+          }
+          if (savedEntity && !movementSaved) {
+            Refad.toast.error(`تم حفظ بيانات التشغيلة لكن فشل تسجيل حركة المخزون: ${error.message}`);
+          } else if (savedEntity && movementSaved) {
+            Refad.toast.error(`تم حفظ التشغيلة وحركتها لكن فشل تسجيل النشاط: ${error.message}`);
+          } else {
+            Refad.toast.error('تعذّر حفظ التشغيلة: ' + error.message);
+          }
+        } finally {
+          saveButton.disabled = false;
+          saveButton.innerHTML = originalButton;
+          if (window.lucide) lucide.createIcons();
+        }
+      }
+
+      // ============================================================
+      // 5) Load suppliers for filter
+      // ============================================================
+      async function loadSuppliers() {
+        try {
+          const rows = await Refad.db.select('suppliers', {
+            columns: 'id, name',
+            eq: { company_id: session.company_id, is_active: true },
+            order: { column: 'name', ascending: true }
+          });
+          state.suppliers = rows;
+          const sel = document.getElementById('filterSupplier');
+          rows.forEach(s => {
+            const opt = document.createElement('option');
+            opt.value = s.id;
+            opt.textContent = s.name;
+            sel.appendChild(opt);
+          });
+        } catch (e) {
+          console.warn('Suppliers filter failed:', e.message);
+        }
+      }
+
+      // ============================================================
+      // 6) Load data (parallel)
+      // ============================================================
+      async function loadAll(silent) {
+        if (!silent) {
+          renderProductsSkeleton();
+          renderBatchesSkeleton();
+          renderMovementsSkeleton();
+        }
+        try {
+          await Promise.all([
+            loadProductsAndBatches(),
+            loadMovements()
+          ]);
+          computeProductStats();
+          renderMiniStats();
+          applyProductFilters();
+          applyBatchFilters();
+          applyMovFilters();
+          renderMovementsChart();
+        } catch (e) {
+          console.error('[Inventory] load failed:', e);
+          Refad.toast.error('تعذّر التحميل: ' + e.message);
+        }
+      }
+
+      async function loadProductsAndBatches() {
+        const [products, batches] = await Promise.all([
+          Refad.db.select('products', {
+            columns: 'id, name, name_en, form, unit, category, reorder_level, default_price, is_active',
+            eq: { company_id: session.company_id, is_active: true },
+            order: { column: 'name', ascending: true }
+          }),
+          Refad.db.select('batches', {
+            columns: 'id, product_id, supplier_id, batch_number, quantity_in, quantity_left, cost_price, sale_price, purchase_discount, expiry_date, created_at',
+            eq: { company_id: session.company_id },
+            order: { column: 'expiry_date', ascending: true },
+            limit: 2000
+          }).catch(() => [])
+        ]);
+
+        state.products = products;
+        state.batches = batches;
+      }
+
+      async function loadMovements() {
+        try {
+          const fromDate = Refad.date.addDays(Refad.date.today(), -90);
+          const rows = await Refad.db.select('inventory_movements', {
+            columns: 'id, product_id, batch_id, movement_type, reference_type, reference_id, quantity, unit_cost, notes, created_at, products(name)',
+            eq: { company_id: session.company_id },
+            gte: { created_at: fromDate + 'T00:00:00Z' },
+            order: { column: 'created_at', ascending: false },
+            limit: 500
+          });
+          state.movements = rows;
+        } catch (e) {
+          console.warn('Movements load failed:', e.message);
+          state.movements = [];
+        }
+      }
+
+      // ============================================================
+      // 7) Compute product stats
+      // ============================================================
+      function computeProductStats() {
+        // group batches by product_id
+        const byProduct = {};
+        state.batches.forEach(b => {
+          if (!byProduct[b.product_id]) byProduct[b.product_id] = [];
+          byProduct[b.product_id].push(b);
+        });
+
+        const today = Refad.date.today();
+        const in90Days = Refad.date.addDays(today, 90);
+
+        state.products = state.products.map(p => {
+          const batches = (byProduct[p.id] || []).filter(b => (b.quantity_left || 0) > 0);
+          const totalQty = batches.reduce((s, b) => s + (b.quantity_left || 0), 0);
+
+          // أقرب صلاحية
+          let nearestExpiry = null;
+          batches.forEach(b => {
+            if (!b.expiry_date) return;
+            if (!nearestExpiry || b.expiry_date < nearestExpiry) nearestExpiry = b.expiry_date;
+          });
+
+          // حالة المخزون
+          let status = 'in-stock';
+          if (totalQty === 0) status = 'out';
+          else if (p.reorder_level && totalQty <= p.reorder_level) status = 'low';
+
+          // قريبة الانتهاء
+          const expiring = batches.some(b => {
+            if (!b.expiry_date) return false;
+            return b.expiry_date <= in90Days;
+          });
+
+          return {
+            ...p,
+            total_qty: totalQty,
+            batches_count: batches.length,
+            nearest_expiry: nearestExpiry,
+            status,
+            expiring
+          };
+        });
+      }
+
+      function renderMiniStats() {
+        const total = state.products.length;
+        const inStock = state.products.filter(p => p.status === 'in-stock').length;
+        const low = state.products.filter(p => p.status === 'low').length;
+        const out = state.products.filter(p => p.status === 'out').length;
+        const expiring = state.products.filter(p => p.expiring).length;
+
+        document.getElementById('statTotal').textContent = Refad.format.number(total);
+        document.getElementById('statInStock').textContent = Refad.format.number(inStock);
+        document.getElementById('statLow').textContent = Refad.format.number(low);
+        document.getElementById('statOut').textContent = Refad.format.number(out);
+        document.getElementById('statExpiring').textContent = Refad.format.number(expiring);
+      }
+
+      // ============================================================
+      // 8) Products tab
+      // ============================================================
+      function applyProductFilters() {
+        const q = state.productSearch.toLowerCase().trim();
+        const filtered = state.products.filter(p => {
+          if (state.productFilterStatus && p.status !== state.productFilterStatus) return false;
+          if (!q) return true;
+          return (
+            (p.name || '').toLowerCase().includes(q) ||
+            (p.name_en || '').toLowerCase().includes(q) ||
+            (p.category || '').toLowerCase().includes(q) ||
+            (p.form || '').toLowerCase().includes(q)
+          );
+        });
+        renderProductsTable(filtered);
+      }
+
+      function renderProductsSkeleton() {
+        const tbody = document.getElementById('productsBody');
+        tbody.innerHTML = Array(6).fill(0).map(() => `
+          <tr class="skeleton-row">
+            <td><div class="skeleton-bar" style="width:60%"></div></td>
+            <td><div class="skeleton-bar" style="width:60px"></div></td>
+            <td><div class="skeleton-bar" style="width:50px"></div></td>
+            <td><div class="skeleton-bar" style="width:50px"></div></td>
+            <td><div class="skeleton-bar" style="width:80px"></div></td>
+            <td><div class="skeleton-bar" style="width:70px"></div></td>
+            <td><div class="skeleton-bar" style="width:60px"></div></td>
+          </tr>
+        `).join('');
+      }
+
+      function renderProductsTable(list) {
+        const tbody = document.getElementById('productsBody');
+        const pag = Refad.paginate(list, state.productsPage, state.perPage);
+
+        if (list.length === 0) {
+          tbody.innerHTML = `
+            <tr class="empty-row">
+              <td colspan="7">
+                <i data-lucide="package-open"></i>
+                <p>لا توجد أصناف مطابقة</p>
+              </td>
+            </tr>
+          `;
+          if (window.lucide) lucide.createIcons();
+          renderPagination('productsPagination', pag, p => { state.productsPage = p; renderProductsTable(list); });
+          return;
+        }
+
+        tbody.innerHTML = pag.data.map(p => {
+          const initial = (p.name || '؟').trim().charAt(0);
+
+          let qtyCls = 'out';
+          if (p.status === 'in-stock') qtyCls = 'ok';
+          else if (p.status === 'low') qtyCls = 'low';
+
+          const statusTag = {
+            'in-stock': '<span class="badge-tag green">متوفر</span>',
+            'low': '<span class="badge-tag gold">منخفض</span>',
+            'out': '<span class="badge-tag red">نفد</span>'
+          }[p.status];
+
+          let expiryTag = '<span style="color:var(--text-muted);">—</span>';
+          if (p.nearest_expiry) {
+            const days = Refad.format.daysLeft(p.nearest_expiry);
+            if (days !== null) {
+              if (days < 0) expiryTag = `<span class="badge-tag red">منتهي</span>`;
+              else if (days <= 30) expiryTag = `<span class="badge-tag red">${days} يوم</span>`;
+              else if (days <= 90) expiryTag = `<span class="badge-tag gold">${days} يوم</span>`;
+              else expiryTag = `<span class="badge-tag green">${days} يوم</span>`;
+            }
+          }
+
+          return `
+            <tr>
+              <td>
+                <div class="product-cell" onclick="location.href='product-details.html?id=${p.id}'">
+                  <div class="product-avatar">${Refad.escapeHtml(initial)}</div>
+                  <div>
+                    <div class="product-name">${Refad.escapeHtml(p.name)}</div>
+                    <div class="product-sub">${Refad.escapeHtml([p.form, p.unit].filter(Boolean).join(' • ') || '—')}</div>
+                  </div>
+                </div>
+              </td>
+              <td><span class="qty-value ${qtyCls}">${Refad.format.number(p.total_qty)}</span></td>
+              <td>${Refad.format.number(p.reorder_level || 0)}</td>
+              <td>${Refad.format.number(p.batches_count)}</td>
+              <td>${expiryTag}</td>
+              <td>${statusTag}</td>
+              <td>
+                <div class="actions-cell">
+                  <button class="action-btn" data-action="view" data-id="${p.id}" title="تفاصيل">
+                    <i data-lucide="eye"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join('');
+
+        if (window.lucide) lucide.createIcons();
+        renderPagination('productsPagination', pag, p => { state.productsPage = p; renderProductsTable(list); });
+      }
+
+      // ============================================================
+      // 9) Batches tab
+      // ============================================================
+      function applyBatchFilters() {
+        const q = state.batchSearch.toLowerCase().trim();
+        const today = Refad.date.today();
+        const in90Days = Refad.date.addDays(today, 90);
+
+        // اربط مع المنتجات
+        const productMap = {};
+        state.products.forEach(p => { productMap[p.id] = p; });
+
+        const filtered = state.batches
+          .map(b => ({ ...b, product: productMap[b.product_id] }))
+          .filter(b => {
+            if (state.batchFilterStatus === 'available') {
+              if (!b.quantity_left || b.quantity_left <= 0) return false;
+            } else if (state.batchFilterStatus === 'expiring') {
+              if (!b.expiry_date || !b.quantity_left) return false;
+              if (b.expiry_date > in90Days || b.expiry_date < today) return false;
+            } else if (state.batchFilterStatus === 'expired') {
+              if (!b.expiry_date) return false;
+              if (b.expiry_date >= today) return false;
+            } else if (state.batchFilterStatus === 'empty') {
+              if (b.quantity_left > 0) return false;
+            }
+            if (!q) return true;
+            return (
+              (b.batch_number || '').toLowerCase().includes(q) ||
+              (b.product?.name || '').toLowerCase().includes(q)
+            );
+          });
+
+        renderBatchesTable(filtered);
+      }
+
+      function renderBatchesSkeleton() {
+        const tbody = document.getElementById('batchesBody');
+        tbody.innerHTML = Array(6).fill(0).map(() => `
+          <tr class="skeleton-row">
+            <td><div class="skeleton-bar" style="width:60%"></div></td>
+            <td><div class="skeleton-bar" style="width:70px"></div></td>
+            <td><div class="skeleton-bar" style="width:60px"></div></td>
+            <td><div class="skeleton-bar" style="width:70px"></div></td>
+            <td><div class="skeleton-bar" style="width:70px"></div></td>
+            <td><div class="skeleton-bar" style="width:80px"></div></td>
+            <td><div class="skeleton-bar" style="width:70px"></div></td>
+            <td><div class="skeleton-bar" style="width:60px"></div></td>
+          </tr>
+        `).join('');
+      }
+
+      function renderBatchesTable(list) {
+        const tbody = document.getElementById('batchesBody');
+        const pag = Refad.paginate(list, state.batchesPage, state.perPage);
+
+        if (list.length === 0) {
+          tbody.innerHTML = `
+            <tr class="empty-row">
+              <td colspan="8">
+                <i data-lucide="layers"></i>
+                <p>لا توجد تشغيلات مطابقة</p>
+              </td>
+            </tr>
+          `;
+          if (window.lucide) lucide.createIcons();
+          renderPagination('batchesPagination', pag, p => { state.batchesPage = p; renderBatchesTable(list); });
+          return;
+        }
+
+        const today = Refad.date.today();
+
+        tbody.innerHTML = pag.data.map(b => {
+          const days = Refad.format.daysLeft(b.expiry_date);
+          let expiryTag = '<span style="color:var(--text-muted);">—</span>';
+          let statusTag = '';
+
+          if (days !== null) {
+            if (days < 0) {
+              expiryTag = `<span class="badge-tag red">منتهي (${Math.abs(days)} يوم)</span>`;
+              statusTag = '<span class="badge-tag red">منتهي</span>';
+            } else if (days <= 30) {
+              expiryTag = `<span class="badge-tag red">${days} يوم</span>`;
+              statusTag = '<span class="badge-tag gold">قريب</span>';
+            } else if (days <= 90) {
+              expiryTag = `<span class="badge-tag gold">${days} يوم</span>`;
+              statusTag = '<span class="badge-tag blue">تحذير</span>';
+            } else {
+              expiryTag = `<span class="badge-tag green">${days} يوم</span>`;
+              statusTag = '<span class="badge-tag green">آمن</span>';
+            }
+          }
+
+          let qtyCls = 'out';
+          if (b.quantity_left > 0) qtyCls = 'ok';
+
+          return `
+            <tr>
+              <td>
+                <div class="product-name">${Refad.escapeHtml(b.product?.name || '—')}</div>
+                <div class="product-sub">${Refad.escapeHtml([b.product?.form, b.product?.unit].filter(Boolean).join(' • ') || '')}</div>
+              </td>
+              <td><strong>${Refad.escapeHtml(b.batch_number || '—')}</strong></td>
+              <td><span class="qty-value ${qtyCls}">${Refad.format.number(b.quantity_left)}</span></td>
+              <td>${Refad.format.money(b.cost_price)}</td>
+              <td>${Refad.format.money(b.sale_price)}</td>
+              <td>${Refad.format.date(b.expiry_date)}</td>
+              <td>${statusTag}</td>
+              <td>
+                <div class="actions-cell">
+                  ${Refad.Auth.can('inventory.adjust') ? `<button class="action-btn" data-action="edit-batch" data-id="${b.id}" title="تعديل التشغيلة"><i data-lucide="pencil"></i></button>` : ''}
+                  <button class="action-btn" data-action="view-product" data-id="${b.product_id}" title="الصنف">
+                    <i data-lucide="eye"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join('');
+
+        if (window.lucide) lucide.createIcons();
+        renderPagination('batchesPagination', pag, p => { state.batchesPage = p; renderBatchesTable(list); });
+      }
+
+      // ============================================================
+      // 10) Movements tab
+      // ============================================================
+      function applyMovFilters() {
+        const q = state.movSearch.toLowerCase().trim();
+        const filtered = state.movements.filter(m => {
+          if (state.movType && m.movement_type !== state.movType) return false;
+          if (!q) return true;
+          return (
+            (m.products?.name || '').toLowerCase().includes(q) ||
+            (m.notes || '').toLowerCase().includes(q) ||
+            (m.reference_type || '').toLowerCase().includes(q)
+          );
+        });
+        renderMovementsTable(filtered);
+      }
+
+      function renderMovementsSkeleton() {
+        const tbody = document.getElementById('movementsBody');
+        tbody.innerHTML = Array(6).fill(0).map(() => `
+          <tr class="skeleton-row">
+            <td><div class="skeleton-bar" style="width:80px"></div></td>
+            <td><div class="skeleton-bar" style="width:60%"></div></td>
+            <td><div class="skeleton-bar" style="width:70px"></div></td>
+            <td><div class="skeleton-bar" style="width:50px"></div></td>
+            <td><div class="skeleton-bar" style="width:80px"></div></td>
+            <td><div class="skeleton-bar" style="width:100px"></div></td>
+          </tr>
+        `).join('');
+      }
+
+      function renderMovementsTable(list) {
+        const tbody = document.getElementById('movementsBody');
+        const pag = Refad.paginate(list, state.movementsPage, state.perPage);
+
+        if (list.length === 0) {
+          tbody.innerHTML = `
+            <tr class="empty-row">
+              <td colspan="6">
+                <i data-lucide="activity"></i>
+                <p>لا توجد حركات مطابقة</p>
+              </td>
+            </tr>
+          `;
+          if (window.lucide) lucide.createIcons();
+          renderPagination('movementsPagination', pag, p => { state.movementsPage = p; renderMovementsTable(list); });
+          return;
+        }
+
+        const TYPES = {
+          'in': { label: 'إدخال', cls: 'green' },
+          'out': { label: 'إخراج', cls: 'red' },
+          'adjust': { label: 'تسوية', cls: 'gold' },
+          'loss': { label: 'فاقد', cls: 'red' },
+          'return': { label: 'مرتجع', cls: 'blue' }
+        };
+
+        tbody.innerHTML = pag.data.map(m => {
+          const t = TYPES[m.movement_type] || { label: m.movement_type, cls: 'gray' };
+          return `
+            <tr>
+              <td>${Refad.format.datetime(m.created_at)}</td>
+              <td>${Refad.escapeHtml(m.products?.name || '—')}</td>
+              <td><span class="badge-tag ${t.cls}">${Refad.escapeHtml(t.label)}</span></td>
+              <td><strong>${m.quantity > 0 ? '+' : ''}${Refad.format.number(m.quantity)}</strong></td>
+              <td>${Refad.escapeHtml(m.reference_type || '—')} ${m.reference_id ? '#' + m.reference_id : ''}</td>
+              <td>${Refad.escapeHtml(m.notes || '—')}</td>
+            </tr>
+          `;
+        }).join('');
+
+        if (window.lucide) lucide.createIcons();
+        renderPagination('movementsPagination', pag, p => { state.movementsPage = p; renderMovementsTable(list); });
+      }
+
+      // ============================================================
+      // 11) Movements Chart (30 day)
+      // ============================================================
+      function renderMovementsChart() {
+        const ctx = document.getElementById('movementsChart').getContext('2d');
+        const days = [];
+        const labels = [];
+        for (let i = 29; i >= 0; i--) {
+          const d = Refad.date.addDays(Refad.date.today(), -i);
+          days.push(d);
+          labels.push(Refad.format.date(d, 'DD/MM'));
+        }
+
+        const inData = days.map(() => 0);
+        const outData = days.map(() => 0);
+
+        state.movements.forEach(m => {
+          const mDate = (typeof dayjs !== 'undefined') ? dayjs(m.created_at).format('YYYY-MM-DD') : m.created_at.slice(0, 10);
+          const idx = days.indexOf(mDate);
+          if (idx === -1) return;
+          if (m.movement_type === 'in') inData[idx] += m.quantity || 0;
+          else if (m.movement_type === 'out') outData[idx] += Math.abs(m.quantity || 0);
+        });
+
+        const isDark = Refad.theme.get() === 'dark';
+        const gridColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
+        const textColor = isDark ? '#94a3b8' : '#64748b';
+
+        if (state.movementsChart) state.movementsChart.destroy();
+
+        state.movementsChart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels,
+            datasets: [
+              {
+                label: 'إدخال',
+                data: inData,
+                borderColor: '#10b981',
+                backgroundColor: 'rgba(16,185,129,0.1)',
+                borderWidth: 2,
+                tension: 0.35,
+                pointRadius: 2,
+                pointHoverRadius: 5,
+                fill: true
+              },
+              {
+                label: 'إخراج',
+                data: outData,
+                borderColor: '#ef4444',
+                backgroundColor: 'rgba(239,68,68,0.1)',
+                borderWidth: 2,
+                tension: 0.35,
+                pointRadius: 2,
+                pointHoverRadius: 5,
+                fill: true
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: 'top',
+                labels: {
+                  font: { family: 'Cairo', size: 12 },
+                  color: textColor,
+                  usePointStyle: true,
+                  padding: 15
+                }
+              },
+              tooltip: {
+                rtl: true,
+                textDirection: 'rtl',
+                backgroundColor: isDark ? '#0f2137' : '#0B2C4D',
+                padding: 10,
+                cornerRadius: 8,
+                titleFont: { family: 'Cairo', size: 12, weight: '700' },
+                bodyFont: { family: 'Cairo', size: 12 }
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                grid: { color: gridColor, drawBorder: false },
+                ticks: { color: textColor, font: { family: 'Cairo', size: 11 } }
+              },
+              x: {
+                grid: { display: false },
+                ticks: {
+                  color: textColor,
+                  font: { family: 'Cairo', size: 10 },
+                  maxRotation: 0,
+                  autoSkip: true,
+                  maxTicksLimit: 10
+                }
+              }
+            }
+          }
+        });
+      }
+
+      // ============================================================
+      // 12) Pagination
+      // ============================================================
+      function renderPagination(elId, pag, onPageChange) {
+        const el = document.getElementById(elId);
+        const { page, pages, total, perPage } = pag;
+
+        if (total === 0) { el.innerHTML = ''; return; }
+
+        const from = (page - 1) * perPage + 1;
+        const to = Math.min(page * perPage, total);
+
+        let pageNums = [];
+        if (pages <= 5) {
+          for (let i = 1; i <= pages; i++) pageNums.push(i);
+        } else if (page <= 3) {
+          pageNums = [1, 2, 3, 4, 5];
+        } else if (page >= pages - 2) {
+          pageNums = [pages - 4, pages - 3, pages - 2, pages - 1, pages];
+        } else {
+          pageNums = [page - 2, page - 1, page, page + 1, page + 2];
+        }
+
+        el.innerHTML = `
+          <div>عرض ${from} - ${to} من ${total}</div>
+          <div class="controls">
+            <button class="page-btn" data-page="${page - 1}" ${page === 1 ? 'disabled' : ''}>
+              <i data-lucide="chevron-right" style="width:14px;height:14px;"></i>
+            </button>
+            ${pageNums.map(n => `<button class="page-btn ${n === page ? 'active' : ''}" data-page="${n}">${n}</button>`).join('')}
+            <button class="page-btn" data-page="${page + 1}" ${page === pages ? 'disabled' : ''}>
+              <i data-lucide="chevron-left" style="width:14px;height:14px;"></i>
+            </button>
+          </div>
+        `;
+
+        el.querySelectorAll('.page-btn:not(:disabled)').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const p = parseInt(btn.dataset.page, 10);
+            if (p >= 1 && p <= pages && p !== page) {
+              onPageChange(p);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+          });
+        });
+
+        if (window.lucide) lucide.createIcons();
+      }
+
+      // ============================================================
+      // 13) Tabs
+      // ============================================================
+      function setupTabs() {
+        document.querySelectorAll('.tab').forEach(tab => {
+          tab.addEventListener('click', () => {
+            const name = tab.dataset.tab;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            tab.classList.add('active');
+            document.querySelector(`.tab-panel[data-panel="${name}"]`).classList.add('active');
+
+            // Chart needs resize
+            if (name === 'movements' && state.movementsChart) {
+              setTimeout(() => state.movementsChart.resize(), 50);
+            }
+          });
+        });
+      }
+
+      // ============================================================
+      // 14) Mini stats click → filter
+      // ============================================================
+      function setupMiniStats() {
+        document.querySelectorAll('.mini-card').forEach(card => {
+          card.addEventListener('click', () => {
+            const filter = card.dataset.filter;
+            // انتقل لتبويب المنتجات
+            document.querySelector('.tab[data-tab="products"]').click();
+
+            document.querySelectorAll('.mini-card').forEach(c => c.classList.remove('active'));
+            card.classList.add('active');
+
+            if (filter === 'all') {
+              state.productFilterStatus = '';
+              document.getElementById('filterStatus').value = '';
+            } else if (filter === 'expiring') {
+              // فلترة خاصة: نعرض الأصناف قريبة الانتهاء
+              state.productFilterStatus = '';
+              document.getElementById('filterStatus').value = '';
+              // فلترة يدوية
+              const filtered = state.products.filter(p => p.expiring);
+              renderProductsTable(filtered);
+              return;
+            } else {
+              state.productFilterStatus = filter;
+              document.getElementById('filterStatus').value = filter;
+            }
+            applyProductFilters();
+          });
+        });
+      }
+
+      // ============================================================
+      // 15) Events
+      // ============================================================
+      function bindEvents() {
+        // Product search
+        const pSearchHandler = Refad.debounce(v => { state.productSearch = v; state.productsPage = 1; applyProductFilters(); }, 250);
+        document.getElementById('searchInput').addEventListener('input', e => pSearchHandler(e.target.value));
+
+        document.getElementById('filterStatus').addEventListener('change', e => {
+          state.productFilterStatus = e.target.value;
+          state.productsPage = 1;
+          applyProductFilters();
+          document.querySelectorAll('.mini-card').forEach(c => c.classList.remove('active'));
+        });
+
+        document.getElementById('filterSupplier').addEventListener('change', e => {
+          state.productFilterSupplier = e.target.value;
+          // ملاحظة: يمكن لاحقاً ربط الفلترة بالمورد عبر batches
+          Refad.toast.info('قريباً: فلترة حسب المورد');
+        });
+
+        // Batch search
+        const bSearchHandler = Refad.debounce(v => { state.batchSearch = v; state.batchesPage = 1; applyBatchFilters(); }, 250);
+        document.getElementById('batchSearch').addEventListener('input', e => bSearchHandler(e.target.value));
+        document.getElementById('batchFilterStatus').addEventListener('change', e => {
+          state.batchFilterStatus = e.target.value;
+          state.batchesPage = 1;
+          applyBatchFilters();
+        });
+
+        // Movements search
+        const mSearchHandler = Refad.debounce(v => { state.movSearch = v; state.movementsPage = 1; applyMovFilters(); }, 250);
+        document.getElementById('movSearch').addEventListener('input', e => mSearchHandler(e.target.value));
+        document.getElementById('movType').addEventListener('change', e => {
+          state.movType = e.target.value;
+          state.movementsPage = 1;
+          applyMovFilters();
+        });
+
+        // Table actions
+        document.getElementById('productsBody').addEventListener('click', e => {
+          const btn = e.target.closest('[data-action]');
+          if (!btn) return;
+          if (btn.dataset.action === 'view') {
+            location.href = `product-details.html?id=${btn.dataset.id}`;
+          }
+        });
+        document.getElementById('batchesBody').addEventListener('click', e => {
+          const btn = e.target.closest('[data-action]');
+          if (!btn) return;
+          if (btn.dataset.action === 'view-product') {
+            location.href = `product-details.html?id=${btn.dataset.id}`;
+          } else if (btn.dataset.action === 'edit-batch') {
+            const batch = state.batches.find(item => String(item.id) === btn.dataset.id);
+            if (batch) openBatchModal(batch);
+          }
+        });
+        document.getElementById('addBatchBtn').addEventListener('click', () => openBatchModal());
+        document.getElementById('batchProduct').addEventListener('change', event => {
+          if (state.editingBatchId) return;
+          const product = state.products.find(item => String(item.id) === event.target.value);
+          document.getElementById('batchSalePrice').value = Number(product?.default_price) || 0;
+        });
+        document.getElementById('batchForm').addEventListener('submit', saveBatch);
+        document.getElementById('closeBatchModalBtn').addEventListener('click', closeBatchModal);
+        document.getElementById('cancelBatchModalBtn').addEventListener('click', closeBatchModal);
+        document.getElementById('batchModalBackdrop').addEventListener('click', event => {
+          if (event.target.id === 'batchModalBackdrop') closeBatchModal();
+        });
+        document.addEventListener('keydown', event => {
+          if (event.key === 'Escape') closeBatchModal();
+        });
+
+        // Refresh
+        document.getElementById('refreshBtn').addEventListener('click', async () => {
+          Refad.toast.info('جارٍ التحديث...');
+          await loadAll(true);
+          Refad.toast.success('تم التحديث');
+        });
+
+        // Export
+        document.getElementById('exportBtn').addEventListener('click', () => {
+          const activeTab = document.querySelector('.tab.active').dataset.tab;
+          let rows = [];
+          let name = '';
+
+          if (activeTab === 'products') {
+            rows = state.products.map(p => ({
+              'الصنف': p.name,
+              'الشكل': p.form || '',
+              'الوحدة': p.unit || '',
+              'المخزون': p.total_qty,
+              'حد إعادة الطلب': p.reorder_level || 0,
+              'عدد التشغيلات': p.batches_count,
+              'أقرب صلاحية': p.nearest_expiry || '',
+              'الحالة': p.status === 'in-stock' ? 'متوفر' : p.status === 'low' ? 'منخفض' : 'نفد'
+            }));
+            name = 'inventory-products';
+          } else if (activeTab === 'batches') {
+            const productMap = {};
+            state.products.forEach(p => { productMap[p.id] = p.name; });
+            rows = state.batches.map(b => ({
+              'الصنف': productMap[b.product_id] || '',
+              'رقم التشغيلة': b.batch_number || '',
+              'المتبقي': b.quantity_left || 0,
+              'سعر الشراء': b.cost_price || 0,
+              'سعر البيع': b.sale_price || 0,
+              'الصلاحية': b.expiry_date || ''
+            }));
+            name = 'inventory-batches';
+          } else {
+            rows = state.movements.map(m => ({
+              'التاريخ': Refad.format.datetime(m.created_at),
+              'الصنف': m.products?.name || '',
+              'النوع': m.movement_type,
+              'الكمية': m.quantity,
+              'المرجع': `${m.reference_type || ''} ${m.reference_id || ''}`,
+              'ملاحظات': m.notes || ''
+            }));
+            name = 'inventory-movements';
+          }
+
+          if (!rows.length) {
+            Refad.toast.warning('لا توجد بيانات للتصدير');
+            return;
+          }
+          const ws = XLSX.utils.json_to_sheet(rows);
+          const wb = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(wb, ws, name);
+          XLSX.writeFile(wb, `${name}-${Refad.date.today()}.xlsx`);
+          Refad.toast.success('تم التصدير');
+        });
+
+        // Print
+        document.getElementById('printBtn').addEventListener('click', () => {
+          window.print();
+        });
+      }
+
+      // ============================================================
+      // 16) Init
+      // ============================================================
+      async function init() {
+        buildSidebar();
+        fillUser();
+        setupTheme();
+        setupSidebarMobile();
+        setupUserMenu();
+        setupNotifBtn();
+        setupTabs();
+        setupMiniStats();
+        bindEvents();
+        document.getElementById('addBatchBtn').style.display = Refad.Auth.can('inventory.adjust') ? 'inline-flex' : 'none';
+
+        await loadSuppliers();
+        await loadAll();
+
+        Refad.registerServiceWorker();
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+
+      console.log('%c[Refad] Inventory ready', 'color:#14B8A6;font-weight:bold');
+
+    })();
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0B2C4D">
+  <title>تفاصيل عميل - رفاد</title>
+
+  <link rel="icon" type="image/png" href="logo.png">
+  <link rel="manifest" href="manifest.json">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --primary: #0B2C4D; --primary-light: #1e4a73;
+      --accent: #14B8A6; --accent-dark: #0d9488;
+      --gold: #F59E0B; --bg: #F1F5F9; --card: #ffffff;
+      --text: #0f172a; --text-muted: #64748b; --border: #e2e8f0;
+      --danger: #ef4444; --success: #10b981; --warning: #f59e0b; --info: #3b82f6;
+      --sidebar-bg: #0B2C4D; --sidebar-text: #cbd5e1;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+      --shadow: 0 4px 20px rgba(11, 44, 77, 0.08);
+      --shadow-lg: 0 10px 40px rgba(11, 44, 77, 0.12);
+      --radius: 14px; --radius-sm: 10px;
+      --sidebar-w: 260px; --topbar-h: 64px;
+    }
+    [data-theme="dark"] {
+      --bg: #0a1628; --card: #0f2137; --text: #f1f5f9; --text-muted: #94a3b8;
+      --border: #1e3a5f; --sidebar-bg: #061a2e; --sidebar-text: #94a3b8;
+    }
+    html, body { height: 100%; font-family: 'Cairo', sans-serif; background: var(--bg); color: var(--text); transition: background 0.3s, color 0.3s; }
+    body { display: flex; min-height: 100vh; overflow-x: hidden; }
+
+    /* Sidebar (same style as others) */
+    .sidebar { width: var(--sidebar-w); height: 100vh; background: var(--sidebar-bg); color: var(--sidebar-text); position: fixed; top: 0; right: 0; z-index: 100; display: flex; flex-direction: column; transition: transform 0.3s; box-shadow: -4px 0 20px rgba(0,0,0,0.1); }
+    .sidebar-header { padding: 20px 22px; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 14px; height: var(--topbar-h); box-sizing: border-box; }
+    .sidebar-logo { width: 40px; height: 40px; background: linear-gradient(135deg, var(--accent), var(--accent-dark)); border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 12px rgba(20,184,166,0.4); }
+    .sidebar-logo img { width: 70%; height: 70%; object-fit: contain; }
+    .sidebar-logo .fallback { color: white; font-weight: 800; font-size: 18px; }
+    .sidebar-brand h2 { color: white; font-size: 20px; font-weight: 800; line-height: 1.2; }
+    .sidebar-brand p { font-size: 10px; color: var(--sidebar-text); opacity: 0.7; font-weight: 500; margin-top: 2px; }
+    .sidebar-nav { flex: 1; overflow-y: auto; padding: 12px 0; }
+    .sidebar-nav::-webkit-scrollbar { width: 5px; }
+    .sidebar-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 10px; }
+    .nav-section { padding: 8px 20px 4px; font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 1px; margin-top: 8px; }
+    .nav-item { display: flex; align-items: center; gap: 12px; padding: 11px 22px; color: var(--sidebar-text); text-decoration: none; font-size: 14px; font-weight: 500; border-right: 3px solid transparent; transition: all 0.2s; cursor: pointer; position: relative; }
+    .nav-item:hover { background: rgba(255,255,255,0.05); color: white; }
+    .nav-item.active { background: rgba(20,184,166,0.12); color: white; border-right-color: var(--accent); font-weight: 600; }
+    .nav-item i, .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; opacity: 0.85; }
+    .nav-item .badge { margin-right: auto; background: var(--danger); color: white; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
+    .nav-item .badge.teal { background: var(--accent); }
+    .nav-item .badge.gold { background: var(--gold); }
+
+    /* Main */
+    .main { flex: 1; margin-right: var(--sidebar-w); min-width: 0; display: flex; flex-direction: column; }
+    .topbar { height: var(--topbar-h); background: var(--card); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 16px; padding: 0 24px; position: sticky; top: 0; z-index: 50; box-shadow: var(--shadow-sm); }
+    .menu-toggle { display: none; background: transparent; border: none; color: var(--text); cursor: pointer; padding: 8px; border-radius: 8px; }
+    .topbar-title { font-size: 18px; font-weight: 700; color: var(--text); flex-shrink: 0; }
+    .topbar-actions { display: flex; align-items: center; gap: 8px; margin-right: auto; }
+    .icon-btn { width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--border); background: var(--card); color: var(--text); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+    .icon-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .icon-btn i { width: 18px; height: 18px; }
+    .user-menu { display: flex; align-items: center; gap: 10px; padding: 5px 12px 5px 5px; border-radius: 10px; cursor: pointer; border: 1px solid var(--border); background: var(--card); transition: background 0.2s; }
+    .user-menu:hover { background: var(--bg); }
+    .user-avatar { width: 34px; height: 34px; border-radius: 9px; background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; flex-shrink: 0; overflow: hidden; }
+    .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .user-info { display: flex; flex-direction: column; line-height: 1.2; }
+    .user-info .name { font-size: 13px; font-weight: 700; color: var(--text); }
+    .user-info .role { font-size: 11px; color: var(--text-muted); }
+    .dropdown { position: absolute; top: calc(100% + 8px); left: 0; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: var(--shadow-lg); min-width: 200px; padding: 6px; opacity: 0; visibility: hidden; transform: translateY(-8px); transition: all 0.2s; z-index: 100; }
+    .dropdown.show { opacity: 1; visibility: visible; transform: translateY(0); }
+    .dropdown-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; color: var(--text); font-size: 13px; font-weight: 500; cursor: pointer; text-decoration: none; }
+    .dropdown-item:hover { background: var(--bg); }
+    .dropdown-item.danger { color: var(--danger); }
+    .dropdown-item i { width: 16px; height: 16px; }
+    .dropdown-divider { height: 1px; background: var(--border); margin: 6px 0; }
+
+    /* Content */
+    .content { padding: 24px; flex: 1; }
+
+    .page-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+    .page-head h1 { font-size: 22px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+    .page-head p { font-size: 13px; color: var(--text-muted); }
+
+    .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; font-family: inherit; font-size: 14px; font-weight: 600; border-radius: var(--radius-sm); border: none; cursor: pointer; transition: all 0.2s; text-decoration: none; white-space: nowrap; }
+    .btn i { width: 16px; height: 16px; }
+    .btn-primary { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(20,184,166,0.35); }
+    .btn-outline { background: var(--card); color: var(--text); border: 1px solid var(--border); }
+    .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-sm); overflow: hidden; margin-bottom: 16px; }
+    .card-header { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .card-header h3 { font-size: 15px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px; }
+    .card-header h3 i { width: 18px; height: 18px; color: var(--accent); }
+    .card-body { padding: 18px; }
+
+    /* Profile header */
+    .profile-head {
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      color: white;
+      padding: 24px;
+      border-radius: var(--radius);
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .profile-avatar {
+      width: 80px; height: 80px;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.15);
+      border: 2px solid rgba(255,255,255,0.3);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 32px;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .profile-info { flex: 1; min-width: 200px; }
+    .profile-info h1 { font-size: 24px; font-weight: 800; margin-bottom: 6px; }
+    .profile-info .meta { display: flex; gap: 16px; flex-wrap: wrap; font-size: 13px; opacity: 0.9; }
+    .profile-info .meta span { display: inline-flex; align-items: center; gap: 5px; }
+    .profile-info .meta i { width: 14px; height: 14px; }
+    .profile-balance {
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 14px 20px;
+      border-radius: 12px;
+      text-align: center;
+      min-width: 160px;
+    }
+    .profile-balance .lbl { font-size: 11px; opacity: 0.85; font-weight: 600; margin-bottom: 4px; }
+    .profile-balance .val { font-size: 24px; font-weight: 800; }
+
+    .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+    .info-item { background: var(--bg); border-radius: 10px; padding: 12px 14px; }
+    .info-item .lbl { font-size: 11px; color: var(--text-muted); font-weight: 600; margin-bottom: 4px; }
+    .info-item .val { font-size: 14px; font-weight: 700; color: var(--text); word-break: break-word; }
+
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 16px; }
+    .stat-box { background: var(--bg); border-radius: 12px; padding: 16px; text-align: center; }
+    .stat-box .v { font-size: 22px; font-weight: 800; color: var(--accent); }
+    .stat-box .l { font-size: 11px; color: var(--text-muted); font-weight: 600; margin-top: 4px; }
+
+    table.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    table.data-table thead { background: var(--bg); }
+    table.data-table th { text-align: right; padding: 10px 8px; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; white-space: nowrap; }
+    table.data-table td { padding: 10px 8px; color: var(--text); border-bottom: 1px solid var(--border); vertical-align: middle; }
+    table.data-table tbody tr:hover { background: var(--bg); }
+    table.data-table tbody tr:last-child td { border-bottom: none; }
+
+    .badge-tag { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+    .badge-tag.green { background: rgba(16,185,129,0.12); color: var(--success); }
+    .badge-tag.gold { background: rgba(245,158,11,0.12); color: var(--gold); }
+    .badge-tag.red { background: rgba(239,68,68,0.12); color: var(--danger); }
+    .badge-tag.gray { background: rgba(107,114,128,0.12); color: #6b7280; }
+    .badge-tag.blue { background: rgba(59,130,246,0.12); color: var(--info); }
+
+    .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 16px; overflow-x: auto; }
+    .tab { padding: 10px 18px; font-size: 13px; font-weight: 600; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; background: transparent; border-top: none; border-right: none; border-left: none; font-family: inherit; transition: all 0.2s; white-space: nowrap; }
+    .tab:hover { color: var(--text); }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    .empty-state { padding: 40px 20px; text-align: center; color: var(--text-muted); }
+    .empty-state i { width: 42px; height: 42px; opacity: 0.3; margin-bottom: 10px; }
+    .empty-state p { font-size: 13px; }
+
+    .loader { text-align: center; padding: 40px; color: var(--text-muted); }
+    .loader i { width: 36px; height: 36px; animation: spin 1s linear infinite; color: var(--accent); margin-bottom: 10px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .money { font-weight: 700; }
+    .money.accent { color: var(--accent); }
+    .money.danger { color: var(--danger); }
+    .money.success { color: var(--success); }
+
+    .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; opacity: 0; transition: opacity 0.3s; }
+    .overlay.show { display: block; opacity: 1; }
+
+    @media (max-width: 1024px) {
+      .sidebar { transform: translateX(100%); }
+      .sidebar.open { transform: translateX(0); }
+      .main { margin-right: 0; }
+      .menu-toggle { display: flex; }
+      .user-info { display: none; }
+    }
+    @media (max-width: 640px) {
+      .content { padding: 16px; }
+      .topbar { padding: 0 14px; gap: 10px; }
+      .topbar-title { font-size: 15px; }
+      .page-head { flex-direction: column; align-items: stretch; }
+      .page-head h1 { font-size: 18px; }
+      .profile-head { flex-direction: column; text-align: center; }
+      .profile-info .meta { justify-content: center; }
+      .profile-balance { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <img src="logo.png" alt="رفاد" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=fallback>R</span>';">
+      </div>
+      <div class="sidebar-brand">
+        <h2>رفاد</h2>
+        <p>نظام إدارة الأدوية</p>
+      </div>
+    </div>
+    <nav class="sidebar-nav" id="sidebarNav"></nav>
+  </aside>
+
+  <div class="overlay" id="overlay"></div>
+
+  <div class="main">
+    <header class="topbar">
+      <button class="menu-toggle" id="menuToggle"><i data-lucide="menu"></i></button>
+      <div class="topbar-title" id="topbarTitle">تفاصيل عميل</div>
+      <div class="topbar-actions">
+        <button class="icon-btn" id="themeToggle"><i data-lucide="moon" id="themeIcon"></i></button>
+        <button class="icon-btn" id="notifBtn" style="position:relative;"><i data-lucide="bell"></i><span class="dot" id="notifDot" style="display:none;"></span></button>
+        <div style="position:relative;">
+          <div class="user-menu" id="userMenu">
+            <div class="user-avatar" id="userAvatar">م</div>
+            <div class="user-info"><span class="name" id="userName">—</span><span class="role" id="userRole">—</span></div>
+            <i data-lucide="chevron-down" style="width:14px;height:14px;opacity:0.5;"></i>
+          </div>
+          <div class="dropdown" id="userDropdown">
+            <a href="company-settings.html" class="dropdown-item"><i data-lucide="settings"></i> الإعدادات</a>
+            <a href="employees.html" class="dropdown-item"><i data-lucide="user-cog"></i> الملف الشخصي</a>
+            <div class="dropdown-divider"></div>
+            <div class="dropdown-item danger" id="logoutBtn"><i data-lucide="log-out"></i> تسجيل الخروج</div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="content">
+      <div class="page-head">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <a href="customers.html" class="btn btn-outline btn-sm">
+            <i data-lucide="arrow-right"></i> رجوع
+          </a>
+          <div>
+            <h1 id="pageTitle">جارٍ التحميل...</h1>
+            <p id="pageSubtitle">—</p>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;">
+          <button class="btn btn-outline btn-sm" id="printBtn"><i data-lucide="printer"></i> طباعة كشف حساب</button>
+        </div>
+      </div>
+
+      <div id="contentArea">
+        <div class="loader"><i data-lucide="loader-2"></i><p>جارٍ التحميل...</p></div>
+      </div>
+    </main>
+  </div>
+
+  <script src="refad-core.js"></script>
+  <script src="refad-auth.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      const session = Refad.Auth.guardPage('customers.view');
+      if (!session) return;
+
+      const customerId = parseInt(Refad.getParam('id'), 10);
+      if (!customerId) {
+        Refad.alert.error('خطأ', 'لم يتم تحديد العميل').then(() => location.href = 'customers.html');
+        return;
+      }
+
+      const state = {
+        customer: null,
+        invoices: [],
+        orders: [],
+        payments: []
+      };
+
+      // Sidebar
+      const MENU = [
+        { section: 'الرئيسية', items: [
+          { label: 'لوحة التحكم', icon: 'layout-dashboard', href: 'dashboard.html' },
+          { label: 'الشات', icon: 'message-circle', href: 'chat.html', permission: 'chat.use' },
+          { label: 'الإشعارات', icon: 'bell', href: 'notifications.html', permission: 'notifications.view' }
+        ]},
+        { section: 'العمليات', items: [
+          { label: 'الأصناف', icon: 'package', href: 'products.html', permission: 'products.view' },
+          { label: 'المخزون', icon: 'warehouse', href: 'inventory.html', permission: 'inventory.view' },
+          { label: 'طلبات الشراء', icon: 'clipboard-list', href: 'purchase-requests.html', permission: 'purchases.view' },
+          { label: 'الاستلامات', icon: 'package-check', href: 'receipts.html', permission: 'purchases.receive' },
+          { label: 'طلبات البيع', icon: 'shopping-cart', href: 'sales-orders.html', permission: 'sales.view' },
+          { label: 'نقطة البيع', icon: 'scan-barcode', href: 'pos.html', permission: 'sales.pos', badge: 'POS', badgeClass: 'teal' },
+          { label: 'الفواتير', icon: 'receipt', href: 'invoices.html', permission: 'sales.view' }
+        ]},
+        { section: 'الأطراف', items: [
+          { label: 'الموردين', icon: 'truck', href: 'suppliers.html', permission: 'suppliers.view' },
+          { label: 'العملاء', icon: 'users', href: 'customers.html', permission: 'customers.view' }
+        ]},
+        { section: 'المخزون', items: [
+          { label: 'الجرد', icon: 'clipboard-check', href: 'stocktake.html', permission: 'inventory.stocktake' },
+          { label: 'التسويات', icon: 'sliders-horizontal', href: 'adjustments.html', permission: 'inventory.adjust' }
+        ]},
+        { section: 'الموارد البشرية', items: [
+          { label: 'الموظفين', icon: 'user-cog', href: 'employees.html', permission: 'employees.view' },
+          { label: 'الصلاحيات', icon: 'shield-check', href: 'permissions.html', permission: 'permissions.manage' },
+          { label: 'الحضور', icon: 'calendar-check', href: 'attendance.html', permission: 'attendance.view' },
+          { label: 'الرواتب', icon: 'wallet', href: 'payroll.html', permission: 'payroll.view' }
+        ]},
+        { section: 'المالية', items: [
+          { label: 'المصاريف', icon: 'banknote', href: 'expenses.html', permission: 'expenses.view' },
+          { label: 'التقارير', icon: 'bar-chart-3', href: 'reports.html', permission: 'reports.view' }
+        ]},
+        { section: 'النظام', items: [
+          { label: 'إعدادات الشركة', icon: 'settings', href: 'company-settings.html', permission: 'settings.view' },
+          { label: 'شاشة الأدمن', icon: 'shield', href: 'admin.html', permission: 'admin.full', badge: 'Admin', badgeClass: 'gold' }
+        ]}
+      ];
+
+      function buildSidebar() {
+        const nav = document.getElementById('sidebarNav');
+        const frag = document.createDocumentFragment();
+        MENU.forEach(group => {
+          const allowed = group.items.filter(it => !it.permission || Refad.Session.has(it.permission));
+          if (!allowed.length) return;
+          frag.appendChild(Refad.el('div', { class: 'nav-section' }, group.section));
+          allowed.forEach(item => {
+            const a = Refad.el('a', {
+              href: item.href,
+              class: 'nav-item' + (item.href === 'customers.html' ? ' active' : '')
+            });
+            a.innerHTML = `<i data-lucide="${item.icon}"></i><span>${Refad.escapeHtml(item.label)}</span>${item.badge ? `<span class="badge ${item.badgeClass || ''}">${item.badge}</span>` : ''}`;
+            frag.appendChild(a);
+          });
+        });
+        nav.innerHTML = '';
+        nav.appendChild(frag);
+        if (window.lucide) lucide.createIcons();
+      }
+
+      function fillUser() {
+        const av = document.getElementById('userAvatar');
+        const initial = (session.full_name || '؟').trim().charAt(0);
+        if (session.avatar_url) av.innerHTML = `<img src="${Refad.escapeHtml(session.avatar_url)}" alt="">`;
+        else av.textContent = initial;
+        document.getElementById('userName').textContent = session.full_name;
+        document.getElementById('userRole').textContent = Refad.Session.has('company.owner') ? 'صاحب الشركة' : 'موظف';
+      }
+
+      function setupTheme() {
+        const btn = document.getElementById('themeToggle');
+        const icon = document.getElementById('themeIcon');
+        const refresh = () => {
+          const isDark = Refad.theme.get() === 'dark';
+          icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+          if (window.lucide) lucide.createIcons();
+        };
+        refresh();
+        btn.addEventListener('click', () => { Refad.theme.toggle(); refresh(); });
+      }
+
+      function setupSidebarMobile() {
+        const sb = document.getElementById('sidebar');
+        const ov = document.getElementById('overlay');
+        document.getElementById('menuToggle').addEventListener('click', () => { sb.classList.add('open'); ov.classList.add('show'); });
+        ov.addEventListener('click', () => { sb.classList.remove('open'); ov.classList.remove('show'); });
+      }
+
+      function setupUserMenu() {
+        const m = document.getElementById('userMenu');
+        const d = document.getElementById('userDropdown');
+        m.addEventListener('click', e => { e.stopPropagation(); d.classList.toggle('show'); });
+        document.addEventListener('click', () => d.classList.remove('show'));
+        d.addEventListener('click', e => e.stopPropagation());
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+          if (await Refad.alert.confirm('تسجيل الخروج', 'هل تريد الخروج؟', 'خروج')) await Refad.Auth.logout();
+        });
+      }
+
+      function setupNotifBtn() {
+        document.getElementById('notifBtn').addEventListener('click', () => {
+          window.location.href = 'notifications.html';
+        });
+      }
+
+      async function loadData() {
+        try {
+          const customer = await Refad.db.selectOne('customers', { eq: { id: customerId } });
+          if (!customer || customer.company_id !== session.company_id) {
+            Refad.alert.error('غير موجود', 'العميل غير موجود').then(() => location.href = 'customers.html');
+            return;
+          }
+          state.customer = customer;
+
+          const [invoices, orders] = await Promise.all([
+            Refad.db.select('sales_invoices', {
+              columns: 'id, invoice_number, invoice_date, grand_total, paid_amount, status, payment_type',
+              eq: { customer_id: customerId },
+              order: { column: 'created_at', ascending: false },
+              limit: 100
+            }).catch(() => []),
+            Refad.db.select('sales_orders', {
+              columns: 'id, order_number, order_date, net_amount, status',
+              eq: { customer_id: customerId },
+              order: { column: 'created_at', ascending: false },
+              limit: 100
+            }).catch(() => [])
+          ]);
+
+          state.invoices = invoices;
+          state.orders = orders;
+
+          renderPage();
+        } catch (e) {
+          console.error('[Customer Details] load failed:', e);
+          document.getElementById('contentArea').innerHTML = `
+            <div class="card"><div class="card-body">
+              <div class="empty-state" style="color:var(--danger);">
+                <i data-lucide="alert-circle"></i>
+                <p>فشل التحميل: ${Refad.escapeHtml(e.message || '')}</p>
+              </div>
+            </div></div>`;
+          if (window.lucide) lucide.createIcons();
+        }
+      }
+
+      function renderPage() {
+        const c = state.customer;
+        const initials = Refad.escapeHtml((c.name || '؟').charAt(0));
+        const balance = parseFloat(c.balance) || 0;
+        const balanceColor = balance < 0 ? 'var(--danger)' : (balance > 0 ? 'var(--success)' : 'white');
+
+        document.getElementById('pageTitle').textContent = c.name;
+        document.getElementById('pageSubtitle').textContent = c.phone || c.email || '—';
+        document.getElementById('topbarTitle').textContent = c.name;
+
+        const totalInvoices = state.invoices.length;
+        const totalSales = state.invoices.reduce((s, i) => s + (parseFloat(i.grand_total) || 0), 0);
+        const totalPaid = state.invoices.reduce((s, i) => s + (parseFloat(i.paid_amount) || 0), 0);
+        const totalDue = totalSales - totalPaid;
+
+        document.getElementById('contentArea').innerHTML = `
+          <!-- Profile header -->
+          <div class="profile-head">
+            <div class="profile-avatar">${initials}</div>
+            <div class="profile-info">
+              <h1>${Refad.escapeHtml(c.name)}</h1>
+              <div class="meta">
+                ${c.phone ? `<span><i data-lucide="phone"></i> ${Refad.escapeHtml(c.phone)}</span>` : ''}
+                ${c.email ? `<span><i data-lucide="mail"></i> ${Refad.escapeHtml(c.email)}</span>` : ''}
+                ${c.address ? `<span><i data-lucide="map-pin"></i> ${Refad.escapeHtml(c.address)}</span>` : ''}
+                <span><i data-lucide="calendar"></i> ${Refad.format.date(c.created_at)}</span>
+              </div>
+            </div>
+            <div class="profile-balance">
+              <div class="lbl">الرصيد الحالي</div>
+              <div class="val" style="color:${balanceColor};">${Refad.format.money(balance)}</div>
+            </div>
+          </div>
+
+          <!-- Stats -->
+          <div class="stats-grid">
+            <div class="stat-box">
+              <div class="v">${totalInvoices}</div>
+              <div class="l">فاتورة</div>
+            </div>
+            <div class="stat-box">
+              <div class="v">${Refad.format.money(totalSales)}</div>
+              <div class="l">إجمالي المبيعات</div>
+            </div>
+            <div class="stat-box">
+              <div class="v" style="color:var(--success);">${Refad.format.money(totalPaid)}</div>
+              <div class="l">إجمالي المدفوع</div>
+            </div>
+            <div class="stat-box">
+              <div class="v" style="color:var(--danger);">${Refad.format.money(totalDue)}</div>
+              <div class="l">المتبقي</div>
+            </div>
+          </div>
+
+          <!-- Info + notes -->
+          <div class="card">
+            <div class="card-header">
+              <h3><i data-lucide="info"></i> معلومات العميل</h3>
+            </div>
+            <div class="card-body">
+              <div class="info-grid">
+                <div class="info-item">
+                  <div class="lbl">الهاتف</div>
+                  <div class="val">${Refad.escapeHtml(c.phone || '—')}</div>
+                </div>
+                <div class="info-item">
+                  <div class="lbl">البريد الإلكتروني</div>
+                  <div class="val">${Refad.escapeHtml(c.email || '—')}</div>
+                </div>
+                <div class="info-item">
+                  <div class="lbl">العنوان</div>
+                  <div class="val">${Refad.escapeHtml(c.address || '—')}</div>
+                </div>
+                <div class="info-item">
+                  <div class="lbl">الحالة</div>
+                  <div class="val">
+                    <span class="badge-tag ${c.is_active === false ? 'red' : 'green'}">
+                      ${c.is_active === false ? 'موقوف' : 'نشط'}
+                    </span>
+                  </div>
+                </div>
+                ${c.notes ? `
+                  <div class="info-item" style="grid-column:1/-1;">
+                    <div class="lbl">ملاحظات</div>
+                    <div class="val" style="font-weight:400;">${Refad.escapeHtml(c.notes)}</div>
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+          </div>
+
+          <!-- Invoices -->
+          <div class="card">
+            <div class="card-header">
+              <h3><i data-lucide="receipt"></i> آخر الفواتير (${state.invoices.length})</h3>
+            </div>
+            <div class="card-body" style="padding:0;">
+              ${state.invoices.length ? `
+                <div style="overflow-x:auto;">
+                  <table class="data-table">
+                    <thead>
+                      <tr>
+                        <th>رقم الفاتورة</th>
+                        <th>التاريخ</th>
+                        <th>الإجمالي</th>
+                        <th>المدفوع</th>
+                        <th>المتبقي</th>
+                        <th>الحالة</th>
+                        <th></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${state.invoices.slice(0, 30).map(inv => {
+                        const grand = parseFloat(inv.grand_total) || 0;
+                        const paid = parseFloat(inv.paid_amount) || 0;
+                        const due = grand - paid;
+                        const statusMap = {
+                          paid: { label: 'مدفوع', cls: 'green' },
+                          partial: { label: 'جزئي', cls: 'gold' },
+                          unpaid: { label: 'غير مدفوع', cls: 'red' },
+                          cancelled: { label: 'ملغي', cls: 'gray' }
+                        };
+                        const s = statusMap[inv.status] || { label: inv.status, cls: 'gray' };
+                        return `
+                          <tr>
+                            <td><strong>${Refad.escapeHtml(inv.invoice_number)}</strong></td>
+                            <td>${Refad.format.date(inv.invoice_date)}</td>
+                            <td class="money">${Refad.format.money(grand)}</td>
+                            <td class="money success">${Refad.format.money(paid)}</td>
+                            <td class="money ${due > 0 ? 'danger' : ''}">${Refad.format.money(due)}</td>
+                            <td><span class="badge-tag ${s.cls}">${s.label}</span></td>
+                            <td>
+                              <a href="invoices.html?id=${inv.id}" class="btn btn-outline btn-sm" style="padding:4px 10px;font-size:11px;">
+                                <i data-lucide="eye" style="width:12px;height:12px;"></i>
+                              </a>
+                            </td>
+                          </tr>
+                        `;
+                      }).join('')}
+                    </tbody>
+                  </table>
+                </div>
+              ` : `
+                <div class="empty-state">
+                  <i data-lucide="receipt"></i>
+                  <p>لا توجد فواتير لهذا العميل بعد</p>
+                </div>
+              `}
+            </div>
+          </div>
+
+          <!-- Orders -->
+          ${state.orders.length ? `
+            <div class="card">
+              <div class="card-header">
+                <h3><i data-lucide="shopping-cart"></i> طلبات البيع (${state.orders.length})</h3>
+              </div>
+              <div class="card-body" style="padding:0;">
+                <div style="overflow-x:auto;">
+                  <table class="data-table">
+                    <thead>
+                      <tr>
+                        <th>رقم الطلب</th>
+                        <th>التاريخ</th>
+                        <th>الصافي</th>
+                        <th>الحالة</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${state.orders.slice(0, 20).map(o => `
+                        <tr>
+                          <td><strong>${Refad.escapeHtml(o.order_number)}</strong></td>
+                          <td>${Refad.format.date(o.order_date)}</td>
+                          <td class="money accent">${Refad.format.money(o.net_amount)}</td>
+                          <td>
+                            <span class="badge-tag ${o.status === 'completed' ? 'green' : (o.status === 'cancelled' ? 'gray' : 'blue')}">
+                              ${o.status === 'draft' ? 'مسودة' :
+                                o.status === 'confirmed' ? 'مؤكد' :
+                                o.status === 'completed' ? 'مكتمل' :
+                                o.status === 'cancelled' ? 'ملغي' : o.status}
+                            </span>
+                          </td>
+                        </tr>
+                      `).join('')}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          ` : ''}
+        `;
+
+        if (window.lucide) lucide.createIcons();
+      }
+
+      function printStatement() {
+        const c = state.customer;
+        if (!c) return;
+
+        const totalSales = state.invoices.reduce((s, i) => s + (parseFloat(i.grand_total) || 0), 0);
+        const totalPaid = state.invoices.reduce((s, i) => s + (parseFloat(i.paid_amount) || 0), 0);
+        const balance = parseFloat(c.balance) || 0;
+
+        if (Refad.Print && Refad.Print.html) {
+          Refad.Print.html(`
+            <div style="text-align:center;margin-bottom:20px;">
+              <h1 style="color:#0B2C4D;font-size:22px;">كشف حساب عميل</h1>
+              <div style="color:#64748b;font-size:13px;margin-top:4px;">${Refad.format.date(new Date())}</div>
+            </div>
+
+            <div style="background:#F1F5F9;padding:12px 16px;border-radius:8px;margin-bottom:16px;">
+              <div style="display:flex;gap:20px;flex-wrap:wrap;font-size:13px;">
+                <div><strong>العميل:</strong> ${Refad.escapeHtml(c.name)}</div>
+                ${c.phone ? `<div><strong>الهاتف:</strong> ${Refad.escapeHtml(c.phone)}</div>` : ''}
+                ${c.address ? `<div><strong>العنوان:</strong> ${Refad.escapeHtml(c.address)}</div>` : ''}
+              </div>
+            </div>
+
+            <table>
+              <thead>
+                <tr>
+                  <th>التاريخ</th>
+                  <th>رقم الفاتورة</th>
+                  <th>الإجمالي</th>
+                  <th>المدفوع</th>
+                  <th>المتبقي</th>
+                  <th>الحالة</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${state.invoices.map(inv => {
+                  const grand = parseFloat(inv.grand_total) || 0;
+                  const paid = parseFloat(inv.paid_amount) || 0;
+                  const due = grand - paid;
+                  return `<tr>
+                    <td>${Refad.format.date(inv.invoice_date)}</td>
+                    <td>${Refad.escapeHtml(inv.invoice_number)}</td>
+                    <td>${Refad.format.money(grand)}</td>
+                    <td>${Refad.format.money(paid)}</td>
+                    <td>${Refad.format.money(due)}</td>
+                    <td>${inv.status === 'paid' ? 'مدفوع' : (inv.status === 'partial' ? 'جزئي' : 'غير مدفوع')}</td>
+                  </tr>`;
+                }).join('')}
+              </tbody>
+            </table>
+
+            <div style="margin-top:20px;text-align:left;font-size:14px;">
+              <div>إجمالي المبيعات: <strong>${Refad.format.money(totalSales)}</strong></div>
+              <div>إجمالي المدفوع: <strong>${Refad.format.money(totalPaid)}</strong></div>
+              <div style="font-size:16px;margin-top:8px;padding-top:8px;border-top:2px solid #0B2C4D;">
+                الرصيد الحالي: <strong style="color:${balance < 0 ? '#ef4444' : '#14B8A6'};">${Refad.format.money(balance)}</strong>
+              </div>
+            </div>
+          `, { title: 'كشف حساب - ' + c.name });
+        } else {
+          Refad.toast.warning('مكتبة الطباعة غير محمّلة');
+        }
+      }
+
+      async function init() {
+        buildSidebar();
+        fillUser();
+        setupTheme();
+        setupSidebarMobile();
+        setupUserMenu();
+        setupNotifBtn();
+
+        document.getElementById('printBtn').addEventListener('click', printStatement);
+
+        await loadData();
+        if (Refad.registerServiceWorker) Refad.registerServiceWorker();
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+
+      console.log('%c[Refad] Customer details ready', 'color:#14B8A6;font-weight:bold');
+
+    })();
+  </script>
+
+</body>
+</html>

@@ -1,445 +1,840 @@
-create extension if not exists pgcrypto;
 
-create table if not exists public.tenants (
-  id uuid primary key default gen_random_uuid(),
-  type text not null check (type in ('company', 'pharmacy')),
-  name text not null unique,
-  phone text,
-  address text,
-  tax_id text,
-  license text,
-  active boolean not null default true,
-  created_at timestamptz not null default now()
+-- ============================================================
+-- Refad ERP System - Complete Database Schema
+-- Version: 1.0
+-- No RLS, No Auth, Plain Text Passwords
+-- Space-Optimized: BIGSERIAL, SMALLINT, REAL, VARCHAR(n)
+-- ============================================================
+
+-- تنظيف كامل (احتياطي)
+DROP SCHEMA public CASCADE;
+CREATE SCHEMA public;
+GRANT ALL ON SCHEMA public TO postgres;
+GRANT ALL ON SCHEMA public TO public;
+
+-- ============================================================
+-- 1) الجداول الأساسية: الشركات، الأدوار، الصلاحيات، المستخدمين
+-- ============================================================
+
+-- الشركات
+CREATE TABLE companies (
+  id              BIGSERIAL PRIMARY KEY,
+  name            VARCHAR(150) NOT NULL,
+  logo_url        VARCHAR(255),
+  phone           VARCHAR(30),
+  email           VARCHAR(120),
+  address         VARCHAR(255),
+  tax_number      VARCHAR(50),
+  is_active       BOOLEAN DEFAULT TRUE,
+  subscription_end DATE,
+  notes           VARCHAR(255),
+  created_at      TIMESTAMPTZ DEFAULT NOW(),
+  updated_at      TIMESTAMPTZ DEFAULT NOW()
 );
 
-create table if not exists public.users (
-  id uuid primary key default gen_random_uuid(),
-  tenant_id uuid references public.tenants(id) on delete cascade,
-  username text unique not null,
-  password text not null,
-  name text not null,
-  role text not null check (role in ('super', 'admin', 'user')),
-  active boolean not null default true,
-  created_at timestamptz not null default now(),
-  constraint users_super_tenant_check check (
-    (role = 'super' and tenant_id is null)
-    or (role in ('admin', 'user') and tenant_id is not null)
-  )
+-- الأدوار
+CREATE TABLE roles (
+  id              BIGSERIAL PRIMARY KEY,
+  company_id      BIGINT REFERENCES companies(id) ON DELETE CASCADE,
+  name            VARCHAR(60) NOT NULL,
+  name_ar         VARCHAR(60),
+  description     VARCHAR(200),
+  is_system       BOOLEAN DEFAULT FALSE,
+  is_owner        BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at      TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX idx_roles_company ON roles(company_id);
+
+-- الصلاحيات (Action-Level)
+CREATE TABLE permissions (
+  id              BIGSERIAL PRIMARY KEY,
+  code            VARCHAR(60) UNIQUE NOT NULL,
+  name_ar         VARCHAR(100) NOT NULL,
+  module          VARCHAR(40) NOT NULL,
+  created_at      TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX idx_permissions_module ON permissions(module);
+
+-- ربط الأدوار بالصلاحيات
+CREATE TABLE role_permissions (
+  role_id         BIGINT REFERENCES roles(id) ON DELETE CASCADE,
+  permission_id   BIGINT REFERENCES permissions(id) ON DELETE CASCADE,
+  PRIMARY KEY (role_id, permission_id)
 );
 
-create table if not exists public.products (
-  id uuid primary key default gen_random_uuid(),
-  tenant_id uuid not null references public.tenants(id) on delete cascade,
-  name text not null,
-  barcode text unique,
-  category text,
-  unit text not null default 'علبة',
-  purchase_price numeric not null default 0,
-  sale_price numeric not null default 0,
-  min_stock integer not null default 10,
-  active boolean not null default true,
-  created_at timestamptz not null default now()
+-- المستخدمين
+CREATE TABLE users (
+  id              BIGSERIAL PRIMARY KEY,
+  company_id      BIGINT REFERENCES companies(id) ON DELETE CASCADE,
+  role_id         BIGINT REFERENCES roles(id) ON DELETE SET NULL,
+  username        VARCHAR(50) UNIQUE NOT NULL,
+  password        VARCHAR(100) NOT NULL,  -- نص عادي
+  full_name       VARCHAR(120) NOT NULL,
+  phone           VARCHAR(30),
+  email           VARCHAR(120),
+  avatar_url      VARCHAR(255),
+  is_active       BOOLEAN DEFAULT TRUE,
+  has_device      BOOLEAN DEFAULT TRUE,  -- موظف بجهاز أو عامل
+  theme           VARCHAR(10) DEFAULT 'light',  -- light/dark
+  failed_attempts SMALLINT DEFAULT 0,
+  locked_until    TIMESTAMPTZ,
+  last_login      TIMESTAMPTZ,
+  salary          REAL DEFAULT 0,
+  hire_date       DATE,
+  created_at      TIMESTAMPTZ DEFAULT NOW(),
+  updated_at      TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX idx_users_company ON users(company_id);
+CREATE INDEX idx_users_username ON users(username);
+
+-- ============================================================
+-- 2) الأصناف والباركود والخصومات
+-- ============================================================
+
+-- الأصناف
+CREATE TABLE products (
+  id              BIGSERIAL PRIMARY KEY,
+  company_id      BIGINT REFERENCES companies(id) ON DELETE CASCADE,
+  name            VARCHAR(200) NOT NULL,
+  name_en         VARCHAR(200),
+  form            VARCHAR(30),  -- شراب/أقراص/كبسولات/أمبولات/مرهم
+  unit            VARCHAR(30),  -- علبة/شريط/زجاجة
+  category        VARCHAR(80),
+  min_order_qty   SMALLINT DEFAULT 1,
+  reorder_level   SMALLINT DEFAULT 10,
+  default_price   REAL DEFAULT 0,
+  notes           VARCHAR(255),
+  is_active       BOOLEAN DEFAULT TRUE,
+  created_at      TIMESTAMPTZ DEFAULT NOW(),
+  updated_at      TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX idx_products_company ON products(company_id);
+CREATE INDEX idx_products_name ON products(name);
+
+-- باركود الأصناف (يدعم أكثر من باركود لكل صنف)
+CREATE TABLE product_barcodes (
+  id              BIGSERIAL PRIMARY KEY,
+  product_id      BIGINT REFERENCES products(id) ON DELETE CASCADE,
+  barcode         VARCHAR(50) UNIQUE NOT NULL,
+  is_primary      BOOLEAN DEFAULT FALSE,
+  created_at      TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX idx_barcodes_product ON product_barcodes(product_id);
+CREATE INDEX idx_barcodes_code ON product_barcodes(barcode);
+
+-- خصومات الأصناف (شراء + بيع)
+CREATE TABLE product_discounts (
+  id                    BIGSERIAL PRIMARY KEY,
+  product_id            BIGINT REFERENCES products(id) ON DELETE CASCADE UNIQUE,
+  -- خصومات الشراء
+  last_purchase_discount  REAL DEFAULT 0,
+  max_purchase_discount   REAL DEFAULT 0,
+  min_purchase_discount   REAL DEFAULT 0,
+  -- خصومات البيع
+  last_sale_discount      REAL DEFAULT 0,
+  max_sale_discount       REAL DEFAULT 0,
+  min_sale_discount       REAL DEFAULT 0,
+  updated_at            TIMESTAMPTZ DEFAULT NOW()
 );
 
-create table if not exists public.batches (
-  id uuid primary key default gen_random_uuid(),
-  tenant_id uuid not null references public.tenants(id) on delete cascade,
-  product_id uuid not null references public.products(id) on delete cascade,
-  batch_no text not null,
-  expiry_date date not null,
-  quantity integer not null default 0,
-  cost numeric not null default 0,
-  created_at timestamptz not null default now(),
-  unique (tenant_id, product_id, batch_no)
+-- ============================================================
+-- 3) الموردين والعملاء
+-- ============================================================
+
+CREATE TABLE suppliers (
+  id              BIGSERIAL PRIMARY KEY,
+  company_id      BIGINT REFERENCES companies(id) ON DELETE CASCADE,
+  name            VARCHAR(150) NOT NULL,
+  phone           VARCHAR(30),
+  email           VARCHAR(120),
+  address         VARCHAR(255),
+  tax_number      VARCHAR(50),
+  balance         REAL DEFAULT 0,  -- + له / - عليه
+  notes           VARCHAR(255),
+  is_active       BOOLEAN DEFAULT TRUE,
+  created_at      TIMESTAMPTZ DEFAULT NOW(),
+  updated_at      TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX idx_suppliers_company ON suppliers(company_id);
+
+CREATE TABLE supplier_transactions (
+  id              BIGSERIAL PRIMARY KEY,
+  supplier_id     BIGINT REFERENCES suppliers(id) ON DELETE CASCADE,
+  company_id      BIGINT REFERENCES companies(id) ON DELETE CASCADE,
+  type            VARCHAR(20) NOT NULL,  -- payment/invoice/adjustment
+  amount          REAL NOT NULL,
+  balance_after   REAL,
+  reference_id    BIGINT,
+  notes           VARCHAR(255),
+  user_id         BIGINT REFERENCES users(id) ON DELETE SET NULL,
+  created_at      TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX idx_supplier_trans_supplier ON supplier_transactions(supplier_id);
+
+CREATE TABLE customers (
+  id              BIGSERIAL PRIMARY KEY,
+  company_id      BIGINT REFERENCES companies(id) ON DELETE CASCADE,
+  name            VARCHAR(150) NOT NULL,
+  phone           VARCHAR(30),
+  email           VARCHAR(120),
+  address         VARCHAR(255),
+  balance         REAL DEFAULT 0,
+  notes           VARCHAR(255),
+  is_active       BOOLEAN DEFAULT TRUE,
+  created_at      TIMESTAMPTZ DEFAULT NOW(),
+  updated_at      TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX idx_customers_company ON customers(company_id);
+
+-- ============================================================
+-- 4) طلبات الشراء
+-- ============================================================
+
+CREATE TABLE purchase_requests (
+  id              BIGSERIAL PRIMARY KEY,
+  company_id      BIGINT REFERENCES companies(id) ON DELETE CASCADE,
+  supplier_id     BIGINT REFERENCES suppliers(id) ON DELETE SET NULL,
+  request_number  VARCHAR(30) NOT NULL,
+  status          VARCHAR(20) DEFAULT 'draft',  -- draft/sent/partial/received/cancelled
+  total_amount    REAL DEFAULT 0,
+  notes           VARCHAR(500),
+  share_token     VARCHAR(64) UNIQUE,
+  share_expires   TIMESTAMPTZ,
+  created_by      BIGINT REFERENCES users(id) ON DELETE SET NULL,
+  created_at      TIMESTAMPTZ DEFAULT NOW(),
+  updated_at      TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX idx_pr_company ON purchase_requests(company_id);
+CREATE INDEX idx_pr_status ON purchase_requests(status);
+CREATE INDEX idx_pr_token ON purchase_requests(share_token);
+
+CREATE TABLE purchase_request_items (
+  id              BIGSERIAL PRIMARY KEY,
+  request_id      BIGINT REFERENCES purchase_requests(id) ON DELETE CASCADE,
+  product_id      BIGINT REFERENCES products(id) ON DELETE CASCADE,
+  requested_qty   INTEGER NOT NULL DEFAULT 0,
+  received_qty    INTEGER DEFAULT 0,
+  avg_sale_rate   REAL DEFAULT 0,
+  last_discount   REAL DEFAULT 0,
+  notes           VARCHAR(255)
+);
+CREATE INDEX idx_pri_request ON purchase_request_items(request_id);
+CREATE INDEX idx_pri_product ON purchase_request_items(product_id);
+
+-- ============================================================
+-- 5) الاستلامات (Receipts) والتشغيلات (Batches)
+-- ============================================================
+
+CREATE TABLE receipts (
+  id              BIGSERIAL PRIMARY KEY,
+  company_id      BIGINT REFERENCES companies(id) ON DELETE CASCADE,
+  supplier_id     BIGINT REFERENCES suppliers(id) ON DELETE SET NULL,
+  request_id      BIGINT REFERENCES purchase_requests(id) ON DELETE SET NULL,
+  receipt_number  VARCHAR(30) NOT NULL,
+  invoice_number  VARCHAR(50),
+  total_amount    REAL DEFAULT 0,
+  paid_amount     REAL DEFAULT 0,
+  status          VARCHAR(20) DEFAULT 'completed',
+  notes           VARCHAR(500),
+  received_by     BIGINT REFERENCES users(id) ON DELETE SET NULL,
+  receipt_date    DATE DEFAULT CURRENT_DATE,
+  created_at      TIMESTAMPTZ DEFAULT NOW(),
+  updated_at      TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX idx_receipts_company ON receipts(company_id);
+CREATE INDEX idx_receipts_supplier ON receipts(supplier_id);
+
+CREATE TABLE receipt_items (
+  id              BIGSERIAL PRIMARY KEY,
+  receipt_id      BIGINT REFERENCES receipts(id) ON DELETE CASCADE,
+  product_id      BIGINT REFERENCES products(id) ON DELETE CASCADE,
+  quantity        INTEGER NOT NULL DEFAULT 0,
+  unit_price      REAL DEFAULT 0,
+  discount        REAL DEFAULT 0,
+  purchase_discount REAL DEFAULT 0,
+  expiry_date     DATE,
+  batch_number    VARCHAR(50),
+  total           REAL DEFAULT 0
+);
+CREATE INDEX idx_ri_receipt ON receipt_items(receipt_id);
+CREATE INDEX idx_ri_product ON receipt_items(product_id);
+
+-- التشغيلات (Batches) — تُنشأ تلقائياً من الاستلام
+CREATE TABLE batches (
+  id              BIGSERIAL PRIMARY KEY,
+  company_id      BIGINT REFERENCES companies(id) ON DELETE CASCADE,
+  product_id      BIGINT REFERENCES products(id) ON DELETE CASCADE,
+  supplier_id     BIGINT REFERENCES suppliers(id) ON DELETE SET NULL,
+  receipt_id      BIGINT REFERENCES receipts(id) ON DELETE SET NULL,
+  batch_number    VARCHAR(50),
+  quantity_in     INTEGER NOT NULL DEFAULT 0,
+  quantity_left   INTEGER NOT NULL DEFAULT 0,
+  cost_price      REAL DEFAULT 0,
+  sale_price      REAL DEFAULT 0,
+  purchase_discount REAL DEFAULT 0,
+  expiry_date     DATE,
+  created_at      TIMESTAMPTZ DEFAULT NOW(),
+  updated_at      TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX idx_batches_product ON batches(product_id);
+CREATE INDEX idx_batches_expiry ON batches(expiry_date);
+CREATE INDEX idx_batches_company ON batches(company_id);
+
+-- ============================================================
+-- 6) المبيعات والفواتير
+-- ============================================================
+
+CREATE TABLE sales_orders (
+  id              BIGSERIAL PRIMARY KEY,
+  company_id      BIGINT REFERENCES companies(id) ON DELETE CASCADE,
+  customer_id     BIGINT REFERENCES customers(id) ON DELETE SET NULL,
+  supplier_id     BIGINT REFERENCES suppliers(id) ON DELETE SET NULL,
+  order_number    VARCHAR(30) NOT NULL,
+  status          VARCHAR(20) DEFAULT 'draft',  -- draft/confirmed/invoiced/cancelled
+  total_amount    REAL DEFAULT 0,
+  total_profit    REAL DEFAULT 0,
+  notes           VARCHAR(500),
+  created_by      BIGINT REFERENCES users(id) ON DELETE SET NULL,
+  created_at      TIMESTAMPTZ DEFAULT NOW(),
+  updated_at      TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX idx_so_company ON sales_orders(company_id);
+CREATE INDEX idx_so_status ON sales_orders(status);
+CREATE INDEX idx_so_supplier ON sales_orders(supplier_id);
+
+CREATE TABLE sales_order_items (
+  id              BIGSERIAL PRIMARY KEY,
+  order_id        BIGINT REFERENCES sales_orders(id) ON DELETE CASCADE,
+  product_id      BIGINT REFERENCES products(id) ON DELETE CASCADE,
+  batch_id        BIGINT REFERENCES batches(id) ON DELETE SET NULL,
+  quantity        INTEGER NOT NULL DEFAULT 0,
+  unit_price      REAL DEFAULT 0,
+  discount        REAL DEFAULT 0,
+  sale_discount   REAL DEFAULT 0,
+  cost_price      REAL DEFAULT 0,
+  profit          REAL DEFAULT 0,
+  total           REAL DEFAULT 0
+);
+CREATE INDEX idx_soi_order ON sales_order_items(order_id);
+
+CREATE TABLE sales_invoices (
+  id              BIGSERIAL PRIMARY KEY,
+  company_id      BIGINT REFERENCES companies(id) ON DELETE CASCADE,
+  customer_id     BIGINT REFERENCES customers(id) ON DELETE SET NULL,
+  supplier_id     BIGINT REFERENCES suppliers(id) ON DELETE SET NULL,
+  order_id        BIGINT REFERENCES sales_orders(id) ON DELETE SET NULL,
+  invoice_number  VARCHAR(30) NOT NULL,
+  invoice_type    VARCHAR(20) DEFAULT 'sale',  -- sale/return
+  payment_type    VARCHAR(20) DEFAULT 'cash',  -- cash/credit
+  subtotal        REAL DEFAULT 0,
+  discount_total  REAL DEFAULT 0,
+  tax_total       REAL DEFAULT 0,
+  grand_total     REAL DEFAULT 0,
+  total_profit    REAL DEFAULT 0,
+  paid_amount     REAL DEFAULT 0,
+  status          VARCHAR(20) DEFAULT 'paid',  -- paid/partial/unpaid/cancelled
+  notes           VARCHAR(500),
+  cashier_id      BIGINT REFERENCES users(id) ON DELETE SET NULL,
+  invoice_date    DATE DEFAULT CURRENT_DATE,
+  created_at      TIMESTAMPTZ DEFAULT NOW(),
+  updated_at      TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX idx_si_company ON sales_invoices(company_id);
+CREATE INDEX idx_si_customer ON sales_invoices(customer_id);
+CREATE INDEX idx_si_supplier ON sales_invoices(supplier_id);
+CREATE INDEX idx_si_date ON sales_invoices(invoice_date);
+
+CREATE TABLE sales_invoice_items (
+  id              BIGSERIAL PRIMARY KEY,
+  invoice_id      BIGINT REFERENCES sales_invoices(id) ON DELETE CASCADE,
+  product_id      BIGINT REFERENCES products(id) ON DELETE CASCADE,
+  batch_id        BIGINT REFERENCES batches(id) ON DELETE SET NULL,
+  quantity        INTEGER NOT NULL DEFAULT 0,
+  unit_price      REAL DEFAULT 0,
+  discount        REAL DEFAULT 0,
+  sale_discount   REAL DEFAULT 0,
+  cost_price      REAL DEFAULT 0,
+  profit          REAL DEFAULT 0,
+  total           REAL DEFAULT 0
+);
+CREATE INDEX idx_sii_invoice ON sales_invoice_items(invoice_id);
+CREATE INDEX idx_sii_product ON sales_invoice_items(product_id);
+
+-- ============================================================
+-- 7) حركات المخزون والتسويات والجرد
+-- ============================================================
+
+CREATE TABLE inventory_movements (
+  id              BIGSERIAL PRIMARY KEY,
+  company_id      BIGINT REFERENCES companies(id) ON DELETE CASCADE,
+  product_id      BIGINT REFERENCES products(id) ON DELETE CASCADE,
+  batch_id        BIGINT REFERENCES batches(id) ON DELETE SET NULL,
+  movement_type   VARCHAR(20) NOT NULL,  -- in/out/adjust/loss/return
+  reference_type  VARCHAR(30),  -- receipt/invoice/adjustment/stocktake
+  reference_id    BIGINT,
+  quantity        INTEGER NOT NULL,
+  unit_cost       REAL DEFAULT 0,
+  balance_after   INTEGER DEFAULT 0,
+  notes           VARCHAR(255),
+  user_id         BIGINT REFERENCES users(id) ON DELETE SET NULL,
+  created_at      TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX idx_im_company ON inventory_movements(company_id);
+CREATE INDEX idx_im_product ON inventory_movements(product_id);
+CREATE INDEX idx_im_type ON inventory_movements(movement_type);
+CREATE INDEX idx_im_date ON inventory_movements(created_at);
+
+CREATE TABLE stock_adjustments (
+  id              BIGSERIAL PRIMARY KEY,
+  company_id      BIGINT REFERENCES companies(id) ON DELETE CASCADE,
+  adjustment_number VARCHAR(30) NOT NULL,
+  type            VARCHAR(20) NOT NULL,  -- damage/loss/count_diff/expiry
+  status          VARCHAR(20) DEFAULT 'pending',  -- pending/approved
+  notes           VARCHAR(500),
+  created_by      BIGINT REFERENCES users(id) ON DELETE SET NULL,
+  approved_by     BIGINT REFERENCES users(id) ON DELETE SET NULL,
+  created_at      TIMESTAMPTZ DEFAULT NOW(),
+  updated_at      TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX idx_sa_company ON stock_adjustments(company_id);
+
+CREATE TABLE stock_adjustment_items (
+  id              BIGSERIAL PRIMARY KEY,
+  adjustment_id   BIGINT REFERENCES stock_adjustments(id) ON DELETE CASCADE,
+  product_id      BIGINT REFERENCES products(id) ON DELETE CASCADE,
+  batch_id        BIGINT REFERENCES batches(id) ON DELETE SET NULL,
+  system_qty      INTEGER DEFAULT 0,
+  actual_qty      INTEGER DEFAULT 0,
+  difference      INTEGER DEFAULT 0,
+  unit_cost       REAL DEFAULT 0,
+  notes           VARCHAR(255)
 );
 
-create table if not exists public.movements (
-  id uuid primary key default gen_random_uuid(),
-  tenant_id uuid not null references public.tenants(id) on delete cascade,
-  product_id uuid not null references public.products(id) on delete cascade,
-  batch_id uuid references public.batches(id) on delete set null,
-  batch_no text,
-  type text not null check (type in ('in', 'out')),
-  quantity integer not null,
-  reference text,
-  note text,
-  created_at timestamptz not null default now()
+-- ============================================================
+-- 8) الحضور والرواتب
+-- ============================================================
+
+CREATE TABLE attendance (
+  id              BIGSERIAL PRIMARY KEY,
+  company_id      BIGINT REFERENCES companies(id) ON DELETE CASCADE,
+  user_id         BIGINT REFERENCES users(id) ON DELETE CASCADE,
+  att_date        DATE NOT NULL DEFAULT CURRENT_DATE,
+  check_in        TIMESTAMPTZ,
+  check_out       TIMESTAMPTZ,
+  work_hours      REAL DEFAULT 0,
+  status          VARCHAR(20) DEFAULT 'present',  -- present/absent/late/leave
+  notes           VARCHAR(255),
+  created_at      TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(user_id, att_date)
+);
+CREATE INDEX idx_att_company ON attendance(company_id);
+CREATE INDEX idx_att_date ON attendance(att_date);
+
+CREATE TABLE payroll (
+  id              BIGSERIAL PRIMARY KEY,
+  company_id      BIGINT REFERENCES companies(id) ON DELETE CASCADE,
+  user_id         BIGINT REFERENCES users(id) ON DELETE CASCADE,
+  month           SMALLINT NOT NULL,  -- 1-12
+  year            SMALLINT NOT NULL,
+  basic_salary    REAL DEFAULT 0,
+  deductions      REAL DEFAULT 0,
+  bonuses         REAL DEFAULT 0,
+  overtime        REAL DEFAULT 0,
+  net_salary      REAL DEFAULT 0,
+  status          VARCHAR(20) DEFAULT 'pending',  -- pending/paid
+  paid_at         TIMESTAMPTZ,
+  notes           VARCHAR(255),
+  created_at      TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(user_id, month, year)
+);
+CREATE INDEX idx_payroll_company ON payroll(company_id);
+
+CREATE TABLE deductions (
+  id              BIGSERIAL PRIMARY KEY,
+  company_id      BIGINT REFERENCES companies(id) ON DELETE CASCADE,
+  user_id         BIGINT REFERENCES users(id) ON DELETE CASCADE,
+  amount          REAL NOT NULL,
+  reason          VARCHAR(200),
+  ded_date        DATE DEFAULT CURRENT_DATE,
+  created_by      BIGINT REFERENCES users(id) ON DELETE SET NULL,
+  created_at      TIMESTAMPTZ DEFAULT NOW()
 );
 
-create table if not exists public.invoices (
-  id uuid primary key default gen_random_uuid(),
-  tenant_id uuid not null references public.tenants(id) on delete cascade,
-  invoice_no text not null,
-  type text not null check (type in ('sale', 'purchase')),
-  party_id uuid,
-  party_name text,
-  items jsonb not null,
-  subtotal numeric,
-  discount numeric,
-  tax numeric,
-  total numeric,
-  user_name text,
-  created_at timestamptz not null default now(),
-  unique (tenant_id, invoice_no)
+CREATE TABLE bonuses (
+  id              BIGSERIAL PRIMARY KEY,
+  company_id      BIGINT REFERENCES companies(id) ON DELETE CASCADE,
+  user_id         BIGINT REFERENCES users(id) ON DELETE CASCADE,
+  amount          REAL NOT NULL,
+  reason          VARCHAR(200),
+  bonus_date      DATE DEFAULT CURRENT_DATE,
+  created_by      BIGINT REFERENCES users(id) ON DELETE SET NULL,
+  created_at      TIMESTAMPTZ DEFAULT NOW()
 );
 
-create table if not exists public.purchase_orders (
-  id uuid primary key default gen_random_uuid(),
-  order_no text not null,
-  from_tenant uuid not null references public.tenants(id) on delete cascade,
-  to_tenant uuid not null references public.tenants(id) on delete cascade,
-  items jsonb not null,
-  total numeric,
-  status text not null default 'pending' check (status in ('pending', 'approved', 'received')),
-  note text,
-  created_at timestamptz not null default now(),
-  unique (from_tenant, order_no)
+-- ============================================================
+-- 9) المصاريف
+-- ============================================================
+
+CREATE TABLE expenses (
+  id              BIGSERIAL PRIMARY KEY,
+  company_id      BIGINT REFERENCES companies(id) ON DELETE CASCADE,
+  category        VARCHAR(50) NOT NULL,  -- rent/salary/utilities/transport/other
+  amount          REAL NOT NULL,
+  description     VARCHAR(255),
+  expense_date    DATE DEFAULT CURRENT_DATE,
+  user_id         BIGINT REFERENCES users(id) ON DELETE SET NULL,
+  created_at      TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX idx_exp_company ON expenses(company_id);
+CREATE INDEX idx_exp_date ON expenses(expense_date);
+
+-- ============================================================
+-- 10) الشات
+-- ============================================================
+
+CREATE TABLE chat_conversations (
+  id              BIGSERIAL PRIMARY KEY,
+  company_id      BIGINT REFERENCES companies(id) ON DELETE CASCADE,
+  type            VARCHAR(20) DEFAULT 'direct',  -- direct/group/inter_company
+  title           VARCHAR(150),
+  created_by      BIGINT REFERENCES users(id) ON DELETE SET NULL,
+  last_message_at TIMESTAMPTZ DEFAULT NOW(),
+  created_at      TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX idx_cc_company ON chat_conversations(company_id);
+
+CREATE TABLE chat_participants (
+  id              BIGSERIAL PRIMARY KEY,
+  conversation_id BIGINT REFERENCES chat_conversations(id) ON DELETE CASCADE,
+  user_id         BIGINT REFERENCES users(id) ON DELETE CASCADE,
+  last_read_at    TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(conversation_id, user_id)
 );
 
-create table if not exists public.messages (
-  id uuid primary key default gen_random_uuid(),
-  from_tenant uuid not null references public.tenants(id) on delete cascade,
-  to_tenant uuid not null references public.tenants(id) on delete cascade,
-  sender_user text,
-  text text not null,
-  read boolean not null default false,
-  created_at timestamptz not null default now()
+CREATE TABLE chat_messages (
+  id              BIGSERIAL PRIMARY KEY,
+  conversation_id BIGINT REFERENCES chat_conversations(id) ON DELETE CASCADE,
+  sender_id       BIGINT REFERENCES users(id) ON DELETE SET NULL,
+  content         VARCHAR(2000),
+  message_type    VARCHAR(20) DEFAULT 'text',  -- text/file/image
+  created_at      TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX idx_cm_conv ON chat_messages(conversation_id);
+CREATE INDEX idx_cm_created ON chat_messages(created_at);
+
+CREATE TABLE chat_files (
+  id              BIGSERIAL PRIMARY KEY,
+  message_id      BIGINT REFERENCES chat_messages(id) ON DELETE CASCADE,
+  file_url        VARCHAR(255) NOT NULL,
+  file_name       VARCHAR(150),
+  file_size       INTEGER,
+  file_type       VARCHAR(50)
 );
 
-create index if not exists idx_users_tenant_id on public.users (tenant_id);
-create index if not exists idx_products_tenant_category on public.products (tenant_id, category);
-create index if not exists idx_batches_tenant_product_expiry on public.batches (tenant_id, product_id, expiry_date);
-create index if not exists idx_movements_tenant_product_created_at on public.movements (tenant_id, product_id, created_at desc);
-create index if not exists idx_invoices_tenant_type_created_at on public.invoices (tenant_id, type, created_at desc);
-create index if not exists idx_purchase_orders_from_status_created_at on public.purchase_orders (from_tenant, status, created_at desc);
-create index if not exists idx_purchase_orders_to_status_created_at on public.purchase_orders (to_tenant, status, created_at desc);
-create index if not exists idx_messages_from_created_at on public.messages (from_tenant, created_at desc);
-create index if not exists idx_messages_to_read_created_at on public.messages (to_tenant, read, created_at desc);
+-- ============================================================
+-- 11) الإشعارات وسجل النشاط
+-- ============================================================
 
-create or replace function public.jwt_tenant_id()
-returns text
-language sql
-stable
-as $$
-  select coalesce(
-    auth.jwt() ->> 'tenant_id',
-    auth.jwt() -> 'app_metadata' ->> 'tenant_id',
-    auth.jwt() -> 'user_metadata' ->> 'tenant_id'
-  );
-$$;
+CREATE TABLE notifications (
+  id              BIGSERIAL PRIMARY KEY,
+  company_id      BIGINT REFERENCES companies(id) ON DELETE CASCADE,
+  user_id         BIGINT REFERENCES users(id) ON DELETE CASCADE,
+  title           VARCHAR(150) NOT NULL,
+  body            VARCHAR(500),
+  type            VARCHAR(30),  -- expiry/low_stock/invoice/message/system
+  reference_id    BIGINT,
+  is_read         BOOLEAN DEFAULT FALSE,
+  created_at      TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX idx_notif_user ON notifications(user_id);
+CREATE INDEX idx_notif_read ON notifications(is_read);
+CREATE INDEX idx_notif_created ON notifications(created_at);
 
-create or replace function public.jwt_is_super()
-returns boolean
-language sql
-stable
-as $$
-  select coalesce(
-    auth.jwt() -> 'app_metadata' ->> 'role',
-    auth.jwt() -> 'user_metadata' ->> 'role',
-    auth.jwt() ->> 'app_role',
-    auth.jwt() ->> 'role'
-  ) = 'super';
-$$;
+CREATE TABLE activity_log (
+  id              BIGSERIAL PRIMARY KEY,
+  company_id      BIGINT REFERENCES companies(id) ON DELETE CASCADE,
+  user_id         BIGINT REFERENCES users(id) ON DELETE SET NULL,
+  action          VARCHAR(60) NOT NULL,
+  module          VARCHAR(40),
+  reference_id    BIGINT,
+  details         VARCHAR(500),
+  ip_address      VARCHAR(45),
+  created_at      TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX idx_al_company ON activity_log(company_id);
+CREATE INDEX idx_al_user ON activity_log(user_id);
+CREATE INDEX idx_al_created ON activity_log(created_at);
 
-alter table public.tenants enable row level security;
-alter table public.users enable row level security;
-alter table public.products enable row level security;
-alter table public.batches enable row level security;
-alter table public.movements enable row level security;
-alter table public.invoices enable row level security;
-alter table public.purchase_orders enable row level security;
-alter table public.messages enable row level security;
+-- ============================================================
+-- 12) روابط المشاركة + مدفوعات الأدمن + إعدادات النظام
+-- ============================================================
 
--- The plaintext custom-login prototype uses anon, so this policy intentionally
--- permits all anon operations. Authenticated policies below enforce JWT tenancy.
-drop policy if exists prototype_anon_all_access_tenants on public.tenants;
-create policy prototype_anon_all_access_tenants on public.tenants
-  for all to anon using (true) with check (true);
-drop policy if exists authenticated_tenant_access_tenants on public.tenants;
-create policy authenticated_tenant_access_tenants on public.tenants
-  for all to authenticated
-  using (public.jwt_is_super() or id::text = public.jwt_tenant_id())
-  with check (public.jwt_is_super() or id::text = public.jwt_tenant_id());
+CREATE TABLE share_links (
+  id              BIGSERIAL PRIMARY KEY,
+  company_id      BIGINT REFERENCES companies(id) ON DELETE CASCADE,
+  token           VARCHAR(64) UNIQUE NOT NULL,
+  resource_type   VARCHAR(30) NOT NULL,  -- purchase_request/invoice
+  resource_id     BIGINT NOT NULL,
+  expires_at      TIMESTAMPTZ,
+  views           INTEGER DEFAULT 0,
+  created_by      BIGINT REFERENCES users(id) ON DELETE SET NULL,
+  created_at      TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX idx_sl_token ON share_links(token);
 
-drop policy if exists prototype_anon_all_access_users on public.users;
-create policy prototype_anon_all_access_users on public.users
-  for all to anon using (true) with check (true);
-drop policy if exists authenticated_tenant_access_users on public.users;
-create policy authenticated_tenant_access_users on public.users
-  for all to authenticated
-  using (public.jwt_is_super() or tenant_id::text = public.jwt_tenant_id())
-  with check (public.jwt_is_super() or tenant_id::text = public.jwt_tenant_id());
+CREATE TABLE admin_payments (
+  id              BIGSERIAL PRIMARY KEY,
+  company_id      BIGINT REFERENCES companies(id) ON DELETE CASCADE,
+  amount          REAL NOT NULL,
+  payment_date    DATE DEFAULT CURRENT_DATE,
+  due_date        DATE,
+  status          VARCHAR(20) DEFAULT 'pending',  -- pending/paid/overdue
+  method          VARCHAR(30),  -- cash/transfer/vodafone
+  notes           VARCHAR(255),
+  created_at      TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX idx_ap_company ON admin_payments(company_id);
 
-drop policy if exists prototype_anon_all_access_products on public.products;
-create policy prototype_anon_all_access_products on public.products
-  for all to anon using (true) with check (true);
-drop policy if exists authenticated_tenant_access_products on public.products;
-create policy authenticated_tenant_access_products on public.products
-  for all to authenticated
-  using (public.jwt_is_super() or tenant_id::text = public.jwt_tenant_id())
-  with check (public.jwt_is_super() or tenant_id::text = public.jwt_tenant_id());
+CREATE TABLE system_settings (
+  id              BIGSERIAL PRIMARY KEY,
+  key             VARCHAR(60) UNIQUE NOT NULL,
+  value           VARCHAR(500),
+  description     VARCHAR(255),
+  updated_at      TIMESTAMPTZ DEFAULT NOW()
+);
 
-drop policy if exists prototype_anon_all_access_batches on public.batches;
-create policy prototype_anon_all_access_batches on public.batches
-  for all to anon using (true) with check (true);
-drop policy if exists authenticated_tenant_access_batches on public.batches;
-create policy authenticated_tenant_access_batches on public.batches
-  for all to authenticated
-  using (public.jwt_is_super() or tenant_id::text = public.jwt_tenant_id())
-  with check (public.jwt_is_super() or tenant_id::text = public.jwt_tenant_id());
+-- ============================================================
+-- 13) Triggers لتحديث updated_at تلقائياً
+-- ============================================================
 
-drop policy if exists prototype_anon_all_access_movements on public.movements;
-create policy prototype_anon_all_access_movements on public.movements
-  for all to anon using (true) with check (true);
-drop policy if exists authenticated_tenant_access_movements on public.movements;
-create policy authenticated_tenant_access_movements on public.movements
-  for all to authenticated
-  using (public.jwt_is_super() or tenant_id::text = public.jwt_tenant_id())
-  with check (public.jwt_is_super() or tenant_id::text = public.jwt_tenant_id());
+CREATE OR REPLACE FUNCTION update_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
-drop policy if exists prototype_anon_all_access_invoices on public.invoices;
-create policy prototype_anon_all_access_invoices on public.invoices
-  for all to anon using (true) with check (true);
-drop policy if exists authenticated_tenant_access_invoices on public.invoices;
-create policy authenticated_tenant_access_invoices on public.invoices
-  for all to authenticated
-  using (public.jwt_is_super() or tenant_id::text = public.jwt_tenant_id())
-  with check (public.jwt_is_super() or tenant_id::text = public.jwt_tenant_id());
+DO $$
+DECLARE
+  t TEXT;
+BEGIN
+  FOR t IN
+    SELECT table_name FROM information_schema.columns
+    WHERE column_name = 'updated_at' AND table_schema = 'public'
+  LOOP
+    EXECUTE format('CREATE TRIGGER trg_%I_updated BEFORE UPDATE ON %I
+                    FOR EACH ROW EXECUTE FUNCTION update_updated_at()', t, t);
+  END LOOP;
+END $$;
 
-drop policy if exists prototype_anon_all_access_purchase_orders on public.purchase_orders;
-create policy prototype_anon_all_access_purchase_orders on public.purchase_orders
-  for all to anon using (true) with check (true);
-drop policy if exists authenticated_tenant_access_purchase_orders on public.purchase_orders;
-create policy authenticated_tenant_access_purchase_orders on public.purchase_orders
-  for all to authenticated
-  using (
-    public.jwt_is_super()
-    or from_tenant::text = public.jwt_tenant_id()
-    or to_tenant::text = public.jwt_tenant_id()
-  )
-  with check (
-    public.jwt_is_super()
-    or from_tenant::text = public.jwt_tenant_id()
-    or to_tenant::text = public.jwt_tenant_id()
-  );
+-- ============================================================
+-- 14) Trigger لخصم الكمية من التشغيلة عند البيع
+-- ============================================================
 
-drop policy if exists prototype_anon_all_access_messages on public.messages;
-create policy prototype_anon_all_access_messages on public.messages
-  for all to anon using (true) with check (true);
-drop policy if exists authenticated_tenant_access_messages on public.messages;
-create policy authenticated_tenant_access_messages on public.messages
-  for all to authenticated
-  using (
-    public.jwt_is_super()
-    or from_tenant::text = public.jwt_tenant_id()
-    or to_tenant::text = public.jwt_tenant_id()
-  )
-  with check (
-    public.jwt_is_super()
-    or from_tenant::text = public.jwt_tenant_id()
-    or to_tenant::text = public.jwt_tenant_id()
-  );
+CREATE OR REPLACE FUNCTION decrement_batch_qty()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW.batch_id IS NOT NULL THEN
+    UPDATE batches
+    SET quantity_left = quantity_left - NEW.quantity
+    WHERE id = NEW.batch_id;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
-grant usage on schema public to anon, authenticated;
-grant select, insert, update, delete on public.tenants to anon, authenticated;
-grant select, insert, update, delete on public.users to anon, authenticated;
-grant select, insert, update, delete on public.products to anon, authenticated;
-grant select, insert, update, delete on public.batches to anon, authenticated;
-grant select, insert, update, delete on public.movements to anon, authenticated;
-grant select, insert, update, delete on public.invoices to anon, authenticated;
-grant select, insert, update, delete on public.purchase_orders to anon, authenticated;
-grant select, insert, update, delete on public.messages to anon, authenticated;
+CREATE TRIGGER trg_sii_decrement
+AFTER INSERT ON sales_invoice_items
+FOR EACH ROW EXECUTE FUNCTION decrement_batch_qty();
 
-alter table public.messages replica identity full;
-do $$
-begin
-  if exists (select 1 from pg_publication where pubname = 'supabase_realtime')
-     and not exists (
-       select 1
-       from pg_publication_tables
-       where pubname = 'supabase_realtime'
-         and schemaname = 'public'
-         and tablename = 'messages'
-     ) then
-    alter publication supabase_realtime add table public.messages;
-  end if;
-exception
-  when undefined_object then null;
-end;
-$$;
+-- ============================================================
+-- 15) Trigger لحذف الإشعارات الأقدم من 30 يوم
+-- ============================================================
 
-insert into public.tenants (type, name, phone, address, tax_id, license, active)
-values
-  ('company', 'شركة الشفاء', '01123456789', 'الرياض، حي العليا', '310123456700003', 'PH-C-2026-001', true),
-  ('pharmacy', 'صيدلية النور', '01234567890', 'جدة، حي الروضة', '310987654300003', 'PH-P-2026-002', true)
-on conflict (name) do update set
-  type = excluded.type,
-  phone = excluded.phone,
-  address = excluded.address,
-  tax_id = excluded.tax_id,
-  license = excluded.license,
-  active = excluded.active;
+CREATE OR REPLACE FUNCTION cleanup_old_notifications()
+RETURNS void AS $$
+BEGIN
+  DELETE FROM notifications WHERE created_at < NOW() - INTERVAL '30 days';
+END;
+$$ LANGUAGE plpgsql;
 
-insert into public.users (tenant_id, username, password, name, role, active)
-values
-  (null, 'super', 'super123', 'مدير المنصة', 'super', true),
-  ((select id from public.tenants where name = 'شركة الشفاء'), 'shifa', '123456', 'مدير شركة الشفاء', 'admin', true),
-  ((select id from public.tenants where name = 'صيدلية النور'), 'nour', '123456', 'مدير صيدلية النور', 'admin', true)
-on conflict (username) do update set
-  tenant_id = excluded.tenant_id,
-  password = excluded.password,
-  name = excluded.name,
-  role = excluded.role,
-  active = excluded.active;
+-- ============================================================
+-- 16) بيانات أولية: الصلاحيات
+-- ============================================================
 
-insert into public.products (
-  tenant_id, name, barcode, category, unit, purchase_price, sale_price, min_stock, active
+INSERT INTO permissions (code, name_ar, module) VALUES
+-- الأصناف
+('products.view',    'عرض الأصناف',       'products'),
+('products.create',  'إضافة صنف',         'products'),
+('products.edit',    'تعديل صنف',         'products'),
+('products.delete',  'حذف صنف',           'products'),
+-- المشتريات
+('purchases.view',   'عرض المشتريات',     'purchases'),
+('purchases.create', 'إنشاء طلب شراء',    'purchases'),
+('purchases.edit',   'تعديل مشتريات',     'purchases'),
+('purchases.receive','استلام مشتريات',    'purchases'),
+-- المبيعات
+('sales.view',       'عرض المبيعات',      'sales'),
+('sales.create',     'إنشاء فاتورة',      'sales'),
+('sales.pos',        'استخدام نقطة البيع','sales'),
+('sales.return',     'مرتجع مبيعات',      'sales'),
+-- المخزون
+('inventory.view',   'عرض المخزون',       'inventory'),
+('inventory.adjust', 'تسويات المخزون',    'inventory'),
+('inventory.stocktake','الجرد',           'inventory'),
+-- الموردين
+('suppliers.view',   'عرض الموردين',      'suppliers'),
+('suppliers.create', 'إضافة مورد',        'suppliers'),
+('suppliers.edit',   'تعديل مورد',        'suppliers'),
+-- العملاء
+('customers.view',   'عرض العملاء',       'customers'),
+('customers.create', 'إضافة عميل',        'customers'),
+-- الموظفين
+('employees.view',   'عرض الموظفين',      'employees'),
+('employees.create', 'إضافة موظف',        'employees'),
+('employees.edit',   'تعديل موظف',        'employees'),
+('permissions.manage','إدارة الصلاحيات',  'employees'),
+-- الحضور
+('attendance.view',  'عرض الحضور',        'attendance'),
+('attendance.manage','إدارة الحضور',      'attendance'),
+-- الرواتب
+('payroll.view',     'عرض الرواتب',       'payroll'),
+('payroll.manage',   'إدارة الرواتب',     'payroll'),
+-- المصاريف
+('expenses.view',    'عرض المصاريف',      'expenses'),
+('expenses.manage',  'إدارة المصاريف',    'expenses'),
+-- التقارير
+('reports.view',     'عرض التقارير',      'reports'),
+('reports.export',   'تصدير التقارير',    'reports'),
+('notifications.view','عرض الإشعارات',    'notifications'),
+-- الشات
+('chat.use',         'استخدام الشات',     'chat'),
+-- الإعدادات
+('settings.view',    'عرض الإعدادات',     'settings'),
+('settings.manage',  'إدارة الإعدادات',   'settings'),
+-- الأدمن
+('admin.full',       'صلاحيات المطور',    'admin');
+
+-- ============================================================
+-- 17) بيانات أولية: الشركة الافتراضية + دور المدير + المستخدم admin
+-- ============================================================
+
+INSERT INTO companies (id, name, phone, email, address, is_active)
+VALUES (1, 'شركة رفاد التجريبية', '01000000000', 'info@refad.com', 'القاهرة، مصر', TRUE);
+
+INSERT INTO roles (id, company_id, name, name_ar, description, is_system, is_owner)
+VALUES (1, 1, 'admin', 'صاحب الشركة', 'مدير الشركة', TRUE, TRUE);
+
+-- صلاحيات الشركة لا تتضمن صلاحية إدارة كل الشركات
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT 1, id FROM permissions WHERE code <> 'admin.full';
+
+INSERT INTO users (id, company_id, role_id, username, password, full_name, is_active, has_device)
+VALUES (1, 1, 1, 'admin', '22446688', 'صاحب الشركة', TRUE, TRUE);
+
+INSERT INTO roles (id, company_id, name, name_ar, description, is_system, is_owner)
+VALUES (2, NULL, 'superadmin', 'مدير الشركات', 'إدارة جميع الشركات', TRUE, FALSE);
+
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT 2, id FROM permissions;
+
+INSERT INTO users (id, company_id, role_id, username, password, full_name, is_active, has_device)
+VALUES (2, NULL, 2, 'superadmin', '22446688', 'مدير الشركات', TRUE, TRUE);
+
+SELECT setval(pg_get_serial_sequence('roles', 'id'), (SELECT MAX(id) FROM roles), TRUE);
+SELECT setval(pg_get_serial_sequence('users', 'id'), (SELECT MAX(id) FROM users), TRUE);
+
+-- ============================================================
+-- 18) إعدادات النظام الافتراضية
+-- ============================================================
+
+INSERT INTO system_settings (key, value, description) VALUES
+('system_name',        'رفاد',            'اسم النظام'),
+('system_version',     '1.0.0',           'إصدار النظام'),
+('default_currency',   'EGP',             'العملة الافتراضية'),
+('session_hours',      '8',               'مدة الجلسة بالساعات'),
+('idle_timeout_min',   '30',              'مدة الخمول قبل الخروج'),
+('max_login_attempts', '5',               'عدد محاولات الدخول'),
+('lock_duration_min',  '15',              'مدة القفل بالدقائق'),
+('notif_retention_days','30',             'الاحتفاظ بالإشعارات بالأيام'),
+('chat_retention_msgs','500',             'الاحتفاظ برسائل الشات'),
+('expiry_alert_days',  '90',              'تنبيه الصلاحية قبل أيام');
+
+-- ============================================================
+-- 19) فهارس إضافية لتحسين الأداء
+-- ============================================================
+
+CREATE INDEX idx_batches_qty_left ON batches(quantity_left) WHERE quantity_left > 0;
+CREATE INDEX idx_invoices_status ON sales_invoices(status);
+CREATE INDEX idx_receipts_date ON receipts(receipt_date);
+CREATE INDEX idx_im_ref ON inventory_movements(reference_type, reference_id);
+
+-- ============================================================
+-- ✅ انتهى الملف
+-- ============================================================
+-- ملاحظات ما بعد التنفيذ:
+-- 1. شغّل هذا الملف كاملاً في Supabase SQL Editor
+-- 2. تأكد من نجاح كل الأوامر بدون أخطاء
+-- 3. حساب الشركة: admin / 22446688، ومدير الشركات: superadmin / 22446688
+-- 4. في قاعدة موجودة، شغّل superadmin-setup.sql بدلاً من إعادة تشغيل هذا الملف.
+-- 5. لتفعيل الحذف الدوري للإشعارات (اختياري):
+--    SELECT cron.schedule('cleanup_notifs','0 3 * * *',
+--      $$SELECT cleanup_old_notifications()$$);
+-- ============================================================
+
+-- 1) أضف عمود currency للجدول (لو مش موجود)
+ALTER TABLE companies ADD COLUMN IF NOT EXISTS currency VARCHAR(5) DEFAULT 'EGP';
+
+-- 2) أنشئ bucket للشعارات
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('logos', 'logos', true)
+ON CONFLICT (id) DO NOTHING;
+
+-- 3) سياسات bucket للقراءة والرفع
+DROP POLICY IF EXISTS "Public read logos" ON storage.objects;
+DROP POLICY IF EXISTS "Public upload logos" ON storage.objects;
+
+CREATE POLICY "Public read logos" ON storage.objects
+  FOR SELECT USING (bucket_id = 'logos');
+
+CREATE POLICY "Public upload logos" ON storage.objects
+  FOR INSERT WITH CHECK (bucket_id = 'logos');
+
+CREATE POLICY "Public update logos" ON storage.objects
+  FOR UPDATE USING (bucket_id = 'logos');
+
+CREATE POLICY "Public delete logos" ON storage.objects
+  FOR DELETE USING (bucket_id = 'logos');
+
+  -- إنشاء bucket للشات (public)
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES (
+  'chat-files',
+  'chat-files',
+  true,
+  10485760,  -- 10 MB
+  ARRAY['image/jpeg','image/png','image/gif','image/webp','application/pdf',
+        'application/msword','application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/vnd.ms-excel','application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'text/plain','application/zip','application/x-rar-compressed']
 )
-values
-  ((select id from public.tenants where name = 'شركة الشفاء'), 'بنادول إكسترا', '5000158107892', 'مسكنات', 'علبة', 12.00, 18.50, 20, true),
-  ((select id from public.tenants where name = 'شركة الشفاء'), 'أوجمنتين 625', '5000283009441', 'مضادات حيوية', 'علبة', 51.00, 68.00, 10, true),
-  ((select id from public.tenants where name = 'شركة الشفاء'), 'فيتامين د3 1000 وحدة', '8712561484171', 'فيتامينات', 'علبة', 21.00, 32.00, 15, true),
-  ((select id from public.tenants where name = 'شركة الشفاء'), 'كونجستال', '6223001360131', 'برد وحساسية', 'علبة', 14.50, 22.00, 18, true),
-  ((select id from public.tenants where name = 'شركة الشفاء'), 'كتافلام 50', '6223001360407', 'مسكنات', 'علبة', 19.00, 28.00, 12, true),
-  ((select id from public.tenants where name = 'صيدلية النور'), 'بروفين 400', '6281007021465', 'مسكنات', 'علبة', 10.00, 16.00, 25, true),
-  ((select id from public.tenants where name = 'صيدلية النور'), 'زيرتك 10', '3574660258234', 'حساسية', 'علبة', 16.00, 24.00, 12, true),
-  ((select id from public.tenants where name = 'صيدلية النور'), 'أوميبرازول 20', '6281100290119', 'جهاز هضمي', 'علبة', 18.00, 29.00, 15, true)
-on conflict (barcode) do update set
-  tenant_id = excluded.tenant_id,
-  name = excluded.name,
-  category = excluded.category,
-  unit = excluded.unit,
-  purchase_price = excluded.purchase_price,
-  sale_price = excluded.sale_price,
-  min_stock = excluded.min_stock,
-  active = excluded.active;
+ON CONFLICT (id) DO NOTHING;
 
-insert into public.batches (tenant_id, product_id, batch_no, expiry_date, quantity, cost)
-select t.id, p.id, seed.batch_no, seed.expiry_date, seed.quantity, seed.cost
-from (
-  values
-    ('شركة الشفاء', '5000158107892', 'PX2401', date '2026-10-05', 120, 12.00::numeric),
-    ('شركة الشفاء', '5000158107892', 'PX2507', date '2028-07-31', 180, 12.50::numeric),
-    ('شركة الشفاء', '5000283009441', 'AG2502', date '2027-02-28', 54, 51.00::numeric),
-    ('شركة الشفاء', '8712561484171', 'D32401', date '2026-11-15', 90, 21.00::numeric),
-    ('شركة الشفاء', '6223001360131', 'CG2505', date '2028-05-31', 75, 14.50::numeric),
-    ('شركة الشفاء', '6223001360407', 'CF2411', date '2027-11-30', 65, 19.00::numeric),
-    ('صيدلية النور', '6281007021465', 'IB2409', date '2026-09-30', 140, 10.00::numeric),
-    ('صيدلية النور', '3574660258234', 'ZT2503', date '2027-03-31', 60, 16.00::numeric),
-    ('صيدلية النور', '6281100290119', 'OM2506', date '2029-06-30', 110, 18.00::numeric)
-) as seed(tenant_name, barcode, batch_no, expiry_date, quantity, cost)
-join public.tenants t on t.name = seed.tenant_name
-join public.products p on p.tenant_id = t.id and p.barcode = seed.barcode
-on conflict (tenant_id, product_id, batch_no) do update set
-  expiry_date = excluded.expiry_date,
-  quantity = excluded.quantity,
-  cost = excluded.cost;
+-- سياسات مفتوحة (لأن RLS معطّل على الجداول)
+-- ملاحظة: Storage له RLS منفصل
+CREATE POLICY "Public chat-files access"
+  ON storage.objects FOR SELECT
+  USING (bucket_id = 'chat-files');
 
-insert into public.movements (
-  id, tenant_id, product_id, batch_id, batch_no, type, quantity, reference, note
-)
-select
-  '00000000-0000-4000-8000-000000000101'::uuid,
-  t.id,
-  p.id,
-  b.id,
-  b.batch_no,
-  'in',
-  120,
-  'OPEN-SHF-001',
-  'رصيد افتتاحي'
-from public.tenants t
-join public.products p on p.tenant_id = t.id and p.barcode = '5000158107892'
-join public.batches b on b.product_id = p.id and b.batch_no = 'PX2401'
-where t.name = 'شركة الشفاء'
-on conflict (id) do update set
-  tenant_id = excluded.tenant_id,
-  product_id = excluded.product_id,
-  batch_id = excluded.batch_id,
-  batch_no = excluded.batch_no,
-  type = excluded.type,
-  quantity = excluded.quantity,
-  reference = excluded.reference,
-  note = excluded.note;
+CREATE POLICY "Anyone can upload chat-files"
+  ON storage.objects FOR INSERT
+  WITH CHECK (bucket_id = 'chat-files');
 
-insert into public.invoices (
-  tenant_id, invoice_no, type, party_id, party_name, items, subtotal, discount, tax, total, user_name
-)
-select
-  shifa.id,
-  'INV-SHF-001',
-  'sale',
-  nour.id,
-  nour.name,
-  jsonb_build_array(jsonb_build_object(
-    'product_id', p.id,
-    'name', p.name,
-    'barcode', p.barcode,
-    'quantity', 2,
-    'price', 18.50
-  )),
-  37.00,
-  0,
-  5.55,
-  42.55,
-  'shifa'
-from public.tenants shifa
-join public.tenants nour on nour.name = 'صيدلية النور'
-join public.products p on p.tenant_id = shifa.id and p.barcode = '5000158107892'
-where shifa.name = 'شركة الشفاء'
-on conflict (tenant_id, invoice_no) do update set
-  type = excluded.type,
-  party_id = excluded.party_id,
-  party_name = excluded.party_name,
-  items = excluded.items,
-  subtotal = excluded.subtotal,
-  discount = excluded.discount,
-  tax = excluded.tax,
-  total = excluded.total,
-  user_name = excluded.user_name;
+CREATE POLICY "Anyone can update chat-files"
+  ON storage.objects FOR UPDATE
+  USING (bucket_id = 'chat-files');
 
-insert into public.purchase_orders (
-  order_no, from_tenant, to_tenant, items, total, status, note
-)
-select
-  'PO-SHF-001',
-  shifa.id,
-  nour.id,
-  jsonb_build_array(jsonb_build_object(
-    'product_id', p.id,
-    'name', p.name,
-    'barcode', p.barcode,
-    'quantity', 20,
-    'cost', 12.00
-  )),
-  240.00,
-  'approved',
-  'طلب توريد تجريبي'
-from public.tenants shifa
-join public.tenants nour on nour.name = 'صيدلية النور'
-join public.products p on p.tenant_id = shifa.id and p.barcode = '5000158107892'
-where shifa.name = 'شركة الشفاء'
-on conflict (from_tenant, order_no) do update set
-  to_tenant = excluded.to_tenant,
-  items = excluded.items,
-  total = excluded.total,
-  status = excluded.status,
-  note = excluded.note;
-
-insert into public.messages (id, from_tenant, to_tenant, sender_user, text, read)
-select
-  '00000000-0000-4000-8000-000000000201'::uuid,
-  shifa.id,
-  nour.id,
-  'shifa',
-  'تمت الموافقة على طلب التوريد.',
-  false
-from public.tenants shifa
-join public.tenants nour on nour.name = 'صيدلية النور'
-where shifa.name = 'شركة الشفاء'
-on conflict (id) do update set
-  from_tenant = excluded.from_tenant,
-  to_tenant = excluded.to_tenant,
-  sender_user = excluded.sender_user,
-  text = excluded.text,
-  read = excluded.read;
+CREATE POLICY "Anyone can delete chat-files"
+  ON storage.objects FOR DELETE
+  USING (bucket_id = 'chat-files');

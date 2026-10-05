@@ -1,0 +1,1267 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0B2C4D">
+  <title>الإشعارات - رفاد</title>
+
+  <link rel="icon" type="image/png" href="logo.png">
+  <link rel="manifest" href="manifest.json">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --primary: #0B2C4D;
+      --primary-light: #1e4a73;
+      --accent: #14B8A6;
+      --accent-dark: #0d9488;
+      --gold: #F59E0B;
+      --bg: #F1F5F9;
+      --card: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --danger: #ef4444;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --info: #3b82f6;
+      --sidebar-bg: #0B2C4D;
+      --sidebar-text: #cbd5e1;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+      --shadow: 0 4px 20px rgba(11, 44, 77, 0.08);
+      --shadow-lg: 0 10px 40px rgba(11, 44, 77, 0.12);
+      --radius: 14px;
+      --radius-sm: 10px;
+      --sidebar-w: 260px;
+      --topbar-h: 64px;
+    }
+
+    [data-theme="dark"] {
+      --bg: #0a1628;
+      --card: #0f2137;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --border: #1e3a5f;
+      --sidebar-bg: #061a2e;
+      --sidebar-text: #94a3b8;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Cairo', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      transition: background 0.3s, color 0.3s;
+    }
+
+    body { display: flex; min-height: 100vh; overflow-x: hidden; }
+
+    /* Sidebar */
+    .sidebar {
+      width: var(--sidebar-w);
+      height: 100vh;
+      background: var(--sidebar-bg);
+      color: var(--sidebar-text);
+      position: fixed;
+      top: 0;
+      right: 0;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: -4px 0 20px rgba(0,0,0,0.1);
+    }
+
+    .sidebar-header {
+      padding: 20px 22px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      height: var(--topbar-h);
+      box-sizing: border-box;
+    }
+
+    .sidebar-logo {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 4px 12px rgba(20,184,166,0.4);
+    }
+    .sidebar-logo img { width: 70%; height: 70%; object-fit: contain; }
+    .sidebar-logo .fallback { color: white; font-weight: 800; font-size: 18px; }
+
+    .sidebar-brand h2 { color: white; font-size: 20px; font-weight: 800; letter-spacing: -0.5px; line-height: 1.2; }
+    .sidebar-brand p { font-size: 10px; color: var(--sidebar-text); opacity: 0.7; font-weight: 500; margin-top: 2px; }
+
+    .sidebar-nav { flex: 1; overflow-y: auto; padding: 12px 0; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.15) transparent; }
+    .sidebar-nav::-webkit-scrollbar { width: 5px; }
+    .sidebar-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 10px; }
+
+    .nav-section { padding: 8px 20px 4px; font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 1px; margin-top: 8px; }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 22px;
+      color: var(--sidebar-text);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      border-right: 3px solid transparent;
+      transition: all 0.2s;
+      position: relative;
+      cursor: pointer;
+    }
+    .nav-item:hover { background: rgba(255,255,255,0.05); color: white; border-right-color: rgba(20,184,166,0.5); }
+    .nav-item.active { background: rgba(20,184,166,0.12); color: white; border-right-color: var(--accent); font-weight: 600; }
+    .nav-item.active::before { content: ''; position: absolute; right: 0; top: 50%; transform: translateY(-50%); width: 3px; height: 60%; background: var(--accent); border-radius: 0 4px 4px 0; }
+    .nav-item i, .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; opacity: 0.85; }
+    .nav-item .badge { margin-right: auto; background: var(--danger); color: white; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
+    .nav-item .badge.teal { background: var(--accent); }
+    .nav-item .badge.gold { background: var(--gold); }
+
+    /* Main */
+    .main { flex: 1; margin-right: var(--sidebar-w); min-width: 0; display: flex; flex-direction: column; }
+
+    .topbar {
+      height: var(--topbar-h);
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 0 24px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .menu-toggle { display: none; background: transparent; border: none; color: var(--text); cursor: pointer; padding: 8px; border-radius: 8px; }
+    .menu-toggle:hover { background: var(--bg); }
+
+    .topbar-title { font-size: 18px; font-weight: 700; color: var(--text); flex-shrink: 0; }
+    .topbar-actions { display: flex; align-items: center; gap: 8px; margin-right: auto; }
+
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      transition: all 0.2s;
+    }
+    .icon-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .icon-btn i, .icon-btn svg { width: 18px; height: 18px; }
+    .icon-btn .dot { position: absolute; top: 8px; left: 8px; width: 8px; height: 8px; background: var(--danger); border-radius: 50%; border: 2px solid var(--card); }
+
+    .user-menu {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 5px 12px 5px 5px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.2s;
+      border: 1px solid var(--border);
+      background: var(--card);
+    }
+    .user-menu:hover { background: var(--bg); }
+
+    .user-avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 700;
+      font-size: 14px;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .user-info { display: flex; flex-direction: column; line-height: 1.2; }
+    .user-info .name { font-size: 13px; font-weight: 700; color: var(--text); }
+    .user-info .role { font-size: 11px; color: var(--text-muted); }
+
+    .dropdown { position: absolute; top: calc(100% + 8px); left: 0; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: var(--shadow-lg); min-width: 200px; padding: 6px; opacity: 0; visibility: hidden; transform: translateY(-8px); transition: all 0.2s; z-index: 100; }
+    .dropdown.show { opacity: 1; visibility: visible; transform: translateY(0); }
+    .dropdown-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; color: var(--text); font-size: 13px; font-weight: 500; cursor: pointer; transition: background 0.15s; text-decoration: none; }
+    .dropdown-item:hover { background: var(--bg); }
+    .dropdown-item.danger { color: var(--danger); }
+    .dropdown-item.danger:hover { background: rgba(239,68,68,0.08); }
+    .dropdown-item i { width: 16px; height: 16px; }
+    .dropdown-divider { height: 1px; background: var(--border); margin: 6px 0; }
+
+    /* Content */
+    .content { padding: 24px; flex: 1; max-width: 1000px; margin: 0 auto; width: 100%; }
+
+    .page-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .page-head h1 { font-size: 24px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+    .page-head p { font-size: 13px; color: var(--text-muted); }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: var(--radius-sm);
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn i { width: 16px; height: 16px; }
+
+    .btn-primary { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; }
+    .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(20,184,166,0.35); }
+
+    .btn-outline { background: var(--card); color: var(--text); border: 1px solid var(--border); }
+    .btn-outline:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-danger:hover:not(:disabled) { background: #b91c1c; }
+
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+    /* Mini stats */
+    .mini-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .mini-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: all 0.2s;
+      box-shadow: var(--shadow-sm);
+    }
+    .mini-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: var(--shadow); }
+
+    .mini-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .mini-icon i { width: 20px; height: 20px; color: white; }
+    .mini-icon.red    { background: linear-gradient(135deg, #ef4444, #b91c1c); }
+    .mini-icon.blue   { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+    .mini-icon.gold   { background: linear-gradient(135deg, #F59E0B, #d97706); }
+    .mini-icon.green  { background: linear-gradient(135deg, #10b981, #047857); }
+
+    .mini-body { flex: 1; min-width: 0; }
+    .mini-body .label { font-size: 11px; color: var(--text-muted); font-weight: 600; margin-bottom: 2px; }
+    .mini-body .value { font-size: 18px; font-weight: 800; color: var(--text); line-height: 1; }
+
+    /* Toolbar */
+    .toolbar {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .filter-chips {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      flex: 1;
+    }
+
+    .filter-chip {
+      padding: 7px 14px;
+      border-radius: 20px;
+      border: 1.5px solid var(--border);
+      background: var(--card);
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .filter-chip:hover { border-color: var(--accent); color: var(--accent); }
+    .filter-chip.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+    .filter-chip .count {
+      background: rgba(255,255,255,0.25);
+      color: white;
+      padding: 1px 7px;
+      border-radius: 10px;
+      font-size: 10px;
+    }
+    .filter-chip:not(.active) .count {
+      background: rgba(148,163,184,0.2);
+      color: var(--text-muted);
+    }
+
+    /* Notifications list */
+    .notif-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .notif-item {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      transition: all 0.2s;
+      cursor: pointer;
+      position: relative;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .notif-item:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow);
+    }
+
+    .notif-item.unread {
+      background: linear-gradient(90deg, rgba(20,184,166,0.04) 0%, var(--card) 100%);
+      border-right: 4px solid var(--accent);
+    }
+
+    .notif-item.unread::before {
+      content: '';
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 10px;
+      height: 10px;
+      background: var(--accent);
+      border-radius: 50%;
+      box-shadow: 0 0 0 4px rgba(20,184,166,0.2);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.6; transform: scale(1.1); }
+    }
+
+    .notif-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .notif-icon i { width: 22px; height: 22px; color: white; }
+    .notif-icon.expiry    { background: linear-gradient(135deg, #ef4444, #b91c1c); }
+    .notif-icon.low_stock { background: linear-gradient(135deg, #F59E0B, #d97706); }
+    .notif-icon.invoice   { background: linear-gradient(135deg, #10b981, #047857); }
+    .notif-icon.message   { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+    .notif-icon.system    { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
+    .notif-icon.payment   { background: linear-gradient(135deg, #14B8A6, #0d9488); }
+    .notif-icon.default   { background: linear-gradient(135deg, #64748b, #475569); }
+
+    .notif-body {
+      flex: 1;
+      min-width: 0;
+      padding-left: 30px;
+    }
+
+    .notif-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+      line-height: 1.4;
+    }
+
+    .notif-item.unread .notif-title {
+      color: var(--accent);
+    }
+
+    .notif-text {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 6px;
+    }
+
+    .notif-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 11px;
+      color: var(--text-muted);
+      flex-wrap: wrap;
+    }
+
+    .notif-meta .time {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .notif-meta .time i { width: 12px; height: 12px; }
+
+    .notif-actions {
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .action-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+    .action-btn:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
+    .action-btn.danger:hover { border-color: var(--danger); color: var(--danger); background: rgba(239,68,68,0.06); }
+    .action-btn.success:hover { border-color: var(--success); color: var(--success); background: rgba(16,185,129,0.06); }
+    .action-btn i { width: 15px; height: 15px; }
+
+    /* Empty state */
+    .empty-state {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 80px 20px;
+      text-align: center;
+      color: var(--text-muted);
+      box-shadow: var(--shadow-sm);
+    }
+    .empty-state i { width: 64px; height: 64px; opacity: 0.3; margin-bottom: 16px; color: var(--accent); }
+    .empty-state h2 { font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+    .empty-state p { font-size: 14px; }
+
+    /* Loading */
+    .loader {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-muted);
+    }
+    .loader i {
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Date separator */
+    .date-separator {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 20px 0 10px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .date-separator::before,
+    .date-separator::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* Overlay (mobile) */
+    .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; opacity: 0; transition: opacity 0.3s; }
+    .overlay.show { display: block; opacity: 1; }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .sidebar { transform: translateX(100%); }
+      .sidebar.open { transform: translateX(0); }
+      .main { margin-right: 0; }
+      .menu-toggle { display: flex; }
+      .user-info { display: none; }
+    }
+
+    @media (max-width: 640px) {
+      .content { padding: 16px; }
+      .topbar { padding: 0 14px; gap: 10px; }
+      .topbar-title { font-size: 15px; }
+      .page-head { flex-direction: column; align-items: stretch; }
+      .page-head h1 { font-size: 20px; }
+      .notif-item { padding: 12px; }
+      .notif-icon { width: 40px; height: 40px; }
+      .notif-icon i { width: 18px; height: 18px; }
+      .notif-body { padding-left: 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <img src="logo.png" alt="رفاد" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=fallback>R</span>';">
+      </div>
+      <div class="sidebar-brand">
+        <h2>رفاد</h2>
+        <p>نظام إدارة الأدوية</p>
+      </div>
+    </div>
+    <nav class="sidebar-nav" id="sidebarNav"></nav>
+  </aside>
+
+  <div class="overlay" id="overlay"></div>
+
+  <!-- Main -->
+  <div class="main">
+
+    <header class="topbar">
+      <button class="menu-toggle" id="menuToggle"><i data-lucide="menu"></i></button>
+      <div class="topbar-title">الإشعارات</div>
+      <div class="topbar-actions">
+        <button class="icon-btn" id="themeToggle" title="الوضع الليلي/النهاري">
+          <i data-lucide="moon" id="themeIcon"></i>
+        </button>
+        <button class="icon-btn" id="refreshBtn" title="تحديث">
+          <i data-lucide="refresh-cw"></i>
+        </button>
+        <div style="position:relative;">
+          <div class="user-menu" id="userMenu">
+            <div class="user-avatar" id="userAvatar">م</div>
+            <div class="user-info">
+              <span class="name" id="userName">—</span>
+              <span class="role" id="userRole">—</span>
+            </div>
+            <i data-lucide="chevron-down" style="width:14px;height:14px;opacity:0.5;"></i>
+          </div>
+          <div class="dropdown" id="userDropdown">
+            <a href="company-settings.html" class="dropdown-item"><i data-lucide="settings"></i> الإعدادات</a>
+            <a href="employees.html" class="dropdown-item"><i data-lucide="user-cog"></i> الملف الشخصي</a>
+            <div class="dropdown-divider"></div>
+            <div class="dropdown-item danger" id="logoutBtn"><i data-lucide="log-out"></i> تسجيل الخروج</div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="content">
+
+      <div class="page-head">
+        <div>
+          <h1>الإشعارات</h1>
+          <p>كل التنبيهات والرسائل الواردة</p>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn btn-outline btn-sm" id="markAllBtn">
+            <i data-lucide="check-check"></i> تحديد الكل كمقروء
+          </button>
+          <button class="btn btn-danger btn-sm" id="deleteReadBtn">
+            <i data-lucide="trash-2"></i> حذف المقروءة
+          </button>
+        </div>
+      </div>
+
+      <!-- Mini stats -->
+      <div class="mini-stats">
+        <div class="mini-card">
+          <div class="mini-icon blue"><i data-lucide="bell"></i></div>
+          <div class="mini-body">
+            <div class="label">إجمالي</div>
+            <div class="value" id="statTotal">—</div>
+          </div>
+        </div>
+        <div class="mini-card">
+          <div class="mini-icon red"><i data-lucide="bell-ring"></i></div>
+          <div class="mini-body">
+            <div class="label">غير مقروءة</div>
+            <div class="value" id="statUnread">—</div>
+          </div>
+        </div>
+        <div class="mini-card">
+          <div class="mini-icon green"><i data-lucide="check-circle-2"></i></div>
+          <div class="mini-body">
+            <div class="label">مقروءة</div>
+            <div class="value" id="statRead">—</div>
+          </div>
+        </div>
+        <div class="mini-card">
+          <div class="mini-icon gold"><i data-lucide="calendar-days"></i></div>
+          <div class="mini-body">
+            <div class="label">اليوم</div>
+            <div class="value" id="statToday">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Toolbar -->
+      <div class="toolbar">
+        <div class="filter-chips" id="filterChips">
+          <button class="filter-chip active" data-filter="all">
+            <i data-lucide="list" style="width:14px;height:14px;"></i>
+            الكل <span class="count" id="countAll">0</span>
+          </button>
+          <button class="filter-chip" data-filter="unread">
+            <i data-lucide="bell-ring" style="width:14px;height:14px;"></i>
+            غير مقروءة <span class="count" id="countUnread">0</span>
+          </button>
+          <button class="filter-chip" data-filter="read">
+            <i data-lucide="check-circle" style="width:14px;height:14px;"></i>
+            مقروءة <span class="count" id="countRead">0</span>
+          </button>
+        </div>
+        <div style="position:relative;min-width:200px;flex:0 0 auto;">
+          <select id="filterType" style="padding:8px 32px 8px 14px;font-family:inherit;font-size:13px;font-weight:600;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);outline:none;cursor:pointer;appearance:none;width:100%;">
+            <option value="">كل الأنواع</option>
+            <option value="expiry">انتهاء صلاحية</option>
+            <option value="low_stock">مخزون منخفض</option>
+            <option value="invoice">فواتير</option>
+            <option value="message">رسائل</option>
+            <option value="payment">دفعات</option>
+            <option value="system">النظام</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Notifications List -->
+      <div id="notifContainer">
+        <div class="loader">
+          <i data-lucide="loader-2"></i>
+          <p>جارٍ تحميل الإشعارات...</p>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="refad-core.js"></script>
+  <script src="refad-auth.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      // ============================================================
+      // 1) Guard
+      // ============================================================
+      const session = Refad.Auth.guardPage('notifications.view');
+      if (!session) return;
+
+      // ============================================================
+      // 2) State
+      // ============================================================
+      const state = {
+        all: [],
+        filter: 'all',
+        typeFilter: '',
+        realtimeChannel: null
+      };
+
+      // Notification types config
+      const TYPES = {
+        expiry:    { label: 'انتهاء صلاحية', icon: 'calendar-x',      cls: 'expiry' },
+        low_stock: { label: 'مخزون منخفض',   icon: 'alert-triangle',  cls: 'low_stock' },
+        invoice:   { label: 'فاتورة',         icon: 'receipt',         cls: 'invoice' },
+        message:   { label: 'رسالة',          icon: 'message-circle',  cls: 'message' },
+        payment:   { label: 'دفعة',           icon: 'dollar-sign',     cls: 'payment' },
+        system:    { label: 'النظام',         icon: 'info',            cls: 'system' }
+      };
+
+      // Route map: on click, where to go based on type/reference
+      const ROUTES = {
+        expiry:    'inventory.html',
+        low_stock: 'inventory.html',
+        invoice:   'invoices.html',
+        message:   'chat.html',
+        payment:   'company-settings.html',
+        system:    null
+      };
+
+      // ============================================================
+      // 3) Sidebar
+      // ============================================================
+      const MENU = [
+        { section: 'الرئيسية', items: [
+          { label: 'لوحة التحكم', icon: 'layout-dashboard', href: 'dashboard.html' },
+          { label: 'الشات', icon: 'message-circle', href: 'chat.html', permission: 'chat.use' },
+          { label: 'الإشعارات', icon: 'bell', href: 'notifications.html', permission: 'notifications.view' }
+        ]},
+        { section: 'العمليات', items: [
+          { label: 'الأصناف', icon: 'package', href: 'products.html', permission: 'products.view' },
+          { label: 'المخزون', icon: 'warehouse', href: 'inventory.html', permission: 'inventory.view' },
+          { label: 'طلبات الشراء', icon: 'clipboard-list', href: 'purchase-requests.html', permission: 'purchases.view' },
+          { label: 'الاستلامات', icon: 'package-check', href: 'receipts.html', permission: 'purchases.receive' },
+          { label: 'طلبات البيع', icon: 'shopping-cart', href: 'sales-orders.html', permission: 'sales.view' },
+          { label: 'نقطة البيع', icon: 'scan-barcode', href: 'pos.html', permission: 'sales.pos', badge: 'POS', badgeClass: 'teal' },
+          { label: 'الفواتير', icon: 'receipt', href: 'invoices.html', permission: 'sales.view' }
+        ]},
+        { section: 'الأطراف', items: [
+          { label: 'الموردين', icon: 'truck', href: 'suppliers.html', permission: 'suppliers.view' },
+          { label: 'العملاء', icon: 'users', href: 'customers.html', permission: 'customers.view' }
+        ]},
+        { section: 'المخزون', items: [
+          { label: 'الجرد', icon: 'clipboard-check', href: 'stocktake.html', permission: 'inventory.stocktake' },
+          { label: 'التسويات', icon: 'sliders-horizontal', href: 'adjustments.html', permission: 'inventory.adjust' }
+        ]},
+        { section: 'الموارد البشرية', items: [
+          { label: 'الموظفين', icon: 'user-cog', href: 'employees.html', permission: 'employees.view' },
+          { label: 'الصلاحيات', icon: 'shield-check', href: 'permissions.html', permission: 'permissions.manage' },
+          { label: 'الحضور', icon: 'calendar-check', href: 'attendance.html', permission: 'attendance.view' },
+          { label: 'الرواتب', icon: 'wallet', href: 'payroll.html', permission: 'payroll.view' }
+        ]},
+        { section: 'المالية', items: [
+          { label: 'المصاريف', icon: 'banknote', href: 'expenses.html', permission: 'expenses.view' },
+          { label: 'التقارير', icon: 'bar-chart-3', href: 'reports.html', permission: 'reports.view' }
+        ]},
+        { section: 'النظام', items: [
+          { label: 'إعدادات الشركة', icon: 'settings', href: 'company-settings.html', permission: 'settings.view' },
+          { label: 'شاشة الأدمن', icon: 'shield', href: 'admin.html', permission: 'admin.full', badge: 'Admin', badgeClass: 'gold' }
+        ]}
+      ];
+
+      function buildSidebar() {
+        const nav = document.getElementById('sidebarNav');
+        const currentPage = 'notifications.html';
+        const frag = document.createDocumentFragment();
+        MENU.forEach(group => {
+          const allowed = group.items.filter(it => !it.permission || Refad.Session.has(it.permission));
+          if (!allowed.length) return;
+          frag.appendChild(Refad.el('div', { class: 'nav-section' }, group.section));
+          allowed.forEach(item => {
+            const a = Refad.el('a', {
+              href: item.href,
+              class: 'nav-item' + (item.href === currentPage ? ' active' : '')
+            });
+            const unreadBadge = item.href === 'notifications.html' ? '<span class="badge" id="sidebarNotifBadge" style="display:none;"></span>' : '';
+            a.innerHTML = `<i data-lucide="${item.icon}"></i><span>${Refad.escapeHtml(item.label)}</span>${item.badge ? `<span class="badge ${item.badgeClass || ''}">${item.badge}</span>` : ''}${unreadBadge}`;
+            frag.appendChild(a);
+          });
+        });
+        nav.innerHTML = '';
+        nav.appendChild(frag);
+        if (window.lucide) lucide.createIcons();
+      }
+
+      // ============================================================
+      // 4) UI helpers
+      // ============================================================
+      function fillUser() {
+        const av = document.getElementById('userAvatar');
+        const initial = (session.full_name || '؟').trim().charAt(0);
+        if (session.avatar_url) av.innerHTML = `<img src="${Refad.escapeHtml(session.avatar_url)}" alt="">`;
+        else av.textContent = initial;
+        document.getElementById('userName').textContent = session.full_name;
+        document.getElementById('userRole').textContent = Refad.Session.has('company.owner') ? 'صاحب الشركة' : 'موظف';
+      }
+
+      function setupTheme() {
+        const btn = document.getElementById('themeToggle');
+        const icon = document.getElementById('themeIcon');
+        const refresh = () => {
+          const isDark = Refad.theme.get() === 'dark';
+          icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+          if (window.lucide) lucide.createIcons();
+        };
+        refresh();
+        btn.addEventListener('click', () => { Refad.theme.toggle(); refresh(); });
+      }
+
+      function setupSidebarMobile() {
+        const sb = document.getElementById('sidebar');
+        const ov = document.getElementById('overlay');
+        document.getElementById('menuToggle').addEventListener('click', () => {
+          sb.classList.add('open'); ov.classList.add('show');
+        });
+        ov.addEventListener('click', () => {
+          sb.classList.remove('open'); ov.classList.remove('show');
+        });
+      }
+
+      function setupUserMenu() {
+        const m = document.getElementById('userMenu');
+        const d = document.getElementById('userDropdown');
+        m.addEventListener('click', e => { e.stopPropagation(); d.classList.toggle('show'); });
+        document.addEventListener('click', () => d.classList.remove('show'));
+        d.addEventListener('click', e => e.stopPropagation());
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+          if (await Refad.alert.confirm('تسجيل الخروج', 'هل تريد الخروج؟', 'خروج')) {
+            await Refad.Auth.logout();
+          }
+        });
+      }
+
+      // ============================================================
+      // 5) Load notifications
+      // ============================================================
+      async function loadNotifications(silent) {
+        if (!silent) {
+          document.getElementById('notifContainer').innerHTML = `
+            <div class="loader">
+              <i data-lucide="loader-2"></i>
+              <p>جارٍ تحميل الإشعارات...</p>
+            </div>
+          `;
+          if (window.lucide) lucide.createIcons();
+        }
+
+        try {
+          const rows = await Refad.db.select('notifications', {
+            columns: 'id, title, body, type, reference_id, is_read, created_at',
+            eq: { user_id: session.user_id },
+            order: { column: 'created_at', ascending: false },
+            limit: 200
+          });
+          state.all = rows.filter(canViewNotification);
+          renderStats();
+          renderList();
+        } catch (e) {
+          console.error('[Notifications] load failed:', e);
+          Refad.toast.error('تعذّر التحميل: ' + e.message);
+          state.all = [];
+          renderStats();
+          renderList();
+        }
+
+      }
+
+      function canViewNotification(notification) {
+        const requiredByType = {
+          expiry: 'inventory.view',
+          low_stock: 'inventory.view',
+          invoice: 'sales.view',
+          message: 'chat.use',
+          payment: 'company.owner'
+        };
+        const permission = requiredByType[notification.type];
+        return !permission || Refad.Session.has(permission);
+      }
+
+      function renderStats() {
+        const total = state.all.length;
+        const unread = state.all.filter(n => !n.is_read).length;
+        const read = total - unread;
+        const today = Refad.date.today();
+        const todayCount = state.all.filter(n => {
+          const d = dayjs(n.created_at).format('YYYY-MM-DD');
+          return d === today;
+        }).length;
+
+        document.getElementById('statTotal').textContent = Refad.format.number(total);
+        document.getElementById('statUnread').textContent = Refad.format.number(unread);
+        document.getElementById('statRead').textContent = Refad.format.number(read);
+        document.getElementById('statToday').textContent = Refad.format.number(todayCount);
+
+        // Sidebar badge
+        const sidebarBadge = document.getElementById('sidebarNotifBadge');
+        if (sidebarBadge) {
+          if (unread > 0) {
+            sidebarBadge.textContent = unread > 99 ? '99+' : unread;
+            sidebarBadge.style.display = 'inline-block';
+          } else {
+            sidebarBadge.style.display = 'none';
+          }
+        }
+
+        // Filter counts
+        document.getElementById('countAll').textContent = total;
+        document.getElementById('countUnread').textContent = unread;
+        document.getElementById('countRead').textContent = read;
+      }
+
+      // ============================================================
+      // 6) Render list
+      // ============================================================
+      function renderList() {
+        const container = document.getElementById('notifContainer');
+
+        let filtered = state.all;
+        if (state.filter === 'unread') filtered = filtered.filter(n => !n.is_read);
+        else if (state.filter === 'read') filtered = filtered.filter(n => n.is_read);
+        if (state.typeFilter) filtered = filtered.filter(n => n.type === state.typeFilter);
+
+        if (!filtered.length) {
+          const msg = state.all.length === 0
+            ? 'لا توجد إشعارات بعد'
+            : 'لا توجد نتائج مطابقة';
+          container.innerHTML = `
+            <div class="empty-state">
+              <i data-lucide="bell-off"></i>
+              <h2>${msg}</h2>
+              <p>${state.all.length === 0 ? 'كل الإشعارات ستظهر هنا' : 'جرّب تغيير الفلتر'}</p>
+            </div>
+          `;
+          if (window.lucide) lucide.createIcons();
+          return;
+        }
+
+        // Group by date
+        const groups = {};
+        filtered.forEach(n => {
+          const d = dayjs(n.created_at).format('YYYY-MM-DD');
+          if (!groups[d]) groups[d] = [];
+          groups[d].push(n);
+        });
+
+        const sortedDates = Object.keys(groups).sort((a, b) => b.localeCompare(a));
+        const today = Refad.date.today();
+        const yesterday = Refad.date.addDays(today, -1);
+
+        let html = '<div class="notif-list">';
+        sortedDates.forEach(date => {
+          let label = Refad.format.date(date);
+          if (date === today) label = 'اليوم';
+          else if (date === yesterday) label = 'أمس';
+
+          html += `<div class="date-separator">${label}</div>`;
+
+          groups[date].forEach(n => {
+            const t = TYPES[n.type] || { label: n.type, icon: 'bell', cls: 'default' };
+            html += `
+              <div class="notif-item ${n.is_read ? '' : 'unread'}" data-id="${n.id}">
+                <div class="notif-icon ${t.cls}">
+                  <i data-lucide="${t.icon}"></i>
+                </div>
+                <div class="notif-body">
+                  <div class="notif-title">${Refad.escapeHtml(n.title)}</div>
+                  ${n.body ? `<div class="notif-text">${Refad.escapeHtml(n.body)}</div>` : ''}
+                  <div class="notif-meta">
+                    <span class="time">
+                      <i data-lucide="clock"></i>
+                      ${Refad.format.relative(n.created_at)}
+                    </span>
+                    <span class="badge-tag ${n.is_read ? 'gray' : 'green'}" style="font-size:10px;padding:2px 8px;">
+                      ${n.is_read ? 'مقروء' : 'جديد'}
+                    </span>
+                  </div>
+                </div>
+                <div class="notif-actions">
+                  ${!n.is_read ? `
+                    <button class="action-btn success" data-action="mark-read" data-id="${n.id}" title="تحديد كمقروء">
+                      <i data-lucide="check"></i>
+                    </button>
+                  ` : ''}
+                  <button class="action-btn danger" data-action="delete" data-id="${n.id}" title="حذف">
+                    <i data-lucide="trash-2"></i>
+                  </button>
+                </div>
+              </div>
+            `;
+          });
+        });
+        html += '</div>';
+        container.innerHTML = html;
+
+        if (window.lucide) lucide.createIcons();
+
+        // Bind clicks
+        container.querySelectorAll('.notif-item').forEach(item => {
+          const id = parseInt(item.dataset.id, 10);
+
+          item.addEventListener('click', e => {
+            // Ignore clicks on action buttons
+            if (e.target.closest('[data-action]')) return;
+            const n = state.all.find(x => x.id === id);
+            if (!n) return;
+            handleClick(n);
+          });
+        });
+
+        container.querySelectorAll('[data-action]').forEach(btn => {
+          btn.addEventListener('click', async e => {
+            e.stopPropagation();
+            const id = parseInt(btn.dataset.id, 10);
+            const action = btn.dataset.action;
+
+            if (action === 'mark-read') {
+              await markAsRead(id);
+            } else if (action === 'delete') {
+              await deleteNotification(id);
+            }
+          });
+        });
+      }
+
+      // ============================================================
+      // 7) Handle click → navigate
+      // ============================================================
+      async function handleClick(n) {
+        // Mark as read first
+        if (!n.is_read) {
+          await markAsRead(n.id, true);
+        }
+
+        // Navigate based on type
+        const route = ROUTES[n.type];
+        if (route) {
+          let url = route;
+          if (n.reference_id) {
+            // Navigate with id where possible
+            if (route === 'invoices.html') url += `?id=${n.reference_id}`;
+            else if (route === 'chat.html') url += `?id=${n.reference_id}`;
+          }
+          setTimeout(() => window.location.href = url, 300);
+        }
+      }
+
+      // ============================================================
+      // 8) Actions
+      // ============================================================
+      async function markAsRead(id, silent) {
+        try {
+          await Refad.db.update('notifications', id, { is_read: true });
+
+          // Update locally
+          const n = state.all.find(x => x.id === id);
+          if (n) n.is_read = true;
+
+          renderStats();
+          renderList();
+
+          if (!silent) Refad.toast.success('تم التحديد كمقروء');
+        } catch (e) {
+          console.error('Mark read failed:', e);
+          Refad.toast.error('فشل: ' + e.message);
+        }
+      }
+
+      async function markAllAsRead() {
+        const unreadIds = state.all.filter(n => !n.is_read).map(n => n.id);
+        if (!unreadIds.length) {
+          Refad.toast.info('لا توجد إشعارات غير مقروءة');
+          return;
+        }
+
+        try {
+          for (const id of unreadIds) {
+            await Refad.db.update('notifications', id, { is_read: true });
+          }
+
+          state.all.forEach(n => { n.is_read = true; });
+          renderStats();
+          renderList();
+          Refad.toast.success(`تم تحديد ${unreadIds.length} إشعار كمقروء`);
+        } catch (e) {
+          console.error('Mark all failed:', e);
+          Refad.toast.error('فشل: ' + e.message);
+        }
+      }
+
+      async function deleteNotification(id) {
+        try {
+          await Refad.db.remove('notifications', id);
+
+          state.all = state.all.filter(n => n.id !== id);
+          renderStats();
+          renderList();
+          Refad.toast.success('تم الحذف');
+        } catch (e) {
+          console.error('Delete failed:', e);
+          Refad.toast.error('فشل الحذف: ' + e.message);
+        }
+      }
+
+      async function deleteAllRead() {
+        const readIds = state.all.filter(n => n.is_read).map(n => n.id);
+        if (!readIds.length) {
+          Refad.toast.info('لا توجد إشعارات مقروءة لحذفها');
+          return;
+        }
+
+        const ok = await Refad.alert.confirm(
+          'حذف المقروءة',
+          `سيتم حذف ${readIds.length} إشعار مقروء. متابعة؟`,
+          'حذف'
+        );
+        if (!ok) return;
+
+        try {
+          for (const id of readIds) {
+            await Refad.db.remove('notifications', id);
+          }
+
+          state.all = state.all.filter(n => !n.is_read);
+          renderStats();
+          renderList();
+          Refad.toast.success(`تم حذف ${readIds.length} إشعار`);
+        } catch (e) {
+          console.error('Delete all failed:', e);
+          Refad.toast.error('فشل: ' + e.message);
+        }
+      }
+
+      // ============================================================
+      // 9) Realtime (اختياري — يعمل لو Supabase Realtime مفعّل)
+      // ============================================================
+      function setupRealtime() {
+        try {
+          state.realtimeChannel = Refad.sb
+            .channel('notifications-changes')
+            .on(
+              'postgres_changes',
+              {
+                event: 'INSERT',
+                schema: 'public',
+                table: 'notifications',
+                filter: `user_id=eq.${session.user_id}`
+              },
+              payload => {
+                const n = payload.new;
+                if (!canViewNotification(n)) return;
+                state.all.unshift(n);
+                renderStats();
+                renderList();
+
+                // Toast notification
+                Refad.toast.info(`🔔 ${n.title}`, 5000);
+              }
+            )
+            .subscribe();
+        } catch (e) {
+          console.warn('Realtime not available:', e.message);
+        }
+      }
+
+      // ============================================================
+      // 10) Events
+      // ============================================================
+      function bindEvents() {
+        // Filter chips
+        document.querySelectorAll('.filter-chip').forEach(chip => {
+          chip.addEventListener('click', () => {
+            document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+            chip.classList.add('active');
+            state.filter = chip.dataset.filter;
+            renderList();
+          });
+        });
+
+        // Type filter
+        document.getElementById('filterType').addEventListener('change', e => {
+          state.typeFilter = e.target.value;
+          renderList();
+        });
+
+        // Mark all
+        document.getElementById('markAllBtn').addEventListener('click', markAllAsRead);
+
+        // Delete read
+        document.getElementById('deleteReadBtn').addEventListener('click', deleteAllRead);
+
+        // Refresh
+        document.getElementById('refreshBtn').addEventListener('click', async () => {
+          Refad.toast.info('جارٍ التحديث...');
+          await loadNotifications(true);
+          Refad.toast.success('تم التحديث');
+        });
+
+        // Keyboard shortcut: R to refresh
+        document.addEventListener('keydown', e => {
+          if (e.key === 'F5') return; // ignore
+          if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
+            e.preventDefault();
+            loadNotifications(true);
+          }
+        });
+      }
+
+      // ============================================================
+      // 11) Init
+      // ============================================================
+      async function init() {
+        buildSidebar();
+        fillUser();
+        setupTheme();
+        setupSidebarMobile();
+        setupUserMenu();
+        bindEvents();
+
+        await loadNotifications();
+        setupRealtime();
+
+        Refad.registerServiceWorker();
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+
+      console.log('%c[Refad] Notifications ready', 'color:#14B8A6;font-weight:bold');
+
+    })();
+  </script>
+
+</body>
+</html>

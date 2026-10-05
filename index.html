@@ -1,990 +1,769 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" data-theme="light">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<meta name="theme-color" content="#0d6e6e" />
-<title>Pharma Cloud ERP — تسجيل الدخول</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0B2C4D">
+  <meta name="description" content="نظام رفاد - إدارة شركات توزيع الأدوية">
+  <title>تسجيل الدخول - رفاد</title>
 
-<!-- خط Cairo -->
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="logo.png">
+  <link rel="apple-touch-icon" href="icon-192.png">
 
-<!-- Supabase JS -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="manifest.json">
 
-<style>
-/* ═══════════════════════════════════════════════════════════
-   الثيم — Light & Dark
-   ═══════════════════════════════════════════════════════════ */
-:root {
-  /* الألوان الأساسية الطبية */
-  --primary:   #0d6e6e;
-  --primary2:  #12a3a3;
-  --primary3:  #14b8b8;
-  --danger:    #e5484d;
-  --success:   #17a673;
-  --warning:   #f5a524;
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
-  /* الوضع النهاري (افتراضي) */
-  --bg:          #f2f6f8;
-  --bg-grad-1:   #0a5757;
-  --bg-grad-2:   #0d6e6e;
-  --bg-grad-3:   #0b3d3d;
-  --card:        #ffffff;
-  --card-glass:  rgba(255, 255, 255, .96);
-  --input-bg:    #f6fafb;
-  --input-focus: #ffffff;
-  --text:        #1e2a32;
-  --text-soft:   #3d4d5a;
-  --muted:       #6b7c8a;
-  --border:      #e3eaef;
-  --divider:     #eef3f6;
-  --shadow:      0 10px 40px rgba(13, 110, 110, .18);
-  --shadow-hov:  0 12px 28px rgba(13, 110, 110, .45);
-  --toggle-bg:   rgba(255, 255, 255, .18);
-  --toggle-ico:  #fff;
-  --orb-1:       #12a3a3;
-  --orb-2:       #17a673;
-  --grain-op:    .04;
-}
+  <!-- Libraries (CDN) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
 
-/* الوضع الليلي */
-[data-theme="dark"] {
-  --bg:          #0a1219;
-  --bg-grad-1:   #06141a;
-  --bg-grad-2:   #0c2b30;
-  --bg-grad-3:   #020609;
-  --card:        #111d26;
-  --card-glass:  rgba(17, 29, 38, .96);
-  --input-bg:    #0d1721;
-  --input-focus: #0f1c27;
-  --text:        #e8f0f5;
-  --text-soft:   #b8c7d1;
-  --muted:       #7a8d9c;
-  --border:      #1e2c38;
-  --divider:     #18242f;
-  --shadow:      0 10px 40px rgba(0, 0, 0, .55);
-  --shadow-hov:  0 12px 28px rgba(18, 163, 163, .35);
-  --toggle-bg:   rgba(255, 255, 255, .12);
-  --toggle-ico:  #ffd166;
-  --orb-1:       #0d6e6e;
-  --orb-2:       #0d5a44;
-  --grain-op:    .06;
-}
+  <style>
+    /* ============================================================
+       Reset & Base
+       ============================================================ */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --primary: #0B2C4D;
+      --primary-light: #1e4a73;
+      --primary-dark: #061a2e;
+      --accent: #14B8A6;
+      --accent-dark: #0d9488;
+      --gold: #F59E0B;
+      --bg: #F1F5F9;
+      --card: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --danger: #ef4444;
+      --success: #10b981;
+      --shadow: 0 10px 40px rgba(11, 44, 77, 0.08);
+      --shadow-hover: 0 20px 60px rgba(11, 44, 77, 0.15);
+      --radius: 16px;
+      --radius-sm: 10px;
+    }
 
-html, body {
-  height: 100%;
-  font-family: 'Cairo', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  color: var(--text);
-  background: var(--bg);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  transition: background-color .35s ease, color .35s ease;
-}
+    [data-theme="dark"] {
+      --bg: #0a1628;
+      --card: #0f2137;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --border: #1e3a5f;
+      --shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+      --shadow-hover: 0 20px 60px rgba(0, 0, 0, 0.6);
+    }
 
-/* ═══════════════════════════════════════════════════════════
-   خلفية متدرجة + أوربس متحركة
-   ═══════════════════════════════════════════════════════════ */
-body {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  min-height: 100dvh;
-  padding: 24px;
-  position: relative;
-  overflow: hidden;
-  background:
-    radial-gradient(1200px 600px at 10% 10%, color-mix(in srgb, var(--orb-1) 25%, transparent), transparent 60%),
-    radial-gradient(1000px 500px at 90% 90%, color-mix(in srgb, var(--orb-2) 35%, transparent), transparent 60%),
-    linear-gradient(135deg, var(--bg-grad-1) 0%, var(--bg-grad-2) 45%, var(--bg-grad-3) 100%);
-  transition: background .5s ease;
-}
+    html, body {
+      height: 100%;
+      font-family: 'Cairo', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      transition: background 0.3s, color 0.3s;
+      overflow-x: hidden;
+    }
 
-/* طبقة حبيبات خفيفة */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  opacity: var(--grain-op);
-  background-image:
-    radial-gradient(circle at 25% 25%, #fff 1px, transparent 1px),
-    radial-gradient(circle at 75% 75%, #fff 1px, transparent 1px);
-  background-size: 42px 42px, 42px 42px;
-  mix-blend-mode: overlay;
-  z-index: 1;
-}
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+      position: relative;
+    }
 
-/* أوربس متحركة */
-.orb {
-  position: fixed;
-  border-radius: 50%;
-  filter: blur(90px);
-  opacity: .38;
-  pointer-events: none;
-  z-index: 0;
-  transition: background .5s ease;
-}
-.orb.a {
-  width: 460px; height: 460px;
-  background: var(--orb-1);
-  top: -140px; right: -120px;
-  animation: float1 14s ease-in-out infinite;
-}
-.orb.b {
-  width: 380px; height: 380px;
-  background: var(--orb-2);
-  bottom: -120px; left: -100px;
-  animation: float2 16s ease-in-out infinite;
-}
-.orb.c {
-  width: 260px; height: 260px;
-  background: var(--primary2);
-  top: 40%; left: 45%;
-  opacity: .18;
-  animation: float3 20s ease-in-out infinite;
-}
-@keyframes float1 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  50%      { transform: translate(-40px, 40px) scale(1.08); }
-}
-@keyframes float2 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  50%      { transform: translate(40px, -30px) scale(1.1); }
-}
-@keyframes float3 {
-  0%, 100% { transform: translate(-50%, -50%) scale(1); }
-  50%      { transform: translate(-50%, -50%) scale(1.25); }
-}
+    /* ============================================================
+       Background decoration
+       ============================================================ */
+    .bg-decoration {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 10% 20%, rgba(20, 184, 166, 0.15), transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(11, 44, 77, 0.15), transparent 40%),
+        radial-gradient(circle at 50% 50%, rgba(245, 158, 11, 0.06), transparent 60%);
+    }
 
-/* ═══════════════════════════════════════════════════════════
-   زر تبديل الوضع الليلي
-   ═══════════════════════════════════════════════════════════ */
-.theme-toggle {
-  position: fixed;
-  top: 20px;
-  left: 20px;
-  z-index: 100;
-  width: 46px;
-  height: 46px;
-  border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, .18);
-  background: var(--toggle-bg);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  color: var(--toggle-ico);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all .25s cubic-bezier(.2, .8, .2, 1);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, .2);
-}
-.theme-toggle:hover {
-  transform: translateY(-2px) scale(1.04);
-  border-color: var(--primary2);
-  box-shadow: 0 10px 26px rgba(0, 0, 0, .3);
-}
-.theme-toggle:active { transform: translateY(0) scale(.98); }
-.theme-toggle svg {
-  width: 20px;
-  height: 20px;
-  transition: transform .5s cubic-bezier(.4, 0, .2, 1);
-}
-.theme-toggle:hover svg { transform: rotate(35deg); }
+    .bg-decoration::before,
+    .bg-decoration::after {
+      content: '';
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.5;
+      animation: float 12s ease-in-out infinite;
+    }
 
-/* تبديل أيقونة الشمس/القمر */
-.theme-toggle .ico-sun,
-.theme-toggle .ico-moon { transition: opacity .3s, transform .4s; }
-[data-theme="dark"] .theme-toggle .ico-sun  { opacity: 0; transform: scale(.4); position: absolute; }
-[data-theme="dark"] .theme-toggle .ico-moon { opacity: 1; transform: scale(1); }
-.theme-toggle .ico-sun  { opacity: 1; transform: scale(1); }
-.theme-toggle .ico-moon { opacity: 0; transform: scale(.4); position: absolute; }
+    .bg-decoration::before {
+      width: 400px;
+      height: 400px;
+      background: var(--accent);
+      top: -100px;
+      right: -100px;
+    }
 
-/* ═══════════════════════════════════════════════════════════
-   بطاقة الدخول
-   ═══════════════════════════════════════════════════════════ */
-.login-wrap {
-  position: relative;
-  z-index: 2;
-  width: 100%;
-  max-width: 450px;
-}
+    .bg-decoration::after {
+      width: 350px;
+      height: 350px;
+      background: var(--primary);
+      bottom: -100px;
+      left: -100px;
+      animation-delay: -6s;
+    }
 
-.brand {
-  text-align: center;
-  margin-bottom: 24px;
-  color: #fff;
-  animation: fadeDown .6s cubic-bezier(.2, .8, .2, 1);
-}
-.brand-logo {
-  width: 82px;
-  height: 82px;
-  margin: 0 auto 16px;
-  border-radius: 24px;
-  background: linear-gradient(135deg, var(--primary3), var(--primary));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 14px 36px rgba(0, 0, 0, .32), inset 0 0 0 3px rgba(255, 255, 255, .14);
-  position: relative;
-  overflow: hidden;
-  animation: logoPulse 3s ease-in-out infinite;
-}
-.brand-logo::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(120deg, transparent 30%, rgba(255,255,255,.25) 50%, transparent 70%);
-  transform: translateX(-100%);
-  animation: shimmer 3.5s ease-in-out infinite;
-}
-@keyframes shimmer {
-  0%, 60% { transform: translateX(-100%); }
-  100%    { transform: translateX(100%); }
-}
-@keyframes logoPulse {
-  0%, 100% { box-shadow: 0 14px 36px rgba(0, 0, 0, .32), inset 0 0 0 3px rgba(255, 255, 255, .14); }
-  50%      { box-shadow: 0 18px 44px rgba(18, 163, 163, .5), inset 0 0 0 3px rgba(255, 255, 255, .24); }
-}
-.brand-logo svg { width: 46px; height: 46px; color: #fff; position: relative; z-index: 1; }
-.brand h1 {
-  font-size: 26px;
-  font-weight: 800;
-  letter-spacing: .2px;
-  margin-bottom: 6px;
-  text-shadow: 0 2px 12px rgba(0, 0, 0, .25);
-}
-.brand p {
-  font-size: 13.5px;
-  opacity: .85;
-  font-weight: 500;
-  letter-spacing: .3px;
-}
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(30px, -30px) scale(1.1); }
+    }
 
-.card {
-  background: var(--card-glass);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border-radius: 24px;
-  padding: 34px 30px;
-  box-shadow: var(--shadow);
-  border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
-  animation: cardIn .6s cubic-bezier(.2, .8, .2, 1);
-  transition: background .35s, border-color .35s, box-shadow .35s;
-}
-@keyframes cardIn {
-  from { opacity: 0; transform: translateY(28px) scale(.96); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
-}
-@keyframes fadeDown {
-  from { opacity: 0; transform: translateY(-14px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
+    /* ============================================================
+       Theme Toggle
+       ============================================================ */
+    .theme-toggle {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow);
+      transition: all 0.3s;
+      z-index: 10;
+    }
 
-.card h2 {
-  font-size: 20px;
-  font-weight: 700;
-  margin-bottom: 6px;
-  color: var(--text);
-}
-.card .sub {
-  font-size: 13px;
-  color: var(--muted);
-  margin-bottom: 26px;
-  line-height: 1.6;
-}
+    .theme-toggle:hover {
+      transform: rotate(180deg) scale(1.1);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
 
-/* ═══════════════════════════════════════════════════════════
-   الحقول
-   ═══════════════════════════════════════════════════════════ */
-.field { margin-bottom: 18px; }
-.field label {
-  display: block;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-soft);
-  margin-bottom: 8px;
-}
-.field .input-wrap { position: relative; display: flex; align-items: center; }
-.field .input-wrap .ico {
-  position: absolute;
-  right: 15px;
-  width: 18px;
-  height: 18px;
-  color: var(--muted);
-  pointer-events: none;
-  transition: color .2s;
-  z-index: 2;
-}
-.field input {
-  width: 100%;
-  padding: 14px 46px 14px 46px;
-  font-family: inherit;
-  font-size: 14.5px;
-  font-weight: 500;
-  color: var(--text);
-  background: var(--input-bg);
-  border: 1.5px solid var(--border);
-  border-radius: 13px;
-  outline: none;
-  transition: all .22s cubic-bezier(.2, .8, .2, 1);
-}
-.field input::placeholder { color: var(--muted); opacity: .7; font-weight: 400; }
-.field input:hover { border-color: color-mix(in srgb, var(--primary2) 40%, var(--border)); }
-.field input:focus {
-  background: var(--input-focus);
-  border-color: var(--primary2);
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary2) 18%, transparent);
-}
-.field input:focus ~ .ico { color: var(--primary2); }
+    /* ============================================================
+       Login Card
+       ============================================================ */
+    .login-wrapper {
+      width: 100%;
+      max-width: 440px;
+      animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
 
-/* تعديل لون autofill */
-.field input:-webkit-autofill,
-.field input:-webkit-autofill:hover,
-.field input:-webkit-autofill:focus {
-  -webkit-text-fill-color: var(--text);
-  -webkit-box-shadow: 0 0 0 1000px var(--input-bg) inset;
-  transition: background-color 5000s ease-in-out 0s;
-}
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
 
-/* زر إظهار/إخفاء كلمة المرور */
-.toggle-pass {
-  position: absolute;
-  left: 12px;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  padding: 8px;
-  border-radius: 9px;
-  color: var(--muted);
-  display: flex;
-  align-items: center;
-  transition: all .18s;
-  z-index: 3;
-}
-.toggle-pass:hover { color: var(--primary2); background: color-mix(in srgb, var(--primary2) 12%, transparent); }
-.toggle-pass svg { width: 18px; height: 18px; }
+    .login-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 40px 32px;
+      border: 1px solid var(--border);
+      transition: box-shadow 0.3s;
+    }
 
-/* ═══════════════════════════════════════════════════════════
-   الخيارات (تذكرني)
-   ═══════════════════════════════════════════════════════════ */
-.opts {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 22px;
-  font-size: 13px;
-}
-.chk {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  cursor: pointer;
-  user-select: none;
-  color: var(--text-soft);
-  font-weight: 500;
-  transition: color .2s;
-}
-.chk:hover { color: var(--primary2); }
-.chk input { display: none; }
-.chk .box {
-  width: 19px;
-  height: 19px;
-  border: 1.5px solid var(--border);
-  border-radius: 6px;
-  background: var(--input-bg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all .18s;
-  flex-shrink: 0;
-}
-.chk .box svg {
-  width: 12px;
-  height: 12px;
-  color: #fff;
-  opacity: 0;
-  transform: scale(.5);
-  transition: all .18s;
-}
-.chk input:checked + .box {
-  background: var(--primary);
-  border-color: var(--primary);
-  box-shadow: 0 4px 12px color-mix(in srgb, var(--primary) 35%, transparent);
-}
-.chk input:checked + .box svg { opacity: 1; transform: scale(1); }
+    .login-card:hover {
+      box-shadow: var(--shadow-hover);
+    }
 
-/* ═══════════════════════════════════════════════════════════
-   زر الدخول
-   ═══════════════════════════════════════════════════════════ */
-.btn-login {
-  width: 100%;
-  padding: 15px;
-  font-family: inherit;
-  font-size: 15.5px;
-  font-weight: 700;
-  color: #fff;
-  background: linear-gradient(135deg, var(--primary2), var(--primary));
-  border: none;
-  border-radius: 13px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  box-shadow: 0 8px 22px color-mix(in srgb, var(--primary) 40%, transparent);
-  transition: all .22s cubic-bezier(.2, .8, .2, 1);
-  position: relative;
-  overflow: hidden;
-  letter-spacing: .3px;
-}
-.btn-login::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(120deg, transparent 30%, rgba(255,255,255,.22) 50%, transparent 70%);
-  transform: translateX(-100%);
-  transition: transform .6s;
-}
-.btn-login:hover:not(:disabled)::before { transform: translateX(100%); }
-.btn-login:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-hov);
-}
-.btn-login:active:not(:disabled) { transform: translateY(0); }
-.btn-login:disabled { opacity: .8; cursor: not-allowed; }
+    /* Logo & Header */
+    .brand {
+      text-align: center;
+      margin-bottom: 32px;
+    }
 
-/* Spinner */
-.spinner {
-  width: 18px;
-  height: 18px;
-  border: 2.5px solid rgba(255, 255, 255, .35);
-  border-top-color: #fff;
-  border-radius: 50%;
-  animation: spin .7s linear infinite;
-  display: none;
-}
-.btn-login.loading .spinner { display: block; }
-.btn-login.loading .arrow   { display: none; }
-@keyframes spin { to { transform: rotate(360deg); } }
+    .brand-logo {
+      width: 90px;
+      height: 90px;
+      margin: 0 auto 16px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      border-radius: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 10px 30px rgba(20, 184, 166, 0.3);
+      position: relative;
+      overflow: hidden;
+    }
 
-/* ═══════════════════════════════════════════════════════════
-   الحسابات التجريبية
-   ═══════════════════════════════════════════════════════════ */
-.demo {
-  margin-top: 24px;
-  padding-top: 20px;
-  border-top: 1px dashed var(--divider);
-  text-align: center;
-}
-.demo .lbl {
-  font-size: 12px;
-  color: var(--muted);
-  margin-bottom: 12px;
-  font-weight: 600;
-  letter-spacing: .3px;
-}
-.demo-btns {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-.demo-btn {
-  padding: 8px 15px;
-  font-family: inherit;
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--primary2);
-  background: color-mix(in srgb, var(--primary2) 10%, transparent);
-  border: 1px solid color-mix(in srgb, var(--primary2) 22%, transparent);
-  border-radius: 22px;
-  cursor: pointer;
-  transition: all .18s;
-}
-.demo-btn:hover {
-  background: var(--primary);
-  color: #fff;
-  border-color: var(--primary);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 18px color-mix(in srgb, var(--primary) 30%, transparent);
-}
-.demo-btn:active { transform: translateY(0); }
+    .brand-logo::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.2));
+    }
 
-/* ═══════════════════════════════════════════════════════════
-   Toast
-   ═══════════════════════════════════════════════════════════ */
-.toast-wrap {
-  position: fixed;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 9999;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  pointer-events: none;
-  width: calc(100% - 40px);
-  max-width: 420px;
-}
-.toast {
-  padding: 14px 18px;
-  border-radius: 13px;
-  font-size: 13.5px;
-  font-weight: 600;
-  color: #fff;
-  box-shadow: 0 12px 34px rgba(0, 0, 0, .3);
-  display: flex;
-  align-items: center;
-  gap: 11px;
-  animation: toastIn .35s cubic-bezier(.2, .8, .2, 1);
-  pointer-events: auto;
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, .18);
-}
-.toast.err { background: linear-gradient(135deg, #e5484d, #b83a3e); }
-.toast.ok  { background: linear-gradient(135deg, #17a673, #0e7d55); }
-.toast.info{ background: linear-gradient(135deg, #12a3a3, #0d6e6e); }
-.toast svg { width: 18px; height: 18px; flex-shrink: 0; }
-@keyframes toastIn {
-  from { opacity: 0; transform: translateY(-16px) scale(.94); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
-}
-.toast.out { animation: toastOut .3s ease forwards; }
-@keyframes toastOut {
-  to { opacity: 0; transform: translateY(-12px) scale(.94); }
-}
+    .brand-logo img {
+      width: 70%;
+      height: 70%;
+      object-fit: contain;
+      position: relative;
+      z-index: 1;
+    }
 
-/* ═══════════════════════════════════════════════════════════
-   Responsive
-   ═══════════════════════════════════════════════════════════ */
-@media (max-width: 520px) {
-  body { padding: 16px; align-items: flex-start; padding-top: 76px; }
-  .card { padding: 26px 22px; border-radius: 20px; }
-  .brand h1 { font-size: 22px; }
-  .brand p  { font-size: 12.5px; }
-  .brand-logo { width: 72px; height: 72px; border-radius: 20px; }
-  .brand-logo svg { width: 40px; height: 40px; }
-  .theme-toggle { top: 14px; left: 14px; width: 42px; height: 42px; border-radius: 12px; }
-}
-@media (max-width: 360px) {
-  .card { padding: 22px 18px; }
-  .demo-btn { font-size: 11.5px; padding: 7px 12px; }
-  .brand h1 { font-size: 20px; }
-}
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: .01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: .01ms !important;
-  }
-}
-</style>
+    .brand-logo .fallback-text {
+      color: white;
+      font-size: 36px;
+      font-weight: 800;
+      letter-spacing: -2px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .brand h1 {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--primary);
+      margin-bottom: 6px;
+      letter-spacing: -1px;
+    }
+
+    [data-theme="dark"] .brand h1 {
+      color: var(--accent);
+    }
+
+    .brand p {
+      color: var(--text-muted);
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    /* Form */
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+
+    .input-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .input-wrap .icon-left {
+      position: absolute;
+      right: 14px;
+      color: var(--text-muted);
+      pointer-events: none;
+      transition: color 0.2s;
+      width: 20px;
+      height: 20px;
+    }
+
+    .input-wrap input {
+      width: 100%;
+      padding: 14px 44px 14px 44px;
+      font-family: inherit;
+      font-size: 15px;
+      background: var(--bg);
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      transition: all 0.2s;
+      outline: none;
+    }
+
+    .input-wrap input:focus {
+      border-color: var(--accent);
+      background: var(--card);
+      box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.1);
+    }
+
+    .input-wrap input:focus ~ .icon-left {
+      color: var(--accent);
+    }
+
+    .input-wrap input::placeholder {
+      color: var(--text-muted);
+      opacity: 0.7;
+    }
+
+    .toggle-password {
+      position: absolute;
+      left: 12px;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 6px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .toggle-password:hover {
+      color: var(--accent);
+      background: var(--bg);
+    }
+
+    /* Options Row */
+    .options-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      font-size: 13px;
+    }
+
+    .checkbox-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      user-select: none;
+      color: var(--text-muted);
+    }
+
+    .checkbox-wrap input {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .checkbox-wrap:hover {
+      color: var(--text);
+    }
+
+    /* Submit Button */
+    .btn-login {
+      width: 100%;
+      padding: 15px;
+      font-family: inherit;
+      font-size: 16px;
+      font-weight: 700;
+      color: white;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      border: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-login::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      transition: right 0.5s;
+    }
+
+    .btn-login:hover:not(:disabled)::before {
+      right: 100%;
+    }
+
+    .btn-login:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(20, 184, 166, 0.35);
+    }
+
+    .btn-login:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    .btn-login:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+
+    .btn-login .spinner {
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      display: none;
+    }
+
+    .btn-login.loading .spinner {
+      display: block;
+    }
+
+    .btn-login.loading .btn-text {
+      display: none;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* ============================================================
+       Alerts (inline)
+       ============================================================ */
+    .alert {
+      padding: 12px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 18px;
+      display: none;
+      align-items: center;
+      gap: 10px;
+      animation: shake 0.4s;
+    }
+
+    .alert.show {
+      display: flex;
+    }
+
+    .alert.error {
+      background: rgba(239, 68, 68, 0.1);
+      color: var(--danger);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .alert.warning {
+      background: rgba(245, 158, 11, 0.1);
+      color: #b45309;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      75% { transform: translateX(6px); }
+    }
+
+    /* ============================================================
+       Footer
+       ============================================================ */
+    .login-footer {
+      text-align: center;
+      margin-top: 24px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .login-footer .version {
+      display: inline-block;
+      padding: 3px 10px;
+      background: var(--bg);
+      border-radius: 20px;
+      margin-top: 8px;
+      font-weight: 600;
+    }
+
+    /* ============================================================
+       Responsive
+       ============================================================ */
+    @media (max-width: 480px) {
+      .login-card {
+        padding: 28px 22px;
+      }
+      .brand-logo {
+        width: 72px;
+        height: 72px;
+      }
+      .brand h1 {
+        font-size: 24px;
+      }
+      .theme-toggle {
+        top: 12px;
+        left: 12px;
+        width: 40px;
+        height: 40px;
+      }
+    }
+  </style>
 </head>
 <body>
 
-<!-- ═══ Orb Background ═══ -->
-<div class="orb a"></div>
-<div class="orb b"></div>
-<div class="orb c"></div>
+  <!-- Background Decoration -->
+  <div class="bg-decoration"></div>
 
-<!-- ═══ Theme Toggle ═══ -->
-<button class="theme-toggle" id="themeToggle" title="تبديل الوضع الليلي" aria-label="تبديل الوضع الليلي">
-  <svg class="ico-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <circle cx="12" cy="12" r="4"/>
-    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
-  </svg>
-  <svg class="ico-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/>
-  </svg>
-</button>
+  <!-- Theme Toggle -->
+  <button class="theme-toggle" id="themeToggle" title="الوضع الليلي/النهاري">
+    <i data-lucide="moon" id="themeIcon" style="width:20px;height:20px;"></i>
+  </button>
 
-<!-- ═══ Toast Container ═══ -->
-<div class="toast-wrap" id="toastWrap"></div>
+  <!-- Login Card -->
+  <div class="login-wrapper">
+    <div class="login-card">
 
-<!-- ═══ Login Card ═══ -->
-<div class="login-wrap">
-
-  <!-- Brand -->
-  <div class="brand">
-    <div class="brand-logo">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M10.5 20.5 3.5 13.5a5 5 0 0 1 7-7l7 7a5 5 0 0 1-7 7Z"/>
-        <path d="m8.5 8.5 7 7"/>
-        <circle cx="17" cy="7" r="3"/>
-      </svg>
-    </div>
-    <h1>Pharma Cloud ERP</h1>
-    <p>نظام إدارة مخازن الأدوية والصيدليات</p>
-  </div>
-
-  <!-- Card -->
-  <div class="card">
-    <h2>تسجيل الدخول</h2>
-    <p class="sub">أدخل بياناتك للوصول إلى لوحة التحكم</p>
-
-    <form id="loginForm" autocomplete="off" novalidate>
-      <!-- Username -->
-      <div class="field">
-        <label for="username">اسم المستخدم</label>
-        <div class="input-wrap">
-          <input type="text" id="username" name="username" placeholder="مثال: shifa" required autocomplete="username" spellcheck="false" />
-          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-            <circle cx="12" cy="7" r="4"/>
-          </svg>
+      <!-- Brand -->
+      <div class="brand">
+        <div class="brand-logo">
+          <img src="logo.png" alt="رفاد" onerror="this.style.display='none';this.nextElementSibling.style.display='block';">
+          <span class="fallback-text" style="display:none;">R</span>
         </div>
+        <h1>رفاد</h1>
+        <p>نظام إدارة شركات توزيع الأدوية</p>
       </div>
 
-      <!-- Password -->
-      <div class="field">
-        <label for="password">كلمة المرور</label>
-        <div class="input-wrap">
-          <input type="password" id="password" name="password" placeholder="••••••••" required autocomplete="current-password" />
-          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="11" width="18" height="11" rx="2"/>
-            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-          </svg>
-          <button type="button" class="toggle-pass" id="togglePass" tabindex="-1" title="إظهار/إخفاء كلمة المرور" aria-label="إظهار كلمة المرور">
-            <svg id="eyeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
-              <circle cx="12" cy="12" r="3"/>
-            </svg>
-          </button>
-        </div>
+      <!-- Alert -->
+      <div class="alert error" id="alertBox">
+        <i data-lucide="alert-circle" style="width:18px;height:18px;flex-shrink:0;"></i>
+        <span id="alertMessage"></span>
       </div>
 
-      <!-- Options -->
-      <div class="opts">
-        <label class="chk">
-          <input type="checkbox" id="remember" />
-          <span class="box">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="20 6 9 17 4 12"/>
-            </svg>
+      <!-- Form -->
+      <form id="loginForm" autocomplete="off">
+
+        <div class="form-group">
+          <label for="username">اسم المستخدم</label>
+          <div class="input-wrap">
+            <input
+              type="text"
+              id="username"
+              name="username"
+              placeholder="أدخل اسم المستخدم"
+              autocomplete="username"
+              required
+              autofocus>
+            <i data-lucide="user" class="icon-left"></i>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="password">كلمة المرور</label>
+          <div class="input-wrap">
+            <input
+              type="password"
+              id="password"
+              name="password"
+              placeholder="أدخل كلمة المرور"
+              autocomplete="current-password"
+              required>
+            <i data-lucide="lock" class="icon-left"></i>
+            <button type="button" class="toggle-password" id="togglePassword" title="إظهار/إخفاء">
+              <i data-lucide="eye" id="eyeIcon" style="width:18px;height:18px;"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="options-row">
+          <label class="checkbox-wrap">
+            <input type="checkbox" id="rememberMe">
+            <span>تذكرني</span>
+          </label>
+        </div>
+
+        <button type="submit" class="btn-login" id="loginBtn">
+          <span class="btn-text" style="display:flex;align-items:center;gap:10px;">
+            <i data-lucide="log-in" style="width:18px;height:18px;"></i>
+            دخول
           </span>
-          <span>تذكرني على هذا الجهاز</span>
-        </label>
+          <span class="spinner"></span>
+        </button>
+
+      </form>
+      <p style="margin-top:16px;text-align:center;font-size:12px;color:var(--text-muted);">
+        يتم الدخول لإدارة الشركات من نفس الشاشة باستخدام حساب مدير الشركات.
+      </p>
+
+      <!-- Footer -->
+      <div class="login-footer">
+        <div>© <span id="year"></span> رفاد - جميع الحقوق محفوظة</div>
+        <span class="version" id="appVersion">v1.0.0</span>
       </div>
 
-      <!-- Submit -->
-      <button type="submit" class="btn-login" id="btnLogin">
-        <span class="spinner"></span>
-        <span class="txt">دخول</span>
-        <svg class="arrow" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="19" y1="12" x2="5" y2="12"/>
-          <polyline points="12 19 5 12 12 5"/>
-        </svg>
-      </button>
-    </form>
-
-    <!-- Demo accounts -->
-    <div class="demo">
-      <div class="lbl">حسابات تجريبية سريعة</div>
-      <div class="demo-btns">
-        <button type="button" class="demo-btn" data-u="super" data-p="super123">👑 Super Admin</button>
-        <button type="button" class="demo-btn" data-u="shifa" data-p="123456">🏢 شركة الشفاء</button>
-        <button type="button" class="demo-btn" data-u="nour"  data-p="123456">💊 صيدلية النور</button>
-      </div>
     </div>
   </div>
 
-</div>
+  <!-- ============================================================
+       Scripts
+       ============================================================ -->
+  <script src="refad-core.js"></script>
+  <script src="refad-auth.js"></script>
 
-<script>
-/* ═══════════════════════════════════════════════════════════
-   إعداد Supabase
-   ═══════════════════════════════════════════════════════════ */
-const SUPABASE_URL = "https://jlpjqwlwwuknabfekbth.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpscGpxd2x3d3VrbmFiZmVrYnRoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAyOTYxNTAsImV4cCI6MjEwNTg3MjE1MH0.8tcgNJnwGYbKlNZx3899k-h6E7dKWxl2vM9uD3pPFZ0";
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  <script>
+    (function () {
+      'use strict';
 
-/* ═══════════════════════════════════════════════════════════
-   ثوابت
-   ═══════════════════════════════════════════════════════════ */
-const SESSION_KEY  = 'pharma_session';
-const REMEMBER_KEY = 'pharma_remember';
-const THEME_KEY    = 'pharma_theme';
+      // ---------- Elements ----------
+      const form          = document.getElementById('loginForm');
+      const usernameInput = document.getElementById('username');
+      const passwordInput = document.getElementById('password');
+      const rememberMe    = document.getElementById('rememberMe');
+      const loginBtn      = document.getElementById('loginBtn');
+      const togglePwd     = document.getElementById('togglePassword');
+      const eyeIcon       = document.getElementById('eyeIcon');
+      const alertBox      = document.getElementById('alertBox');
+      const alertMessage  = document.getElementById('alertMessage');
+      const themeToggle   = document.getElementById('themeToggle');
+      const themeIcon     = document.getElementById('themeIcon');
 
-/* ═══════════════════════════════════════════════════════════
-   🌙 إدارة الوضع الليلي
-   ═══════════════════════════════════════════════════════════ */
-function applyTheme(theme) {
-  document.documentElement.setAttribute('data-theme', theme);
-  localStorage.setItem(THEME_KEY, theme);
+      // ---------- Init Lucide Icons ----------
+      if (window.lucide) lucide.createIcons();
 
-  // تحديث meta theme-color
-  const meta = document.querySelector('meta[name="theme-color"]');
-  if (meta) meta.setAttribute('content', theme === 'dark' ? '#0a1219' : '#0d6e6e');
-}
+      // ---------- Year & Version ----------
+      document.getElementById('year').textContent = new Date().getFullYear();
+      document.getElementById('appVersion').textContent = 'v' + (window.Refad?.version || '1.0.0');
 
-function initTheme() {
-  const saved = localStorage.getItem(THEME_KEY);
-  if (saved === 'dark' || saved === 'light') {
-    applyTheme(saved);
-    return;
-  }
-  // لو مفيش تخزين → يتبع تفضيل النظام
-  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  applyTheme(prefersDark ? 'dark' : 'light');
-}
-
-function toggleTheme() {
-  const current = document.documentElement.getAttribute('data-theme');
-  applyTheme(current === 'dark' ? 'light' : 'dark');
-}
-
-// تشغيل الثيم فوراً (قبل الـ render عشان نمنع الـ flash)
-initTheme();
-
-document.getElementById('themeToggle').addEventListener('click', toggleTheme);
-
-// متابعة تغيير تفضيل النظام لو المستخدم ما اختارش يدوياً
-window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-  if (!localStorage.getItem(THEME_KEY)) {
-    applyTheme(e.matches ? 'dark' : 'light');
-  }
-});
-
-/* ═══════════════════════════════════════════════════════════
-   🍞 Toast Helper
-   ═══════════════════════════════════════════════════════════ */
-function toast(msg, type = 'err') {
-  const wrap = document.getElementById('toastWrap');
-  const el = document.createElement('div');
-  el.className = 'toast ' + type;
-
-  const icons = {
-    err:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
-    ok:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
-    info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>'
-  };
-
-  el.innerHTML = (icons[type] || icons.err) + '<span>' + msg + '</span>';
-  wrap.appendChild(el);
-
-  setTimeout(() => {
-    el.classList.add('out');
-    setTimeout(() => el.remove(), 320);
-  }, 3400);
-}
-
-/* ═══════════════════════════════════════════════════════════
-   ⏳ Loading state
-   ═══════════════════════════════════════════════════════════ */
-function setLoading(on) {
-  const btn = document.getElementById('btnLogin');
-  const txt = btn.querySelector('.txt');
-  if (on) {
-    btn.classList.add('loading');
-    btn.disabled = true;
-    txt.textContent = 'جارٍ التحقق...';
-  } else {
-    btn.classList.remove('loading');
-    btn.disabled = false;
-    txt.textContent = 'دخول';
-  }
-}
-
-/* ═══════════════════════════════════════════════════════════
-   👁️ إظهار / إخفاء كلمة المرور
-   ═══════════════════════════════════════════════════════════ */
-document.getElementById('togglePass').addEventListener('click', () => {
-  const input = document.getElementById('password');
-  const icon  = document.getElementById('eyeIcon');
-  const isPass = input.type === 'password';
-  input.type = isPass ? 'text' : 'password';
-  icon.innerHTML = isPass
-    ? '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-10-8-10-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 10 8 10 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="2" y1="2" x2="22" y2="22"/>'
-    : '<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>';
-});
-
-/* ═══════════════════════════════════════════════════════════
-   ⚡ أزرار الحسابات التجريبية
-   ═══════════════════════════════════════════════════════════ */
-document.querySelectorAll('.demo-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.getElementById('username').value = btn.dataset.u;
-    document.getElementById('password').value = btn.dataset.p;
-    document.getElementById('username').focus();
-  });
-});
-
-/* ═══════════════════════════════════════════════════════════
-   💾 استرجاع "تذكرني"
-   ═══════════════════════════════════════════════════════════ */
-(function restoreRemembered() {
-  try {
-    const saved = localStorage.getItem(REMEMBER_KEY);
-    if (saved) {
-      const { username, password } = JSON.parse(saved);
-      document.getElementById('username').value = username || '';
-      document.getElementById('password').value = password || '';
-      document.getElementById('remember').checked = true;
-    }
-  } catch (e) { /* تجاهل */ }
-})();
-
-/* ═══════════════════════════════════════════════════════════
-   🔐 الدالة الأساسية: تسجيل الدخول
-   ═══════════════════════════════════════════════════════════ */
-async function login(username, password) {
-  // 1) جلب المستخدم
-  const { data: users, error: userErr } = await supabase
-    .from('users')
-    .select('id, tenant_id, username, name, role, active')
-    .eq('username', username.trim())
-    .eq('password', password)
-    .limit(1);
-
-  if (userErr) {
-    console.error('login user err:', userErr);
-    throw new Error('تعذّر الاتصال بالخادم، حاول مرة أخرى');
-  }
-
-  if (!users || users.length === 0) {
-    throw new Error('اسم المستخدم أو كلمة المرور غير صحيحة');
-  }
-
-  const user = users[0];
-
-  // 2) التحقق من active للمستخدم
-  if (!user.active) {
-    throw new Error('هذا الحساب موقوف، تواصل مع المدير');
-  }
-
-  // 3) التحقق من المنشأة (لو مش super)
-  let tenant = null;
-  if (user.role !== 'super') {
-    if (!user.tenant_id) {
-      throw new Error('هذا الحساب غير مرتبط بأي منشأة');
-    }
-
-    const { data: tenants, error: tenErr } = await supabase
-      .from('tenants')
-      .select('id, name, type, active')
-      .eq('id', user.tenant_id)
-      .limit(1);
-
-    if (tenErr) {
-      console.error('login tenant err:', tenErr);
-      throw new Error('تعذّر التحقق من بيانات المنشأة');
-    }
-
-    if (!tenants || tenants.length === 0) {
-      throw new Error('المنشأة غير موجودة');
-    }
-
-    tenant = tenants[0];
-
-    if (!tenant.active) {
-      throw new Error('المنشأة موقوفة من قِبل الإدارة، تواصل مع الدعم');
-    }
-  }
-
-  // 4) بناء الجلسة
-  const session = {
-    userId:     user.id,
-    username:   user.username,
-    name:       user.name,
-    role:       user.role,
-    tenantId:   user.tenant_id,
-    tenantName: tenant ? tenant.name : null,
-    tenantType: tenant ? tenant.type : null,
-    loginAt:    Date.now()
-  };
-
-  // 5) حفظ الجلسة
-  localStorage.setItem(SESSION_KEY, JSON.stringify(session));
-
-  // 6) حفظ "تذكرني"
-  const remember = document.getElementById('remember').checked;
-  if (remember) {
-    localStorage.setItem(REMEMBER_KEY, JSON.stringify({
-      username: user.username,
-      password: password
-    }));
-  } else {
-    localStorage.removeItem(REMEMBER_KEY);
-  }
-
-  return { user, tenant };
-}
-
-/* ═══════════════════════════════════════════════════════════
-   🚦 التوجيه حسب الدور
-   ═══════════════════════════════════════════════════════════ */
-function redirectByRole(role) {
-  if (role === 'super') {
-    window.location.href = 'tenants.html';
-  } else if (role === 'admin') {
-    window.location.href = 'dashboard.html';
-  } else {
-    window.location.href = 'pos.html';
-  }
-}
-
-/* ═══════════════════════════════════════════════════════════
-   📨 معالج إرسال الفورم
-   ═══════════════════════════════════════════════════════════ */
-document.getElementById('loginForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-
-  const username = document.getElementById('username').value.trim();
-  const password = document.getElementById('password').value;
-
-  if (!username || !password) {
-    toast('يرجى إدخال اسم المستخدم وكلمة المرور');
-    return;
-  }
-
-  setLoading(true);
-
-  try {
-    const { user } = await login(username, password);
-    toast('مرحباً ' + user.name + ' 👋', 'ok');
-    setTimeout(() => redirectByRole(user.role), 750);
-  } catch (err) {
-    console.error('login failed:', err);
-    toast(err.message || 'حدث خطأ غير متوقع');
-    setLoading(false);
-  }
-});
-
-/* ═══════════════════════════════════════════════════════════
-   🔄 توجيه تلقائي لو فيه جلسة سابقة (< 12 ساعة)
-   ═══════════════════════════════════════════════════════════ */
-(function autoRedirectIfLoggedIn() {
-  try {
-    const raw = localStorage.getItem(SESSION_KEY);
-    if (!raw) return;
-    const s = JSON.parse(raw);
-    if (s && s.role && s.loginAt) {
-      const age = Date.now() - s.loginAt;
-      if (age < 12 * 60 * 60 * 1000) {
-        redirectByRole(s.role);
-      } else {
-        localStorage.removeItem(SESSION_KEY);
+      // ---------- Theme ----------
+      function refreshThemeIcon() {
+        const isDark = Refad.theme.get() === 'dark';
+        themeIcon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+        if (window.lucide) lucide.createIcons();
       }
-    }
-  } catch (e) {
-    localStorage.removeItem(SESSION_KEY);
-  }
-})();
+      refreshThemeIcon();
 
-/* ═══════════════════════════════════════════════════════════
-   🎯 تركيز تلقائي على حقل اسم المستخدم
-   ═══════════════════════════════════════════════════════════ */
-window.addEventListener('load', () => {
-  const u = document.getElementById('username');
-  if (!u.value) u.focus();
-});
-</script>
+      themeToggle.addEventListener('click', () => {
+        Refad.theme.toggle();
+        refreshThemeIcon();
+      });
+
+      // ---------- Check: already logged in? ----------
+      (function checkExistingSession() {
+        const s = Refad.Session.get();
+        if (s) {
+          // تحقق من أن المستخدم ما زال موجود ومفعّل
+          Refad.db.selectOne('users', { eq: { id: s.user_id } })
+            .then(user => {
+              if (user && user.is_active) {
+                window.location.replace(s.is_superadmin ? 'admin.html' : 'dashboard.html');
+              } else {
+                Refad.Session.clear();
+              }
+            })
+            .catch(() => {
+              // لا نحذف الجلسة عند فشل الاتصال
+            });
+        }
+      })();
+
+      // ---------- Remember Me: استرجاع آخر username ----------
+      const savedUser = localStorage.getItem('refad_last_user');
+      if (savedUser) {
+        usernameInput.value = savedUser;
+        rememberMe.checked = true;
+        passwordInput.focus();
+      } else {
+        usernameInput.focus();
+      }
+
+      // ---------- Toggle Password Visibility ----------
+      togglePwd.addEventListener('click', () => {
+        const isPwd = passwordInput.type === 'password';
+        passwordInput.type = isPwd ? 'text' : 'password';
+        eyeIcon.setAttribute('data-lucide', isPwd ? 'eye-off' : 'eye');
+        if (window.lucide) lucide.createIcons();
+      });
+
+      // ---------- Show Alert ----------
+      function showAlert(message, type) {
+        alertMessage.textContent = message;
+        alertBox.className = 'alert ' + (type || 'error') + ' show';
+        // إعادة تشغيل animation
+        alertBox.style.animation = 'none';
+        void alertBox.offsetWidth;
+        alertBox.style.animation = '';
+      }
+
+      function hideAlert() {
+        alertBox.classList.remove('show');
+      }
+
+      // ---------- Loading State ----------
+      function setLoading(loading) {
+        loginBtn.disabled = loading;
+        loginBtn.classList.toggle('loading', loading);
+        usernameInput.disabled = loading;
+        passwordInput.disabled = loading;
+      }
+
+      // ---------- Submit Handler ----------
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        hideAlert();
+
+        const username = usernameInput.value.trim();
+        const password = passwordInput.value.trim();
+
+        if (!username || !password) {
+          showAlert('الرجاء إدخال اسم المستخدم وكلمة المرور');
+          return;
+        }
+
+        setLoading(true);
+
+        try {
+          const session = await Refad.Auth.login(username, password, rememberMe.checked);
+
+          // حفظ آخر username إذا "تذكرني"
+          if (rememberMe.checked) {
+            localStorage.setItem('refad_last_user', username);
+          } else {
+            localStorage.removeItem('refad_last_user');
+          }
+
+          // رسالة نجاح سريعة
+          if (window.Toastify) {
+            Toastify({
+              text: `أهلاً بك، ${session.full_name}`,
+              duration: 2000,
+              gravity: 'top',
+              position: 'left',
+              style: {
+                background: 'linear-gradient(to right, #14B8A6, #0d9488)',
+                borderRadius: '10px',
+                fontFamily: 'Cairo, sans-serif',
+                padding: '12px 20px'
+              }
+            }).showToast();
+          }
+
+          // Redirect
+          setTimeout(() => {
+            window.location.href = session.is_superadmin ? 'admin.html' : 'dashboard.html';
+          }, 500);
+
+        } catch (err) {
+          setLoading(false);
+          showAlert(err.message || 'حدث خطأ غير متوقع');
+
+          // اهتزاز الحقل
+          passwordInput.focus();
+          passwordInput.select();
+        }
+      });
+
+      // ---------- Register Service Worker ----------
+      Refad.registerServiceWorker();
+
+      console.log('%c[Refad] Login page ready', 'color:#14B8A6;font-weight:bold');
+
+    })();
+  </script>
+
 </body>
 </html>

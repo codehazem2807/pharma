@@ -1,0 +1,1212 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0B2C4D">
+  <title>العملاء - رفاد</title>
+
+  <link rel="icon" type="image/png" href="logo.png">
+  <link rel="manifest" href="manifest.json">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --primary: #0B2C4D;
+      --primary-light: #1e4a73;
+      --accent: #14B8A6;
+      --accent-dark: #0d9488;
+      --gold: #F59E0B;
+      --bg: #F1F5F9;
+      --card: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --danger: #ef4444;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --info: #3b82f6;
+      --sidebar-bg: #0B2C4D;
+      --sidebar-text: #cbd5e1;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+      --shadow: 0 4px 20px rgba(11, 44, 77, 0.08);
+      --shadow-lg: 0 10px 40px rgba(11, 44, 77, 0.12);
+      --radius: 14px;
+      --radius-sm: 10px;
+      --sidebar-w: 260px;
+      --topbar-h: 64px;
+    }
+
+    [data-theme="dark"] {
+      --bg: #0a1628;
+      --card: #0f2137;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --border: #1e3a5f;
+      --sidebar-bg: #061a2e;
+      --sidebar-text: #94a3b8;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Cairo', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      transition: background 0.3s, color 0.3s;
+    }
+
+    body { display: flex; min-height: 100vh; overflow-x: hidden; }
+
+    /* Sidebar */
+    .sidebar {
+      width: var(--sidebar-w);
+      height: 100vh;
+      background: var(--sidebar-bg);
+      color: var(--sidebar-text);
+      position: fixed;
+      top: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: -4px 0 20px rgba(0,0,0,0.1);
+    }
+    .sidebar-header {
+      padding: 20px 22px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      display: flex; align-items: center; gap: 14px;
+      height: var(--topbar-h);
+      box-sizing: border-box;
+    }
+    .sidebar-logo {
+      width: 40px; height: 40px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 4px 12px rgba(20,184,166,0.4);
+    }
+    .sidebar-logo img { width: 70%; height: 70%; object-fit: contain; }
+    .sidebar-logo .fallback { color: white; font-weight: 800; font-size: 18px; }
+    .sidebar-brand h2 { color: white; font-size: 20px; font-weight: 800; line-height: 1.2; }
+    .sidebar-brand p { font-size: 10px; color: var(--sidebar-text); opacity: 0.7; font-weight: 500; margin-top: 2px; }
+    .sidebar-nav { flex: 1; overflow-y: auto; padding: 12px 0; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.15) transparent; }
+    .sidebar-nav::-webkit-scrollbar { width: 5px; }
+    .sidebar-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 10px; }
+    .nav-section { padding: 8px 20px 4px; font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 1px; margin-top: 8px; }
+    .nav-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 11px 22px;
+      color: var(--sidebar-text);
+      text-decoration: none;
+      font-size: 14px; font-weight: 500;
+      border-right: 3px solid transparent;
+      transition: all 0.2s;
+      position: relative;
+      cursor: pointer;
+    }
+    .nav-item:hover { background: rgba(255,255,255,0.05); color: white; border-right-color: rgba(20,184,166,0.5); }
+    .nav-item.active { background: rgba(20,184,166,0.12); color: white; border-right-color: var(--accent); font-weight: 600; }
+    .nav-item.active::before { content: ''; position: absolute; right: 0; top: 50%; transform: translateY(-50%); width: 3px; height: 60%; background: var(--accent); border-radius: 0 4px 4px 0; }
+    .nav-item i, .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; opacity: 0.85; }
+    .nav-item .badge { margin-right: auto; background: var(--danger); color: white; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
+    .nav-item .badge.teal { background: var(--accent); }
+    .nav-item .badge.gold { background: var(--gold); }
+
+    /* Main */
+    .main { flex: 1; margin-right: var(--sidebar-w); min-width: 0; display: flex; flex-direction: column; }
+    .topbar {
+      height: var(--topbar-h);
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 16px;
+      padding: 0 24px;
+      position: sticky; top: 0;
+      z-index: 50;
+      box-shadow: var(--shadow-sm);
+    }
+    .menu-toggle { display: none; background: transparent; border: none; color: var(--text); cursor: pointer; padding: 8px; border-radius: 8px; }
+    .menu-toggle:hover { background: var(--bg); }
+    .topbar-title { font-size: 18px; font-weight: 700; color: var(--text); flex-shrink: 0; }
+    .topbar-actions { display: flex; align-items: center; gap: 8px; margin-right: auto; }
+    .icon-btn {
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      position: relative;
+      transition: all 0.2s;
+    }
+    .icon-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .icon-btn i, .icon-btn svg { width: 18px; height: 18px; }
+    .icon-btn .dot { position: absolute; top: 8px; left: 8px; width: 8px; height: 8px; background: var(--danger); border-radius: 50%; border: 2px solid var(--card); }
+    .user-menu {
+      display: flex; align-items: center; gap: 10px;
+      padding: 5px 12px 5px 5px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.2s;
+      border: 1px solid var(--border);
+      background: var(--card);
+    }
+    .user-menu:hover { background: var(--bg); }
+    .user-avatar {
+      width: 34px; height: 34px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-weight: 700; font-size: 14px;
+      flex-shrink: 0; overflow: hidden;
+    }
+    .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .user-info { display: flex; flex-direction: column; line-height: 1.2; }
+    .user-info .name { font-size: 13px; font-weight: 700; color: var(--text); }
+    .user-info .role { font-size: 11px; color: var(--text-muted); }
+    .dropdown { position: absolute; top: calc(100% + 8px); left: 0; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: var(--shadow-lg); min-width: 200px; padding: 6px; opacity: 0; visibility: hidden; transform: translateY(-8px); transition: all 0.2s; z-index: 100; }
+    .dropdown.show { opacity: 1; visibility: visible; transform: translateY(0); }
+    .dropdown-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; color: var(--text); font-size: 13px; font-weight: 500; cursor: pointer; transition: background 0.15s; text-decoration: none; }
+    .dropdown-item:hover { background: var(--bg); }
+    .dropdown-item.danger { color: var(--danger); }
+    .dropdown-item.danger:hover { background: rgba(239,68,68,0.08); }
+    .dropdown-item i { width: 16px; height: 16px; }
+    .dropdown-divider { height: 1px; background: var(--border); margin: 6px 0; }
+
+    /* Content */
+    .content { padding: 24px; flex: 1; }
+    .page-head {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .page-head h1 { font-size: 22px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+    .page-head p { font-size: 13px; color: var(--text-muted); }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 18px;
+      font-family: inherit;
+      font-size: 14px; font-weight: 600;
+      border-radius: var(--radius-sm);
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn i { width: 16px; height: 16px; }
+    .btn-primary { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; }
+    .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(20,184,166,0.35); }
+    .btn-outline { background: var(--card); color: var(--text); border: 1px solid var(--border); }
+    .btn-outline:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-danger:hover:not(:disabled) { background: #b91c1c; }
+    .btn-success { background: var(--success); color: white; }
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+    /* Stats */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      display: flex; align-items: center; gap: 14px;
+      box-shadow: var(--shadow-sm);
+      position: relative;
+      overflow: hidden;
+    }
+    .stat-card::before { content: ''; position: absolute; top: 0; right: 0; width: 4px; height: 100%; background: var(--accent); }
+    .stat-card.gold::before { background: var(--gold); }
+    .stat-card.danger::before { background: var(--danger); }
+    .stat-card.info::before { background: var(--info); }
+    .stat-icon {
+      width: 48px; height: 48px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      background: rgba(20,184,166,0.12);
+      color: var(--accent);
+    }
+    .stat-icon.gold { background: rgba(245,158,11,0.12); color: var(--gold); }
+    .stat-icon.danger { background: rgba(239,68,68,0.12); color: var(--danger); }
+    .stat-icon.info { background: rgba(59,130,246,0.12); color: var(--info); }
+    .stat-icon i { width: 22px; height: 22px; }
+    .stat-body { flex: 1; min-width: 0; }
+    .stat-body .label { font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px; }
+    .stat-body .value { font-size: 22px; font-weight: 800; color: var(--text); line-height: 1.2; }
+    .stat-body .sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+    /* Toolbar */
+    .toolbar {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      margin-bottom: 16px;
+      display: flex; gap: 12px; flex-wrap: wrap;
+      align-items: center;
+      box-shadow: var(--shadow-sm);
+    }
+    .search-box { position: relative; flex: 1; min-width: 220px; }
+    .search-box input {
+      width: 100%;
+      padding: 10px 42px 10px 14px;
+      font-family: inherit;
+      font-size: 14px;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      outline: none;
+      transition: all 0.2s;
+    }
+    .search-box input:focus { border-color: var(--accent); background: var(--card); box-shadow: 0 0 0 3px rgba(20,184,166,0.1); }
+    .search-box i { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--text-muted); pointer-events: none; }
+    .filter-select {
+      padding: 10px 14px;
+      font-family: inherit;
+      font-size: 13px; font-weight: 600;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      outline: none;
+      cursor: pointer;
+      min-width: 140px;
+    }
+    .filter-select:focus { border-color: var(--accent); background: var(--card); }
+
+    /* Table */
+    .table-wrap {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+    }
+    .table-scroll { overflow-x: auto; }
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      min-width: 900px;
+    }
+    table.data-table thead { background: var(--bg); border-bottom: 1px solid var(--border); }
+    table.data-table th {
+      text-align: right;
+      padding: 12px 10px;
+      font-size: 11px; font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+    }
+    table.data-table tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+      cursor: pointer;
+    }
+    table.data-table tbody tr:hover { background: var(--bg); }
+    table.data-table td { padding: 11px 10px; color: var(--text); vertical-align: middle; }
+
+    .customer-cell { display: flex; align-items: center; gap: 10px; }
+    .customer-avatar {
+      width: 38px; height: 38px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: white;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 14px;
+      flex-shrink: 0;
+    }
+    .customer-info { min-width: 0; }
+    .customer-info .name { font-weight: 700; color: var(--text); font-size: 13px; }
+    .customer-info .sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+    .money { font-weight: 700; color: var(--text); }
+    .money.accent { color: var(--accent); }
+    .money.danger { color: var(--danger); }
+    .money.success { color: var(--success); }
+
+    .status-pill {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px; font-weight: 700;
+      white-space: nowrap;
+    }
+    .status-pill.active { background: rgba(16,185,129,0.12); color: var(--success); }
+    .status-pill.inactive { background: rgba(239,68,68,0.12); color: var(--danger); }
+
+    .action-btn {
+      width: 30px; height: 30px;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text-muted);
+      cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+      margin: 0 1px;
+      text-decoration: none;
+    }
+    .action-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .action-btn.danger:hover { border-color: var(--danger); color: var(--danger); background: rgba(239,68,68,0.06); }
+    .action-btn i { width: 14px; height: 14px; }
+
+    .empty-state {
+      padding: 60px 20px;
+      text-align: center;
+      color: var(--text-muted);
+    }
+    .empty-state i { width: 52px; height: 52px; opacity: 0.3; margin-bottom: 14px; }
+    .empty-state h3 { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+    .empty-state p { font-size: 13px; }
+
+    .loader { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+    .loader i { width: 40px; height: 40px; animation: spin 1s linear infinite; color: var(--accent); margin-bottom: 12px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(11, 44, 77, 0.5);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .modal-backdrop.show { display: flex; opacity: 1; }
+    .modal {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-lg);
+      width: 100%;
+      max-width: 560px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      transform: scale(0.95);
+      transition: transform 0.2s;
+      overflow: hidden;
+    }
+    .modal-backdrop.show .modal { transform: scale(1); }
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+    .modal-header h3 { font-size: 16px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px; }
+    .modal-header h3 i { width: 18px; height: 18px; color: var(--accent); }
+    .modal-close {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .modal-close:hover { background: var(--bg); color: var(--danger); }
+    .modal-close i { width: 18px; height: 18px; }
+    .modal-body { padding: 20px; overflow-y: auto; flex: 1; min-height: 0; }
+    .modal-footer {
+      padding: 14px 20px;
+      border-top: 1px solid var(--border);
+      display: flex; gap: 10px; justify-content: flex-end;
+      background: var(--bg);
+      flex-shrink: 0;
+    }
+
+    /* Form */
+    .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+    .form-group { display: flex; flex-direction: column; }
+    .form-group.full { grid-column: 1 / -1; }
+    .form-group label { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 6px; display: flex; align-items: center; gap: 4px; }
+    .form-group label .req { color: var(--danger); }
+    .form-group label .hint { color: var(--text-muted); font-weight: 500; font-size: 11px; margin-right: auto; }
+    .form-group input, .form-group select, .form-group textarea {
+      padding: 10px 14px;
+      font-family: inherit;
+      font-size: 14px;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      outline: none;
+      width: 100%;
+      transition: all 0.2s;
+    }
+    .form-group textarea { resize: vertical; min-height: 70px; }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      border-color: var(--accent);
+      background: var(--card);
+      box-shadow: 0 0 0 3px rgba(20,184,166,0.1);
+    }
+
+    /* Overlay */
+    .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; opacity: 0; transition: opacity 0.3s; }
+    .overlay.show { display: block; opacity: 1; }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .sidebar { transform: translateX(100%); }
+      .sidebar.open { transform: translateX(0); }
+      .main { margin-right: 0; }
+      .menu-toggle { display: flex; }
+      .user-info { display: none; }
+    }
+    @media (max-width: 640px) {
+      .content { padding: 16px; }
+      .topbar { padding: 0 14px; gap: 10px; }
+      .topbar-title { font-size: 15px; }
+      .page-head { flex-direction: column; align-items: stretch; }
+      .page-head h1 { font-size: 18px; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .stat-card { padding: 14px; }
+      .stat-icon { width: 40px; height: 40px; }
+      .stat-body .value { font-size: 18px; }
+      .form-grid { grid-template-columns: 1fr; }
+      .modal-footer { flex-direction: column-reverse; }
+      .modal-footer .btn { width: 100%; justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <img src="logo.png" alt="رفاد" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=fallback>R</span>';">
+      </div>
+      <div class="sidebar-brand">
+        <h2>رفاد</h2>
+        <p>نظام إدارة الأدوية</p>
+      </div>
+    </div>
+    <nav class="sidebar-nav" id="sidebarNav"></nav>
+  </aside>
+
+  <div class="overlay" id="overlay"></div>
+
+  <!-- Main -->
+  <div class="main">
+
+    <header class="topbar">
+      <button class="menu-toggle" id="menuToggle"><i data-lucide="menu"></i></button>
+      <div class="topbar-title">العملاء</div>
+      <div class="topbar-actions">
+        <button class="icon-btn" id="themeToggle" title="الوضع الليلي/النهاري">
+          <i data-lucide="moon" id="themeIcon"></i>
+        </button>
+        <button class="icon-btn" id="notifBtn" title="الإشعارات" style="position:relative;">
+          <i data-lucide="bell"></i>
+          <span class="dot" id="notifDot" style="display:none;"></span>
+        </button>
+        <div style="position:relative;">
+          <div class="user-menu" id="userMenu">
+            <div class="user-avatar" id="userAvatar">م</div>
+            <div class="user-info">
+              <span class="name" id="userName">—</span>
+              <span class="role" id="userRole">—</span>
+            </div>
+            <i data-lucide="chevron-down" style="width:14px;height:14px;opacity:0.5;"></i>
+          </div>
+          <div class="dropdown" id="userDropdown">
+            <a href="company-settings.html" class="dropdown-item"><i data-lucide="settings"></i> الإعدادات</a>
+            <a href="employees.html" class="dropdown-item"><i data-lucide="user-cog"></i> الملف الشخصي</a>
+            <div class="dropdown-divider"></div>
+            <div class="dropdown-item danger" id="logoutBtn"><i data-lucide="log-out"></i> تسجيل الخروج</div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="content">
+
+      <div class="page-head">
+        <div>
+          <h1>جميع العملاء</h1>
+          <p>قائمة كاملة بكل عملاء الشركة مع الأرصدة والبيانات الأساسية</p>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn btn-outline btn-sm" id="refreshBtn">
+            <i data-lucide="refresh-cw"></i> تحديث
+          </button>
+          <button class="btn btn-outline btn-sm" id="exportBtn">
+            <i data-lucide="download"></i> تصدير Excel
+          </button>
+          <button class="btn btn-primary" id="addBtn">
+            <i data-lucide="plus"></i> عميل جديد
+          </button>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon"><i data-lucide="users"></i></div>
+          <div class="stat-body">
+            <div class="label">إجمالي العملاء</div>
+            <div class="value" id="statTotal">0</div>
+            <div class="sub" id="statTotalSub">—</div>
+          </div>
+        </div>
+        <div class="stat-card info">
+          <div class="stat-icon info"><i data-lucide="user-check"></i></div>
+          <div class="stat-body">
+            <div class="label">عملاء نشطون</div>
+            <div class="value" id="statActive">0</div>
+            <div class="sub">حالة نشطة</div>
+          </div>
+        </div>
+        <div class="stat-card danger">
+          <div class="stat-icon danger"><i data-lucide="trending-down"></i></div>
+          <div class="stat-body">
+            <div class="label">إجمالي المدين</div>
+            <div class="value" id="statDebt">0.00</div>
+            <div class="sub">أرصدة عليهم</div>
+          </div>
+        </div>
+        <div class="stat-card gold">
+          <div class="stat-icon gold"><i data-lucide="trending-up"></i></div>
+          <div class="stat-body">
+            <div class="label">إجمالي الدائن</div>
+            <div class="value" id="statCredit">0.00</div>
+            <div class="sub">أرصدة لهم</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Toolbar -->
+      <div class="toolbar">
+        <div class="search-box">
+          <input type="text" id="searchInput" placeholder="ابحث بالاسم أو الهاتف أو البريد...">
+          <i data-lucide="search"></i>
+        </div>
+        <select class="filter-select" id="filterBalance">
+          <option value="">كل الأرصدة</option>
+          <option value="debt">عليه رصيد</option>
+          <option value="credit">له رصيد</option>
+          <option value="zero">رصيد صفر</option>
+        </select>
+        <select class="filter-select" id="filterStatus">
+          <option value="">كل الحالات</option>
+          <option value="active">نشط</option>
+          <option value="inactive">موقوف</option>
+        </select>
+      </div>
+
+      <!-- Table -->
+      <div class="table-wrap">
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th style="width:50px;">#</th>
+                <th>العميل</th>
+                <th>الهاتف</th>
+                <th>البريد</th>
+                <th>الرصيد</th>
+                <th>الفواتير</th>
+                <th>الحالة</th>
+                <th style="width:120px;">إجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody">
+              <tr><td colspan="8"><div class="loader"><i data-lucide="loader-2"></i><p>جارٍ التحميل...</p></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Modal: Add/Edit -->
+  <div class="modal-backdrop" id="customerModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3><i data-lucide="user-plus"></i> <span id="modalTitle">عميل جديد</span></h3>
+        <button class="modal-close" data-close><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group full">
+            <label>اسم العميل <span class="req">*</span></label>
+            <input type="text" id="cName" maxlength="150" placeholder="اسم العميل">
+          </div>
+          <div class="form-group">
+            <label>الهاتف</label>
+            <input type="text" id="cPhone" maxlength="30" placeholder="01xxxxxxxxx">
+          </div>
+          <div class="form-group">
+            <label>البريد الإلكتروني</label>
+            <input type="email" id="cEmail" maxlength="120" placeholder="customer@email.com">
+          </div>
+          <div class="form-group full">
+            <label>العنوان</label>
+            <input type="text" id="cAddress" maxlength="255" placeholder="المدينة، الشارع">
+          </div>
+          <div class="form-group">
+            <label>الرصيد الافتتاحي <span class="hint">+ له / - عليه</span></label>
+            <input type="number" id="cBalance" step="0.01" value="0" placeholder="0.00">
+          </div>
+          <div class="form-group">
+            <label>الحالة</label>
+            <select id="cStatus">
+              <option value="active">نشط</option>
+              <option value="inactive">موقوف</option>
+            </select>
+          </div>
+          <div class="form-group full">
+            <label>ملاحظات</label>
+            <textarea id="cNotes" maxlength="500" placeholder="ملاحظات..."></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" data-close>إلغاء</button>
+        <button class="btn btn-primary" id="saveBtn">
+          <i data-lucide="save"></i> <span id="saveBtnText">إضافة العميل</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="refad-core.js"></script>
+  <script src="refad-auth.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      // ============================================================
+      // 1) Guard
+      // ============================================================
+      const session = Refad.Auth.guardPage('customers.view');
+      if (!session) return;
+
+      // ============================================================
+      // 2) State
+      // ============================================================
+      const state = {
+        customers: [],
+        invoicesCountMap: {},
+        filtered: [],
+        editingId: null,
+        filters: { search: '', balance: '', status: '' }
+      };
+
+      // ============================================================
+      // 3) Sidebar
+      // ============================================================
+      const MENU = [
+        { section: 'الرئيسية', items: [
+          { label: 'لوحة التحكم', icon: 'layout-dashboard', href: 'dashboard.html' },
+          { label: 'الشات', icon: 'message-circle', href: 'chat.html', permission: 'chat.use' },
+          { label: 'الإشعارات', icon: 'bell', href: 'notifications.html', permission: 'notifications.view' }
+        ]},
+        { section: 'العمليات', items: [
+          { label: 'الأصناف', icon: 'package', href: 'products.html', permission: 'products.view' },
+          { label: 'المخزون', icon: 'warehouse', href: 'inventory.html', permission: 'inventory.view' },
+          { label: 'طلبات الشراء', icon: 'clipboard-list', href: 'purchase-requests.html', permission: 'purchases.view' },
+          { label: 'الاستلامات', icon: 'package-check', href: 'receipts.html', permission: 'purchases.receive' },
+          { label: 'طلبات البيع', icon: 'shopping-cart', href: 'sales-orders.html', permission: 'sales.view' },
+          { label: 'نقطة البيع', icon: 'scan-barcode', href: 'pos.html', permission: 'sales.pos', badge: 'POS', badgeClass: 'teal' },
+          { label: 'الفواتير', icon: 'receipt', href: 'invoices.html', permission: 'sales.view' }
+        ]},
+        { section: 'الأطراف', items: [
+          { label: 'الموردين', icon: 'truck', href: 'suppliers.html', permission: 'suppliers.view' },
+          { label: 'العملاء', icon: 'users', href: 'customers.html', permission: 'customers.view' }
+        ]},
+        { section: 'المخزون', items: [
+          { label: 'الجرد', icon: 'clipboard-check', href: 'stocktake.html', permission: 'inventory.stocktake' },
+          { label: 'التسويات', icon: 'sliders-horizontal', href: 'adjustments.html', permission: 'inventory.adjust' }
+        ]},
+        { section: 'الموارد البشرية', items: [
+          { label: 'الموظفين', icon: 'user-cog', href: 'employees.html', permission: 'employees.view' },
+          { label: 'الصلاحيات', icon: 'shield-check', href: 'permissions.html', permission: 'permissions.manage' },
+          { label: 'الحضور', icon: 'calendar-check', href: 'attendance.html', permission: 'attendance.view' },
+          { label: 'الرواتب', icon: 'wallet', href: 'payroll.html', permission: 'payroll.view' }
+        ]},
+        { section: 'المالية', items: [
+          { label: 'المصاريف', icon: 'banknote', href: 'expenses.html', permission: 'expenses.view' },
+          { label: 'التقارير', icon: 'bar-chart-3', href: 'reports.html', permission: 'reports.view' }
+        ]},
+        { section: 'النظام', items: [
+          { label: 'إعدادات الشركة', icon: 'settings', href: 'company-settings.html', permission: 'settings.view' },
+          { label: 'شاشة الأدمن', icon: 'shield', href: 'admin.html', permission: 'admin.full', badge: 'Admin', badgeClass: 'gold' }
+        ]}
+      ];
+
+      function buildSidebar() {
+        const nav = document.getElementById('sidebarNav');
+        const frag = document.createDocumentFragment();
+        MENU.forEach(group => {
+          const allowed = group.items.filter(it => !it.permission || Refad.Session.has(it.permission));
+          if (!allowed.length) return;
+          frag.appendChild(Refad.el('div', { class: 'nav-section' }, group.section));
+          allowed.forEach(item => {
+            const a = Refad.el('a', {
+              href: item.href,
+              class: 'nav-item' + (item.href === 'customers.html' ? ' active' : '')
+            });
+            a.innerHTML = `<i data-lucide="${item.icon}"></i><span>${Refad.escapeHtml(item.label)}</span>${item.badge ? `<span class="badge ${item.badgeClass || ''}">${item.badge}</span>` : ''}`;
+            frag.appendChild(a);
+          });
+        });
+        nav.innerHTML = '';
+        nav.appendChild(frag);
+        if (window.lucide) lucide.createIcons();
+      }
+
+      // ============================================================
+      // 4) UI helpers
+      // ============================================================
+      function fillUser() {
+        const av = document.getElementById('userAvatar');
+        const initial = (session.full_name || '؟').trim().charAt(0);
+        if (session.avatar_url) av.innerHTML = `<img src="${Refad.escapeHtml(session.avatar_url)}" alt="">`;
+        else av.textContent = initial;
+        document.getElementById('userName').textContent = session.full_name;
+        document.getElementById('userRole').textContent = Refad.Session.has('company.owner') ? 'صاحب الشركة' : 'موظف';
+      }
+
+      function setupTheme() {
+        const btn = document.getElementById('themeToggle');
+        const icon = document.getElementById('themeIcon');
+        const refresh = () => {
+          const isDark = Refad.theme.get() === 'dark';
+          icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+          if (window.lucide) lucide.createIcons();
+        };
+        refresh();
+        btn.addEventListener('click', () => { Refad.theme.toggle(); refresh(); });
+      }
+
+      function setupSidebarMobile() {
+        const sb = document.getElementById('sidebar');
+        const ov = document.getElementById('overlay');
+        document.getElementById('menuToggle').addEventListener('click', () => {
+          sb.classList.add('open'); ov.classList.add('show');
+        });
+        ov.addEventListener('click', () => {
+          sb.classList.remove('open'); ov.classList.remove('show');
+        });
+      }
+
+      function setupUserMenu() {
+        const m = document.getElementById('userMenu');
+        const d = document.getElementById('userDropdown');
+        m.addEventListener('click', e => { e.stopPropagation(); d.classList.toggle('show'); });
+        document.addEventListener('click', () => d.classList.remove('show'));
+        d.addEventListener('click', e => e.stopPropagation());
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+          if (await Refad.alert.confirm('تسجيل الخروج', 'هل تريد الخروج؟', 'خروج')) {
+            await Refad.Auth.logout();
+          }
+        });
+      }
+
+      function setupNotifBtn() {
+        document.getElementById('notifBtn').addEventListener('click', () => {
+          window.location.href = 'notifications.html';
+        });
+      }
+
+      // ============================================================
+      // 5) Load data
+      // ============================================================
+      async function loadData() {
+        document.getElementById('tableBody').innerHTML =
+          '<tr><td colspan="8"><div class="loader"><i data-lucide="loader-2"></i><p>جارٍ التحميل...</p></div></td></tr>';
+        if (window.lucide) lucide.createIcons();
+
+        try {
+          const [customers, invoices] = await Promise.all([
+            Refad.db.select('customers', {
+              columns: 'id, name, phone, email, address, balance, notes, is_active, created_at',
+              eq: { company_id: session.company_id },
+              order: { column: 'name', ascending: true },
+              limit: 3000
+            }),
+            Refad.db.select('sales_invoices', {
+              columns: 'id, customer_id',
+              eq: { company_id: session.company_id },
+              limit: 5000
+            }).catch(() => [])
+          ]);
+
+          state.customers = customers;
+          state.invoicesCountMap = {};
+          invoices.forEach(inv => {
+            if (!inv.customer_id) return;
+            state.invoicesCountMap[inv.customer_id] = (state.invoicesCountMap[inv.customer_id] || 0) + 1;
+          });
+
+          renderStats();
+          applyFilters();
+        } catch (e) {
+          console.error('[Customers] load failed:', e);
+          document.getElementById('tableBody').innerHTML = `
+            <tr><td colspan="8"><div class="empty-state" style="color:var(--danger);">
+              <i data-lucide="alert-circle"></i>
+              <h3>فشل تحميل البيانات</h3>
+              <p>${Refad.escapeHtml(e.message || '')}</p>
+            </div></td></tr>`;
+          if (window.lucide) lucide.createIcons();
+        }
+      }
+
+      // ============================================================
+      // 6) Stats
+      // ============================================================
+      function renderStats() {
+        const list = state.customers;
+        const total = list.length;
+        const active = list.filter(c => c.is_active !== false).length;
+
+        let debt = 0, credit = 0;
+        list.forEach(c => {
+          const b = parseFloat(c.balance) || 0;
+          if (b < 0) debt += Math.abs(b);
+          else if (b > 0) credit += b;
+        });
+
+        document.getElementById('statTotal').textContent = Refad.format.number(total);
+        document.getElementById('statTotalSub').textContent = `${active} نشط`;
+        document.getElementById('statActive').textContent = Refad.format.number(active);
+        document.getElementById('statDebt').textContent = Refad.format.money(debt);
+        document.getElementById('statCredit').textContent = Refad.format.money(credit);
+      }
+
+      // ============================================================
+      // 7) Filters + render
+      // ============================================================
+      function applyFilters() {
+        let list = state.customers.slice();
+
+        if (state.filters.search) {
+          const q = state.filters.search.toLowerCase();
+          list = list.filter(c =>
+            (c.name || '').toLowerCase().includes(q) ||
+            (c.phone || '').toLowerCase().includes(q) ||
+            (c.email || '').toLowerCase().includes(q)
+          );
+        }
+
+        if (state.filters.balance) {
+          if (state.filters.balance === 'debt') list = list.filter(c => (parseFloat(c.balance) || 0) < 0);
+          else if (state.filters.balance === 'credit') list = list.filter(c => (parseFloat(c.balance) || 0) > 0);
+          else if (state.filters.balance === 'zero') list = list.filter(c => !c.balance || parseFloat(c.balance) === 0);
+        }
+
+        if (state.filters.status) {
+          list = list.filter(c => state.filters.status === 'active' ? c.is_active !== false : c.is_active === false);
+        }
+
+        state.filtered = list;
+        renderTable();
+      }
+
+      function renderTable() {
+        const tbody = document.getElementById('tableBody');
+        const list = state.filtered;
+
+        if (!list.length) {
+          tbody.innerHTML = `
+            <tr><td colspan="8">
+              <div class="empty-state">
+                <i data-lucide="users"></i>
+                <h3>${state.customers.length ? 'لا توجد نتائج مطابقة' : 'لا يوجد عملاء بعد'}</h3>
+                <p>${state.customers.length ? 'جرّب تعديل الفلاتر' : 'ابدأ بإضافة عميل جديد'}</p>
+              </div>
+            </td></tr>`;
+          if (window.lucide) lucide.createIcons();
+          return;
+        }
+
+        tbody.innerHTML = list.map((c, i) => {
+          const balance = parseFloat(c.balance) || 0;
+          const balanceCls = balance < 0 ? 'danger' : (balance > 0 ? 'success' : '');
+          const initials = Refad.escapeHtml((c.name || '؟').charAt(0));
+          const invCount = state.invoicesCountMap[c.id] || 0;
+          const isActive = c.is_active !== false;
+
+          return `
+            <tr data-id="${c.id}">
+              <td style="color:var(--text-muted);font-weight:700;text-align:center;">${i + 1}</td>
+              <td>
+                <div class="customer-cell">
+                  <div class="customer-avatar">${initials}</div>
+                  <div class="customer-info">
+                    <div class="name">${Refad.escapeHtml(c.name)}</div>
+                    ${c.address ? `<div class="sub">${Refad.escapeHtml(c.address)}</div>` : ''}
+                  </div>
+                </div>
+              </td>
+              <td>${Refad.escapeHtml(c.phone || '—')}</td>
+              <td>${Refad.escapeHtml(c.email || '—')}</td>
+              <td class="money ${balanceCls}">${Refad.format.money(balance)}</td>
+              <td style="text-align:center;font-weight:700;">${invCount}</td>
+              <td>
+                <span class="status-pill ${isActive ? 'active' : 'inactive'}">
+                  ${isActive ? 'نشط' : 'موقوف'}
+                </span>
+              </td>
+              <td>
+                <a href="customer-details.html?id=${c.id}" class="action-btn" title="التفاصيل">
+                  <i data-lucide="eye"></i>
+                </a>
+                <button class="action-btn" data-action="edit" data-id="${c.id}" title="تعديل">
+                  <i data-lucide="edit"></i>
+                </button>
+                <button class="action-btn danger" data-action="delete" data-id="${c.id}" title="حذف">
+                  <i data-lucide="trash-2"></i>
+                </button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+
+        if (window.lucide) lucide.createIcons();
+
+        tbody.querySelectorAll('tr[data-id]').forEach(tr => {
+          tr.addEventListener('click', (e) => {
+            if (e.target.closest('[data-action]') || e.target.closest('a')) return;
+            window.location.href = 'customer-details.html?id=' + tr.dataset.id;
+          });
+        });
+
+        tbody.querySelectorAll('[data-action]').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const action = btn.dataset.action;
+            const cid = parseInt(btn.dataset.id, 10);
+            if (action === 'edit') openEdit(cid);
+            else if (action === 'delete') deleteCustomer(cid);
+          });
+        });
+      }
+
+      // ============================================================
+      // 8) Add / Edit
+      // ============================================================
+      function openAdd() {
+        state.editingId = null;
+        document.getElementById('modalTitle').textContent = 'عميل جديد';
+        document.getElementById('saveBtnText').textContent = 'إضافة العميل';
+        ['cName', 'cPhone', 'cEmail', 'cAddress', 'cNotes'].forEach(id => {
+          document.getElementById(id).value = '';
+        });
+        document.getElementById('cBalance').value = 0;
+        document.getElementById('cStatus').value = 'active';
+        document.getElementById('customerModal').classList.add('show');
+        setTimeout(() => document.getElementById('cName').focus(), 150);
+      }
+
+      function openEdit(cid) {
+        const c = state.customers.find(x => x.id === cid);
+        if (!c) return;
+        state.editingId = cid;
+        document.getElementById('modalTitle').textContent = 'تعديل: ' + c.name;
+        document.getElementById('saveBtnText').textContent = 'حفظ التعديلات';
+        document.getElementById('cName').value = c.name || '';
+        document.getElementById('cPhone').value = c.phone || '';
+        document.getElementById('cEmail').value = c.email || '';
+        document.getElementById('cAddress').value = c.address || '';
+        document.getElementById('cBalance').value = c.balance || 0;
+        document.getElementById('cStatus').value = c.is_active === false ? 'inactive' : 'active';
+        document.getElementById('cNotes').value = c.notes || '';
+        document.getElementById('customerModal').classList.add('show');
+      }
+
+      async function save() {
+        const name = document.getElementById('cName').value.trim();
+        if (!name) {
+          Refad.toast.warning('اسم العميل مطلوب');
+          document.getElementById('cName').focus();
+          return;
+        }
+
+        const btn = document.getElementById('saveBtn');
+        btn.disabled = true;
+
+        try {
+          const payload = {
+            company_id: session.company_id,
+            name: name,
+            phone: document.getElementById('cPhone').value.trim() || null,
+            email: document.getElementById('cEmail').value.trim() || null,
+            address: document.getElementById('cAddress').value.trim() || null,
+            balance: Refad.toNum(document.getElementById('cBalance').value),
+            is_active: document.getElementById('cStatus').value === 'active',
+            notes: document.getElementById('cNotes').value.trim() || null
+          };
+
+          if (state.editingId) {
+            await Refad.db.update('customers', state.editingId, payload);
+            Refad.toast.success('تم تحديث العميل');
+          } else {
+            await Refad.db.insert('customers', payload);
+            Refad.toast.success('تم إضافة العميل');
+          }
+
+          document.getElementById('customerModal').classList.remove('show');
+          await loadData();
+        } catch (e) {
+          console.error('[Customers] save failed:', e);
+          Refad.toast.error('فشل الحفظ: ' + (e.message || e));
+        } finally {
+          btn.disabled = false;
+        }
+      }
+
+      async function deleteCustomer(cid) {
+        const c = state.customers.find(x => x.id === cid);
+        if (!c) return;
+
+        const ok = await Refad.alert.confirm(
+          'حذف العميل',
+          `سيتم حذف "${c.name}" نهائياً. الفواتير المرتبطة لن تُحذف لكنها ستفقد الربط. متابعة؟`,
+          'حذف'
+        );
+        if (!ok) return;
+
+        try {
+          await Refad.db.remove('customers', cid);
+          await Refad.logActivity('delete_customer', 'customers', `حذف عميل: ${c.name}`, cid);
+          Refad.toast.success('تم الحذف');
+          await loadData();
+        } catch (e) {
+          console.error('[Customers] delete failed:', e);
+          Refad.toast.error('فشل الحذف: ' + (e.message || e));
+        }
+      }
+
+      // ============================================================
+      // 9) Export
+      // ============================================================
+      function exportExcel() {
+        const list = state.filtered.length ? state.filtered : state.customers;
+        if (!list.length) return Refad.toast.warning('لا توجد بيانات');
+
+        const data = list.map((c, i) => ({
+          '#': i + 1,
+          'الاسم': c.name,
+          'الهاتف': c.phone || '',
+          'البريد': c.email || '',
+          'العنوان': c.address || '',
+          'الرصيد': parseFloat(c.balance) || 0,
+          'عدد الفواتير': state.invoicesCountMap[c.id] || 0,
+          'الحالة': c.is_active === false ? 'موقوف' : 'نشط'
+        }));
+
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'العملاء');
+        XLSX.writeFile(wb, 'customers_' + Refad.date.today() + '.xlsx');
+        Refad.toast.success('تم التصدير');
+      }
+
+      // ============================================================
+      // 10) Events
+      // ============================================================
+      function bindEvents() {
+        document.getElementById('addBtn').addEventListener('click', openAdd);
+        document.getElementById('saveBtn').addEventListener('click', save);
+        document.getElementById('exportBtn').addEventListener('click', exportExcel);
+        document.getElementById('refreshBtn').addEventListener('click', async () => {
+          Refad.toast.info('جارٍ التحديث...');
+          await loadData();
+          Refad.toast.success('تم التحديث');
+        });
+
+        document.querySelectorAll('#customerModal [data-close]').forEach(b => {
+          b.addEventListener('click', () => document.getElementById('customerModal').classList.remove('show'));
+        });
+        document.getElementById('customerModal').addEventListener('click', (e) => {
+          if (e.target.id === 'customerModal') e.target.classList.remove('show');
+        });
+
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape') document.getElementById('customerModal').classList.remove('show');
+        });
+
+        document.getElementById('searchInput').addEventListener('input', Refad.debounce((e) => {
+          state.filters.search = e.target.value.trim();
+          applyFilters();
+        }, 200));
+
+        document.getElementById('filterBalance').addEventListener('change', (e) => {
+          state.filters.balance = e.target.value;
+          applyFilters();
+        });
+
+        document.getElementById('filterStatus').addEventListener('change', (e) => {
+          state.filters.status = e.target.value;
+          applyFilters();
+        });
+      }
+
+      // ============================================================
+      // 11) Init
+      // ============================================================
+      async function init() {
+        buildSidebar();
+        fillUser();
+        setupTheme();
+        setupSidebarMobile();
+        setupUserMenu();
+        setupNotifBtn();
+        bindEvents();
+
+        await loadData();
+
+        if (Refad.registerServiceWorker) Refad.registerServiceWorker();
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+
+      console.log('%c[Refad] Customers ready', 'color:#14B8A6;font-weight:bold');
+
+    })();
+  </script>
+
+</body>
+</html>

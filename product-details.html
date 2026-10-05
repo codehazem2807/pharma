@@ -1,0 +1,1884 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0B2C4D">
+  <title>تفاصيل الصنف - رفاد</title>
+
+  <link rel="icon" type="image/png" href="logo.png">
+  <link rel="manifest" href="manifest.json">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --primary: #0B2C4D;
+      --primary-light: #1e4a73;
+      --accent: #14B8A6;
+      --accent-dark: #0d9488;
+      --gold: #F59E0B;
+      --bg: #F1F5F9;
+      --card: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --danger: #ef4444;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --info: #3b82f6;
+      --sidebar-bg: #0B2C4D;
+      --sidebar-text: #cbd5e1;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+      --shadow: 0 4px 20px rgba(11, 44, 77, 0.08);
+      --shadow-lg: 0 10px 40px rgba(11, 44, 77, 0.12);
+      --radius: 14px;
+      --radius-sm: 10px;
+      --sidebar-w: 260px;
+      --topbar-h: 64px;
+    }
+
+    [data-theme="dark"] {
+      --bg: #0a1628;
+      --card: #0f2137;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --border: #1e3a5f;
+      --sidebar-bg: #061a2e;
+      --sidebar-text: #94a3b8;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Cairo', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      transition: background 0.3s, color 0.3s;
+    }
+
+    body { display: flex; min-height: 100vh; overflow-x: hidden; }
+
+    /* ============================================================
+       Sidebar
+       ============================================================ */
+    .sidebar {
+      width: var(--sidebar-w);
+      height: 100vh;
+      background: var(--sidebar-bg);
+      color: var(--sidebar-text);
+      position: fixed;
+      top: 0;
+      right: 0;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: -4px 0 20px rgba(0,0,0,0.1);
+    }
+
+    .sidebar-header {
+      padding: 20px 22px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      height: var(--topbar-h);
+      box-sizing: border-box;
+    }
+
+    .sidebar-logo {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 4px 12px rgba(20,184,166,0.4);
+    }
+    .sidebar-logo img { width: 70%; height: 70%; object-fit: contain; }
+    .sidebar-logo .fallback { color: white; font-weight: 800; font-size: 18px; }
+
+    .sidebar-brand h2 { color: white; font-size: 20px; font-weight: 800; letter-spacing: -0.5px; line-height: 1.2; }
+    .sidebar-brand p { font-size: 10px; color: var(--sidebar-text); opacity: 0.7; font-weight: 500; margin-top: 2px; }
+
+    .sidebar-nav { flex: 1; overflow-y: auto; padding: 12px 0; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.15) transparent; }
+    .sidebar-nav::-webkit-scrollbar { width: 5px; }
+    .sidebar-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 10px; }
+
+    .nav-section { padding: 8px 20px 4px; font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 1px; margin-top: 8px; }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 22px;
+      color: var(--sidebar-text);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      border-right: 3px solid transparent;
+      transition: all 0.2s;
+      position: relative;
+      cursor: pointer;
+    }
+    .nav-item:hover { background: rgba(255,255,255,0.05); color: white; border-right-color: rgba(20,184,166,0.5); }
+    .nav-item.active { background: rgba(20,184,166,0.12); color: white; border-right-color: var(--accent); font-weight: 600; }
+    .nav-item.active::before { content: ''; position: absolute; right: 0; top: 50%; transform: translateY(-50%); width: 3px; height: 60%; background: var(--accent); border-radius: 0 4px 4px 0; }
+    .nav-item i, .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; opacity: 0.85; }
+    .nav-item .badge { margin-right: auto; background: var(--danger); color: white; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
+    .nav-item .badge.teal { background: var(--accent); }
+    .nav-item .badge.gold { background: var(--gold); }
+
+    /* ============================================================
+       Main
+       ============================================================ */
+    .main { flex: 1; margin-right: var(--sidebar-w); min-width: 0; display: flex; flex-direction: column; }
+
+    .topbar {
+      height: var(--topbar-h);
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 0 24px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .menu-toggle { display: none; background: transparent; border: none; color: var(--text); cursor: pointer; padding: 8px; border-radius: 8px; }
+    .menu-toggle:hover { background: var(--bg); }
+
+    .topbar-title { font-size: 18px; font-weight: 700; color: var(--text); flex-shrink: 0; }
+    .topbar-actions { display: flex; align-items: center; gap: 8px; margin-right: auto; }
+
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      transition: all 0.2s;
+    }
+    .icon-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .icon-btn i, .icon-btn svg { width: 18px; height: 18px; }
+    .icon-btn .dot { position: absolute; top: 8px; left: 8px; width: 8px; height: 8px; background: var(--danger); border-radius: 50%; border: 2px solid var(--card); }
+
+    .user-menu {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 5px 12px 5px 5px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.2s;
+      border: 1px solid var(--border);
+      background: var(--card);
+    }
+    .user-menu:hover { background: var(--bg); }
+
+    .user-avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 700;
+      font-size: 14px;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .user-info { display: flex; flex-direction: column; line-height: 1.2; }
+    .user-info .name { font-size: 13px; font-weight: 700; color: var(--text); }
+    .user-info .role { font-size: 11px; color: var(--text-muted); }
+
+    .dropdown { position: absolute; top: calc(100% + 8px); left: 0; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: var(--shadow-lg); min-width: 200px; padding: 6px; opacity: 0; visibility: hidden; transform: translateY(-8px); transition: all 0.2s; z-index: 100; }
+    .dropdown.show { opacity: 1; visibility: visible; transform: translateY(0); }
+    .dropdown-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; color: var(--text); font-size: 13px; font-weight: 500; cursor: pointer; transition: background 0.15s; text-decoration: none; }
+    .dropdown-item:hover { background: var(--bg); }
+    .dropdown-item.danger { color: var(--danger); }
+    .dropdown-item.danger:hover { background: rgba(239,68,68,0.08); }
+    .dropdown-item i { width: 16px; height: 16px; }
+    .dropdown-divider { height: 1px; background: var(--border); margin: 6px 0; }
+
+    /* ============================================================
+       Content
+       ============================================================ */
+    .content { padding: 24px; flex: 1; }
+
+    /* Back button + header */
+    .back-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .back-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .back-btn i { width: 14px; height: 14px; }
+
+    /* Product hero */
+    .product-hero {
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      border-radius: var(--radius);
+      padding: 26px;
+      color: white;
+      margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+
+    .product-hero::before {
+      content: '';
+      position: absolute;
+      top: -50px;
+      left: -50px;
+      width: 200px;
+      height: 200px;
+      background: radial-gradient(circle, rgba(20,184,166,0.4), transparent 70%);
+      border-radius: 50%;
+    }
+
+    .product-hero-inner {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .hero-avatar {
+      width: 82px;
+      height: 82px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 34px;
+      font-weight: 800;
+      color: white;
+      flex-shrink: 0;
+      box-shadow: 0 10px 30px rgba(20,184,166,0.4);
+    }
+
+    .hero-info { flex: 1; min-width: 200px; }
+
+    .hero-info h1 {
+      font-size: 26px;
+      font-weight: 800;
+      margin-bottom: 6px;
+      letter-spacing: -0.5px;
+    }
+
+    .hero-info .sub {
+      font-size: 14px;
+      opacity: 0.85;
+      margin-bottom: 10px;
+    }
+
+    .hero-tags {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .hero-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 12px;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      backdrop-filter: blur(4px);
+    }
+
+    .hero-tag i { width: 13px; height: 13px; }
+
+    .hero-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .hero-actions .btn {
+      background: rgba(255,255,255,0.15);
+      color: white;
+      border: 1px solid rgba(255,255,255,0.2);
+      backdrop-filter: blur(4px);
+    }
+    .hero-actions .btn:hover { background: rgba(255,255,255,0.25); transform: translateY(-2px); }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 6px;
+      margin-bottom: 16px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      box-shadow: var(--shadow-sm);
+    }
+    .tabs::-webkit-scrollbar { display: none; }
+
+    .tab {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: transparent;
+      border: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .tab:hover { background: var(--bg); color: var(--text); }
+    .tab.active { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; box-shadow: 0 4px 12px rgba(20,184,166,0.3); }
+    .tab i { width: 16px; height: 16px; }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; animation: fadeIn 0.3s; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Cards */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+
+    .card-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .card-header h3 { font-size: 15px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px; }
+    .card-header h3 i { width: 18px; height: 18px; color: var(--accent); }
+
+    .card-body { padding: 18px; }
+
+    /* Stats */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.2s;
+    }
+    .stat-card:hover { transform: translateY(-2px); border-color: var(--accent); box-shadow: var(--shadow); }
+
+    .stat-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .stat-icon i { width: 22px; height: 22px; color: white; }
+    .stat-icon.blue   { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+    .stat-icon.teal   { background: linear-gradient(135deg, #14B8A6, #0d9488); }
+    .stat-icon.gold   { background: linear-gradient(135deg, #F59E0B, #d97706); }
+    .stat-icon.red    { background: linear-gradient(135deg, #ef4444, #b91c1c); }
+    .stat-icon.green  { background: linear-gradient(135deg, #10b981, #047857); }
+    .stat-icon.purple { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
+
+    .stat-body { flex: 1; min-width: 0; }
+    .stat-body .label { font-size: 11px; color: var(--text-muted); font-weight: 600; margin-bottom: 3px; }
+    .stat-body .value { font-size: 20px; font-weight: 800; color: var(--text); line-height: 1.1; }
+    .stat-body .sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+    /* Discounts grid */
+    .discounts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+    }
+
+    .discount-box {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px;
+      text-align: center;
+      transition: all 0.2s;
+    }
+    .discount-box:hover { border-color: var(--accent); transform: translateY(-2px); }
+
+    .discount-box .label {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 700;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .discount-box .value { font-size: 20px; font-weight: 800; color: var(--text); }
+    .discount-box .value.purchase { color: var(--info); }
+    .discount-box .value.sale { color: var(--success); }
+
+    /* Table */
+    .table-wrap { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      min-width: 620px;
+    }
+
+    thead { background: var(--bg); border-bottom: 1px solid var(--border); }
+
+    th {
+      text-align: right;
+      padding: 12px 14px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+
+    tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--bg); }
+
+    td { padding: 12px 14px; color: var(--text); vertical-align: middle; }
+
+    .badge-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 9px;
+      font-size: 11px;
+      font-weight: 600;
+      border-radius: 20px;
+      white-space: nowrap;
+    }
+    .badge-tag.green  { background: rgba(16,185,129,0.12); color: var(--success); }
+    .badge-tag.red    { background: rgba(239,68,68,0.12); color: var(--danger); }
+    .badge-tag.gold   { background: rgba(245,158,11,0.12); color: var(--warning); }
+    .badge-tag.gray   { background: rgba(148,163,184,0.15); color: var(--text-muted); }
+    .badge-tag.blue   { background: rgba(59,130,246,0.12); color: var(--info); }
+
+    .action-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text-muted);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    .action-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .action-btn.danger:hover { border-color: var(--danger); color: var(--danger); background: rgba(239,68,68,0.06); }
+    .action-btn i { width: 14px; height: 14px; }
+
+    .empty-state {
+      padding: 50px 20px;
+      text-align: center;
+      color: var(--text-muted);
+    }
+    .empty-state i { width: 42px; height: 42px; opacity: 0.4; margin-bottom: 10px; }
+    .empty-state p { font-size: 13px; font-weight: 500; }
+
+    /* Barcode display */
+    .barcode-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--bg);
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+
+    .barcode-item svg { max-width: 200px; height: 50px; background: white; padding: 4px; border-radius: 6px; }
+
+    .barcode-code {
+      font-family: 'Courier New', monospace;
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--text);
+      letter-spacing: 1px;
+      flex: 1;
+      min-width: 100px;
+    }
+
+    .barcode-actions { display: flex; gap: 6px; }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 16px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: var(--radius-sm);
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn i { width: 15px; height: 15px; }
+
+    .btn-primary { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; }
+    .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(20,184,166,0.35); }
+
+    .btn-outline { background: var(--card); color: var(--text); border: 1px solid var(--border); }
+    .btn-outline:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-danger:hover:not(:disabled) { background: #b91c1c; }
+
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+    /* Modal - with scrollable body */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(11, 44, 77, 0.5);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .modal-backdrop.show { display: flex; opacity: 1; }
+
+    .modal {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-lg);
+      width: 100%;
+      max-width: 560px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      transform: scale(0.95);
+      transition: transform 0.2s;
+      overflow: hidden;
+    }
+    .modal-backdrop.show .modal { transform: scale(1); }
+    .modal.modal-lg { max-width: 800px; }
+    .modal.modal-sm { max-width: 420px; }
+
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .modal-header h3 { font-size: 16px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px; }
+    .modal-header h3 i { width: 18px; height: 18px; color: var(--accent); }
+
+    .modal-close {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    .modal-close:hover { background: var(--bg); color: var(--danger); }
+    .modal-close i { width: 18px; height: 18px; }
+
+    /* ⭐ السكرول في الـ body */
+    .modal-body {
+      padding: 20px;
+      overflow-y: auto;
+      flex: 1;
+      min-height: 0;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+    .modal-body::-webkit-scrollbar { width: 8px; }
+    .modal-body::-webkit-scrollbar-track { background: transparent; }
+    .modal-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+    .modal-body::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+    .modal-footer {
+      padding: 14px 20px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      background: var(--bg);
+      flex-shrink: 0;
+    }
+
+    /* Form */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
+
+    .form-group { display: flex; flex-direction: column; }
+    .form-group.full { grid-column: 1 / -1; }
+
+    .form-group label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .form-group label .req { color: var(--danger); }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      padding: 10px 12px;
+      font-family: inherit;
+      font-size: 14px;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      outline: none;
+      transition: all 0.2s;
+      width: 100%;
+    }
+
+    .form-group textarea { resize: vertical; min-height: 70px; }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      border-color: var(--accent);
+      background: var(--card);
+      box-shadow: 0 0 0 3px rgba(20,184,166,0.1);
+    }
+
+    /* Overlay (mobile) */
+    .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; opacity: 0; transition: opacity 0.3s; }
+    .overlay.show { display: block; opacity: 1; }
+
+    /* Loading skeleton */
+    .skeleton {
+      background: linear-gradient(90deg, var(--border) 25%, var(--bg) 50%, var(--border) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+      border-radius: 6px;
+      color: transparent !important;
+    }
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .sidebar { transform: translateX(100%); }
+      .sidebar.open { transform: translateX(0); }
+      .main { margin-right: 0; }
+      .menu-toggle { display: flex; }
+      .user-info { display: none; }
+    }
+
+    @media (max-width: 640px) {
+      .content { padding: 16px; }
+      .topbar { padding: 0 14px; }
+      .topbar-title { font-size: 15px; }
+      .product-hero { padding: 18px; }
+      .hero-avatar { width: 60px; height: 60px; font-size: 26px; }
+      .hero-info h1 { font-size: 20px; }
+      .form-grid { grid-template-columns: 1fr; }
+      .modal-footer { flex-direction: column-reverse; }
+      .modal-footer .btn { width: 100%; justify-content: center; }
+      .tabs { padding: 4px; }
+      .tab { padding: 8px 12px; font-size: 12px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <img src="logo.png" alt="رفاد" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=fallback>R</span>';">
+      </div>
+      <div class="sidebar-brand">
+        <h2>رفاد</h2>
+        <p>نظام إدارة الأدوية</p>
+      </div>
+    </div>
+    <nav class="sidebar-nav" id="sidebarNav"></nav>
+  </aside>
+
+  <div class="overlay" id="overlay"></div>
+
+  <!-- Main -->
+  <div class="main">
+
+    <header class="topbar">
+      <button class="menu-toggle" id="menuToggle"><i data-lucide="menu"></i></button>
+      <div class="topbar-title">تفاصيل الصنف</div>
+      <div class="topbar-actions">
+        <button class="icon-btn" id="themeToggle" title="الوضع الليلي/النهاري">
+          <i data-lucide="moon" id="themeIcon"></i>
+        </button>
+        <button class="icon-btn" id="notifBtn" title="الإشعارات" style="position:relative;">
+          <i data-lucide="bell"></i>
+          <span class="dot" id="notifDot" style="display:none;"></span>
+        </button>
+        <div style="position:relative;">
+          <div class="user-menu" id="userMenu">
+            <div class="user-avatar" id="userAvatar">م</div>
+            <div class="user-info">
+              <span class="name" id="userName">—</span>
+              <span class="role" id="userRole">—</span>
+            </div>
+            <i data-lucide="chevron-down" style="width:14px;height:14px;opacity:0.5;"></i>
+          </div>
+          <div class="dropdown" id="userDropdown">
+            <a href="company-settings.html" class="dropdown-item"><i data-lucide="settings"></i> الإعدادات</a>
+            <a href="employees.html" class="dropdown-item"><i data-lucide="user-cog"></i> الملف الشخصي</a>
+            <div class="dropdown-divider"></div>
+            <div class="dropdown-item danger" id="logoutBtn"><i data-lucide="log-out"></i> تسجيل الخروج</div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="content">
+
+      <div class="back-bar">
+        <a href="products.html" class="back-btn">
+          <i data-lucide="arrow-right"></i> رجوع للأصناف
+        </a>
+      </div>
+
+      <!-- Product Hero -->
+      <div class="product-hero" id="productHero">
+        <div class="product-hero-inner">
+          <div class="hero-avatar skeleton" id="heroAvatar" style="color:transparent;">&nbsp;</div>
+          <div class="hero-info">
+            <h1 id="heroName">جارٍ التحميل...</h1>
+            <div class="sub" id="heroSub">—</div>
+            <div class="hero-tags" id="heroTags"></div>
+          </div>
+          <div class="hero-actions">
+            <button class="btn" id="editProductBtn">
+              <i data-lucide="pencil"></i> تعديل
+            </button>
+            <button class="btn" id="printBarcodeBtn">
+              <i data-lucide="printer"></i> طباعة الباركود
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-grid" id="statsGrid">
+        <!-- JS -->
+      </div>
+
+      <!-- Tabs -->
+      <div class="tabs">
+        <button class="tab active" data-tab="discounts"><i data-lucide="percent"></i> الخصومات</button>
+        <button class="tab" data-tab="barcodes"><i data-lucide="barcode"></i> الباركود</button>
+        <button class="tab" data-tab="batches"><i data-lucide="layers"></i> التشغيلات</button>
+        <button class="tab" data-tab="movements"><i data-lucide="activity"></i> الحركات</button>
+        <button class="tab" data-tab="info"><i data-lucide="info"></i> معلومات</button>
+      </div>
+
+      <!-- Panel: Discounts -->
+      <div class="tab-panel active" data-panel="discounts">
+        <div class="card">
+          <div class="card-header">
+            <h3><i data-lucide="trending-up"></i> خصومات الشراء</h3>
+            <button class="btn btn-outline btn-sm" id="editPurchaseDiscount">
+              <i data-lucide="pencil"></i> تعديل
+            </button>
+          </div>
+          <div class="card-body">
+            <div class="discounts-grid" id="purchaseDiscounts">
+              <!-- JS -->
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3><i data-lucide="trending-down"></i> خصومات البيع</h3>
+            <button class="btn btn-outline btn-sm" id="editSaleDiscount">
+              <i data-lucide="pencil"></i> تعديل
+            </button>
+          </div>
+          <div class="card-body">
+            <div class="discounts-grid" id="saleDiscounts">
+              <!-- JS -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel: Barcodes -->
+      <div class="tab-panel" data-panel="barcodes">
+        <div class="card">
+          <div class="card-header">
+            <h3><i data-lucide="barcode"></i> الباركود</h3>
+            <button class="btn btn-primary btn-sm" id="addBarcodeBtn">
+              <i data-lucide="plus"></i> إضافة باركود
+            </button>
+          </div>
+          <div class="card-body" id="barcodesBody">
+            <!-- JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel: Batches -->
+      <div class="tab-panel" data-panel="batches">
+        <div class="card">
+          <div class="card-header">
+            <h3><i data-lucide="layers"></i> التشغيلات</h3>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>رقم التشغيلة</th>
+                  <th>الكمية الأصلية</th>
+                  <th>المتبقي</th>
+                  <th>سعر الشراء</th>
+                  <th>سعر البيع</th>
+                  <th>تاريخ الصلاحية</th>
+                  <th>الأيام المتبقية</th>
+                </tr>
+              </thead>
+              <tbody id="batchesBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel: Movements -->
+      <div class="tab-panel" data-panel="movements">
+        <div class="card">
+          <div class="card-header">
+            <h3><i data-lucide="activity"></i> سجل الحركات</h3>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>التاريخ</th>
+                  <th>النوع</th>
+                  <th>الكمية</th>
+                  <th>المرجع</th>
+                  <th>ملاحظات</th>
+                </tr>
+              </thead>
+              <tbody id="movementsBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel: Info -->
+      <div class="tab-panel" data-panel="info">
+        <div class="card">
+          <div class="card-header">
+            <h3><i data-lucide="info"></i> المعلومات الأساسية</h3>
+          </div>
+          <div class="card-body">
+            <div class="form-grid" id="infoGrid"></div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- ============================================================
+       Modal: Edit Product
+       ============================================================ -->
+  <div class="modal-backdrop" id="editModal">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <h3><i data-lucide="package-check"></i> تعديل الصنف</h3>
+        <button class="modal-close" data-close><i data-lucide="x"></i></button>
+      </div>
+      <form id="editForm">
+        <div class="modal-body">
+          <div class="form-grid">
+            <div class="form-group full">
+              <label>اسم الصنف <span class="req">*</span></label>
+              <input type="text" name="name" required maxlength="200">
+            </div>
+            <div class="form-group">
+              <label>الاسم بالإنجليزية</label>
+              <input type="text" name="name_en" maxlength="200">
+            </div>
+            <div class="form-group">
+              <label>الشكل الدوائي</label>
+              <select name="form">
+                <option value="">اختر...</option>
+                <option value="شراب">شراب</option>
+                <option value="أقراص">أقراص</option>
+                <option value="كبسولات">كبسولات</option>
+                <option value="أمبولات">أمبولات</option>
+                <option value="مرهم">مرهم</option>
+                <option value="قطرة">قطرة</option>
+                <option value="لبوس">لبوس</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>الوحدة</label>
+              <input type="text" name="unit" maxlength="30">
+            </div>
+            <div class="form-group">
+              <label>التصنيف</label>
+              <input type="text" name="category" maxlength="80">
+            </div>
+            <div class="form-group">
+              <label>السعر الافتراضي</label>
+              <input type="number" name="default_price" min="0" step="0.01">
+            </div>
+            <div class="form-group">
+              <label>الحد الأدنى للطلب</label>
+              <input type="number" name="min_order_qty" min="1" step="1">
+            </div>
+            <div class="form-group">
+              <label>حد إعادة الطلب</label>
+              <input type="number" name="reorder_level" min="0" step="1">
+            </div>
+            <div class="form-group full">
+              <label>ملاحظات</label>
+              <textarea name="notes" maxlength="255"></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" data-close>إلغاء</button>
+          <button type="submit" class="btn btn-primary" id="saveEditBtn">
+            <i data-lucide="save"></i> تحديث
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       Modal: Add Barcode
+       ============================================================ -->
+  <div class="modal-backdrop" id="barcodeModal">
+    <div class="modal modal-sm">
+      <div class="modal-header">
+        <h3><i data-lucide="barcode"></i> إضافة باركود</h3>
+        <button class="modal-close" data-close><i data-lucide="x"></i></button>
+      </div>
+      <form id="barcodeForm">
+        <div class="modal-body">
+          <div class="form-group">
+            <label>الباركود <span class="req">*</span></label>
+            <input type="text" name="barcode" required maxlength="50" autofocus placeholder="امسح الباركود أو اكتبه">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" data-close>إلغاء</button>
+          <button type="submit" class="btn btn-primary"><i data-lucide="save"></i> إضافة</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       Modal: Edit Discount
+       ============================================================ -->
+  <div class="modal-backdrop" id="discountModal">
+    <div class="modal modal-sm">
+      <div class="modal-header">
+        <h3><i data-lucide="percent" id="discountIcon"></i> <span id="discountTitle">تعديل الخصم</span></h3>
+        <button class="modal-close" data-close><i data-lucide="x"></i></button>
+      </div>
+      <form id="discountForm">
+        <div class="modal-body">
+          <div class="form-grid" id="discountFormGrid"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" data-close>إلغاء</button>
+          <button type="submit" class="btn btn-primary"><i data-lucide="save"></i> حفظ</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="refad-core.js"></script>
+  <script src="refad-auth.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      // ============================================================
+      // 1) Guard
+      // ============================================================
+      const session = Refad.Auth.guardPage('products.view');
+      if (!session) return;
+
+      const canEdit   = Refad.Session.has('products.edit');
+      const canDelete = Refad.Session.has('products.delete');
+
+      // ============================================================
+      // 2) Product ID from URL
+      // ============================================================
+      const productId = parseInt(Refad.getParam('id'), 10);
+      if (!productId || isNaN(productId)) {
+        Refad.alert.error('خطأ', 'لم يتم تحديد الصنف').then(() => location.href = 'products.html');
+        return;
+      }
+
+      // ============================================================
+      // 3) State
+      // ============================================================
+      const state = {
+        product: null,
+        discounts: null,
+        barcodes: [],
+        batches: [],
+        movements: []
+      };
+
+      // ============================================================
+      // 4) Sidebar
+      // ============================================================
+      const MENU = [
+        { section: 'الرئيسية', items: [
+          { label: 'لوحة التحكم', icon: 'layout-dashboard', href: 'dashboard.html' },
+          { label: 'الشات', icon: 'message-circle', href: 'chat.html', permission: 'chat.use' },
+          { label: 'الإشعارات', icon: 'bell', href: 'notifications.html', permission: 'notifications.view' }
+        ]},
+        { section: 'العمليات', items: [
+          { label: 'الأصناف', icon: 'package', href: 'products.html', permission: 'products.view' },
+          { label: 'المخزون', icon: 'warehouse', href: 'inventory.html', permission: 'inventory.view' },
+          { label: 'طلبات الشراء', icon: 'clipboard-list', href: 'purchase-requests.html', permission: 'purchases.view' },
+          { label: 'الاستلامات', icon: 'package-check', href: 'receipts.html', permission: 'purchases.receive' },
+          { label: 'طلبات البيع', icon: 'shopping-cart', href: 'sales-orders.html', permission: 'sales.view' },
+          { label: 'نقطة البيع', icon: 'scan-barcode', href: 'pos.html', permission: 'sales.pos', badge: 'POS', badgeClass: 'teal' },
+          { label: 'الفواتير', icon: 'receipt', href: 'invoices.html', permission: 'sales.view' }
+        ]},
+        { section: 'الأطراف', items: [
+          { label: 'الموردين', icon: 'truck', href: 'suppliers.html', permission: 'suppliers.view' },
+          { label: 'العملاء', icon: 'users', href: 'customers.html', permission: 'customers.view' }
+        ]},
+        { section: 'المخزون', items: [
+          { label: 'الجرد', icon: 'clipboard-check', href: 'stocktake.html', permission: 'inventory.stocktake' },
+          { label: 'التسويات', icon: 'sliders-horizontal', href: 'adjustments.html', permission: 'inventory.adjust' }
+        ]},
+        { section: 'الموارد البشرية', items: [
+          { label: 'الموظفين', icon: 'user-cog', href: 'employees.html', permission: 'employees.view' },
+          { label: 'الصلاحيات', icon: 'shield-check', href: 'permissions.html', permission: 'permissions.manage' },
+          { label: 'الحضور', icon: 'calendar-check', href: 'attendance.html', permission: 'attendance.view' },
+          { label: 'الرواتب', icon: 'wallet', href: 'payroll.html', permission: 'payroll.view' }
+        ]},
+        { section: 'المالية', items: [
+          { label: 'المصاريف', icon: 'banknote', href: 'expenses.html', permission: 'expenses.view' },
+          { label: 'التقارير', icon: 'bar-chart-3', href: 'reports.html', permission: 'reports.view' }
+        ]},
+        { section: 'النظام', items: [
+          { label: 'إعدادات الشركة', icon: 'settings', href: 'company-settings.html', permission: 'settings.view' },
+          { label: 'شاشة الأدمن', icon: 'shield', href: 'admin.html', permission: 'admin.full', badge: 'Admin', badgeClass: 'gold' }
+        ]}
+      ];
+
+      function buildSidebar() {
+        const nav = document.getElementById('sidebarNav');
+        const frag = document.createDocumentFragment();
+        MENU.forEach(group => {
+          const allowed = group.items.filter(it => !it.permission || Refad.Session.has(it.permission));
+          if (!allowed.length) return;
+          frag.appendChild(Refad.el('div', { class: 'nav-section' }, group.section));
+          allowed.forEach(item => {
+            const a = Refad.el('a', {
+              href: item.href,
+              class: 'nav-item' + (item.href === 'products.html' ? ' active' : '')
+            });
+            a.innerHTML = `<i data-lucide="${item.icon}"></i><span>${Refad.escapeHtml(item.label)}</span>${item.badge ? `<span class="badge ${item.badgeClass || ''}">${item.badge}</span>` : ''}`;
+            frag.appendChild(a);
+          });
+        });
+        nav.innerHTML = '';
+        nav.appendChild(frag);
+        if (window.lucide) lucide.createIcons();
+      }
+
+      // ============================================================
+      // 5) UI Helpers
+      // ============================================================
+      function fillUser() {
+        const av = document.getElementById('userAvatar');
+        const initial = (session.full_name || '؟').trim().charAt(0);
+        if (session.avatar_url) av.innerHTML = `<img src="${Refad.escapeHtml(session.avatar_url)}" alt="">`;
+        else av.textContent = initial;
+        document.getElementById('userName').textContent = session.full_name;
+        document.getElementById('userRole').textContent = Refad.Session.has('company.owner') ? 'صاحب الشركة' : 'موظف';
+      }
+
+      function setupTheme() {
+        const btn = document.getElementById('themeToggle');
+        const icon = document.getElementById('themeIcon');
+        const refresh = () => {
+          const isDark = Refad.theme.get() === 'dark';
+          icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+          if (window.lucide) lucide.createIcons();
+        };
+        refresh();
+        btn.addEventListener('click', () => { Refad.theme.toggle(); refresh(); });
+      }
+
+      function setupSidebarMobile() {
+        const sb = document.getElementById('sidebar');
+        const ov = document.getElementById('overlay');
+        document.getElementById('menuToggle').addEventListener('click', () => {
+          sb.classList.add('open'); ov.classList.add('show');
+        });
+        ov.addEventListener('click', () => {
+          sb.classList.remove('open'); ov.classList.remove('show');
+        });
+      }
+
+      function setupUserMenu() {
+        const m = document.getElementById('userMenu');
+        const d = document.getElementById('userDropdown');
+        m.addEventListener('click', e => { e.stopPropagation(); d.classList.toggle('show'); });
+        document.addEventListener('click', () => d.classList.remove('show'));
+        d.addEventListener('click', e => e.stopPropagation());
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+          if (await Refad.alert.confirm('تسجيل الخروج', 'هل تريد الخروج؟', 'خروج')) {
+            await Refad.Auth.logout();
+          }
+        });
+      }
+
+      function setupNotifBtn() {
+        document.getElementById('notifBtn').addEventListener('click', () => {
+          window.location.href = 'notifications.html';
+        });
+      }
+
+      // ============================================================
+      // 6) Load product data
+      // ============================================================
+      async function loadProduct() {
+        try {
+          state.product = await Refad.db.selectOne('products', { eq: { id: productId } });
+          if (!state.product || state.product.company_id !== session.company_id) {
+            Refad.alert.error('غير موجود', 'الصنف غير موجود أو لا يخصك').then(() => location.href = 'products.html');
+            return;
+          }
+          renderHero();
+          renderInfo();
+          renderStats();
+        } catch (e) {
+          console.error('[ProductDetails] load failed:', e);
+          Refad.toast.error('تعذّر تحميل الصنف: ' + e.message);
+        }
+      }
+
+      function renderHero() {
+        const p = state.product;
+        document.getElementById('heroAvatar').textContent = (p.name || '؟').charAt(0);
+        document.getElementById('heroAvatar').classList.remove('skeleton');
+        document.getElementById('heroName').textContent = p.name;
+
+        const subs = [];
+        if (p.name_en) subs.push(p.name_en);
+        if (p.category) subs.push(p.category);
+        document.getElementById('heroSub').textContent = subs.join(' • ') || '—';
+
+        const tags = [];
+        if (p.form) tags.push({ icon: 'pill', text: p.form });
+        if (p.unit) tags.push({ icon: 'package', text: p.unit });
+        if (p.default_price) tags.push({ icon: 'tag', text: Refad.format.money(p.default_price) });
+        tags.push({
+          icon: p.is_active ? 'check-circle' : 'x-circle',
+          text: p.is_active ? 'نشط' : 'غير نشط'
+        });
+
+        document.getElementById('heroTags').innerHTML = tags.map(t =>
+          `<span class="hero-tag"><i data-lucide="${t.icon}"></i> ${Refad.escapeHtml(t.text)}</span>`
+        ).join('');
+
+        if (window.lucide) lucide.createIcons();
+      }
+
+      function renderInfo() {
+        const p = state.product;
+        const rows = [
+          ['الاسم', p.name],
+          ['الاسم بالإنجليزية', p.name_en || '—'],
+          ['الشكل الدوائي', p.form || '—'],
+          ['الوحدة', p.unit || '—'],
+          ['التصنيف', p.category || '—'],
+          ['السعر الافتراضي', Refad.format.money(p.default_price)],
+          ['الحد الأدنى للطلب', Refad.format.number(p.min_order_qty || 1)],
+          ['حد إعادة الطلب', Refad.format.number(p.reorder_level || 0)],
+          ['الحالة', p.is_active ? 'نشط' : 'غير نشط'],
+          ['تاريخ الإضافة', Refad.format.datetime(p.created_at)],
+          ['آخر تحديث', Refad.format.datetime(p.updated_at)]
+        ];
+        document.getElementById('infoGrid').innerHTML = rows.map(([k, v]) => `
+          <div class="form-group">
+            <label>${Refad.escapeHtml(k)}</label>
+            <div style="padding:10px 12px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14px;">${Refad.escapeHtml(String(v))}</div>
+          </div>
+        `).join('');
+
+        if (p.notes) {
+          document.getElementById('infoGrid').innerHTML += `
+            <div class="form-group full">
+              <label>ملاحظات</label>
+              <div style="padding:10px 12px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14px;line-height:1.6;">${Refad.escapeHtml(p.notes)}</div>
+            </div>
+          `;
+        }
+      }
+
+      // ============================================================
+      // 7) Load all related data (parallel)
+      // ============================================================
+      async function loadRelated() {
+        try {
+          const [discount, barcodes, batches, movements] = await Promise.all([
+            Refad.db.selectOne('product_discounts', { eq: { product_id: productId } }).catch(() => null),
+            Refad.db.select('product_barcodes', {
+              eq: { product_id: productId },
+              order: { column: 'is_primary', ascending: false }
+            }).catch(() => []),
+            Refad.db.select('batches', {
+              columns: 'id, batch_number, quantity_in, quantity_left, cost_price, sale_price, expiry_date, created_at',
+              eq: { product_id: productId },
+              order: { column: 'expiry_date', ascending: true }
+            }).catch(() => []),
+            Refad.db.select('inventory_movements', {
+              columns: 'id, movement_type, quantity, reference_type, reference_id, notes, created_at',
+              eq: { product_id: productId },
+              order: { column: 'created_at', ascending: false },
+              limit: 100
+            }).catch(() => [])
+          ]);
+
+          state.discounts = discount;
+          state.barcodes = barcodes;
+          state.batches = batches;
+          state.movements = movements;
+
+          renderDiscounts();
+          renderBarcodes();
+          renderBatches();
+          renderMovements();
+          renderStats();
+        } catch (e) {
+          console.error('[ProductDetails] related load failed:', e);
+        }
+      }
+
+      // ============================================================
+      // 8) Stats
+      // ============================================================
+      function renderStats() {
+        const b = state.batches || [];
+        const totalIn = b.reduce((s, x) => s + (x.quantity_in || 0), 0);
+        const totalLeft = b.reduce((s, x) => s + (x.quantity_left || 0), 0);
+        const sold = totalIn - totalLeft;
+        const saleRate = totalIn > 0 ? Math.round((sold / totalIn) * 100) : 0;
+
+        // تنبيهات الصلاحية
+        const expiringSoon = b.filter(x => {
+          if (!x.expiry_date || !x.quantity_left) return false;
+          const d = Refad.format.daysLeft(x.expiry_date);
+          return d !== null && d >= 0 && d <= 90;
+        }).length;
+
+        const expired = b.filter(x => {
+          if (!x.expiry_date || !x.quantity_left) return false;
+          const d = Refad.format.daysLeft(x.expiry_date);
+          return d !== null && d < 0;
+        }).length;
+
+        const cards = [
+          { label: 'إجمالي المستلم', value: Refad.format.number(totalIn), icon: 'package-plus', cls: 'blue' },
+          { label: 'المخزون الحالي', value: Refad.format.number(totalLeft), icon: 'package', cls: 'teal' },
+          { label: 'معدل البيع', value: saleRate + '%', icon: 'trending-up', cls: 'green' },
+          { label: 'قريبة الانتهاء', value: Refad.format.number(expiringSoon), icon: 'alert-triangle', cls: 'gold' },
+          { label: 'منتهية', value: Refad.format.number(expired), icon: 'x-octagon', cls: 'red' }
+        ];
+
+        document.getElementById('statsGrid').innerHTML = cards.map(c => `
+          <div class="stat-card">
+            <div class="stat-icon ${c.cls}"><i data-lucide="${c.icon}"></i></div>
+            <div class="stat-body">
+              <div class="label">${Refad.escapeHtml(c.label)}</div>
+              <div class="value">${Refad.escapeHtml(c.value)}</div>
+            </div>
+          </div>
+        `).join('');
+        if (window.lucide) lucide.createIcons();
+      }
+
+      // ============================================================
+      // 9) Discounts
+      // ============================================================
+      function renderDiscounts() {
+        const d = state.discounts || {
+          last_purchase_discount: 0, max_purchase_discount: 0, min_purchase_discount: 0,
+          last_sale_discount: 0, max_sale_discount: 0, min_sale_discount: 0
+        };
+
+        const purchaseBoxes = [
+          ['آخر خصم', d.last_purchase_discount || 0],
+          ['أعلى خصم', d.max_purchase_discount || 0],
+          ['أقل خصم', d.min_purchase_discount || 0]
+        ];
+        document.getElementById('purchaseDiscounts').innerHTML = purchaseBoxes.map(([l, v]) => `
+          <div class="discount-box">
+            <div class="label">${Refad.escapeHtml(l)}</div>
+            <div class="value purchase">${Refad.format.number(v, 2)}%</div>
+          </div>
+        `).join('');
+
+        const saleBoxes = [
+          ['آخر خصم', d.last_sale_discount || 0],
+          ['أعلى خصم', d.max_sale_discount || 0],
+          ['أقل خصم', d.min_sale_discount || 0]
+        ];
+        document.getElementById('saleDiscounts').innerHTML = saleBoxes.map(([l, v]) => `
+          <div class="discount-box">
+            <div class="label">${Refad.escapeHtml(l)}</div>
+            <div class="value sale">${Refad.format.number(v, 2)}%</div>
+          </div>
+        `).join('');
+      }
+
+      function openDiscountModal(type) {
+        const d = state.discounts || {};
+        const isPurchase = type === 'purchase';
+        document.getElementById('discountTitle').textContent = isPurchase ? 'خصومات الشراء' : 'خصومات البيع';
+        document.getElementById('discountIcon').setAttribute('data-lucide', isPurchase ? 'trending-up' : 'trending-down');
+
+        const prefix = isPurchase ? 'purchase' : 'sale';
+        document.getElementById('discountFormGrid').innerHTML = `
+          <div class="form-group">
+            <label>آخر خصم %</label>
+            <input type="number" name="last_${prefix}_discount" min="0" max="100" step="0.01" value="${d['last_' + prefix + '_discount'] || 0}">
+          </div>
+          <div class="form-group">
+            <label>أعلى خصم %</label>
+            <input type="number" name="max_${prefix}_discount" min="0" max="100" step="0.01" value="${d['max_' + prefix + '_discount'] || 0}">
+          </div>
+          <div class="form-group">
+            <label>أقل خصم %</label>
+            <input type="number" name="min_${prefix}_discount" min="0" max="100" step="0.01" value="${d['min_' + prefix + '_discount'] || 0}">
+          </div>
+        `;
+
+        document.getElementById('discountForm').dataset.type = type;
+        document.getElementById('discountModal').classList.add('show');
+        if (window.lucide) lucide.createIcons();
+      }
+
+      async function saveDiscount(e) {
+        e.preventDefault();
+        const type = document.getElementById('discountForm').dataset.type;
+        const prefix = type === 'purchase' ? 'purchase' : 'sale';
+        const form = e.target;
+
+        const payload = {
+          product_id: productId,
+          [`last_${prefix}_discount`]: Refad.toNum(form[`last_${prefix}_discount`].value),
+          [`max_${prefix}_discount`]: Refad.toNum(form[`max_${prefix}_discount`].value),
+          [`min_${prefix}_discount`]: Refad.toNum(form[`min_${prefix}_discount`].value)
+        };
+
+        try {
+          if (state.discounts) {
+            await Refad.db.update('product_discounts', state.discounts.id, payload);
+          } else {
+            const created = await Refad.db.insert('product_discounts', payload);
+            state.discounts = created;
+          }
+          closeAllModals();
+          Refad.toast.success('تم تحديث الخصومات');
+          await loadRelated();
+        } catch (err) {
+          console.error('[Discount] save failed:', err);
+          Refad.toast.error('فشل الحفظ: ' + err.message);
+        }
+      }
+
+      // ============================================================
+      // 10) Barcodes
+      // ============================================================
+      function renderBarcodes() {
+        const body = document.getElementById('barcodesBody');
+        if (!state.barcodes.length) {
+          body.innerHTML = `
+            <div class="empty-state">
+              <i data-lucide="barcode"></i>
+              <p>لا يوجد باركود بعد. اضغط "إضافة باركود".</p>
+            </div>`;
+          if (window.lucide) lucide.createIcons();
+          return;
+        }
+
+        body.innerHTML = state.barcodes.map((b, i) => `
+          <div class="barcode-item">
+            <svg id="barcode-svg-${b.id}"></svg>
+            <div class="barcode-code">${Refad.escapeHtml(b.barcode)}</div>
+            <div class="barcode-actions">
+              <button class="action-btn" data-barcode-action="print" data-id="${b.id}" title="طباعة">
+                <i data-lucide="printer"></i>
+              </button>
+              ${canDelete ? `
+                <button class="action-btn danger" data-barcode-action="delete" data-id="${b.id}" title="حذف">
+                  <i data-lucide="trash-2"></i>
+                </button>
+              ` : ''}
+            </div>
+          </div>
+        `).join('');
+
+        // توليد SVG للباركود
+        state.barcodes.forEach(b => {
+          try {
+            JsBarcode(`#barcode-svg-${b.id}`, b.barcode, {
+              format: 'CODE128',
+              width: 1.8,
+              height: 50,
+              displayValue: false,
+              margin: 2,
+              lineColor: '#0f172a'
+            });
+          } catch (e) {
+            console.warn('Barcode render failed:', e);
+          }
+        });
+
+        if (window.lucide) lucide.createIcons();
+      }
+
+      function openBarcodeModal() {
+        document.getElementById('barcodeForm').reset();
+        document.getElementById('barcodeModal').classList.add('show');
+        setTimeout(() => document.querySelector('#barcodeForm [name=barcode]').focus(), 100);
+      }
+
+      async function saveBarcode(e) {
+        e.preventDefault();
+        const barcode = e.target.barcode.value.trim();
+        if (!barcode) return;
+
+        try {
+          await Refad.db.insert('product_barcodes', {
+            product_id: productId,
+            barcode,
+            is_primary: state.barcodes.length === 0
+          });
+          closeAllModals();
+          Refad.toast.success('تم إضافة الباركود');
+          await loadRelated();
+        } catch (err) {
+          console.error('[Barcode] save failed:', err);
+          if (err.message?.includes('duplicate')) {
+            Refad.toast.error('هذا الباركود مستخدم بالفعل');
+          } else {
+            Refad.toast.error('فشل الإضافة: ' + err.message);
+          }
+        }
+      }
+
+      async function deleteBarcode(id) {
+        if (!await Refad.alert.confirm('حذف الباركود', 'هل تريد الحذف؟', 'حذف')) return;
+        try {
+          await Refad.db.remove('product_barcodes', id);
+          Refad.toast.success('تم الحذف');
+          await loadRelated();
+        } catch (err) {
+          Refad.toast.error('فشل الحذف: ' + err.message);
+        }
+      }
+
+      function printBarcode(id) {
+        const bc = state.barcodes.find(b => b.id === id);
+        if (!bc) return;
+
+        const printWindow = window.open('', '_blank', 'width=500,height=400');
+        printWindow.document.write(`
+          <!DOCTYPE html>
+          <html dir="rtl">
+          <head>
+            <title>باركود - ${Refad.escapeHtml(state.product.name)}</title>
+            <style>
+              body { font-family: Cairo, Arial, sans-serif; text-align: center; padding: 30px; }
+              h2 { margin-bottom: 6px; color: #0B2C4D; }
+              p { color: #64748b; margin-bottom: 20px; font-size: 13px; }
+              svg { background: white; }
+              .code { font-family: monospace; font-size: 16px; margin-top: 8px; letter-spacing: 2px; }
+            </style>
+          </head>
+          <body>
+            <h2>${Refad.escapeHtml(state.product.name)}</h2>
+            <p>${Refad.escapeHtml(state.product.form || '')} ${state.product.unit ? '• ' + Refad.escapeHtml(state.product.unit) : ''}</p>
+            <svg id="bc"></svg>
+            <div class="code">${Refad.escapeHtml(bc.barcode)}</div>
+            <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"><\/script>
+            <script>
+              JsBarcode('#bc', '${bc.barcode.replace(/'/g, "\\'")}', {
+                format: 'CODE128', width: 2, height: 70, displayValue: false, margin: 4
+              });
+              window.onload = () => setTimeout(() => window.print(), 300);
+            <\/script>
+          </body>
+          </html>
+        `);
+        printWindow.document.close();
+      }
+
+      // ============================================================
+      // 11) Batches
+      // ============================================================
+      function renderBatches() {
+        const body = document.getElementById('batchesBody');
+        if (!state.batches.length) {
+          body.innerHTML = `
+            <tr class="empty-row" style="border:none;">
+              <td colspan="7">
+                <div class="empty-state">
+                  <i data-lucide="layers"></i>
+                  <p>لا توجد تشغيلات بعد</p>
+                </div>
+              </td>
+            </tr>`;
+          if (window.lucide) lucide.createIcons();
+          return;
+        }
+
+        body.innerHTML = state.batches.map(b => {
+          const days = Refad.format.daysLeft(b.expiry_date);
+          let expiryTag = '<span class="badge-tag gray">—</span>';
+          if (days !== null) {
+            if (days < 0) expiryTag = `<span class="badge-tag red">منتهي (${Math.abs(days)} يوم)</span>`;
+            else if (days <= 30) expiryTag = `<span class="badge-tag red">${days} يوم</span>`;
+            else if (days <= 90) expiryTag = `<span class="badge-tag gold">${days} يوم</span>`;
+            else expiryTag = `<span class="badge-tag green">${days} يوم</span>`;
+          }
+
+          return `
+            <tr>
+              <td><strong>${Refad.escapeHtml(b.batch_number || '—')}</strong></td>
+              <td>${Refad.format.number(b.quantity_in || 0)}</td>
+              <td><strong style="color:${b.quantity_left > 0 ? 'var(--success)' : 'var(--text-muted)'}">${Refad.format.number(b.quantity_left || 0)}</strong></td>
+              <td>${Refad.format.money(b.cost_price)}</td>
+              <td>${Refad.format.money(b.sale_price)}</td>
+              <td>${Refad.format.date(b.expiry_date)}</td>
+              <td>${expiryTag}</td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      // ============================================================
+      // 12) Movements
+      // ============================================================
+      function renderMovements() {
+        const body = document.getElementById('movementsBody');
+        if (!state.movements.length) {
+          body.innerHTML = `
+            <tr class="empty-row" style="border:none;">
+              <td colspan="5">
+                <div class="empty-state">
+                  <i data-lucide="activity"></i>
+                  <p>لا توجد حركات بعد</p>
+                </div>
+              </td>
+            </tr>`;
+          if (window.lucide) lucide.createIcons();
+          return;
+        }
+
+        const TYPES = {
+          'in': { label: 'إدخال', cls: 'green' },
+          'out': { label: 'إخراج', cls: 'red' },
+          'adjust': { label: 'تسوية', cls: 'gold' },
+          'loss': { label: 'فاقد', cls: 'red' },
+          'return': { label: 'مرتجع', cls: 'blue' }
+        };
+
+        body.innerHTML = state.movements.map(m => {
+          const t = TYPES[m.movement_type] || { label: m.movement_type, cls: 'gray' };
+          return `
+            <tr>
+              <td>${Refad.format.datetime(m.created_at)}</td>
+              <td><span class="badge-tag ${t.cls}">${Refad.escapeHtml(t.label)}</span></td>
+              <td><strong>${m.quantity > 0 ? '+' : ''}${Refad.format.number(m.quantity)}</strong></td>
+              <td>${Refad.escapeHtml(m.reference_type || '—')} ${m.reference_id ? '#' + m.reference_id : ''}</td>
+              <td>${Refad.escapeHtml(m.notes || '—')}</td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      // ============================================================
+      // 13) Edit product
+      // ============================================================
+      function openEditModal() {
+        const p = state.product;
+        if (!p) return;
+        const form = document.getElementById('editForm');
+        ['name','name_en','form','unit','category','default_price','min_order_qty','reorder_level','notes'].forEach(k => {
+          if (form[k]) form[k].value = p[k] ?? '';
+        });
+        document.getElementById('editModal').classList.add('show');
+        if (window.lucide) lucide.createIcons();
+      }
+
+      async function saveEdit(e) {
+        e.preventDefault();
+        const form = e.target;
+        const payload = {
+          name: form.name.value.trim(),
+          name_en: form.name_en.value.trim() || null,
+          form: form.form.value || null,
+          unit: form.unit.value.trim() || null,
+          category: form.category.value.trim() || null,
+          default_price: Refad.toNum(form.default_price.value),
+          min_order_qty: parseInt(form.min_order_qty.value, 10) || 1,
+          reorder_level: parseInt(form.reorder_level.value, 10) || 0,
+          notes: form.notes.value.trim() || null
+        };
+        if (!payload.name) {
+          Refad.toast.warning('اسم الصنف مطلوب');
+          return;
+        }
+        try {
+          await Refad.db.update('products', productId, payload);
+          await Refad.logActivity('update_product', 'products', `تعديل: ${payload.name}`, productId);
+          closeAllModals();
+          Refad.toast.success('تم التحديث');
+          await loadProduct();
+          document.title = `${payload.name} - رفاد`;
+        } catch (err) {
+          Refad.toast.error('فشل الحفظ: ' + err.message);
+        }
+      }
+
+      // ============================================================
+      // 14) Modal helpers
+      // ============================================================
+      function closeAllModals() {
+        document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.remove('show'));
+      }
+
+      function setupModals() {
+        // إغلاق بـ data-close
+        document.querySelectorAll('[data-close]').forEach(btn => {
+          btn.addEventListener('click', closeAllModals);
+        });
+
+        // إغلاق بـ ESC
+        document.addEventListener('keydown', e => {
+          if (e.key === 'Escape') closeAllModals();
+        });
+
+        // إغلاق بالضغط على الخلفية
+        document.querySelectorAll('.modal-backdrop').forEach(m => {
+          m.addEventListener('click', e => {
+            if (e.target === m) closeAllModals();
+          });
+        });
+      }
+
+      // ============================================================
+      // 15) Tabs
+      // ============================================================
+      function setupTabs() {
+        document.querySelectorAll('.tab').forEach(tab => {
+          tab.addEventListener('click', () => {
+            const name = tab.dataset.tab;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            tab.classList.add('active');
+            document.querySelector(`.tab-panel[data-panel="${name}"]`).classList.add('active');
+          });
+        });
+      }
+
+      // ============================================================
+      // 16) Events
+      // ============================================================
+      function bindEvents() {
+        document.getElementById('editProductBtn').addEventListener('click', openEditModal);
+        document.getElementById('editForm').addEventListener('submit', saveEdit);
+
+        document.getElementById('editPurchaseDiscount').addEventListener('click', () => openDiscountModal('purchase'));
+        document.getElementById('editSaleDiscount').addEventListener('click', () => openDiscountModal('sale'));
+        document.getElementById('discountForm').addEventListener('submit', saveDiscount);
+
+        document.getElementById('addBarcodeBtn').addEventListener('click', openBarcodeModal);
+        document.getElementById('barcodeForm').addEventListener('submit', saveBarcode);
+
+        document.getElementById('barcodesBody').addEventListener('click', e => {
+          const btn = e.target.closest('[data-barcode-action]');
+          if (!btn) return;
+          const id = parseInt(btn.dataset.id, 10);
+          if (btn.dataset.barcodeAction === 'print') printBarcode(id);
+          else if (btn.dataset.barcodeAction === 'delete') deleteBarcode(id);
+        });
+
+        document.getElementById('printBarcodeBtn').addEventListener('click', () => {
+          if (!state.barcodes.length) {
+            Refad.toast.warning('لا يوجد باركود لطباعته');
+            return;
+          }
+          printBarcode(state.barcodes[0].id);
+        });
+
+        // إخفاء أزرار التعديل لو مفيش صلاحية
+        if (!canEdit) {
+          document.getElementById('editProductBtn').style.display = 'none';
+          document.getElementById('editPurchaseDiscount').style.display = 'none';
+          document.getElementById('editSaleDiscount').style.display = 'none';
+        }
+      }
+
+      // ============================================================
+      // 17) Init
+      // ============================================================
+      async function init() {
+        buildSidebar();
+        fillUser();
+        setupTheme();
+        setupSidebarMobile();
+        setupUserMenu();
+        setupNotifBtn();
+        setupTabs();
+        setupModals();
+        bindEvents();
+
+        await loadProduct();
+        if (!state.product) return;
+        document.title = `${state.product.name} - رفاد`;
+        await loadRelated();
+
+        Refad.registerServiceWorker();
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+
+      console.log('%c[Refad] Product details ready', 'color:#14B8A6;font-weight:bold');
+
+    })();
+  </script>
+
+</body>
+</html>
