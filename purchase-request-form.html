@@ -774,6 +774,12 @@
           <button class="btn btn-outline btn-sm" id="printBtn" style="display:none;">
             <i data-lucide="printer"></i> طباعة
           </button>
+          <a class="btn btn-outline btn-sm" id="convertedReceiptBtn" href="#" style="display:none;">
+            <i data-lucide="package-check"></i> فاتورة الاستلام
+          </a>
+          <a class="btn btn-outline btn-sm" id="convertedReturnBtn" href="#" style="display:none;">
+            <i data-lucide="undo-2"></i> المرتجعات
+          </a>
           <button class="btn btn-success btn-sm" id="sendBtn" style="display:none;">
             <i data-lucide="send"></i> إرسال للمورد
           </button>
@@ -840,7 +846,11 @@
                 <th>آخر خصم شراء</th>
                 <th>أعلى خصم شراء</th>
                 <th>معدل البيع (90 يوم)</th>
+                <th>الرصيد القابل للبيع</th>
+                <th>أفضل سعر شراء سابق</th>
+                <th>كمية مقترحة</th>
                 <th>الكمية المطلوبة</th>
+                <th>خصم تفاوضي مقترح</th>
                 <th>الخصم المطلوب %</th>
                 <th>رد المورد</th>
                 <th style="width:60px;"></th>
@@ -848,7 +858,7 @@
             </thead>
             <tbody id="itemsBody">
               <tr class="empty-row">
-                <td colspan="9">
+                <td colspan="13">
                   <i data-lucide="package-open"></i>
                   <p>لم تضف أي أصناف بعد. ابدأ بالبحث أعلاه.</p>
                 </td>
@@ -954,6 +964,35 @@
       const canCreate = Refad.Session.has('purchases.create');
       const canEdit   = Refad.Session.has('purchases.edit');
 
+      function applyLockedRequestState(receipt) {
+        const receiptLink = document.getElementById('convertedReceiptBtn');
+        const returnLink = document.getElementById('convertedReturnBtn');
+        const canReturnPurchase = Refad.Session.has('purchases.return') || Refad.Session.has('purchases.receive');
+        if (receipt) {
+          receiptLink.href = `receipt-form.html?id=${receipt.id}`;
+          receiptLink.style.display = 'inline-flex';
+          returnLink.href = `returns.html?type=purchase&receipt_id=${receipt.id}`;
+          returnLink.style.display = canReturnPurchase ? 'inline-flex' : 'none';
+        }
+        document.getElementById('pageSubtitle').textContent = 'تم تحويل الطلب إلى فاتورة استلام — الطلب للعرض فقط';
+        document.getElementById('saveBtn').style.display = 'none';
+        document.getElementById('sendBtn').style.display = 'none';
+        const addAllBtn = document.getElementById('addAllProductsBtn');
+        if (addAllBtn) addAllBtn.disabled = true;
+        const importBtn = document.getElementById('importBtn');
+        if (importBtn) importBtn.disabled = true;
+        document.querySelectorAll('main.content input, main.content select, main.content textarea, #itemsBody button').forEach(control => {
+          control.disabled = true;
+        });
+        if (!document.getElementById('lockedRequestNotice')) {
+          const notice = document.createElement('div');
+          notice.id = 'lockedRequestNotice';
+          notice.style.cssText = 'margin:12px 0;padding:12px 14px;border:1px solid rgba(37,99,235,.25);border-radius:10px;background:rgba(37,99,235,.08);color:var(--text);font-size:13px;';
+          notice.textContent = 'تم تحويل طلب الشراء إلى فاتورة استلام، لذلك تم قفل تعديل بيانات الطلب وأصنافه. سجّل المرتجع من فاتورة الاستلام المرتبطة.';
+          document.querySelector('main.content .page-head').after(notice);
+        }
+      }
+
       // ============================================================
       // 2) ID from URL (edit mode?)
       // ============================================================
@@ -970,13 +1009,15 @@
         products: [],
         allProducts: [],
         stockByProduct: {},
+        purchaseBenchmarks: {},
         barcodeMap: {},
         items: [],
         originalItemIds: [],
         supplierResponses: [],
         requestNumber: null,
         shareToken: null,
-        status: 'draft'
+        status: 'draft',
+        isLocked: false
       };
 
       // ============================================================
@@ -1163,6 +1204,43 @@
             state.stockByProduct[batch.product_id] =
               (state.stockByProduct[batch.product_id] || 0) + (Number(batch.quantity_left) || 0);
           });
+
+          const purchaseSince = Refad.date.addDays(today, -180);
+          try {
+            const purchases = products.length ? await Refad.db.select('receipt_items', {
+              columns: 'product_id, unit_price, purchase_discount, quantity, receipts!inner(company_id, supplier_id, receipt_date, status, suppliers(id, name))',
+              in: { product_id: products.map(product => product.id) },
+              gte: { 'receipts.receipt_date': purchaseSince },
+              eq: { 'receipts.company_id': session.company_id },
+              neq: { 'receipts.status': 'cancelled' },
+              limit: 10000
+            }) : [];
+            state.purchaseBenchmarks = {};
+            purchases.forEach(row => {
+              const receipt = row.receipts;
+              const supplier = receipt?.suppliers;
+              const unitPrice = Number(row.unit_price);
+              if (!receipt || !supplier || !Number.isFinite(unitPrice) || unitPrice < 0) return;
+              const discount = Math.max(0, Math.min(100, Number(row.purchase_discount) || 0));
+              const netPrice = unitPrice * (1 - discount / 100);
+              const benchmark = state.purchaseBenchmarks[row.product_id] || { best: null, latest: null };
+              const purchase = {
+                supplierId: receipt.supplier_id,
+                supplierName: supplier.name,
+                netPrice,
+                discount,
+                date: receipt.receipt_date,
+                quantity: Number(row.quantity) || 0
+              };
+              if (!benchmark.best || netPrice < benchmark.best.netPrice) benchmark.best = purchase;
+              if (!benchmark.latest || receipt.receipt_date > benchmark.latest.date) benchmark.latest = purchase;
+              state.purchaseBenchmarks[row.product_id] = benchmark;
+            });
+          } catch (historyError) {
+            console.error('[Purchase request] Purchase price history failed:', historyError);
+            state.purchaseBenchmarks = {};
+            Refad.toast.warning('تعذّر تحميل مقارنة أسعار الشراء السابقة؛ ستظل توصيات الكمية والخصم متاحة');
+          }
         } catch (e) {
           console.error('Products load failed:', e);
           Refad.toast.error('تعذّر تحميل الأصناف');
@@ -1205,7 +1283,14 @@
         const reorderLevel = Number(product.reorder_level) || 0;
         const targetStock = Math.max(reorderLevel, Math.ceil((Number(dailyRate) || 0) * 30));
         const needed = Math.max(0, targetStock - currentStock);
-        return needed > 0 ? Math.max(Number(product.min_order_qty) || 1, needed) : 0;
+        return needed > 0 ? Math.min(99999, Math.max(Number(product.min_order_qty) || 1, needed)) : 0;
+      }
+
+      function suggestedPurchaseDiscount(product) {
+        return Math.max(
+          0,
+          Math.min(100, Number(product.max_purchase_discount) || Number(product.last_purchase_discount) || 0)
+        );
       }
 
       async function applySmartSuggestions() {
@@ -1255,8 +1340,11 @@
             product_id: product.id,
             product,
             requested_qty: quantity,
+            suggested_qty: suggestedPurchaseQty(product, dailyRate),
             last_discount: product.last_purchase_discount || 0,
             max_discount: product.max_purchase_discount || 0,
+            suggested_discount: suggestedPurchaseDiscount(product),
+            purchase_benchmark: state.purchaseBenchmarks[product.id] || null,
             requested_discount: 0,
             sale_rate: dailyRate
           });
@@ -1416,6 +1504,10 @@
       // 10) Add product to items
       // ============================================================
       async function addProductById(pid) {
+        if (state.isLocked) {
+          Refad.toast.warning('لا يمكن تعديل طلب تم تحويله إلى فاتورة استلام');
+          return;
+        }
         if (state.items.some(it => it.product_id === pid)) {
           Refad.toast.warning('الصنف مضاف بالفعل');
           return;
@@ -1430,8 +1522,11 @@
           product_id: p.id,
           product: p,
           requested_qty: 1,
+          suggested_qty: suggestedPurchaseQty(p, rates[pid] || 0),
           last_discount: p.last_purchase_discount || 0,
           max_discount: p.max_purchase_discount || 0,
+          suggested_discount: suggestedPurchaseDiscount(p),
+          purchase_benchmark: state.purchaseBenchmarks[p.id] || null,
           requested_discount: 0,
           sale_rate: rates[pid] || 0
         });
@@ -1446,7 +1541,7 @@
         if (!state.items.length) {
           tbody.innerHTML = `
             <tr class="empty-row">
-              <td colspan="9">
+              <td colspan="13">
                 <i data-lucide="package-open"></i>
                 <p>لم تضف أي أصناف بعد. ابدأ بالبحث أعلاه.</p>
               </td>
@@ -1475,8 +1570,26 @@
                 : '<span style="color:var(--text-muted);font-size:12px;">—</span>'
               }
             </td>
+            <td>${Refad.format.number(state.stockByProduct[it.product_id] || 0)}</td>
+            <td>
+              ${it.purchase_benchmark?.best
+                ? `<strong>${Refad.format.money(it.purchase_benchmark.best.netPrice)}</strong><div class="product-sub">الأفضل: ${Refad.escapeHtml(it.purchase_benchmark.best.supplierName)} • ${Refad.format.date(it.purchase_benchmark.best.date)}</div>${it.purchase_benchmark.latest ? `<div class="product-sub">آخر شراء: ${Refad.format.money(it.purchase_benchmark.latest.netPrice)} من ${Refad.escapeHtml(it.purchase_benchmark.latest.supplierName)} • ${Refad.format.date(it.purchase_benchmark.latest.date)}</div>` : ''}`
+                : '<span style="color:var(--text-muted);font-size:12px;">لا يوجد سجل آخر 180 يوم</span>'
+              }
+            </td>
+            <td>
+              <button type="button" class="btn btn-outline btn-sm" data-use-quantity="${i}" ${it.suggested_qty > 0 ? '' : 'disabled'}>
+                ${it.suggested_qty > 0 ? Refad.format.number(it.suggested_qty) : 'كافٍ'}
+              </button>
+            </td>
             <td>
               <input type="number" class="qty-input" value="${it.requested_qty}" min="1" max="99999" data-idx="${i}">
+            </td>
+            <td>
+              ${it.suggested_discount > 0
+                ? `<button type="button" class="btn btn-outline btn-sm" data-use-discount="${i}" title="أعلى خصم شراء تم تسجيله لهذا الصنف">${Refad.format.number(it.suggested_discount, 1)}%</button><div class="product-sub">أعلى خصم مسجل</div>`
+                : '<span style="color:var(--text-muted);font-size:12px;">لا يوجد سجل خصم</span>'
+              }
             </td>
             <td><input type="number" class="discount-request-input" value="${Number(it.requested_discount) || 0}" min="0" max="100" step="0.1" data-idx="${i}" aria-label="الخصم المطلوب"></td>
             <td>
@@ -1522,6 +1635,28 @@
           };
           inp.addEventListener('input', updateDiscount);
           inp.addEventListener('change', updateDiscount);
+        });
+
+        tbody.querySelectorAll('[data-use-quantity]').forEach(button => {
+          button.addEventListener('click', () => {
+            const idx = Number(button.dataset.useQuantity);
+            const item = state.items[idx];
+            if (!item || item.suggested_qty < 1) return;
+            item.requested_qty = item.suggested_qty;
+            renderItems();
+            Refad.toast.info('تم وضع الكمية المقترحة؛ راجعها قبل حفظ الطلب');
+          });
+        });
+
+        tbody.querySelectorAll('[data-use-discount]').forEach(button => {
+          button.addEventListener('click', () => {
+            const idx = Number(button.dataset.useDiscount);
+            const item = state.items[idx];
+            if (!item) return;
+            item.requested_discount = item.suggested_discount;
+            renderItems();
+            Refad.toast.info('تم وضع أعلى خصم شراء مسجل كهدف تفاوضي؛ يمكنك تعديله');
+          });
         });
 
         tbody.querySelectorAll('[data-remove]').forEach(btn => {
@@ -1576,8 +1711,11 @@
             product_id: product.id,
             product,
             requested_qty: quantity,
+            suggested_qty: quantity,
             last_discount: product.last_purchase_discount || 0,
             max_discount: product.max_purchase_discount || 0,
+            suggested_discount: suggestedPurchaseDiscount(product),
+            purchase_benchmark: state.purchaseBenchmarks[product.id] || null,
             requested_discount: 0,
             sale_rate: rate
           });
@@ -1632,8 +1770,11 @@
                   product_id: p.id,
                   product: p,
                   requested_qty: item.qty,
+                  suggested_qty: suggestedPurchaseQty(p, rates[p.id] || 0),
                   last_discount: p.last_purchase_discount || 0,
                   max_discount: p.max_purchase_discount || 0,
+                  suggested_discount: suggestedPurchaseDiscount(p),
+                  purchase_benchmark: state.purchaseBenchmarks[p.id] || null,
                   requested_discount: 0,
                   sale_rate: rates[p.id] || 0
                 });
@@ -1681,6 +1822,10 @@
       // 15) Save
       // ============================================================
       async function save() {
+        if (state.isLocked) {
+          Refad.toast.error('لا يمكن تعديل طلب شراء بعد تحويله إلى فاتورة استلام');
+          return;
+        }
         const invalidDiscount = document.querySelector('.discount-request-input:invalid');
         if (invalidDiscount) {
           invalidDiscount.focus();
@@ -1850,29 +1995,48 @@
 
           // ابحث عن أعلى خصم لكل صنف
           const discounts = await Refad.db.select('product_discounts', {
-            columns: 'product_id, max_purchase_discount',
+            columns: 'product_id, last_purchase_discount, max_purchase_discount',
             in: { product_id: items.map(i => i.product_id).filter(Boolean) }
           }).catch(() => []);
           const dMap = {};
-          discounts.forEach(d => { dMap[d.product_id] = d.max_purchase_discount || 0; });
+          discounts.forEach(d => { dMap[d.product_id] = d; });
 
           state.originalItemIds = items.map(item => item.id);
           state.items = items.filter(it => it.products).map(it => ({
             id: it.id,
             product_id: it.product_id,
-            product: it.products,
+            product: state.allProducts.find(product => product.id === it.product_id) || it.products,
             requested_qty: it.requested_qty || 1,
+            suggested_qty: suggestedPurchaseQty(
+              state.allProducts.find(product => product.id === it.product_id) || it.products,
+              it.avg_sale_rate || 0
+            ),
             last_discount: it.last_discount || 0,
             requested_discount: it.requested_discount || 0,
             supplier_price: it.supplier_price,
             supplier_discount: it.supplier_discount,
             supplier_response_at: it.supplier_response_at,
-            max_discount: dMap[it.product_id] || 0,
+            max_discount: dMap[it.product_id]?.max_purchase_discount || 0,
+            suggested_discount: suggestedPurchaseDiscount({
+              max_purchase_discount: dMap[it.product_id]?.max_purchase_discount,
+              last_purchase_discount: dMap[it.product_id]?.last_purchase_discount
+            }),
+            purchase_benchmark: state.purchaseBenchmarks[it.product_id] || null,
             sale_rate: it.avg_sale_rate || 0
           }));
 
           renderItems();
           renderSupplierResponseHistory();
+          const linkedReceipts = await Refad.db.select('receipts', {
+            columns: 'id, receipt_number, invoice_number, status',
+            eq: { company_id: session.company_id, request_id: requestId },
+            neq: { status: 'cancelled' },
+            order: { column: 'id', ascending: false },
+            limit: 1
+          });
+          const linkedReceipt = linkedReceipts[0] || null;
+          state.isLocked = r.status === 'received' || Boolean(linkedReceipt);
+          if (state.isLocked) applyLockedRequestState(linkedReceipt);
         } catch (e) {
           console.error('Load request failed:', e);
           Refad.toast.error('تعذّر تحميل الطلب: ' + e.message);
@@ -1914,6 +2078,7 @@
       // 17) Send / Share
       // ============================================================
       async function sendRequest() {
+        if (state.isLocked) return Refad.toast.warning('لا يمكن تغيير حالة طلب تم تحويله إلى فاتورة استلام');
         if (!requestId) return Refad.toast.warning('احفظ الطلب أولاً');
         const ok = await Refad.alert.confirm('إرسال الطلب', 'سيتم تغيير حالة الطلب إلى "مُرسل". متابعة؟', 'إرسال');
         if (!ok) return;

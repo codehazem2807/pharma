@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0B2C4D">
+  <title>الحسابات - رفاد</title>
+  <link rel="icon" type="image/png" href="logo.png">
+  <link rel="manifest" href="manifest.json">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    * { box-sizing: border-box; }
+    :root {
+      --primary: #0B2C4D; --accent: #14B8A6; --bg: #F1F5F9; --card: #fff;
+      --text: #0f172a; --muted: #64748b; --border: #e2e8f0;
+      --green: #059669; --red: #dc2626; --gold: #d97706;
+      --shadow: 0 4px 20px rgba(11,44,77,.07); --radius: 16px;
+    }
+    [data-theme="dark"] {
+      --bg: #0a1628; --card: #0f2137; --text: #f1f5f9; --muted: #94a3b8; --border: #1e3a5f;
+    }
+    body { margin: 0; background: var(--bg); color: var(--text); font-family: Cairo, sans-serif; }
+    .shell { max-width: 1500px; margin: auto; padding: 24px; }
+    header { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:24px; }
+    .brand { display:flex; align-items:center; gap:14px; min-width:0; }
+    .brand img { width:48px;height:48px;object-fit:contain;background:var(--card);border-radius:14px;padding:5px;box-shadow:var(--shadow); }
+    h1 { margin:0;font-size:26px;font-weight:800; }
+    .subtitle { color:var(--muted);font-size:13px;margin-top:3px; }
+    .header-actions,.quick-links { display:flex;align-items:center;gap:9px;flex-wrap:wrap; }
+    button,select,.link-btn { font:inherit; }
+    button,.link-btn { border:1px solid var(--border);border-radius:10px;background:var(--card);color:var(--text);padding:9px 13px;display:inline-flex;align-items:center;justify-content:center;gap:7px;text-decoration:none;cursor:pointer;transition:.15s; }
+    button:hover,.link-btn:hover { border-color:var(--accent);color:var(--accent); }
+    button:disabled { opacity:.55;cursor:wait; }
+    .primary { background:linear-gradient(135deg,var(--primary),var(--accent));border:0;color:#fff; }
+    .primary:hover { color:#fff;filter:brightness(1.06); }
+    .filters { display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px; }
+    .period { background:var(--card);border:1px solid var(--border);border-radius:10px;color:var(--text);padding:10px 14px;min-width:190px; }
+    .updated { color:var(--muted);font-size:12px; }
+    .cards { display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:18px; }
+    .metric { min-height:124px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);position:relative;overflow:hidden; }
+    .metric::after { content:"";position:absolute;inset:0 0 auto;height:3px;background:var(--metric,var(--accent)); }
+    .metric-head { display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:12px;font-weight:700;gap:8px; }
+    .metric-icon { width:36px;height:36px;border-radius:11px;background:color-mix(in srgb,var(--metric,var(--accent)) 13%,transparent);color:var(--metric,var(--accent));display:grid;place-items:center;flex:none; }
+    .metric-icon svg { width:19px;height:19px; }
+    .metric-value { font-size:21px;font-weight:800;margin-top:12px;overflow-wrap:anywhere; }
+    .metric-note { color:var(--muted);font-size:11px;margin-top:2px; }
+    .grid { display:grid;grid-template-columns:minmax(0,1.45fr) minmax(300px,1fr);gap:16px;margin-bottom:16px; }
+    .panel { background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);min-width:0; }
+    .panel-head { padding:16px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px; }
+    .panel-head h2 { margin:0;font-size:15px;display:flex;align-items:center;gap:8px; }
+    .panel-head svg { width:18px;height:18px;color:var(--accent); }
+    .panel-body { padding:16px 18px; }
+    .legend { display:flex;gap:14px;flex-wrap:wrap;color:var(--muted);font-size:11px; }
+    .legend span { display:flex;align-items:center;gap:5px; }
+    .dot { width:9px;height:9px;border-radius:50%;background:var(--dot); }
+    .chart { display:grid;grid-template-columns:repeat(14,minmax(15px,1fr));align-items:end;gap:8px;min-height:205px;padding-top:14px;overflow-x:auto; }
+    .day-col { min-width:18px;height:180px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:6px; }
+    .bars { height:150px;width:100%;display:flex;align-items:flex-end;justify-content:center;gap:2px;border-bottom:1px solid var(--border); }
+    .bar { width:28%;min-height:2px;border-radius:4px 4px 0 0;background:var(--bar);transition:height .25s; }
+    .day-label { color:var(--muted);font-size:9px;white-space:nowrap; }
+    .chart-empty { color:var(--muted);text-align:center;padding:35px 10px;font-size:13px; }
+    .balance-list { display:flex;flex-direction:column;gap:10px; }
+    .balance-row { display:flex;justify-content:space-between;align-items:center;gap:12px;padding-bottom:9px;border-bottom:1px solid var(--border); }
+    .balance-row:last-child { border-bottom:0;padding-bottom:0; }
+    .balance-name { min-width:0; }
+    .balance-name a { color:var(--text);font-weight:700;text-decoration:none; }
+    .balance-name a:hover { color:var(--accent); }
+    .balance-name small { display:block;color:var(--muted);font-size:10px; }
+    .balance-value { font-weight:800;white-space:nowrap; }
+    .table-wrap { overflow:auto; }
+    table { width:100%;border-collapse:collapse;min-width:720px;font-size:12px; }
+    th,td { padding:11px 14px;text-align:right;border-bottom:1px solid var(--border);white-space:nowrap; }
+    th { color:var(--muted);font-size:11px;background:var(--bg); }
+    tbody tr:last-child td { border-bottom:0; }
+    tbody tr:hover { background:color-mix(in srgb,var(--accent) 5%,var(--card)); }
+    .status { border-radius:20px;padding:3px 9px;font-size:10px;font-weight:700;background:var(--status-bg);color:var(--status); }
+    .type-link { color:var(--primary);font-weight:700;text-decoration:none; }
+    [data-theme="dark"] .type-link { color:#5eead4; }
+    .notice { border-radius:12px;padding:11px 14px;margin-bottom:16px;font-size:12px;background:rgba(59,130,246,.08);color:#2563eb;border:1px solid rgba(59,130,246,.2); }
+    [data-theme="dark"] .notice { color:#93c5fd; }
+    .error-box { display:none;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);color:var(--red);padding:16px;border-radius:12px;margin-bottom:16px; }
+    .empty { text-align:center;padding:24px;color:var(--muted); }
+    .footer { text-align:center;color:var(--muted);font-size:10px;padding:18px; }
+    .rep-toolbar { display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 18px;border-bottom:1px solid var(--border); }
+    .rep-toolbar label { font-size:12px;font-weight:700;color:var(--muted); }
+    .rep-filter { min-width:220px;max-width:100%;background:var(--bg);border:1px solid var(--border);border-radius:10px;color:var(--text);padding:9px 12px;font:inherit; }
+    .rep-summary { display:flex;gap:10px;flex-wrap:wrap;margin-inline-start:auto; }
+    .rep-summary span { border:1px solid var(--border);border-radius:10px;padding:7px 11px;font-size:12px;color:var(--muted); }
+    .rep-summary strong { color:var(--text);margin-inline-start:5px; }
+    .settle-btn { border:0;background:var(--accent);color:#fff;padding:7px 10px;border-radius:8px;font-weight:700;font-size:11px;white-space:nowrap; }
+    .settle-btn:hover { color:#fff;background:#0d9488; }
+    .settle-btn:disabled { opacity:.55;cursor:wait; }
+    .settlement-section { margin-top:16px; }
+    .settlement-log { border-top:1px solid var(--border); }
+    .settlement-log h3 { font-size:13px;margin:0;padding:13px 18px 0; }
+    @media(max-width:1050px) { .cards { grid-template-columns:repeat(2,minmax(0,1fr)); } .grid { grid-template-columns:1fr; } }
+    @media(max-width:600px) {
+      .shell { padding:14px; } header { align-items:flex-start; } h1 { font-size:21px; }
+      .brand img { width:40px;height:40px; } .header-actions { justify-content:flex-end; }
+      .header-actions .link-btn span { display:none; } .cards { gap:9px; }
+      .metric { min-height:112px;padding:13px; } .metric-value { font-size:17px; }
+      .panel-head,.panel-body { padding:13px; } .period { width:100%; }
+      .rep-toolbar { padding:13px;align-items:stretch; } .rep-filter { width:100%;min-width:0; }
+      .rep-summary { margin-inline-start:0; } .rep-summary span { flex:1; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <div class="brand">
+        <img src="logo.png" alt="رفاد" onerror="this.style.display='none'">
+        <div><h1>الحسابات</h1><div class="subtitle" id="companySubtitle">ملخص مالي واضح من سجلات الشركة</div></div>
+      </div>
+      <div class="header-actions">
+        <a class="link-btn" href="dashboard.html"><i data-lucide="layout-dashboard"></i><span>الرئيسية</span></a>
+        <button type="button" id="refreshBtn"><i data-lucide="refresh-cw"></i><span>تحديث</span></button>
+        <button type="button" id="exportBtn"><i data-lucide="download"></i><span>تصدير الملخص</span></button>
+      </div>
+    </header>
+
+    <div class="filters">
+      <select class="period" id="periodSelect" aria-label="الفترة الحسابية">
+        <option value="month">هذا الشهر</option>
+        <option value="today">اليوم</option>
+        <option value="7d">آخر 7 أيام</option>
+        <option value="30d">آخر 30 يوماً</option>
+        <option value="year">هذه السنة</option>
+        <option value="all">كل السجلات المحملة</option>
+      </select>
+      <span class="updated" id="updatedAt">جارٍ تحميل البيانات...</span>
+    </div>
+
+    <div class="error-box" id="errorBox" role="alert"></div>
+    <div class="notice">
+      هذا ملخص إداري يعتمد على الفواتير والاستلامات والمصاريف المسجلة، وليس دفتر قيود محاسبي أو رصيداً بنكياً. نتيجة التشغيل تقديرية: إجمالي ربح الفواتير ناقص المصاريف المسجلة للفترة.
+    </div>
+
+    <section class="panel settlement-section" aria-label="تسوية حسابات المندوبين">
+      <div class="panel-head">
+        <h2><i data-lucide="hand-coins"></i> تسوية حسابات المندوبين والفواتير الآجلة</h2>
+      </div>
+      <div class="rep-toolbar">
+        <label for="repFilter">المندوب</label>
+        <select class="rep-filter" id="repFilter">
+          <option value="">كل المندوبين</option>
+        </select>
+        <div class="rep-summary">
+          <span>فواتير مفتوحة <strong id="repOpenCount">0</strong></span>
+          <span>المتبقي للتحصيل <strong id="repOpenDue">—</strong></span>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>المندوب</th><th>رقم الفاتورة</th><th>العميل / المورد</th><th>تاريخ الفاتورة</th><th>الإجمالي</th><th>المحصل</th><th>المتبقي</th><th>الإجراء</th></tr></thead>
+          <tbody id="repInvoiceRows"><tr><td colspan="8" class="empty">جارٍ تحميل الفواتير الآجلة...</td></tr></tbody>
+        </table>
+      </div>
+      <div class="settlement-log">
+        <h3>آخر تسويات المندوبين</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>التاريخ</th><th>المندوب</th><th>الفاتورة</th><th>سجّلها</th><th>المبلغ</th><th>ملاحظات</th></tr></thead>
+            <tbody id="repSettlementRows"><tr><td colspan="6" class="empty">جارٍ تحميل سجل التسويات...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="cards" aria-label="المؤشرات المالية">
+      <article class="metric" style="--metric:#2563eb"><div class="metric-head"><span>صافي المبيعات</span><span class="metric-icon"><i data-lucide="trending-up"></i></span></div><div class="metric-value" id="salesValue">—</div><div class="metric-note" id="salesCount">يشمل الفواتير غير الملغاة</div></article>
+      <article class="metric" style="--metric:#059669"><div class="metric-head"><span>المبالغ المحصلة من المبيعات</span><span class="metric-icon"><i data-lucide="banknote"></i></span></div><div class="metric-value" id="collectionsValue">—</div><div class="metric-note">حسب المدفوع المسجل على الفواتير</div></article>
+      <article class="metric" style="--metric:#0d9488"><div class="metric-head"><span>إجمالي الربح المسجل</span><span class="metric-icon"><i data-lucide="badge-dollar-sign"></i></span></div><div class="metric-value" id="profitValue">—</div><div class="metric-note">قبل المصاريف التشغيلية</div></article>
+      <article class="metric" style="--metric:#7c3aed"><div class="metric-head"><span>النتيجة بعد المصاريف</span><span class="metric-icon"><i data-lucide="scale"></i></span></div><div class="metric-value" id="netValue">—</div><div class="metric-note">تقدير الربح ناقص المصاريف المسجلة</div></article>
+      <article class="metric" style="--metric:#d97706"><div class="metric-head"><span>قيمة المشتريات المستلمة</span><span class="metric-icon"><i data-lucide="package-check"></i></span></div><div class="metric-value" id="purchaseValue">—</div><div class="metric-note" id="purchasePaid">من فواتير الاستلام</div></article>
+      <article class="metric" style="--metric:#dc2626"><div class="metric-head"><span>المصاريف المسجلة</span><span class="metric-icon"><i data-lucide="receipt-text"></i></span></div><div class="metric-value" id="expenseValue">—</div><div class="metric-note" id="expenseCount">للفترة المختارة</div></article>
+      <article class="metric" style="--metric:#0891b2"><div class="metric-head"><span>أرصدة العملاء المدينة</span><span class="metric-icon"><i data-lucide="users"></i></span></div><div class="metric-value" id="customerDue">—</div><div class="metric-note">من أرصدة حسابات العملاء المسجلة</div></article>
+      <article class="metric" style="--metric:#be123c"><div class="metric-head"><span>أرصدة الموردين الدائنة</span><span class="metric-icon"><i data-lucide="truck"></i></span></div><div class="metric-value" id="supplierDue">—</div><div class="metric-note">من أرصدة حسابات الموردين المسجلة</div></article>
+    </section>
+
+    <section class="grid">
+      <article class="panel">
+        <div class="panel-head"><h2><i data-lucide="chart-no-axes-column-increasing"></i> حركة آخر 14 يوماً</h2>
+          <div class="legend"><span><i class="dot" style="--dot:#2563eb"></i>بيع</span><span><i class="dot" style="--dot:#d97706"></i>استلام</span><span><i class="dot" style="--dot:#dc2626"></i>مصروف</span></div>
+        </div>
+        <div class="panel-body"><div class="chart" id="trendChart"><div class="chart-empty">جارٍ تحميل الحركة...</div></div></div>
+      </article>
+      <article class="panel">
+        <div class="panel-head"><h2><i data-lucide="hand-coins"></i> أكبر الأرصدة المفتوحة</h2></div>
+        <div class="panel-body">
+          <div class="balance-list" id="balanceList"><div class="empty">جارٍ تحميل الأرصدة...</div></div>
+          <div class="quick-links" style="margin-top:16px">
+            <a class="link-btn" href="suppliers.html"><i data-lucide="truck"></i> حسابات الموردين</a>
+            <a class="link-btn" href="customers.html"><i data-lucide="users"></i> حسابات العملاء</a>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2><i data-lucide="history"></i> أحدث الحركات المالية</h2>
+        <div class="quick-links">
+          <a class="link-btn" href="invoices.html">فواتير البيع</a>
+          <a class="link-btn" href="receipts.html">الاستلامات</a>
+          <a class="link-btn" href="expenses.html">المصاريف</a>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>النوع</th><th>الرقم / البيان</th><th>الطرف</th><th>التاريخ</th><th>الإجمالي</th><th>المدفوع</th><th>المتبقي</th></tr></thead>
+          <tbody id="recentRows"><tr><td colspan="7" class="empty">جارٍ تحميل الحركات...</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+    <div class="footer">رفاد • المؤشرات مبنية على السجلات المتاحة للشركة المسجل دخولها</div>
+  </main>
+
+  <script src="refad-core.js"></script>
+  <script src="refad-auth.js"></script>
+  <script>
+    (function () {
+      'use strict';
+      const session = Refad.Auth.guardPage('company.owner');
+      if (!session) return;
+      const state = { invoices: [], receipts: [], expenses: [], suppliers: [], customers: [], users: [], settlements: [] };
+      const today = () => {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      };
+      const dateShift = (date, days) => {
+        const d = new Date(`${date}T12:00:00`);
+        d.setDate(d.getDate() + days);
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      };
+      const periodRange = value => {
+        const now = today();
+        if (value === 'today') return { from: now, to: now };
+        if (value === '7d') return { from: dateShift(now, -6), to: now };
+        if (value === '30d') return { from: dateShift(now, -29), to: now };
+        if (value === 'year') return { from: `${now.slice(0, 4)}-01-01`, to: now };
+        if (value === 'all') return { from: null, to: null };
+        return { from: `${now.slice(0, 7)}-01`, to: now };
+      };
+      const inRange = (date, range) => (!range.from || date >= range.from) && (!range.to || date <= range.to);
+      const amount = value => Number(value) || 0;
+      const money = value => Refad.format.money(value);
+
+      function setText(id, value) { document.getElementById(id).textContent = value; }
+      function withinPeriod(rows, dateKey, range) { return rows.filter(row => inRange(row[dateKey] || '', range)); }
+      function userName(id) {
+        return state.users.find(row => String(row.id) === String(id))?.full_name || '—';
+      }
+      function openInvoices() {
+        return state.invoices.filter(row =>
+          row.status !== 'cancelled' &&
+          (row.invoice_type || 'sale') === 'sale' &&
+          row.cashier_id &&
+          amount(row.grand_total) - amount(row.paid_amount) > 0.009
+        );
+      }
+      function populateRepresentatives() {
+        const select = document.getElementById('repFilter');
+        const selected = select.value;
+        const representativeIds = new Set(openInvoices().map(row => String(row.cashier_id)));
+        const representatives = state.users
+          .filter(user => representativeIds.has(String(user.id)))
+          .sort((a, b) => String(a.full_name).localeCompare(String(b.full_name), 'ar'));
+        select.innerHTML = '<option value="">كل المندوبين</option>' + representatives.map(user =>
+          `<option value="${user.id}">${Refad.escapeHtml(user.full_name || 'مندوب')}</option>`
+        ).join('');
+        if (representativeIds.has(selected)) select.value = selected;
+      }
+      function renderRepresentativeAccounts() {
+        populateRepresentatives();
+        const selectedRep = document.getElementById('repFilter').value;
+        const rows = openInvoices()
+          .filter(row => !selectedRep || String(row.cashier_id) === selectedRep)
+          .sort((a, b) => String(b.invoice_date || '').localeCompare(String(a.invoice_date || '')));
+        const dueTotal = rows.reduce((sum, row) => sum + Math.max(0, amount(row.grand_total) - amount(row.paid_amount)), 0);
+        setText('repOpenCount', Refad.format.number(rows.length));
+        setText('repOpenDue', money(dueTotal));
+        document.getElementById('repInvoiceRows').innerHTML = rows.length ? rows.map(row => {
+          const due = Math.max(0, amount(row.grand_total) - amount(row.paid_amount));
+          const party = row.supplier_id
+            ? (state.suppliers.find(item => String(item.id) === String(row.supplier_id))?.name || 'مورد')
+            : (state.customers.find(item => String(item.id) === String(row.customer_id))?.name || 'عميل نقدي');
+          return `<tr>
+            <td>${Refad.escapeHtml(userName(row.cashier_id))}</td>
+            <td><a class="type-link" href="invoices.html?id=${row.id}">${Refad.escapeHtml(row.invoice_number || '—')}</a></td>
+            <td>${Refad.escapeHtml(party)}</td><td>${Refad.format.date(row.invoice_date)}</td>
+            <td>${money(row.grand_total)}</td><td>${money(row.paid_amount)}</td>
+            <td><strong>${money(due)}</strong></td>
+            <td><button type="button" class="settle-btn" data-settle-invoice="${row.id}" data-due="${due}">تسجيل تحصيل</button></td>
+          </tr>`;
+        }).join('') : '<tr><td colspan="8" class="empty">لا توجد فواتير آجلة مرتبطة بمندوب في الوقت الحالي.</td></tr>';
+        const recent = state.settlements.slice(0, 20);
+        document.getElementById('repSettlementRows').innerHTML = recent.length ? recent.map(row => {
+          const invoice = state.invoices.find(item => String(item.id) === String(row.invoice_id));
+          return `<tr>
+            <td>${Refad.format.date(row.settlement_date)}</td><td>${Refad.escapeHtml(userName(row.representative_id))}</td>
+            <td>${invoice ? `<a class="type-link" href="invoices.html?id=${invoice.id}">${Refad.escapeHtml(invoice.invoice_number || '—')}</a>` : '—'}</td>
+            <td>${Refad.escapeHtml(userName(row.received_by))}</td><td><strong>${money(row.amount)}</strong></td>
+            <td>${Refad.escapeHtml(row.notes || '—')}</td>
+          </tr>`;
+        }).join('') : '<tr><td colspan="6" class="empty">لا توجد تسويات مسجلة حتى الآن.</td></tr>';
+        if (window.lucide) lucide.createIcons();
+      }
+
+      async function settleRepresentativeInvoice(invoiceId, due, button) {
+        const invoice = state.invoices.find(row => String(row.id) === String(invoiceId));
+        if (!invoice) {
+          Refad.toast.error('الفاتورة غير موجودة في البيانات الحالية؛ حدّث الصفحة وحاول مجدداً');
+          return;
+        }
+        const result = await Swal.fire({
+          title: 'تسجيل تحصيل من المندوب',
+          html: `<div style="text-align:right;font-size:13px;line-height:1.9">
+            <div>المندوب: <strong>${Refad.escapeHtml(userName(invoice.cashier_id))}</strong></div>
+            <div>الفاتورة: <strong>${Refad.escapeHtml(invoice.invoice_number || '—')}</strong></div>
+            <div>المبلغ المتبقي: <strong>${money(due)}</strong></div>
+            <label for="settlementAmount" style="display:block;margin-top:12px">المبلغ المستلم</label>
+            <input id="settlementAmount" type="number" min="0.01" max="${due}" step="0.01" value="${due}" class="swal2-input" style="width:100%;margin:4px 0 10px">
+            <label for="settlementNotes" style="display:block">ملاحظات التسوية (اختياري)</label>
+            <input id="settlementNotes" type="text" maxlength="255" class="swal2-input" style="width:100%;margin:4px 0">
+          </div>`,
+          showCancelButton: true,
+          confirmButtonText: 'تأكيد التحصيل',
+          cancelButtonText: 'إلغاء',
+          confirmButtonColor: '#14B8A6',
+          reverseButtons: true,
+          preConfirm: () => {
+            const input = document.getElementById('settlementAmount');
+            const value = Math.round((Number(input.value) + Number.EPSILON) * 100) / 100;
+            if (!Number.isFinite(value) || value <= 0 || value > due) {
+              Swal.showValidationMessage(`أدخل مبلغاً أكبر من صفر ولا يتجاوز ${money(due)}`);
+              return false;
+            }
+            return { amount: value, notes: document.getElementById('settlementNotes').value.trim() };
+          }
+        });
+        if (!result.isConfirmed) return;
+        button.disabled = true;
+        try {
+          const settlement = await Refad.db.rpc('settle_representative_invoice', {
+            p_company_id: session.company_id,
+            p_user_id: session.user_id,
+            p_invoice_id: Number(invoiceId),
+            p_representative_id: Number(invoice.cashier_id),
+            p_amount: result.value.amount,
+            p_settlement_date: today(),
+            p_notes: result.value.notes || null
+          });
+          const invoiceRow = state.invoices.find(row => String(row.id) === String(invoiceId));
+          if (invoiceRow) {
+            invoiceRow.paid_amount = settlement.paid_amount;
+            invoiceRow.status = settlement.status;
+          }
+          state.settlements.unshift({
+            id: settlement.settlement_id,
+            company_id: session.company_id,
+            representative_id: Number(invoice.cashier_id),
+            invoice_id: Number(invoiceId),
+            amount: result.value.amount,
+            settlement_date: today(),
+            notes: result.value.notes || null,
+            received_by: session.user_id
+          });
+          renderRepresentativeAccounts();
+          renderMetrics();
+          Refad.toast.success(settlement.status === 'paid'
+            ? 'تمت التسوية وأصبحت الفاتورة مدفوعة بالكامل'
+            : `تم تسجيل التحصيل الجزئي، والمتبقي ${money(settlement.remaining_amount)}`);
+        } catch (error) {
+          console.error('[Accounts] Representative settlement failed:', error);
+          Refad.toast.error(`تعذّر تسجيل التحصيل: ${error.message || error}`);
+        } finally {
+          button.disabled = false;
+        }
+      }
+      async function selectAllRows(table, options) {
+        const pageSize = 500;
+        const rows = [];
+        for (let offset = 0; ; offset += pageSize) {
+          const page = await Refad.db.select(table, {
+            ...options,
+            range: [offset, offset + pageSize - 1]
+          });
+          rows.push(...page);
+          if (page.length < pageSize) return rows;
+        }
+      }
+
+      function renderBalances() {
+        const suppliers = state.suppliers
+          .map(row => ({ kind: 'supplier', name: row.name, id: row.id, balance: amount(row.balance) }))
+          .filter(row => row.balance > 0)
+          .sort((a, b) => b.balance - a.balance).slice(0, 4);
+        const customers = state.customers
+          .map(row => ({ kind: 'customer', name: row.name, id: row.id, balance: amount(row.balance) }))
+          .filter(row => row.balance > 0)
+          .sort((a, b) => b.balance - a.balance).slice(0, 4);
+        const items = [
+          ...customers.map(row => ({ ...row, label: 'مستحق للشركة من عميل', href: `customer-details.html?id=${row.id}`, cls: 'var(--green)' })),
+          ...suppliers.map(row => ({ ...row, label: 'مستحق للمورد', href: `supplier-details.html?id=${row.id}`, cls: 'var(--red)' }))
+        ].sort((a, b) => b.balance - a.balance).slice(0, 6);
+        setText('customerDue', money(state.customers.reduce((sum, row) => sum + Math.max(0, amount(row.balance)), 0)));
+        setText('supplierDue', money(state.suppliers.reduce((sum, row) => sum + Math.max(0, amount(row.balance)), 0)));
+        document.getElementById('balanceList').innerHTML = items.length ? items.map(row => `
+          <div class="balance-row">
+            <div class="balance-name"><a href="${row.href}">${Refad.escapeHtml(row.name || '—')}</a><small>${row.label}</small></div>
+            <strong class="balance-value" style="color:${row.cls}">${money(row.balance)}</strong>
+          </div>`).join('') : '<div class="empty">لا توجد أرصدة موجبة مسجلة على العملاء أو الموردين.</div>';
+      }
+
+      function renderMetrics() {
+        renderRepresentativeAccounts();
+        const range = periodRange(document.getElementById('periodSelect').value);
+        const invoices = withinPeriod(state.invoices, 'invoice_date', range).filter(row =>
+          row.status !== 'cancelled' && (row.invoice_type || 'sale') === 'sale'
+        );
+        const receipts = withinPeriod(state.receipts, 'receipt_date', range).filter(row => row.status !== 'cancelled');
+        const expenses = withinPeriod(state.expenses, 'expense_date', range);
+        const sales = invoices.reduce((sum, row) => sum + amount(row.grand_total), 0);
+        const collections = invoices.reduce((sum, row) => sum + amount(row.paid_amount), 0);
+        const profit = invoices.reduce((sum, row) => sum + amount(row.total_profit), 0);
+        const purchaseValue = receipts.reduce((sum, row) => sum + amount(row.total_amount), 0);
+        const purchasePaid = receipts.reduce((sum, row) => sum + amount(row.paid_amount), 0);
+        const expenseValue = expenses.reduce((sum, row) => sum + amount(row.amount), 0);
+        setText('salesValue', money(sales));
+        setText('salesCount', `${Refad.format.number(invoices.length)} فاتورة بيع`);
+        setText('collectionsValue', money(collections));
+        setText('profitValue', money(profit));
+        setText('netValue', money(profit - expenseValue));
+        setText('purchaseValue', money(purchaseValue));
+        setText('purchasePaid', `المدفوع: ${money(purchasePaid)} • ${Refad.format.number(receipts.length)} استلام`);
+        setText('expenseValue', money(expenseValue));
+        setText('expenseCount', `${Refad.format.number(expenses.length)} مصروف مسجل`);
+        renderBalances();
+        renderTrend();
+        renderRecent(invoices, receipts, expenses);
+        setText('updatedAt', `آخر تحديث: ${new Date().toLocaleString('ar-EG')}`);
+      }
+
+      function renderTrend() {
+        const rows = Array.from({ length: 14 }, (_, index) => {
+          const date = dateShift(today(), index - 13);
+          return { date, sales: 0, purchases: 0, expenses: 0 };
+        });
+        const byDate = new Map(rows.map(row => [row.date, row]));
+        state.invoices.forEach(row => {
+          if (row.status === 'cancelled' || (row.invoice_type || 'sale') !== 'sale') return;
+          const bucket = byDate.get(row.invoice_date);
+          if (bucket) bucket.sales += amount(row.grand_total);
+        });
+        state.receipts.forEach(row => {
+          const bucket = byDate.get(row.receipt_date);
+          if (bucket && row.status !== 'cancelled') bucket.purchases += amount(row.total_amount);
+        });
+        state.expenses.forEach(row => {
+          const bucket = byDate.get(row.expense_date);
+          if (bucket) bucket.expenses += amount(row.amount);
+        });
+        const max = Math.max(1, ...rows.flatMap(row => [row.sales, row.purchases, row.expenses]));
+        document.getElementById('trendChart').innerHTML = rows.map(row => `
+          <div class="day-col" title="${row.date} | بيع: ${money(row.sales)} | استلام: ${money(row.purchases)} | مصروف: ${money(row.expenses)}">
+            <div class="bars">
+              <div class="bar" style="--bar:#2563eb;height:${Math.max(row.sales ? 3 : 0, row.sales / max * 100)}%"></div>
+              <div class="bar" style="--bar:#d97706;height:${Math.max(row.purchases ? 3 : 0, row.purchases / max * 100)}%"></div>
+              <div class="bar" style="--bar:#dc2626;height:${Math.max(row.expenses ? 3 : 0, row.expenses / max * 100)}%"></div>
+            </div>
+            <span class="day-label">${row.date.slice(5)}</span>
+          </div>`).join('');
+      }
+
+      function renderRecent(invoices, receipts, expenses) {
+        const rows = [
+          ...invoices.map(row => ({
+              kind: 'بيع', number: row.invoice_number,
+              party: row.supplier_id
+                ? (state.suppliers.find(item => String(item.id) === String(row.supplier_id))?.name || 'مورد')
+                : (state.customers.find(item => String(item.id) === String(row.customer_id))?.name || 'عميل نقدي'),
+              date: row.invoice_date, total: amount(row.grand_total), paid: amount(row.paid_amount),
+              href: `invoices.html?id=${row.id}`, color: '#2563eb'
+            })),
+            ...receipts.map(row => ({
+              kind: 'استلام', number: row.receipt_number,
+              party: state.suppliers.find(item => String(item.id) === String(row.supplier_id))?.name || '—',
+            date: row.receipt_date, total: amount(row.total_amount), paid: amount(row.paid_amount),
+            href: `receipt-form.html?id=${row.id}`, color: '#d97706'
+          })),
+          ...expenses.map(row => ({
+            kind: 'مصروف', number: row.description || row.category || 'مصروف', party: 'الشركة',
+            date: row.expense_date, total: amount(row.amount), paid: amount(row.amount),
+            href: 'expenses.html', color: '#dc2626'
+          }))
+        ].sort((a, b) => String(b.date || '').localeCompare(String(a.date || ''))).slice(0, 10);
+        document.getElementById('recentRows').innerHTML = rows.length ? rows.map(row => `
+          <tr data-row-href="${row.href}" tabindex="0" style="cursor:pointer">
+            <td><span class="status" style="--status:${row.color};--status-bg:color-mix(in srgb,${row.color} 12%,transparent)">${row.kind}</span></td>
+            <td><a class="type-link" href="${row.href}">${Refad.escapeHtml(row.number || '—')}</a></td>
+            <td>${Refad.escapeHtml(row.party)}</td><td>${Refad.format.date(row.date)}</td>
+            <td><strong>${money(row.total)}</strong></td><td>${money(row.paid)}</td><td>${money(Math.max(0, row.total - row.paid))}</td>
+          </tr>`).join('') : '<tr><td colspan="7" class="empty">لا توجد حركات للفترة المختارة.</td></tr>';
+      }
+
+      function exportSummary() {
+        const range = periodRange(document.getElementById('periodSelect').value);
+        const values = [
+          ['المؤشر', 'القيمة'],
+          ['الفترة من', range.from || 'كل السجلات المحملة'],
+          ['الفترة إلى', range.to || '—'],
+          ['صافي المبيعات', document.getElementById('salesValue').textContent],
+          ['المبالغ المحصلة', document.getElementById('collectionsValue').textContent],
+          ['إجمالي الربح المسجل', document.getElementById('profitValue').textContent],
+          ['النتيجة بعد المصاريف', document.getElementById('netValue').textContent],
+          ['قيمة المشتريات المستلمة', document.getElementById('purchaseValue').textContent],
+          ['المصاريف المسجلة', document.getElementById('expenseValue').textContent],
+          ['أرصدة العملاء المدينة', document.getElementById('customerDue').textContent],
+          ['أرصدة الموردين الدائنة', document.getElementById('supplierDue').textContent]
+        ];
+        const csv = '\uFEFF' + values.map(row => row.map(value => `"${String(value).replace(/"/g, '""')}"`).join(',')).join('\r\n');
+        const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `refad-accounts-${today()}.csv`;
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }
+
+      async function loadData() {
+        const button = document.getElementById('refreshBtn');
+        const errorBox = document.getElementById('errorBox');
+        button.disabled = true;
+        errorBox.style.display = 'none';
+        try {
+          const [invoices, receipts, expenses, suppliers, customers, users, settlements] = await Promise.all([
+            selectAllRows('sales_invoices', {
+              columns: 'id, invoice_number, invoice_type, invoice_date, grand_total, paid_amount, total_profit, status, customer_id, supplier_id, cashier_id',
+              eq: { company_id: session.company_id },
+              order: { column: 'id', ascending: true }
+            }),
+            selectAllRows('receipts', {
+              columns: 'id, receipt_number, receipt_date, total_amount, paid_amount, status, supplier_id',
+              eq: { company_id: session.company_id },
+              order: { column: 'id', ascending: true }
+            }),
+            selectAllRows('expenses', {
+              columns: 'id, category, amount, description, expense_date',
+              eq: { company_id: session.company_id },
+              order: { column: 'id', ascending: true }
+            }),
+            selectAllRows('suppliers', {
+              columns: 'id, name, balance',
+              eq: { company_id: session.company_id, is_active: true },
+              order: { column: 'id', ascending: true }
+            }),
+            selectAllRows('customers', {
+              columns: 'id, name, balance',
+              eq: { company_id: session.company_id, is_active: true },
+              order: { column: 'id', ascending: true }
+            }),
+            selectAllRows('users', {
+              columns: 'id, full_name, is_active',
+              eq: { company_id: session.company_id },
+              order: { column: 'id', ascending: true }
+            }),
+            selectAllRows('representative_settlements', {
+              columns: 'id, representative_id, invoice_id, amount, settlement_date, notes, received_by',
+              eq: { company_id: session.company_id },
+              order: { column: 'id', ascending: false },
+              limit: 20
+            })
+          ]);
+          Object.assign(state, { invoices, receipts, expenses, suppliers, customers, users, settlements });
+          renderMetrics();
+          setText('companySubtitle', `الملخص المالي • ${session.company_name || 'الشركة الحالية'}`);
+        } catch (error) {
+          console.error('[Accounts] Dashboard load failed:', error);
+          errorBox.textContent = `تعذّر تحميل بيانات الحسابات: ${error.message || error}`;
+          errorBox.style.display = 'block';
+          document.getElementById('recentRows').innerHTML = '<tr><td colspan="7" class="empty">لم يكتمل تحميل البيانات؛ أعد المحاولة.</td></tr>';
+          document.getElementById('balanceList').innerHTML = '<div class="empty">تعذّر تحميل الأرصدة.</div>';
+          document.getElementById('trendChart').innerHTML = '<div class="chart-empty">تعذّر تحميل الحركة.</div>';
+          Refad.toast.error('تعذّر تحميل البيانات الحسابية');
+        } finally {
+          button.disabled = false;
+          if (window.lucide) lucide.createIcons();
+        }
+      }
+
+      document.getElementById('periodSelect').addEventListener('change', renderMetrics);
+      document.getElementById('repFilter').addEventListener('change', renderRepresentativeAccounts);
+      document.getElementById('refreshBtn').addEventListener('click', loadData);
+      document.getElementById('exportBtn').addEventListener('click', exportSummary);
+      document.getElementById('repInvoiceRows').addEventListener('click', event => {
+        const button = event.target.closest('[data-settle-invoice]');
+        if (button) settleRepresentativeInvoice(button.dataset.settleInvoice, Number(button.dataset.due), button);
+      });
+      document.getElementById('recentRows').addEventListener('click', event => {
+        const row = event.target.closest('[data-row-href]');
+        if (row && !event.target.closest('a, button')) window.location.href = row.dataset.rowHref;
+      });
+      document.getElementById('recentRows').addEventListener('keydown', event => {
+        const row = event.target.closest('[data-row-href]');
+        if (row && event.target === row && (event.key === 'Enter' || event.key === ' ')) {
+          event.preventDefault();
+          window.location.href = row.dataset.rowHref;
+        }
+      });
+      loadData();
+    })();
+  </script>
+</body>
+</html>

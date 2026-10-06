@@ -380,6 +380,7 @@
       transition: background 0.15s;
     }
     table.items-table tbody tr:hover { background: var(--bg); }
+    table.items-table tbody tr.receipt-item-active { background: rgba(20,184,166,0.08); }
 
     table.items-table td { padding: 8px; color: var(--text); vertical-align: middle; }
 
@@ -403,6 +404,7 @@
     .cell-input.qty { min-width: 70px; }
     .cell-input.price { min-width: 90px; }
     .cell-input.discount { min-width: 70px; }
+    .cell-input.batch-barcode-input { margin-top: 5px; font-size: 11px; }
 
     .product-name-cell { font-weight: 700; color: var(--text); font-size: 13px; }
     .product-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
@@ -730,6 +732,9 @@
           <button class="btn btn-outline btn-sm" id="printBtn" style="display:none;">
             <i data-lucide="printer"></i> طباعة
           </button>
+          <a class="btn btn-outline btn-sm" id="receiptReturnsBtn" href="#" style="display:none;">
+            <i data-lucide="undo-2"></i> المرتجعات
+          </a>
           <button class="btn btn-primary" id="saveBtn">
             <i data-lucide="save"></i> <span id="saveBtnText">حفظ الفاتورة</span>
           </button>
@@ -807,12 +812,12 @@
               <tr>
                 <th style="width:40px;">#</th>
                 <th>الصنف</th>
-                <th>رقم التشغيلة</th>
+                <th>التشغيلة / باركودها</th>
+                <th>تاريخ الصلاحية</th>
                 <th>الكمية</th>
                 <th>سعر الشراء</th>
                 <th>خصم %</th>
                 <th>الإجمالي</th>
-                <th>تاريخ الصلاحية</th>
                 <th style="width:50px;"></th>
               </tr>
             </thead>
@@ -864,7 +869,7 @@
       <div class="modal-body">
         <div id="barcodeReader"></div>
         <p style="text-align:center;color:var(--text-muted);font-size:13px;margin-top:12px;">
-          وجّه الكاميرا نحو الباركود
+          امسح باركود الصنف لإضافة الكمية، ثم امسح باركود التشغيلة بعد تحديد سطرها. يظل الفحص مفتوحاً حتى تضغط إيقاف.
         </p>
       </div>
       <div class="modal-footer">
@@ -875,6 +880,7 @@
   </div>
 
   <script src="refad-core.js"></script>
+  <script src="refad-print.js"></script>
   <script src="refad-camera-scanner.js"></script>
   <script src="refad-auth.js"></script>
   <script>
@@ -904,6 +910,9 @@
         purchaseOrders: [],
         poItems: [],              // أصناف الطلب المحدد
         items: [],
+        activeItemIndex: null,
+        batchBarcodeReady: true,
+        company: null,
         receiptNumber: null,
       };
 
@@ -1030,7 +1039,7 @@
       async function loadSuppliers() {
         try {
           const rows = await Refad.db.select('suppliers', {
-            columns: 'id, name, phone',
+            columns: 'id, name, phone, address, tax_number',
             eq: { company_id: session.company_id, is_active: true },
             order: { column: 'name', ascending: true }
           });
@@ -1047,12 +1056,25 @@
         }
       }
 
+      async function loadCompany() {
+        try {
+          state.company = await Refad.db.selectOne('companies', {
+            columns: 'id, name, logo_url, phone, email, address, tax_number',
+            eq: { id: session.company_id }
+          });
+          if (!state.company) throw new Error('بيانات الشركة غير موجودة');
+        } catch (error) {
+          console.error('[Receipt] Company details load failed:', error);
+          Refad.toast.error('تعذّر تحميل بيانات الشركة؛ لن تتوفر طباعة فاتورة ببيانات الشركة');
+        }
+      }
+
       // ============================================================
       // 7) Load products + barcodes
       // ============================================================
       async function loadProducts() {
         try {
-          const [products, barcodes] = await Promise.all([
+          const [products, barcodes, batchBarcodes] = await Promise.all([
             Refad.db.select('products', {
               columns: 'id, name, name_en, form, unit, default_price',
               eq: { company_id: session.company_id, is_active: true },
@@ -1064,6 +1086,18 @@
               console.error('[Receipt] Barcode load failed:', error);
               Refad.toast.warning('تعذّر تحميل بيانات الباركود؛ راجع اتصال قاعدة البيانات');
               return [];
+            }),
+            Refad.db.select('batches', {
+              columns: 'product_id, batch_barcode',
+              eq: { company_id: session.company_id }
+            }).catch(error => {
+              console.error('[Receipt] Batch barcode load failed:', error);
+              state.batchBarcodeReady = false;
+              const migrationMissing = /batch_barcode|column .* does not exist/i.test(error.message || '');
+              Refad.toast.warning(migrationMissing
+                ? 'ميزة باركود التشغيلة تحتاج تشغيل batch-barcode-migration.sql؛ سيظل إدخال الاستلام متاحاً'
+                : 'تعذّر تحميل باركودات التشغيلات؛ سيظل إدخال الاستلام متاحاً');
+              return [];
             })
           ]);
 
@@ -1071,6 +1105,11 @@
 
           barcodes.forEach(b => {
             if (b.barcode) state.barcodeMap[String(b.barcode).trim().toUpperCase()] = b.product_id;
+          });
+          batchBarcodes.forEach(batch => {
+            if (batch.batch_barcode) {
+              state.barcodeMap[String(batch.batch_barcode).trim().toUpperCase()] = batch.product_id;
+            }
           });
         } catch (e) {
           console.error('Products load failed:', e);
@@ -1115,11 +1154,14 @@
         }
         try {
           const items = await Refad.db.select('purchase_request_items', {
-            columns: 'id, product_id, requested_qty, products(id, name, name_en, form, unit)',
+            columns: 'id, product_id, requested_qty, requested_discount, supplier_price, supplier_discount, products(id, name, name_en, form, unit)',
             eq: { request_id: poId },
             order: { column: 'id', ascending: true }
           });
-          state.poItems = items.filter(it => it.products);
+          state.poItems = items.filter(it => it.products).map(item => ({
+            ...item,
+            product: state.allProducts.find(product => product.id === item.product_id) || item.products
+          }));
 
           const po = state.purchaseOrders.find(p => p.id === parseInt(poId, 10));
           document.getElementById('poInfoText').innerHTML = `
@@ -1142,17 +1184,19 @@
         // أضف الأصناف بكمياتهم المطلوبة
         state.poItems.forEach(poItem => {
           if (state.items.some(it => it.product_id === poItem.product_id)) return;
-          const p = state.allProducts.find(x => x.id === poItem.product_id) || poItem.products;
+          const p = poItem.product;
           state.items.push({
             product_id: p.id,
             product: p,
             batch_number: '',
+            batch_barcode: '',
             quantity: poItem.requested_qty || 1,
-            cost_price: p.default_price || 0,
-            purchase_discount: 0,
+            cost_price: poItem.supplier_price ?? p.default_price ?? 0,
+            purchase_discount: poItem.requested_discount ?? 0,
             expiry_date: ''
           });
         });
+        state.activeItemIndex = state.items.length - 1;
         renderItems();
         Refad.toast.success('تم تحميل الأصناف');
       }
@@ -1223,8 +1267,12 @@
               addProductToReceipt(bm);
               input.value = '';
               results.classList.remove('show');
+            } else if (/^\d{8,14}$/.test(q) && state.items[state.activeItemIndex]) {
+              assignBatchBarcode(state.activeItemIndex, q);
+              input.value = '';
+              results.classList.remove('show');
             } else if (/^\d{8,14}$/.test(q)) {
-              Refad.toast.warning('الباركود غير مسجل لأي صنف');
+              Refad.toast.warning('امسح باركود الصنف أولاً أو اختر سطر الصنف لربط باركود التشغيلة');
               input.select();
             } else {
               // أضف أول نتيجة
@@ -1255,8 +1303,19 @@
       // 10) Add product to receipt
       // ============================================================
       function addProductToReceipt(pid) {
-        if (state.items.some(it => it.product_id === pid)) {
-          Refad.toast.warning('الصنف مضاف بالفعل');
+        const active = state.items[state.activeItemIndex];
+        if (active?.product_id === pid) {
+          const idx = state.activeItemIndex;
+          state.items[idx].quantity = (Number(state.items[idx].quantity) || 0) + 1;
+          state.activeItemIndex = idx;
+          renderItems();
+          return;
+        }
+        const existingIndex = state.items.findIndex(it => it.product_id === pid);
+        if (existingIndex !== -1) {
+          state.items[existingIndex].quantity = (Number(state.items[existingIndex].quantity) || 0) + 1;
+          state.activeItemIndex = existingIndex;
+          renderItems();
           return;
         }
         const p = state.allProducts.find(x => x.id === pid);
@@ -1266,12 +1325,35 @@
           product_id: p.id,
           product: p,
           batch_number: '',
+          batch_barcode: '',
           quantity: 1,
           cost_price: p.default_price || 0,
           purchase_discount: 0,
           expiry_date: ''
         });
+        state.activeItemIndex = state.items.length - 1;
         renderItems();
+      }
+
+      function assignBatchBarcode(index, barcode, message = 'تم ربط الباركود بالتشغيلة') {
+        const item = state.items[index];
+        if (!item) {
+          Refad.toast.warning('اختر سطر الصنف قبل ربط باركود التشغيلة');
+          return;
+        }
+        const normalizedBarcode = String(barcode || '').trim().toUpperCase();
+        const alreadyAssigned = state.items.some((other, otherIndex) =>
+          otherIndex !== index && String(other.batch_barcode || '').trim().toUpperCase() === normalizedBarcode
+        );
+        if (alreadyAssigned) {
+          Refad.toast.warning('باركود التشغيلة مربوط بالفعل بصنف آخر في هذه الفاتورة');
+          return;
+        }
+        item.batch_barcode = normalizedBarcode;
+        state.activeItemIndex = index;
+        state.barcodeMap[item.batch_barcode] = item.product_id;
+        renderItems();
+        Refad.toast.success(message);
       }
 
       // ============================================================
@@ -1305,7 +1387,11 @@
                 <div class="product-sub">${Refad.escapeHtml([it.product.form, it.product.unit].filter(Boolean).join(' • ') || '—')}</div>
               </td>
               <td>
-                <input type="text" class="cell-input" value="${Refad.escapeHtml(it.batch_number || '')}" placeholder="B-123" data-idx="${i}" data-field="batch_number" maxlength="50">
+                <input type="text" class="cell-input" value="${Refad.escapeHtml(it.batch_number || '')}" placeholder="رقم التشغيلة" data-idx="${i}" data-field="batch_number" maxlength="50" aria-label="رقم التشغيلة">
+                <input type="text" class="cell-input batch-barcode-input" value="${Refad.escapeHtml(it.batch_barcode || '')}" placeholder="${state.batchBarcodeReady ? 'باركود التشغيلة' : 'شغّل ترحيل باركود التشغيلة'}" data-idx="${i}" data-field="batch_barcode" maxlength="50" aria-label="باركود التشغيلة" ${state.batchBarcodeReady ? '' : 'disabled title="شغّل batch-barcode-migration.sql لتفعيل الخاصية"'}>
+              </td>
+              <td>
+                <input type="date" class="cell-input" value="${it.expiry_date || ''}" data-idx="${i}" data-field="expiry_date" aria-label="تاريخ الصلاحية">
               </td>
               <td>
                 <input type="number" class="cell-input qty" value="${it.quantity || 1}" min="1" max="99999" data-idx="${i}" data-field="quantity">
@@ -1318,9 +1404,9 @@
               </td>
               <td class="total-cell">${Refad.format.number(total, 2)}</td>
               <td>
-                <input type="date" class="cell-input" value="${it.expiry_date || ''}" data-idx="${i}" data-field="expiry_date" style="min-width:130px;">
-              </td>
-              <td>
+                <button class="action-btn" data-add-lot="${i}" title="إضافة تشغيلة أخرى للصنف">
+                  <i data-lucide="copy-plus"></i>
+                </button>
                 <button class="action-btn danger" data-remove="${i}" title="حذف">
                   <i data-lucide="trash-2"></i>
                 </button>
@@ -1329,10 +1415,23 @@
           `;
         }).join('');
 
+        tbody.onclick = event => {
+          const row = event.target.closest('tr[data-idx]');
+          if (!row || event.target.closest('button')) return;
+          state.activeItemIndex = Number(row.dataset.idx);
+          tbody.querySelectorAll('tr[data-idx]').forEach(itemRow => itemRow.classList.remove('receipt-item-active'));
+          row.classList.add('receipt-item-active');
+        };
+
         if (window.lucide) lucide.createIcons();
 
         // ربط الحقول
         tbody.querySelectorAll('input[data-field]').forEach(inp => {
+          inp.addEventListener('focus', () => {
+            state.activeItemIndex = parseInt(inp.dataset.idx, 10);
+            tbody.querySelectorAll('tr[data-idx]').forEach(row => row.classList.remove('receipt-item-active'));
+            inp.closest('tr')?.classList.add('receipt-item-active');
+          });
           inp.addEventListener('input', e => {
             const idx = parseInt(e.target.dataset.idx, 10);
             const field = e.target.dataset.field;
@@ -1341,6 +1440,10 @@
             if (field === 'quantity') {
               val = Math.max(1, parseInt(val, 10) || 1);
               state.items[idx].quantity = val;
+              e.target.value = val;
+            } else if (field === 'batch_barcode') {
+              val = String(val).trim().toUpperCase();
+              state.items[idx].batch_barcode = val;
               e.target.value = val;
             } else if (field === 'cost_price') {
               val = Math.max(0, Refad.toNum(val));
@@ -1366,6 +1469,14 @@
               updateSummary();
             }
           });
+          inp.addEventListener('keydown', e => {
+            if (e.key !== 'Enter') return;
+            e.preventDefault();
+            const fields = [...e.target.closest('tr').querySelectorAll('input[data-field]')];
+            const next = fields[fields.indexOf(e.target) + 1];
+            if (next) next.focus();
+            else document.getElementById('productSearch').focus();
+          });
         });
 
         tbody.querySelectorAll('[data-remove]').forEach(btn => {
@@ -1373,6 +1484,23 @@
             const idx = parseInt(btn.dataset.remove, 10);
             state.items.splice(idx, 1);
             renderItems();
+          });
+        });
+
+        tbody.querySelectorAll('[data-add-lot]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const source = state.items[Number(btn.dataset.addLot)];
+            if (!source) return;
+            state.items.splice(Number(btn.dataset.addLot) + 1, 0, {
+              ...source,
+              batch_number: '',
+              batch_barcode: '',
+              quantity: 1,
+              expiry_date: ''
+            });
+            state.activeItemIndex = Number(btn.dataset.addLot) + 1;
+            renderItems();
+            Refad.toast.info('أُضيف سطر لتسجيل تشغيلة وصلاحية مختلفة للصنف');
           });
         });
 
@@ -1457,7 +1585,8 @@
       }
 
       async function onBarcodeScanned(code) {
-        const trimmed = code.trim();
+        const trimmed = code.trim().toUpperCase();
+        if (!trimmed) return;
 
         // صوت تنبيه
         try {
@@ -1468,23 +1597,31 @@
         if (navigator.vibrate) navigator.vibrate(150);
 
         // ابحث عن المنتج
+        const batchIndex = state.items.findIndex(item =>
+          String(item.batch_barcode || '').trim().toUpperCase() === trimmed
+        );
+        if (batchIndex !== -1) {
+          state.items[batchIndex].quantity = (Number(state.items[batchIndex].quantity) || 0) + 1;
+          state.activeItemIndex = batchIndex;
+          renderItems();
+          Refad.toast.success('تم تسجيل وحدة إضافية من التشغيلة');
+          return;
+        }
+
         const pid = state.barcodeMap[trimmed];
         if (pid) {
-          if (state.items.some(it => it.product_id === pid)) {
-            // زد الكمية
-            const idx = state.items.findIndex(it => it.product_id === pid);
-            state.items[idx].quantity += 1;
-            renderItems();
-            Refad.toast.success('تم زيادة الكمية');
-          } else {
-            addProductToReceipt(pid);
-            Refad.toast.success('تم إضافة الصنف');
-          }
-          // أوقف المسح
-          await stopScanner();
-          document.getElementById('scanModal').classList.remove('show');
+          addProductToReceipt(pid);
+          Refad.toast.success('تم تسجيل الصنف؛ يمكنك متابعة الفحص');
         } else {
-          Refad.toast.warning('باركود غير معروف: ' + trimmed);
+          if (!state.batchBarcodeReady) {
+            Refad.toast.warning('لتفعيل باركود التشغيلة شغّل batch-barcode-migration.sql أولاً');
+            return;
+          }
+          if (!state.items[state.activeItemIndex]) {
+            Refad.toast.warning('امسح باركود الصنف أولاً أو اختر سطر الصنف لربط باركود التشغيلة');
+            return;
+          }
+          assignBatchBarcode(state.activeItemIndex, trimmed, 'تم ربط الباركود بالتشغيلة؛ استمر في فحص الأصناف');
         }
       }
 
@@ -1505,6 +1642,13 @@
         }
         if (!state.items.length) {
           Refad.toast.warning('يجب إضافة صنف واحد على الأقل');
+          return;
+        }
+        const batchBarcodes = state.items.map(item =>
+          String(item.batch_barcode || '').trim().toUpperCase()
+        ).filter(Boolean);
+        if (new Set(batchBarcodes).size !== batchBarcodes.length) {
+          Refad.toast.warning('يوجد باركود تشغيلة مكرر؛ اجعل لكل تشغيلة باركوداً مختلفاً');
           return;
         }
 
@@ -1588,8 +1732,9 @@
               discount: it.purchase_discount,
               expiry_date: it.expiry_date || null,
               batch_number: it.batch_number || null,
-              total: totalIt
-            });
+                ...(state.batchBarcodeReady ? { batch_barcode: it.batch_barcode || null } : {}),
+                total: totalIt
+              });
 
             // 2. batch جديدة
             await Refad.db.insert('batches', {
@@ -1598,6 +1743,7 @@
               supplier_id: supplierId,
               receipt_id: rid,
               batch_number: it.batch_number || null,
+              ...(state.batchBarcodeReady ? { batch_barcode: it.batch_barcode || null } : {}),
               quantity_in: it.quantity,
               quantity_left: it.quantity,
               cost_price: it.cost_price,
@@ -1754,6 +1900,9 @@
           document.getElementById('pageSubtitle').textContent = `تعديل فاتورة استلام`;
           document.getElementById('topbarTitle').textContent = `فاتورة ${r.receipt_number}`;
           document.getElementById('printBtn').style.display = 'inline-flex';
+          const returnsBtn = document.getElementById('receiptReturnsBtn');
+          returnsBtn.href = `returns.html?type=purchase&receipt_id=${r.id}`;
+          returnsBtn.style.display = Refad.Session.has('purchases.receive') ? 'inline-flex' : 'none';
 
           // حمل الطلبات لهذا المورد
           if (r.supplier_id) {
@@ -1763,22 +1912,37 @@
           }
 
           // حمل الأصناف
-          const items = await Refad.db.select('receipt_items', {
-            columns: 'id, product_id, quantity, unit_price, purchase_discount, expiry_date, batch_number, products(id, name, name_en, form, unit, default_price)',
-            eq: { receipt_id: receiptId },
-            order: { column: 'id', ascending: true }
-          });
+          let items;
+          try {
+            items = await Refad.db.select('receipt_items', {
+              columns: 'id, product_id, quantity, unit_price, purchase_discount, expiry_date, batch_number, batch_barcode, products(id, name, name_en, form, unit, default_price)',
+              eq: { receipt_id: receiptId },
+              order: { column: 'id', ascending: true }
+            });
+          } catch (barcodeColumnError) {
+            if (!/batch_barcode|column .* does not exist/i.test(barcodeColumnError.message || '')) throw barcodeColumnError;
+            console.warn('[Receipt] Batch barcode migration is not installed; loading without barcode values');
+            state.batchBarcodeReady = false;
+            Refad.toast.warning('الفاتورة محمّلة، لكن باركود التشغيلات يحتاج تشغيل batch-barcode-migration.sql');
+            items = await Refad.db.select('receipt_items', {
+              columns: 'id, product_id, quantity, unit_price, purchase_discount, expiry_date, batch_number, products(id, name, name_en, form, unit, default_price)',
+              eq: { receipt_id: receiptId },
+              order: { column: 'id', ascending: true }
+            });
+          }
 
           state.items = items.filter(it => it.products).map(it => ({
             product_id: it.product_id,
             product: it.products,
             batch_number: it.batch_number || '',
+            batch_barcode: it.batch_barcode || '',
             quantity: it.quantity || 1,
             cost_price: it.unit_price || 0,
             purchase_discount: it.purchase_discount || 0,
             expiry_date: it.expiry_date || ''
           }));
 
+          state.activeItemIndex = state.items.length ? 0 : null;
           renderItems();
         } catch (e) {
           console.error('Load receipt failed:', e);
@@ -1791,6 +1955,7 @@
       // ============================================================
       function printReceipt() {
         if (!state.items.length) return Refad.toast.warning('لا يوجد محتوى للطباعة');
+        if (!state.company?.id) return Refad.toast.error('بيانات الشركة غير متاحة؛ تعذّرت طباعة الفاتورة');
         const supplier = state.suppliers.find(s => s.id === parseInt(document.getElementById('supplierSelect').value, 10));
 
         const subtotal = state.items.reduce((s, it) => s + ((it.quantity || 0) * (it.cost_price || 0)), 0);
@@ -1799,60 +1964,85 @@
           return s + st * ((it.purchase_discount || 0) / 100);
         }, 0);
         const total = subtotal - discountTotal;
-
         const w = window.open('', '_blank');
-        w.document.write(`
-          <!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8">
-          <title>فاتورة ${state.receiptNumber}</title>
-          <style>
-            body { font-family: Cairo, Arial; padding: 30px; color: #0f172a; }
-            h1 { color: #0B2C4D; margin-bottom: 4px; font-size: 22px; }
-            .sub { color: #64748b; font-size: 13px; margin-bottom: 20px; }
-            .info { display: flex; gap: 30px; margin-bottom: 20px; flex-wrap: wrap; font-size: 13px; }
-            .info strong { color: #0B2C4D; }
-            table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 20px; }
-            th, td { border: 1px solid #cbd5e1; padding: 6px; text-align: right; }
-            th { background: #F1F5F9; font-weight: 700; }
-            .totals { display: flex; flex-direction: column; gap: 6px; align-items: flex-end; font-size: 13px; }
-            .totals .row { display: flex; gap: 20px; }
-            .totals .row strong { min-width: 130px; display: inline-block; }
-            .totals .grand { font-size: 17px; color: #14B8A6; font-weight: 800; }
-            .footer { margin-top: 30px; text-align: center; font-size: 11px; color: #94a3b8; }
-          </style></head><body>
-          <h1>فاتورة استلام رقم: ${Refad.escapeHtml(state.receiptNumber || '')}</h1>
-          <div class="sub">التاريخ: ${Refad.format.date(new Date())}</div>
-          <div class="info">
-            <div><strong>المورد:</strong> ${Refad.escapeHtml(supplier?.name || '—')}</div>
-            <div><strong>الهاتف:</strong> ${Refad.escapeHtml(supplier?.phone || '—')}</div>
+        if (!w) return Refad.toast.warning('اسمح بالنوافذ المنبثقة لطباعة الفاتورة');
+        const paid = Math.max(0, Refad.toNum(document.getElementById('paidAmount').value));
+        const rows = state.items.map((it, i) => {
+          const lineSubtotal = (Number(it.quantity) || 0) * (Number(it.cost_price) || 0);
+          const lineTotal = lineSubtotal * (1 - (Number(it.purchase_discount) || 0) / 100);
+          return `<tr>
+            <td>${i + 1}</td>
+            <td>${Refad.escapeHtml(it.product.name)}</td>
+            <td>${Refad.escapeHtml(it.batch_number || '—')}</td>
+            <td>${Refad.escapeHtml(it.batch_barcode || '—')}</td>
+            <td>${Refad.format.number(it.quantity)}</td>
+            <td>${Refad.format.money(it.cost_price)}</td>
+            <td>${Refad.format.number(it.purchase_discount || 0, 1)}%</td>
+            <td>${Refad.format.money(lineTotal)}</td>
+            <td>${Refad.escapeHtml(it.expiry_date || '—')}</td>
+          </tr>`;
+        }).join('');
+        const company = state.company;
+        const content = `
+          <div class="receipt-header">
+            ${company.logo_url ? `<img src="${Refad.escapeHtml(company.logo_url)}" alt="شعار ${Refad.escapeHtml(company.name)}">` : ''}
+            <div class="company-details">
+              <h1>${Refad.escapeHtml(company.name || 'الشركة')}</h1>
+              <div>${[
+                company.address,
+                company.phone ? `هاتف: ${company.phone}` : '',
+                company.email,
+                company.tax_number ? `رقم ضريبي: ${company.tax_number}` : ''
+              ].filter(Boolean).map(Refad.escapeHtml).join(' • ')}</div>
+            </div>
+            <div class="document-title">
+              <strong>فاتورة استلام</strong>
+              <span>رقم: ${Refad.escapeHtml(state.receiptNumber || document.getElementById('receiptNumber').value || 'مسودة')}</span>
+              <span>التاريخ: ${Refad.escapeHtml(document.getElementById('receiptDate').value || '')}</span>
+            </div>
+          </div>
+          <div class="supplier-details">
+            <strong>المورد:</strong> ${Refad.escapeHtml(supplier?.name || '—')}
+            ${supplier?.phone ? ` • الهاتف: ${Refad.escapeHtml(supplier.phone)}` : ''}
+            ${supplier?.address ? `<br>العنوان: ${Refad.escapeHtml(supplier.address)}` : ''}
+            ${supplier?.tax_number ? ` • الرقم الضريبي: ${Refad.escapeHtml(supplier.tax_number)}` : ''}
+            ${document.getElementById('invoiceNumber').value ? `<br><strong>رقم فاتورة المورد:</strong> ${Refad.escapeHtml(document.getElementById('invoiceNumber').value)}` : ''}
           </div>
           <table><thead><tr>
-            <th>#</th><th>الصنف</th><th>التشغيلة</th><th>الكمية</th><th>السعر</th><th>خصم%</th><th>الإجمالي</th><th>الصلاحية</th>
-          </tr></thead><tbody>
-            ${state.items.map((it, i) => {
-              const st = (it.quantity || 0) * (it.cost_price || 0);
-              const dt = st * ((it.purchase_discount || 0) / 100);
-              return `<tr>
-                <td>${i + 1}</td>
-                <td>${Refad.escapeHtml(it.product.name)}</td>
-                <td>${Refad.escapeHtml(it.batch_number || '—')}</td>
-                <td>${it.quantity}</td>
-                <td>${Refad.format.money(it.cost_price)}</td>
-                <td>${Refad.format.number(it.purchase_discount || 0, 1)}%</td>
-                <td>${Refad.format.money(st - dt)}</td>
-                <td>${it.expiry_date || '—'}</td>
-              </tr>`;
-            }).join('')}
-          </tbody></table>
+            <th>#</th><th>الصنف</th><th>التشغيلة</th><th>باركود التشغيلة</th><th>الكمية</th><th>السعر</th><th>خصم%</th><th>الإجمالي</th><th>الصلاحية</th>
+          </tr></thead><tbody>${rows}</tbody></table>
           <div class="totals">
-            <div class="row"><strong>المجموع قبل الخصم:</strong> <span>${Refad.format.money(subtotal)}</span></div>
-            <div class="row"><strong>إجمالي الخصم:</strong> <span>${Refad.format.money(discountTotal)}</span></div>
-            <div class="row grand"><strong>الإجمالي النهائي:</strong> <span>${Refad.format.money(total)}</span></div>
+            <div><span>المجموع قبل الخصم</span><strong>${Refad.format.money(subtotal)}</strong></div>
+            <div><span>إجمالي الخصم</span><strong>${Refad.format.money(discountTotal)}</strong></div>
+            <div class="grand"><span>الإجمالي النهائي</span><strong>${Refad.format.money(total)}</strong></div>
+            <div><span>المدفوع</span><strong>${Refad.format.money(paid)}</strong></div>
+            <div><span>المتبقي</span><strong>${Refad.format.money(Math.max(0, total - paid))}</strong></div>
           </div>
-          <div class="footer">تم الإنشاء من نظام رفاد</div>
-          <script>window.onload = () => setTimeout(() => window.print(), 300);<\/script>
-          </body></html>
-        `);
-        w.document.close();
+          ${document.getElementById('receiptNotes').value ? `<div class="notes"><strong>ملاحظات:</strong> ${Refad.escapeHtml(document.getElementById('receiptNotes').value)}</div>` : ''}
+          <footer>تم إنشاء المستند من نظام رفاد • ${Refad.escapeHtml(company.name || '')}</footer>
+        `;
+        Refad.Print.html(content, {
+          title: `فاتورة استلام ${state.receiptNumber || ''}`,
+          windowRef: w,
+          styles: `
+            .receipt-header { display:flex;align-items:center;gap:18px;border-bottom:3px solid #0B2C4D;padding-bottom:16px;margin-bottom:18px; }
+            .receipt-header img { width:84px;height:84px;object-fit:contain; }
+            .company-details { flex:1; }
+            .company-details h1 { font-size:21px;margin:0 0 5px; }
+            .company-details div,.document-title span { color:#64748b;font-size:11px;line-height:1.7; }
+            .document-title { text-align:left;display:flex;flex-direction:column;gap:2px;min-width:130px; }
+            .document-title strong { color:#0B2C4D;font-size:16px; }
+            .supplier-details { background:#F1F5F9;padding:12px 15px;border-radius:8px;margin-bottom:16px;font-size:12px;line-height:1.8; }
+            th { background:#0B2C4D;color:#fff; }
+            tbody tr:nth-child(even) { background:#f8fafc; }
+            .totals { width:300px;margin-right:auto;display:grid;gap:6px;font-size:12px; }
+            .totals div { display:flex;justify-content:space-between;gap:16px; }
+            .totals .grand { border-top:2px solid #0B2C4D;padding-top:8px;font-size:15px;color:#0d9488; }
+            .notes { margin-top:20px;padding:10px;border:1px solid #cbd5e1;border-radius:6px;font-size:12px; }
+            footer { margin-top:32px;padding-top:10px;border-top:1px solid #cbd5e1;text-align:center;color:#94a3b8;font-size:10px; }
+            @media print { tr { break-inside:avoid; } }
+          `
+        });
       }
 
       // ============================================================
@@ -1899,6 +2089,7 @@
 
         await loadSuppliers();
         await loadProducts();
+        await loadCompany();
 
         if (isEdit) {
           await loadReceipt();

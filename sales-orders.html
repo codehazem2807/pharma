@@ -964,7 +964,7 @@
           const st = STATUS[r.status] || { label: r.status, cls: 'gray' };
           const itemCount = r.sales_order_items?.length || 0;
           return `
-            <tr>
+            <tr class="order-clickable-row" data-open-order="${r.id}" tabindex="0" style="cursor:pointer" aria-label="فتح طلب البيع ${Refad.escapeHtml(r.order_number)}">
               <td>
                 <span class="order-number" onclick="location.href='sales-order-form.html?id=${r.id}'">
                   ${Refad.escapeHtml(r.order_number)}
@@ -1098,14 +1098,26 @@
 
         document.getElementById('tableBody').addEventListener('click', e => {
           const btn = e.target.closest('[data-action]');
-          if (!btn) return;
-          const action = btn.dataset.action;
-          const id = parseInt(btn.dataset.id, 10);
-          const r = state.all.find(x => x.id === id);
-          if (!r) return;
-
-          if (action === 'view') location.href = `sales-order-form.html?id=${id}`;
-          else if (action === 'delete') deleteOrder(id, r.order_number);
+          if (btn) {
+            const action = btn.dataset.action;
+            const id = parseInt(btn.dataset.id, 10);
+            const r = state.all.find(x => x.id === id);
+            if (!r) return;
+            if (action === 'view') location.href = `sales-order-form.html?id=${id}`;
+            else if (action === 'delete') deleteOrder(id, r.order_number);
+            return;
+          }
+          const row = e.target.closest('[data-open-order]');
+          if (row && !e.target.closest('a, input, select, textarea, label')) {
+            location.href = `sales-order-form.html?id=${row.dataset.openOrder}`;
+          }
+        });
+        document.getElementById('tableBody').addEventListener('keydown', e => {
+          const row = e.target.closest('[data-open-order]');
+          if (row && e.target === row && (e.key === 'Enter' || e.key === ' ')) {
+            e.preventDefault();
+            location.href = `sales-order-form.html?id=${row.dataset.openOrder}`;
+          }
         });
 
         // Export

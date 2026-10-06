@@ -1036,6 +1036,7 @@
         {
           section: 'المالية',
           items: [
+            { label: 'الحسابات', icon: 'landmark', href: 'accounts.html', permission: 'company.owner' },
             { label: 'المصاريف', icon: 'banknote', href: 'expenses.html', permission: 'expenses.view' },
             { label: 'التقارير', icon: 'bar-chart-3', href: 'reports.html', permission: 'reports.view' }
           ]
@@ -1337,23 +1338,34 @@
         try {
           const companyId = session.company_id;
           const in90Days = Refad.date.addDays(Refad.date.today(), 90);
-
-          const [expiring, lowStock] = await Promise.all([
-            Refad.db.select('batches', {
-              columns: 'id, batch_number, expiry_date, quantity_left, products(name)',
-              eq: { company_id: companyId },
-              gt: { quantity_left: 0 },
-              lte: { expiry_date: in90Days },
-              order: { column: 'expiry_date', ascending: true },
-              limit: 5
-            }).catch(() => []),
+          const [products, batches] = await Promise.all([
             Refad.db.select('products', {
               columns: 'id, name, reorder_level',
               eq: { company_id: companyId, is_active: true },
-              limit: 50
-            }).catch(() => [])
+              order: { column: 'id', ascending: true },
+              limit: 5000
+            }),
+            Refad.db.select('batches', {
+              columns: 'id, product_id, batch_number, expiry_date, quantity_left',
+              eq: { company_id: companyId },
+              gt: { quantity_left: 0 },
+              order: { column: 'id', ascending: true },
+              limit: 5000
+            })
           ]);
-
+          const productById = new Map(products.map(product => [String(product.id), product]));
+          const quantityByProduct = new Map();
+          batches.forEach(batch => {
+            const key = String(batch.product_id);
+            quantityByProduct.set(key, (quantityByProduct.get(key) || 0) + (Number(batch.quantity_left) || 0));
+          });
+          const expiring = batches
+            .filter(batch => batch.expiry_date && batch.expiry_date <= in90Days)
+            .sort((a, b) => String(a.expiry_date).localeCompare(String(b.expiry_date)));
+          const lowStock = products.filter(product => {
+            const threshold = Number(product.reorder_level) || 0;
+            return threshold > 0 && (quantityByProduct.get(String(product.id)) || 0) <= threshold;
+          });
           const items = [];
 
           expiring.forEach(b => {
@@ -1361,9 +1373,22 @@
             items.push({
               type: days <= 30 ? 'danger' : 'warning',
               icon: 'calendar-x',
-              title: b.products?.name || 'صنف',
+              title: productById.get(String(b.product_id))?.name || 'صنف',
               sub: `تشغيلة ${b.batch_number || '—'} • متبقي ${b.quantity_left} • ${days} يوم`
             });
+          });
+          lowStock.forEach(product => {
+            items.push({
+              type: 'warning',
+              icon: 'package-x',
+              title: `مخزون منخفض: ${product.name}`,
+              sub: `المتاح ${Refad.format.number(quantityByProduct.get(String(product.id)) || 0)} • حد إعادة الطلب ${Refad.format.number(product.reorder_level)}`
+            });
+          });
+
+          Refad.scanInventoryAlerts(companyId).catch(error => {
+            console.error('[Dashboard] Inventory notification dispatch failed:', error);
+            Refad.toast.warning('تم تحميل تنبيهات المخزون، لكن تعذّر إرسال بعضها');
           });
 
           if (items.length === 0) {
@@ -1374,7 +1399,7 @@
                 <p style="font-size:11px;">كل شيء على ما يرام</p>
               </div>`;
           } else {
-            list.innerHTML = items.map(it => `
+            list.innerHTML = items.slice(0, 8).map(it => `
               <div class="alert-item">
                 <div class="alert-icon ${it.type}"><i data-lucide="${it.icon}"></i></div>
                 <div class="alert-body">

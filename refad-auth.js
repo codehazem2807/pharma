@@ -321,6 +321,7 @@
 
     // تشغيل Idle Watcher
     window.Refad.initIdleWatcher();
+    window.Refad.addSharedNavigation();
 
     return s;
   }

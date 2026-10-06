@@ -214,7 +214,7 @@
     .pos-body {
       flex: 1;
       display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(460px, min(38vw, 560px));
+      grid-template-columns: minmax(0, 1fr) minmax(500px, min(44vw, 660px));
       gap: 16px;
       padding: 16px;
       min-height: 0;
@@ -814,18 +814,18 @@
 
     /* Responsive */
     @media (max-width: 1100px) {
-      .pos-body { grid-template-columns: minmax(0, 1fr) 440px; }
+      .pos-body { grid-template-columns: minmax(0, 1fr) minmax(480px, 48vw); }
     }
 
-    @media (max-width: 900px) {
+    @media (max-width: 1024px) {
       .sidebar { transform: translateX(100%); }
       .sidebar.open { transform: translateX(0); }
       .main { margin-right: 0; }
       .menu-toggle { display: flex; }
       html, body { height: auto; min-height: 100vh; overflow: auto; }
       .main { height: auto; min-height: 100vh; }
-      .pos-body { grid-template-columns: 1fr; grid-template-rows: minmax(360px, 45vh) minmax(500px, 65vh); overflow: visible; }
-      .cart-panel { min-height: 500px; max-height: none; }
+      .pos-body { grid-template-columns: 1fr; grid-template-rows: minmax(360px, 45vh) minmax(620px, 75vh); overflow: visible; }
+      .cart-panel { min-height: 620px; max-height: none; }
     }
 
     @media (max-width: 640px) {
@@ -1206,7 +1206,11 @@
             }).catch(() => []),
             Refad.db.select('product_discounts', {
               columns: 'product_id, last_purchase_discount, max_purchase_discount, last_sale_discount, max_sale_discount'
-            }).catch(() => [])
+            }).catch(error => {
+              console.error('[POS] Discount history load failed:', error);
+              Refad.toast.warning('تعذّر تحميل سجل الخصومات؛ لن تظهر توصيات الخصم');
+              return [];
+            })
           ]);
 
           // barcode map
@@ -1242,6 +1246,7 @@
             return {
               ...p,
               last_sale_discount: dMap[p.id]?.last_sale_discount || 0,
+              max_sale_discount: dMap[p.id]?.max_sale_discount || 0,
               last_purchase_discount: dMap[p.id]?.last_purchase_discount || 0,
               total_stock: totalStock,
               nearest_expiry: nearestExpiry
@@ -1405,7 +1410,7 @@
           quantity: 1,
           sale_price: batch.sale_price || p.default_price || 0,
           cost_price: batch.cost_price || 0,
-          sale_discount: p.last_sale_discount || 0,
+          sale_discount: 0,
           purchase_discount: purchaseDisc
         });
 
@@ -1426,6 +1431,24 @@
         const saleNetUnit = (it.sale_price || 0) * (1 - (it.sale_discount || 0) / 100);
         const costNetUnit = (it.cost_price || 0) * (1 - (it.purchase_discount || 0) / 100);
         return (saleNetUnit - costNetUnit) * qty;
+      }
+
+      function getSaleDiscountGuidance(item) {
+        const historicalDiscount = Math.max(
+          Number(item.product.max_sale_discount) || 0,
+          Number(item.product.last_sale_discount) || 0
+        );
+        const salePrice = Number(item.sale_price) || 0;
+        const netCost = (Number(item.cost_price) || 0) *
+          (1 - (Number(item.purchase_discount) || 0) / 100);
+        const maxWithoutLoss = salePrice > 0
+          ? Math.max(0, Math.min(100, (1 - netCost / salePrice) * 100))
+          : 0;
+        return {
+          historicalDiscount,
+          maxWithoutLoss,
+          suggested: Math.min(historicalDiscount, maxWithoutLoss)
+        };
       }
 
       // ============================================================
@@ -1453,6 +1476,7 @@
           const total = calcLineTotal(it);
           const profit = calcLineProfit(it);
           const profitCls = profit >= 0 ? 'positive' : 'negative';
+          const discountGuidance = getSaleDiscountGuidance(it);
 
           const days = Refad.format.daysLeft(it.batch_expiry);
           let expiryTag = '';
@@ -1484,6 +1508,19 @@
                 <input type="number" min="0" max="100" step="0.1" value="${it.sale_discount}" data-idx="${i}" data-field="sale_discount">
                 <span class="ci-label">خصم شراء</span>
                 <input type="number" value="${it.purchase_discount}" disabled style="opacity:0.7;">
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:8px;">
+                <small style="color:var(--text-muted);">
+                  ${discountGuidance.historicalDiscount > 0
+                    ? `أعلى خصم بيع مسجل ${Refad.format.number(discountGuidance.historicalDiscount, 1)}%`
+                    : 'لا يوجد سجل خصم بيع سابق'
+                  }
+                  • سقف الخصم دون خسارة ${Refad.format.number(discountGuidance.maxWithoutLoss, 1)}%
+                </small>
+                ${discountGuidance.suggested > 0
+                  ? `<button type="button" class="btn btn-outline btn-sm" data-suggest-discount="${i}">تطبيق المقترح ${Refad.format.number(discountGuidance.suggested, 1)}%</button>`
+                  : ''
+                }
               </div>
               <div class="ci-total">
                 <span class="label">الإجمالي</span>
@@ -1531,10 +1568,27 @@
               it.sale_discount = v;
               updateCartItem(idx);
               updateTotals();
+            } else if (field === 'sale_price') {
+              const v = Math.max(0, Refad.toNum(e.target.value));
+              e.target.value = v;
+              it.sale_price = v;
+              renderCart();
             }
           });
           inp.addEventListener('keydown', e => {
             if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); }
+          });
+        });
+
+        container.querySelectorAll('[data-suggest-discount]').forEach(button => {
+          button.addEventListener('click', () => {
+            const idx = Number(button.dataset.suggestDiscount);
+            const item = state.cart[idx];
+            if (!item) return;
+            item.sale_discount = getSaleDiscountGuidance(item).suggested;
+            renderCart();
+            updateTotals();
+            Refad.toast.info('تم تطبيق خصم إرشادي من سجل الصنف مع الحفاظ على ربح غير سالب');
           });
         });
 
@@ -1822,7 +1876,7 @@
               invoice.id,
               session.user_id
             ),
-            ...lowStockCrossings.map(product => Refad.notifyCompany(
+            ...lowStockCrossings.map(product => Refad.notifyCompanyDaily(
               session.company_id,
               'مخزون صنف منخفض',
               `وصل رصيد ${product.name} إلى حد إعادة الطلب أو أقل.`,

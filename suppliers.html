@@ -1169,7 +1169,7 @@
           }
 
           return `
-            <tr data-id="${s.id}">
+            <tr data-id="${s.id}" tabindex="0" style="cursor:pointer">
               <td>
                 <div class="supplier-cell" onclick="location.href='supplier-details.html?id=${s.id}'">
                   <div class="supplier-avatar">${Refad.escapeHtml(initial)}</div>
@@ -1366,7 +1366,13 @@
 
         document.getElementById('tableBody').addEventListener('click', e => {
           const btn = e.target.closest('[data-action]');
-          if (!btn) return;
+          if (!btn) {
+            const row = e.target.closest('tr[data-id]');
+            if (row && !e.target.closest('a, input, select, textarea, label')) {
+              location.href = `supplier-details.html?id=${row.dataset.id}`;
+            }
+            return;
+          }
           const action = btn.dataset.action;
           const id = parseInt(btn.dataset.id, 10);
           const supplier = state.all.find(s => s.id === id);
@@ -1376,6 +1382,13 @@
             location.href = `supplier-details.html?id=${id}`;
           } else if (action === 'edit') {
             openModal(supplier);
+          }
+        });
+        document.getElementById('tableBody').addEventListener('keydown', e => {
+          const row = e.target.closest('tr[data-id]');
+          if (row && e.target === row && (e.key === 'Enter' || e.key === ' ')) {
+            e.preventDefault();
+            location.href = `supplier-details.html?id=${row.dataset.id}`;
           }
         });
 

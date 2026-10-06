@@ -408,6 +408,8 @@
     tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
     tbody tr:last-child { border-bottom: none; }
     tbody tr:hover { background: var(--bg); }
+    tbody tr.invoice-clickable-row { cursor: pointer; }
+    tbody tr.invoice-clickable-row:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
 
     td { padding: 14px 16px; color: var(--text); vertical-align: middle; }
 
@@ -866,6 +868,9 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-outline" data-close>إغلاق</button>
+        <a class="btn btn-outline" id="invoiceReturnsBtn" href="#" style="display:none;">
+          <i data-lucide="undo-2"></i> تسجيل مرتجع
+        </a>
         <button type="button" class="btn btn-success" id="reprintBtn">
           <i data-lucide="printer"></i> إعادة طباعة
         </button>
@@ -920,6 +925,7 @@
           { label: 'الرواتب', icon: 'wallet', href: 'payroll.html', permission: 'payroll.view' }
         ]},
         { section: 'المالية', items: [
+          { label: 'الحسابات', icon: 'landmark', href: 'accounts.html', permission: 'company.owner' },
           { label: 'المصاريف', icon: 'banknote', href: 'expenses.html', permission: 'expenses.view' },
           { label: 'التقارير', icon: 'bar-chart-3', href: 'reports.html', permission: 'reports.view' }
         ]},
@@ -1176,7 +1182,7 @@
           const st = STATUS[r.status] || { label: r.status, cls: 'gray' };
           const itemCount = r.sales_invoice_items?.length || 0;
           return `
-            <tr>
+            <tr class="invoice-clickable-row" data-open-invoice="${r.id}" tabindex="0" aria-label="فتح الفاتورة ${Refad.escapeHtml(r.invoice_number)}">
               <td>
                 <span class="invoice-number" data-view="${r.id}">
                   ${Refad.escapeHtml(r.invoice_number)}
@@ -1279,6 +1285,14 @@
             eq: { invoice_id: id },
             order: { column: 'id', ascending: true }
           });
+          const returns = await Refad.db.select('inventory_returns', {
+            columns: 'id, return_number, return_date, total_amount, reason',
+            eq: { company_id: session.company_id, return_type: 'sales', reference_invoice_id: id },
+            order: { column: 'id', ascending: false }
+          }).catch(error => {
+            console.warn('[Invoices] Return history unavailable:', error.message);
+            return [];
+          });
 
           // جلب العميل
           let customer = null;
@@ -1294,7 +1308,10 @@
             }).catch(() => null);
           }
 
-          state.currentInvoice = { invoice: inv, items, customer };
+          state.currentInvoice = { invoice: inv, items, customer, returns };
+          const returnsBtn = document.getElementById('invoiceReturnsBtn');
+          returnsBtn.href = `returns.html?type=sales&invoice_id=${inv.id}`;
+          returnsBtn.style.display = Refad.Session.has('sales.view') ? 'inline-flex' : 'none';
           renderModal();
 
           document.getElementById('invoiceModal').classList.add('show');
@@ -1306,7 +1323,7 @@
       }
 
       function renderModal() {
-        const { invoice, items, customer } = state.currentInvoice;
+        const { invoice, items, customer, returns = [] } = state.currentInvoice;
         document.getElementById('modalTitle').textContent = `فاتورة ${invoice.invoice_number}`;
 
         const STATUS = {
@@ -1409,6 +1426,22 @@
               <span class="value">${Refad.format.money(invoice.total_profit || 0)}</span>
             </div>
           </div>
+
+          <section style="margin-top:18px;">
+            <h3 style="font-size:14px;font-weight:700;margin-bottom:8px;color:var(--text);display:flex;align-items:center;gap:6px;">
+              <i data-lucide="undo-2" style="width:16px;height:16px;color:var(--accent);"></i>
+              المرتجعات المرتبطة (${returns.length})
+            </h3>
+            ${returns.length ? `<div class="table-scroll"><table class="items-mini-table">
+              <thead><tr><th>رقم المرتجع</th><th>التاريخ</th><th>السبب</th><th>الإجمالي</th></tr></thead>
+              <tbody>${returns.map(row => `<tr>
+                <td>${Refad.escapeHtml(row.return_number || '—')}</td>
+                <td>${Refad.format.date(row.return_date)}</td>
+                <td>${Refad.escapeHtml(row.reason || '—')}</td>
+                <td>${Refad.format.money(row.total_amount || 0)}</td>
+              </tr>`).join('')}</tbody>
+            </table></div>` : '<div class="empty-state">لا توجد مرتجعات مسجلة لهذه الفاتورة.</div>'}
+          </section>
         `;
 
         if (window.lucide) lucide.createIcons();
@@ -1600,31 +1633,45 @@
           }
 
           const btn = e.target.closest('[data-action]');
-          if (!btn) return;
-          const action = btn.dataset.action;
-          const id = parseInt(btn.dataset.id, 10);
-          const inv = state.all.find(x => x.id === id);
-          if (!inv) return;
+          if (btn) {
+            const action = btn.dataset.action;
+            const id = parseInt(btn.dataset.id, 10);
+            const inv = state.all.find(x => x.id === id);
+            if (!inv) return;
 
-          if (action === 'view') viewInvoice(id);
-          else if (action === 'print') {
-            if (!state.company) {
-              Refad.toast.error('بيانات الشركة غير متاحة؛ تعذّرت طباعة الفاتورة');
-              return;
+            if (action === 'view') viewInvoice(id);
+            else if (action === 'print') {
+              if (!state.company) {
+                Refad.toast.error('بيانات الشركة غير متاحة؛ تعذّرت طباعة الفاتورة');
+                return;
+              }
+              const printWindow = window.open('', '_blank');
+              if (!printWindow) {
+                Refad.toast.warning('اسمح بالنوافذ المنبثقة لإعادة طباعة الفاتورة');
+                return;
+              }
+              printWindow.document.write('<!DOCTYPE html><html dir="rtl"><meta charset="UTF-8"><body>جارٍ تجهيز الفاتورة...</body></html>');
+              state.currentInvoice = null;
+              viewInvoice(id).then(() => {
+                if (state.currentInvoice?.invoice.id === id) reprintInvoice(printWindow);
+                else printWindow.close();
+              });
             }
-            const printWindow = window.open('', '_blank');
-            if (!printWindow) {
-              Refad.toast.warning('اسمح بالنوافذ المنبثقة لإعادة طباعة الفاتورة');
-              return;
-            }
-            printWindow.document.write('<!DOCTYPE html><html dir="rtl"><meta charset="UTF-8"><body>جارٍ تجهيز الفاتورة...</body></html>');
-            state.currentInvoice = null;
-            viewInvoice(id).then(() => {
-              if (state.currentInvoice?.invoice.id === id) reprintInvoice(printWindow);
-              else printWindow.close();
-            });
+            else if (action === 'delete') deleteInvoice(id, inv);
+            return;
           }
-          else if (action === 'delete') deleteInvoice(id, inv);
+
+          const row = e.target.closest('[data-open-invoice]');
+          if (row && !e.target.closest('a, input, select, textarea, label')) {
+            viewInvoice(parseInt(row.dataset.openInvoice, 10));
+          }
+        });
+        document.getElementById('tableBody').addEventListener('keydown', e => {
+          const row = e.target.closest('[data-open-invoice]');
+          if (row && e.target === row && (e.key === 'Enter' || e.key === ' ')) {
+            e.preventDefault();
+            viewInvoice(parseInt(row.dataset.openInvoice, 10));
+          }
         });
 
         // Modal close

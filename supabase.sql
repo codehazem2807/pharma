@@ -269,6 +269,7 @@ CREATE TABLE receipt_items (
   purchase_discount REAL DEFAULT 0,
   expiry_date     DATE,
   batch_number    VARCHAR(50),
+  batch_barcode   VARCHAR(50),
   total           REAL DEFAULT 0
 );
 CREATE INDEX idx_ri_receipt ON receipt_items(receipt_id);
@@ -282,6 +283,7 @@ CREATE TABLE batches (
   supplier_id     BIGINT REFERENCES suppliers(id) ON DELETE SET NULL,
   receipt_id      BIGINT REFERENCES receipts(id) ON DELETE SET NULL,
   batch_number    VARCHAR(50),
+  batch_barcode   VARCHAR(50),
   quantity_in     INTEGER NOT NULL DEFAULT 0,
   quantity_left   INTEGER NOT NULL DEFAULT 0,
   cost_price      REAL DEFAULT 0,
@@ -689,6 +691,7 @@ INSERT INTO permissions (code, name_ar, module) VALUES
 ('purchases.create', 'إنشاء طلب شراء',    'purchases'),
 ('purchases.edit',   'تعديل مشتريات',     'purchases'),
 ('purchases.receive','استلام مشتريات',    'purchases'),
+('purchases.return', 'مرتجع مشتريات',     'purchases'),
 -- المبيعات
 ('sales.view',       'عرض المبيعات',      'sales'),
 ('sales.create',     'إنشاء فاتورة',      'sales'),

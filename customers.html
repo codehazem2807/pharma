@@ -965,7 +965,7 @@
           const isActive = c.is_active !== false;
 
           return `
-            <tr data-id="${c.id}">
+            <tr data-id="${c.id}" tabindex="0" style="cursor:pointer">
               <td style="color:var(--text-muted);font-weight:700;text-align:center;">${i + 1}</td>
               <td>
                 <div class="customer-cell">
@@ -1006,6 +1006,12 @@
           tr.addEventListener('click', (e) => {
             if (e.target.closest('[data-action]') || e.target.closest('a')) return;
             window.location.href = 'customer-details.html?id=' + tr.dataset.id;
+          });
+          tr.addEventListener('keydown', e => {
+            if (e.target === tr && (e.key === 'Enter' || e.key === ' ')) {
+              e.preventDefault();
+              window.location.href = 'customer-details.html?id=' + tr.dataset.id;
+            }
           });
         });
 

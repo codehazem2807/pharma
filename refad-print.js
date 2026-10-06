@@ -42,6 +42,7 @@
               font-size: 13px; line-height: 1.5;
             }
             ${receipt ? 'body { width: 72mm; padding: 4mm; font-size: 11px; } table { font-size: 10px; } th, td { padding: 4px 2px; font-size: 10px; }' : ''}
+            ${receipt ? '.invoice-print-header { flex-wrap: wrap !important; gap: 6px !important; } .invoice-print-header img { width: 34px !important; height: 34px !important; } .invoice-print-header > div { font-size: 10px !important; }' : ''}
             h1, h2, h3 { color: #0B2C4D; }
             table { width: 100%; border-collapse: collapse; margin: 10px 0; }
             th, td { border: 1px solid #cbd5e1; padding: 6px 8px; text-align: right; font-size: 12px; }
@@ -211,7 +212,7 @@
       const terms = invoice.terms || invoiceSettings.invoice_terms || '';
 
       Print.html(`
-        <div style="border-bottom:2px solid #0B2C4D;padding-bottom:12px;margin-bottom:16px;display:flex;align-items:center;gap:14px;">
+        <div class="invoice-print-header" style="border-bottom:2px solid #0B2C4D;padding-bottom:12px;margin-bottom:16px;display:flex;align-items:center;gap:14px;">
           ${company.logo_url ? `<img src="${Refad.escapeHtml(company.logo_url)}" alt="${Refad.escapeHtml(company.name || '')}" style="width:70px;height:70px;object-fit:contain;" onerror="this.style.display='none'">` : ''}
           <div style="flex:1;">
             <h1 style="font-size:20px;margin-bottom:4px;">${Refad.escapeHtml(company.name || '')}</h1>

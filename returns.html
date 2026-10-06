@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0B2C4D">
+  <title>المرتجعات - رفاد</title>
+  <link rel="icon" type="image/png" href="logo.png">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    * { box-sizing: border-box; }
+    :root { --primary:#0B2C4D;--accent:#14B8A6;--bg:#f1f5f9;--card:#fff;--text:#0f172a;--muted:#64748b;--border:#e2e8f0;--red:#dc2626;--green:#059669;--shadow:0 5px 22px rgba(11,44,77,.07); }
+    [data-theme="dark"] { --bg:#0a1628;--card:#0f2137;--text:#f1f5f9;--muted:#94a3b8;--border:#1e3a5f; }
+    body { margin:0;background:var(--bg);color:var(--text);font-family:Cairo,sans-serif; }
+    .shell { max-width:1440px;margin:auto;padding:24px; }
+    header { display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:20px; }
+    h1 { margin:0;font-size:25px;font-weight:800; }
+    h2 { margin:0;font-size:16px; }
+    .subtitle { color:var(--muted);font-size:12px;margin-top:2px; }
+    .heading { display:flex;align-items:center;gap:12px; }
+    .heading-icon { width:46px;height:46px;border-radius:14px;background:linear-gradient(135deg,var(--primary),var(--accent));color:white;display:grid;place-items:center; }
+    .toolbar,.actions { display:flex;align-items:center;gap:8px;flex-wrap:wrap; }
+    button,select,input,textarea { font:inherit; }
+    button,.button { display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid var(--border);border-radius:10px;padding:9px 13px;background:var(--card);color:var(--text);cursor:pointer;text-decoration:none; }
+    button:hover,.button:hover { border-color:var(--accent);color:var(--accent); }
+    button:disabled { cursor:wait;opacity:.6; }
+    .primary { background:linear-gradient(135deg,var(--primary),var(--accent));border:0;color:#fff; }
+    .primary:hover { color:#fff;filter:brightness(1.05); }
+    .layout { display:grid;grid-template-columns:minmax(0,1.3fr) minmax(340px,.85fr);gap:16px;align-items:start; }
+    .card { background:var(--card);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);overflow:hidden;margin-bottom:16px; }
+    .card-head { display:flex;align-items:center;justify-content:space-between;gap:10px;padding:15px 18px;border-bottom:1px solid var(--border); }
+    .card-head h2 { display:flex;align-items:center;gap:8px; }
+    .card-head svg { width:18px;height:18px;color:var(--accent); }
+    .card-body { padding:17px 18px; }
+    .form-grid { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px; }
+    .field { display:flex;flex-direction:column;gap:5px;min-width:0; }
+    .field.full { grid-column:1/-1; }
+    label { font-size:12px;font-weight:700;color:var(--muted); }
+    input,select,textarea { width:100%;min-width:0;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:9px;padding:10px 11px;outline:0; }
+    input:focus,select:focus,textarea:focus { border-color:var(--accent);box-shadow:0 0 0 3px rgba(20,184,166,.11); }
+    textarea { resize:vertical;min-height:72px; }
+    .notice { border:1px solid rgba(217,119,6,.24);background:rgba(245,158,11,.08);color:#b45309;padding:10px 13px;border-radius:11px;font-size:11px;margin-bottom:14px; }
+    [data-theme="dark"] .notice { color:#fbbf24; }
+    .error { display:none;border:1px solid rgba(220,38,38,.3);background:rgba(220,38,38,.08);color:var(--red);padding:12px;border-radius:10px;margin-bottom:14px;font-size:12px; }
+    .table-wrap { overflow:auto; }
+    table { border-collapse:collapse;width:100%;min-width:680px;font-size:12px; }
+    th,td { text-align:right;padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:middle; }
+    th { color:var(--muted);background:var(--bg);font-size:11px;white-space:nowrap; }
+    tbody tr:last-child td { border-bottom:0; }
+    .qty-input { width:90px;padding:7px; }
+    .product-name { font-weight:700; }
+    .sub { color:var(--muted);font-size:10px; }
+    .party { padding:8px 10px;border-radius:9px;background:var(--bg);font-size:12px;margin-top:12px; }
+    .summary { display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 0 2px;font-size:12px;color:var(--muted); }
+    .summary strong { font-size:17px;color:var(--text); }
+    .empty { text-align:center;color:var(--muted);padding:26px 12px;font-size:12px; }
+    .history-table { min-width:740px; }
+    .history-link { color:var(--primary);text-decoration:none;font-weight:700; }
+    [data-theme="dark"] .history-link { color:#5eead4; }
+    .pill { display:inline-block;border-radius:20px;background:rgba(20,184,166,.12);color:var(--accent);padding:3px 8px;font-size:10px;font-weight:700; }
+    @media(max-width:950px) { .layout { grid-template-columns:1fr; } }
+    @media(max-width:600px) {
+      .shell { padding:14px; } header { align-items:flex-start; } h1 { font-size:21px; }
+      .form-grid { grid-template-columns:1fr; } .field.full { grid-column:auto; }
+      .card-head,.card-body { padding:13px; } .toolbar .button span { display:none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <div class="heading">
+        <div class="heading-icon"><i data-lucide="undo-2"></i></div>
+        <div><h1>إدارة المرتجعات</h1><div class="subtitle">مرتجع مبيعات من العميل أو مرتجع مشتريات إلى المورد مع تحديث المخزون والحسابات</div></div>
+      </div>
+      <div class="toolbar">
+        <a class="button" href="dashboard.html"><i data-lucide="layout-dashboard"></i><span>الرئيسية</span></a>
+        <button id="refreshBtn" type="button"><i data-lucide="refresh-cw"></i><span>تحديث</span></button>
+      </div>
+    </header>
+    <div class="error" id="errorBox" role="alert"></div>
+    <div class="notice">يجب تسجيل المرتجع على فاتورته الأصلية. لا يمكن تجاوز الكمية المباعة/المستلمة سابقاً، ومرتجع المورد لا يتجاوز الكمية المتبقية في التشغيلة. يعكس النظام قيمة المرتجع في رصيد العميل أو المورد؛ رد النقدية فعلياً يحتاج سند صرف/قبض من نظام الحسابات.</div>
+
+    <div class="layout">
+      <section class="card">
+        <div class="card-head"><h2><i data-lucide="file-plus-2"></i> تسجيل مرتجع جديد</h2><span class="pill">حفظ آمن موحد</span></div>
+        <div class="card-body">
+          <div class="form-grid">
+            <div class="field">
+              <label for="returnType">نوع المرتجع</label>
+              <select id="returnType">
+                <option value="sales">مرتجع مبيعات من عميل</option>
+                <option value="purchase">مرتجع مشتريات إلى مورد</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="sourceSelect" id="sourceLabel">فاتورة البيع الأصلية</label>
+              <select id="sourceSelect"><option value="">اختر الفاتورة</option></select>
+            </div>
+            <div class="field">
+              <label for="returnDate">تاريخ المرتجع</label>
+              <input id="returnDate" type="date">
+            </div>
+            <div class="field">
+              <label for="reason">سبب المرتجع</label>
+              <select id="reason">
+                <option value="تالف">تالف</option>
+                <option value="قرب انتهاء الصلاحية">قرب انتهاء الصلاحية</option>
+                <option value="خطأ في الصنف أو الكمية">خطأ في الصنف أو الكمية</option>
+                <option value="رفض العميل / المورد">رفض العميل / المورد</option>
+                <option value="أخرى">أخرى</option>
+              </select>
+            </div>
+            <div class="field full"><label for="notes">ملاحظات</label><textarea id="notes" maxlength="500" placeholder="تفاصيل إضافية (اختياري)"></textarea></div>
+          </div>
+          <div class="party" id="partyLine" hidden></div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>الصنف / التشغيلة</th><th>الموجود بالمستند</th><th>مرتجع سابق</th><th>المتاح للإرجاع</th><th>سعر الوحدة</th><th>كمية المرتجع</th></tr></thead>
+            <tbody id="sourceItems"><tr><td colspan="6" class="empty">اختر نوع المرتجع والفاتورة لعرض الأصناف القابلة للإرجاع.</td></tr></tbody>
+          </table>
+        </div>
+        <div class="card-body">
+          <div class="summary"><span>إجمالي قيمة المرتجع</span><strong id="returnTotal">0.00</strong></div>
+          <div class="actions" style="margin-top:12px;justify-content:flex-end">
+            <button type="button" id="clearBtn">مسح الاختيار</button>
+            <button type="button" class="primary" id="saveBtn"><i data-lucide="save"></i> حفظ المرتجع</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><h2><i data-lucide="history"></i> آخر المرتجعات</h2></div>
+        <div class="table-wrap">
+          <table class="history-table">
+            <thead><tr><th>رقم المرتجع</th><th>النوع</th><th>الطرف</th><th>المستند الأصلي</th><th>التاريخ</th><th>الإجمالي</th></tr></thead>
+            <tbody id="historyRows"><tr><td colspan="6" class="empty">جارٍ التحميل...</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </main>
+  <script src="refad-core.js"></script>
+  <script src="refad-auth.js"></script>
+  <script>
+    (function () {
+      'use strict';
+      const session = Refad.Auth.guardPage();
+      if (!session) return;
+      const canSalesReturn = Refad.Session.has('sales.view');
+      const canPurchaseReturn = Refad.Session.has('purchases.receive');
+      if (!canSalesReturn && !canPurchaseReturn) {
+        Refad.toast.error('ليس لديك صلاحية تسجيل المرتجعات');
+        window.location.replace('dashboard.html');
+        return;
+      }
+      const state = {
+        invoices: [], receipts: [], customers: [], suppliers: [],
+        sourceRows: [], sourceBatches: [], returnedByItem: new Map()
+      };
+      const $ = id => document.getElementById(id);
+      const today = Refad.date.today();
+      $('returnDate').value = today;
+      if (!canSalesReturn) $('returnType').value = 'purchase';
+      if (!canPurchaseReturn) {
+        $('returnType').innerHTML = '<option value="sales">مرتجع مبيعات من عميل</option>';
+      }
+
+      function showError(error) {
+        const failure = error && typeof error === 'object' ? error : { message: String(error) };
+        console.error('[Returns] Operation failed:', JSON.stringify({
+          code: failure.code,
+          message: failure.message,
+          details: failure.details,
+          hint: failure.hint
+        }));
+        const detail = [failure.message, failure.details, failure.hint].filter(Boolean).join(' — ') || 'خطأ غير معروف';
+        const setupMissing = ['PGRST202', '42P01', '42883'].includes(failure.code) ||
+          /inventory_returns|inventory_return_items|process_inventory_return|schema cache/i.test(detail);
+        $('errorBox').textContent = setupMissing
+          ? `ميزة المرتجعات غير مفعّلة بالكامل في قاعدة البيانات. شغّل ملف returns-setup.sql في Supabase SQL Editor بعد المخطط الأساسي، ثم سجّل الخروج والدخول. التفاصيل: ${detail}`
+          : `تعذّر إكمال العملية: ${detail}`;
+        $('errorBox').style.display = 'block';
+        return detail;
+      }
+      function money(value) { return Refad.format.money(value); }
+      function currentType() { return $('returnType').value; }
+      function selectedSource() {
+        const id = $('sourceSelect').value;
+        const source = currentType() === 'sales' ? state.invoices : state.receipts;
+        return source.find(row => String(row.id) === String(id)) || null;
+      }
+      function partyFor(type, source) {
+        if (!source) return '';
+        const id = type === 'sales' ? source.customer_id : source.supplier_id;
+        if (type === 'sales' && source.supplier_id) {
+          return state.suppliers.find(row => String(row.id) === String(source.supplier_id))?.name || 'مورد';
+        }
+        const list = type === 'sales' ? state.customers : state.suppliers;
+        return list.find(row => String(row.id) === String(id))?.name || '—';
+      }
+      function sourceNumber(type, source) {
+        return type === 'sales' ? source.invoice_number : (source.invoice_number || source.receipt_number);
+      }
+      function populateSources() {
+        const type = currentType();
+        const select = $('sourceSelect');
+        $('sourceLabel').textContent = type === 'sales' ? 'فاتورة البيع الأصلية' : 'فاتورة الاستلام الأصلية';
+        const source = type === 'sales' ? state.invoices : state.receipts;
+        select.innerHTML = `<option value="">اختر ${type === 'sales' ? 'فاتورة البيع' : 'فاتورة الاستلام'}</option>` +
+          source.map(row => {
+            const partner = partyFor(type, row);
+            const date = type === 'sales' ? row.invoice_date : row.receipt_date;
+            return `<option value="${row.id}">${Refad.escapeHtml(sourceNumber(type, row) || '—')} • ${Refad.escapeHtml(partner)} • ${Refad.format.date(date)} • ${money(row.grand_total ?? row.total_amount)}</option>`;
+          }).join('');
+        $('sourceItems').innerHTML = '<tr><td colspan="6" class="empty">اختر المستند الأصلي لعرض الأصناف القابلة للإرجاع.</td></tr>';
+        $('partyLine').hidden = true;
+        state.sourceRows = [];
+        state.sourceBatches = [];
+        state.returnedByItem.clear();
+        updateTotal();
+      }
+      async function loadDocuments() {
+        const [invoices, receipts, customers, suppliers] = await Promise.all([
+          canSalesReturn ? Refad.db.select('sales_invoices', {
+            columns: 'id, invoice_number, invoice_date, grand_total, status, invoice_type, customer_id, supplier_id',
+            eq: { company_id: session.company_id, invoice_type: 'sale' },
+            neq: { status: 'cancelled' },
+            order: { column: 'id', ascending: false },
+            limit: 2000
+          }) : [],
+          canPurchaseReturn ? Refad.db.select('receipts', {
+            columns: 'id, receipt_number, invoice_number, receipt_date, total_amount, status, supplier_id',
+            eq: { company_id: session.company_id },
+            neq: { status: 'cancelled' },
+            order: { column: 'id', ascending: false },
+            limit: 2000
+          }) : [],
+          canSalesReturn ? Refad.db.select('customers', {
+            columns: 'id, name', eq: { company_id: session.company_id }
+          }) : [],
+          (canSalesReturn || canPurchaseReturn) ? Refad.db.select('suppliers', {
+            columns: 'id, name', eq: { company_id: session.company_id }
+          }) : []
+        ]);
+        Object.assign(state, { invoices, receipts, customers, suppliers });
+        populateSources();
+      }
+      async function openLinkedSource() {
+        const requestedType = Refad.getParam('type');
+        const salesInvoiceId = Refad.getParam('invoice_id');
+        const purchaseReceiptId = Refad.getParam('receipt_id');
+        const type = requestedType === 'purchase' || purchaseReceiptId ? 'purchase' : 'sales';
+        const sourceId = type === 'sales' ? salesInvoiceId : purchaseReceiptId;
+        if (!sourceId) return;
+        if ((type === 'sales' && !canSalesReturn) || (type === 'purchase' && !canPurchaseReturn)) {
+          Refad.toast.error('ليس لديك صلاحية تسجيل هذا النوع من المرتجعات');
+          return;
+        }
+        $('returnType').value = type;
+        populateSources();
+        const availableSources = type === 'sales' ? state.invoices : state.receipts;
+        if (!availableSources.some(row => String(row.id) === String(sourceId))) {
+          Refad.toast.warning('المستند المرتبط غير متاح أو لا توجد لديك صلاحية عرضه');
+          return;
+        }
+        $('sourceSelect').value = String(sourceId);
+        await loadSourceItems();
+      }
+      async function loadHistory() {
+        const rows = await Refad.db.select('inventory_returns', {
+          columns: 'id, return_number, return_type, reference_invoice_id, reference_receipt_id, customer_id, supplier_id, return_date, total_amount, reason',
+          eq: { company_id: session.company_id },
+          order: { column: 'id', ascending: false },
+          limit: 100
+        });
+        const visibleRows = rows.filter(row =>
+          row.return_type === 'sales' ? canSalesReturn : canPurchaseReturn
+        );
+        $('historyRows').innerHTML = visibleRows.length ? visibleRows.map(row => {
+          const type = row.return_type === 'sales' ? 'sales' : 'purchase';
+          const sourceId = type === 'sales' ? row.reference_invoice_id : row.reference_receipt_id;
+          const sourceRows = type === 'sales' ? state.invoices : state.receipts;
+          const source = sourceRows.find(item => String(item.id) === String(sourceId));
+          const sourceHref = type === 'sales'
+            ? `invoices.html?id=${sourceId}`
+            : `receipt-form.html?id=${sourceId}`;
+          const partnerList = type === 'sales'
+            ? (row.supplier_id ? state.suppliers : state.customers)
+            : state.suppliers;
+          const partnerId = type === 'sales' && row.supplier_id ? row.supplier_id
+            : (type === 'sales' ? row.customer_id : row.supplier_id);
+          const partner = partnerList.find(item => String(item.id) === String(partnerId))?.name || '—';
+          return `<tr>
+            <td><strong>${Refad.escapeHtml(row.return_number)}</strong></td>
+            <td><span class="pill">${type === 'sales' ? 'مرتجع مبيعات' : 'مرتجع مشتريات'}</span></td>
+            <td>${Refad.escapeHtml(partner)}</td>
+            <td><a class="history-link" href="${sourceHref}">${Refad.escapeHtml(source ? sourceNumber(type, source) : 'فتح المستند')}</a></td>
+            <td>${Refad.format.date(row.return_date)}</td><td><strong>${money(row.total_amount)}</strong></td>
+          </tr>`;
+        }).join('') : '<tr><td colspan="6" class="empty">لا توجد مرتجعات مسجلة حتى الآن.</td></tr>';
+      }
+      async function loadSourceItems() {
+        const type = currentType();
+        const source = selectedSource();
+        state.sourceRows = [];
+        state.sourceBatches = [];
+        state.returnedByItem.clear();
+        if (!source) {
+          $('partyLine').hidden = true;
+          $('sourceItems').innerHTML = '<tr><td colspan="6" class="empty">اختر المستند الأصلي لعرض الأصناف القابلة للإرجاع.</td></tr>';
+          updateTotal();
+          return;
+        }
+        $('partyLine').textContent = `الطرف: ${partyFor(type, source)} • المستند الأصلي: ${sourceNumber(type, source)}`;
+        $('partyLine').hidden = false;
+        const sourceTable = type === 'sales' ? 'sales_invoice_items' : 'receipt_items';
+        const referenceColumn = type === 'sales' ? 'invoice_id' : 'receipt_id';
+        const [items, returnHeaders] = await Promise.all([
+          Refad.db.select(sourceTable, {
+            columns: `id, product_id, ${type === 'sales' ? 'batch_id' : 'batch_number'}, quantity, unit_price, total, products(name)`,
+            eq: { [referenceColumn]: source.id },
+            order: { column: 'id', ascending: true }
+          }),
+          Refad.db.select('inventory_returns', {
+            columns: 'id',
+            eq: {
+              company_id: session.company_id,
+              return_type: type,
+              [type === 'sales' ? 'reference_invoice_id' : 'reference_receipt_id']: source.id
+            }
+          })
+        ]);
+        const batchIds = type === 'sales' ? items.map(item => item.batch_id).filter(Boolean) : null;
+        const batches = type === 'sales' && !batchIds.length ? [] : await Refad.db.select('batches', {
+          columns: 'id, product_id, batch_number, quantity_left',
+          eq: { company_id: session.company_id, ...(type === 'purchase' ? { receipt_id: source.id } : {}) },
+          ...(batchIds ? { in: { id: batchIds } } : {}),
+          order: { column: 'id', ascending: true }
+        });
+        state.sourceRows = items;
+        state.sourceBatches = batches;
+        if (returnHeaders.length) {
+          const returned = await Refad.db.select('inventory_return_items', {
+            columns: 'source_item_id, quantity, batch_id',
+            in: { return_id: returnHeaders.map(row => row.id) }
+          });
+          returned.forEach(row => {
+            const key = String(row.source_item_id);
+            state.returnedByItem.set(key, (state.returnedByItem.get(key) || 0) + (Number(row.quantity) || 0));
+          });
+        }
+        renderSourceItems();
+      }
+      function itemBatch(item) {
+        if (currentType() === 'sales') {
+          return state.sourceBatches.find(batch => String(batch.id) === String(item.batch_id)) || null;
+        }
+        return state.sourceBatches.find(batch =>
+          String(batch.product_id) === String(item.product_id) &&
+          String(batch.batch_number || '') === String(item.batch_number || '')
+        ) || null;
+      }
+      function renderSourceItems() {
+        if (!state.sourceRows.length) {
+          $('sourceItems').innerHTML = '<tr><td colspan="6" class="empty">لا توجد أصناف في المستند الأصلي.</td></tr>';
+          return;
+        }
+        $('sourceItems').innerHTML = state.sourceRows.map(item => {
+          const returned = state.returnedByItem.get(String(item.id)) || 0;
+          const available = Math.max(0, Number(item.quantity || 0) - returned);
+          const batch = itemBatch(item);
+          const batchDescription = batch
+            ? `تشغيلة ${batch.batch_number || '—'} • متبقي ${Refad.format.number(batch.quantity_left)}`
+            : 'لا توجد تشغيلة مرتبطة — لا يمكن إرجاع هذا الصنف بأمان';
+          const safeAvailable = !batch ? 0
+            : currentType() === 'purchase'
+              ? Math.min(available, Number(batch.quantity_left) || 0)
+              : available;
+          const unitPrice = Number(item.total) > 0 && Number(item.quantity) > 0
+            ? Number(item.total) / Number(item.quantity)
+            : Number(item.unit_price) || 0;
+          return `<tr data-item-id="${item.id}" data-max="${safeAvailable}" data-price="${unitPrice}" data-batch-id="${batch?.id || ''}">
+            <td><div class="product-name">${Refad.escapeHtml(item.products?.name || 'صنف')}</div><div class="sub">${Refad.escapeHtml(batchDescription)}</div></td>
+            <td>${Refad.format.number(item.quantity)}</td>
+            <td>${Refad.format.number(returned)}</td>
+            <td><strong>${Refad.format.number(safeAvailable)}</strong></td>
+            <td>${money(unitPrice)}</td>
+            <td><input class="qty-input return-qty" type="number" min="0" max="${safeAvailable}" step="1" value="0" ${safeAvailable <= 0 ? 'disabled' : ''} aria-label="كمية المرتجع"></td>
+          </tr>`;
+        }).join('');
+        document.querySelectorAll('.return-qty').forEach(input => input.addEventListener('input', updateTotal));
+        updateTotal();
+      }
+      function updateTotal() {
+        let total = 0;
+        document.querySelectorAll('#sourceItems tr[data-item-id]').forEach(row => {
+          const qty = Math.max(0, Number(row.querySelector('.return-qty')?.value) || 0);
+          const max = Number(row.dataset.max) || 0;
+          const input = row.querySelector('.return-qty');
+          if (qty > max) input.setCustomValidity(`الحد المتاح ${max}`);
+          else input.setCustomValidity('');
+          total += Math.min(qty, max) * (Number(row.dataset.price) || 0);
+        });
+        $('returnTotal').textContent = money(total);
+      }
+      async function saveReturn() {
+        const source = selectedSource();
+        if (!source) {
+          Refad.toast.warning('اختر المستند الأصلي أولاً');
+          return;
+        }
+        if (!$('reason').value.trim()) {
+          Refad.toast.warning('سبب المرتجع مطلوب');
+          return;
+        }
+        const items = [];
+        let invalid = false;
+        document.querySelectorAll('#sourceItems tr[data-item-id]').forEach(row => {
+          const input = row.querySelector('.return-qty');
+          const quantity = Math.floor(Number(input.value) || 0);
+          const max = Number(row.dataset.max) || 0;
+          if (quantity > max) invalid = true;
+          if (quantity > 0) items.push({ source_item_id: Number(row.dataset.itemId), quantity });
+        });
+        if (invalid) {
+          Refad.toast.warning('كمية مرتجعة تتجاوز الكمية المتاحة');
+          return;
+        }
+        if (!items.length) {
+          Refad.toast.warning('أدخل كمية مرتجعة لصنف واحد على الأقل');
+          return;
+        }
+        const button = $('saveBtn');
+        button.disabled = true;
+        try {
+          const { data, error } = await Refad.sb.rpc('process_inventory_return', {
+            p_company_id: session.company_id,
+            p_return_type: currentType(),
+            p_reference_id: Number(source.id),
+            p_return_date: $('returnDate').value || today,
+            p_reason: $('reason').value.trim(),
+            p_notes: $('notes').value.trim() || null,
+            p_user_id: session.user_id,
+            p_items: items
+          });
+          if (error) throw error;
+          $('errorBox').style.display = 'none';
+          Refad.toast.success(`تم تسجيل المرتجع ${data.return_number} بإجمالي ${money(data.total_amount)}`);
+          $('notes').value = '';
+          await Promise.all([loadHistory(), loadSourceItems()]);
+        } catch (error) {
+          Refad.toast.error(`لم يتم حفظ المرتجع: ${showError(error)}`);
+        } finally {
+          button.disabled = false;
+        }
+      }
+      async function init() {
+        try {
+          await loadDocuments();
+          await openLinkedSource();
+          await loadHistory();
+        } catch (error) {
+          showError(error);
+        }
+        $('returnType').addEventListener('change', populateSources);
+        $('sourceSelect').addEventListener('change', () => loadSourceItems().catch(showError));
+        $('saveBtn').addEventListener('click', saveReturn);
+        $('clearBtn').addEventListener('click', () => {
+          $('sourceSelect').value = '';
+          $('notes').value = '';
+          populateSources();
+        });
+        $('refreshBtn').addEventListener('click', async () => {
+          $('refreshBtn').disabled = true;
+          try {
+            await loadDocuments();
+            await loadHistory();
+            Refad.toast.success('تم تحديث البيانات');
+          } catch (error) {
+            showError(error);
+          } finally {
+            $('refreshBtn').disabled = false;
+          }
+        });
+        if (window.lucide) lucide.createIcons();
+      }
+      init();
+    })();
+  </script>
+</body>
+</html>

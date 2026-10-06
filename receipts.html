@@ -404,6 +404,8 @@
     tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
     tbody tr:last-child { border-bottom: none; }
     tbody tr:hover { background: var(--bg); }
+    tbody tr.receipt-clickable-row { cursor: pointer; }
+    tbody tr.receipt-clickable-row:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
 
     td { padding: 14px 16px; color: var(--text); vertical-align: middle; }
 
@@ -755,10 +757,24 @@
           </div>
         </div>
         <div class="mini-card">
+          <div class="mini-icon blue"><i data-lucide="hourglass"></i></div>
+          <div class="mini-body">
+            <div class="label">معلق</div>
+            <div class="value" id="statPending">—</div>
+          </div>
+        </div>
+        <div class="mini-card">
           <div class="mini-icon teal"><i data-lucide="banknote"></i></div>
           <div class="mini-body">
             <div class="label">إجمالي القيمة</div>
             <div class="value" id="statValue">—</div>
+          </div>
+        </div>
+        <div class="mini-card">
+          <div class="mini-icon red"><i data-lucide="wallet"></i></div>
+          <div class="mini-body">
+            <div class="label">المتبقي للموردين</div>
+            <div class="value" id="statDue">—</div>
           </div>
         </div>
       </div>
@@ -775,6 +791,7 @@
             <option value="completed">مكتمل</option>
             <option value="partial">جزئي</option>
             <option value="pending">معلق</option>
+            <option value="cancelled">ملغي</option>
           </select>
         </div>
         <div class="select-wrap">
@@ -793,6 +810,7 @@
                 <th>رقم الفاتورة</th>
                 <th>المورد</th>
                 <th>التاريخ</th>
+                <th>الأصناف المستلمة</th>
                 <th>الإجمالي</th>
                 <th>المدفوع</th>
                 <th>المتبقي</th>
@@ -857,6 +875,7 @@
           { label: 'الرواتب', icon: 'wallet', href: 'payroll.html', permission: 'payroll.view' }
         ]},
         { section: 'المالية', items: [
+          { label: 'الحسابات', icon: 'landmark', href: 'accounts.html', permission: 'company.owner' },
           { label: 'المصاريف', icon: 'banknote', href: 'expenses.html', permission: 'expenses.view' },
           { label: 'التقارير', icon: 'bar-chart-3', href: 'reports.html', permission: 'reports.view' }
         ]},
@@ -953,7 +972,8 @@
         perPage: 15,
         search: '',
         filterStatus: '',
-        filterSupplier: ''
+        filterSupplier: '',
+        loadError: ''
       };
 
       // ============================================================
@@ -983,12 +1003,14 @@
       // 6) Load receipts
       // ============================================================
       async function loadReceipts(silent) {
+        state.loadError = '';
         if (!silent) renderSkeleton();
         try {
           const rows = await Refad.db.select('receipts', {
             columns: `id, receipt_number, invoice_number, receipt_date, total_amount, paid_amount, status, notes,
                       suppliers(id, name, phone),
-                      purchase_requests(id, request_number)`,
+                        purchase_requests(id, request_number),
+                        receipt_items(id, quantity, products(name))`,
             eq: { company_id: session.company_id },
             order: { column: 'created_at', ascending: false },
             limit: 500
@@ -999,7 +1021,7 @@
         } catch (e) {
           console.error('[Receipts] load failed:', e);
           Refad.toast.error('تعذّر التحميل: ' + e.message);
-          state.all = [];
+          state.loadError = e.message || 'تعذّر الاتصال بقاعدة البيانات';
           applyFilters();
         }
       }
@@ -1008,12 +1030,17 @@
         const total = state.all.length;
         const completed = state.all.filter(r => r.status === 'completed').length;
         const partial = state.all.filter(r => r.status === 'partial').length;
+        const pending = state.all.filter(r => r.status === 'pending').length;
         const totalValue = state.all.reduce((s, r) => s + (Number(r.total_amount) || 0), 0);
+        const totalDue = state.all.reduce((s, r) =>
+          s + Math.max(0, (Number(r.total_amount) || 0) - (Number(r.paid_amount) || 0)), 0);
 
         document.getElementById('statTotal').textContent = Refad.format.number(total);
         document.getElementById('statCompleted').textContent = Refad.format.number(completed);
         document.getElementById('statPartial').textContent = Refad.format.number(partial);
+        document.getElementById('statPending').textContent = Refad.format.number(pending);
         document.getElementById('statValue').textContent = Refad.format.money(totalValue);
+        document.getElementById('statDue').textContent = Refad.format.money(totalDue);
       }
 
       // ============================================================
@@ -1030,6 +1057,7 @@
             (r.invoice_number || '').toLowerCase().includes(q) ||
             (r.suppliers?.name || '').toLowerCase().includes(q) ||
             (r.purchase_requests?.request_number || '').toLowerCase().includes(q) ||
+            (r.receipt_items || []).some(item => (item.products?.name || '').toLowerCase().includes(q)) ||
             (r.notes || '').toLowerCase().includes(q)
           );
         });
@@ -1044,6 +1072,7 @@
             <td><div class="skeleton-bar" style="width:90px"></div></td>
             <td><div class="skeleton-bar" style="width:60%"></div></td>
             <td><div class="skeleton-bar" style="width:80px"></div></td>
+            <td><div class="skeleton-bar" style="width:100px"></div></td>
             <td><div class="skeleton-bar" style="width:80px"></div></td>
             <td><div class="skeleton-bar" style="width:80px"></div></td>
             <td><div class="skeleton-bar" style="width:80px"></div></td>
@@ -1058,12 +1087,27 @@
         const pag = Refad.paginate(state.filtered, state.page, state.perPage);
 
         if (state.filtered.length === 0) {
+          if (state.loadError) {
+            tbody.innerHTML = `
+              <tr class="empty-row">
+                <td colspan="9">
+                  <i data-lucide="triangle-alert"></i>
+                  <p>تعذّر تحميل الاستلامات: ${Refad.escapeHtml(state.loadError)}</p>
+                  <button type="button" class="btn btn-outline btn-sm" data-action="retry">
+                    <i data-lucide="refresh-cw"></i> إعادة المحاولة
+                  </button>
+                </td>
+              </tr>`;
+            if (window.lucide) lucide.createIcons();
+            renderPagination(pag);
+            return;
+          }
           const msg = state.all.length === 0
             ? 'لا توجد استلامات بعد. ابدأ بإنشاء استلام جديد.'
             : 'لا توجد نتائج مطابقة.';
           tbody.innerHTML = `
             <tr class="empty-row">
-              <td colspan="8">
+              <td colspan="9">
                 <i data-lucide="package-check"></i>
                 <p>${msg}</p>
               </td>
@@ -1077,21 +1121,27 @@
         const STATUS = {
           'completed': { label: 'مكتمل', cls: 'green' },
           'partial': { label: 'جزئي', cls: 'gold' },
-          'pending': { label: 'معلق', cls: 'gray' }
+          'pending': { label: 'معلق', cls: 'gray' },
+          'cancelled': { label: 'ملغي', cls: 'red' }
         };
 
         tbody.innerHTML = pag.data.map(r => {
           const st = STATUS[r.status] || { label: r.status, cls: 'gray' };
-          const remaining = (Number(r.total_amount) || 0) - (Number(r.paid_amount) || 0);
+          const remaining = Math.max(0, (Number(r.total_amount) || 0) - (Number(r.paid_amount) || 0));
           const remainingCls = remaining > 0 ? 'unpaid' : 'paid';
+          const items = r.receipt_items || [];
+          const itemCount = items.length;
+          const totalQty = items.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0);
+          const itemNames = items.slice(0, 2).map(item => item.products?.name).filter(Boolean);
 
           return `
-            <tr>
+            <tr class="receipt-clickable-row" data-open-receipt="${r.id}" tabindex="0" aria-label="فتح فاتورة الشراء ${Refad.escapeHtml(r.receipt_number)}">
               <td>
-                <span class="receipt-number" onclick="location.href='receipt-form.html?id=${r.id}'">
+                <span class="receipt-number">
                   ${Refad.escapeHtml(r.receipt_number)}
                 </span>
                 ${r.invoice_number ? `<div class="supplier-sub">فاتورة: ${Refad.escapeHtml(r.invoice_number)}</div>` : ''}
+                ${r.purchase_requests?.request_number ? `<div class="supplier-sub">طلب شراء: ${Refad.escapeHtml(r.purchase_requests.request_number)}</div>` : ''}
               </td>
               <td>
                 ${r.suppliers ? `
@@ -1100,6 +1150,10 @@
                 ` : '<span style="color:var(--text-muted);">—</span>'}
               </td>
               <td>${Refad.format.date(r.receipt_date)}</td>
+              <td>
+                <strong>${Refad.format.number(itemCount)} أصناف</strong>
+                <div class="supplier-sub">${Refad.format.number(totalQty)} وحدة${itemNames.length ? ` • ${itemNames.map(Refad.escapeHtml).join('، ')}` : ''}${itemCount > itemNames.length ? '…' : ''}</div>
+              </td>
               <td class="money-cell">${Refad.format.money(r.total_amount || 0)}</td>
               <td class="money-cell paid">${Refad.format.money(r.paid_amount || 0)}</td>
               <td class="money-cell ${remainingCls}">${Refad.format.money(remaining)}</td>
@@ -1225,14 +1279,32 @@
 
         document.getElementById('tableBody').addEventListener('click', e => {
           const btn = e.target.closest('[data-action]');
-          if (!btn) return;
-          const action = btn.dataset.action;
-          const id = parseInt(btn.dataset.id, 10);
-          const r = state.all.find(x => x.id === id);
-          if (!r) return;
+          if (btn) {
+            const action = btn.dataset.action;
+            if (action === 'retry') {
+              loadReceipts();
+              return;
+            }
+            const id = parseInt(btn.dataset.id, 10);
+            const r = state.all.find(x => x.id === id);
+            if (!r) return;
 
-          if (action === 'view') location.href = `receipt-form.html?id=${id}`;
-          else if (action === 'delete') deleteReceipt(id, r.receipt_number);
+            if (action === 'view') location.href = `receipt-form.html?id=${id}`;
+            else if (action === 'delete') deleteReceipt(id, r.receipt_number);
+            return;
+          }
+
+          const row = e.target.closest('[data-open-receipt]');
+          if (row && !e.target.closest('a, input, select, textarea, label')) {
+            location.href = `receipt-form.html?id=${parseInt(row.dataset.openReceipt, 10)}`;
+          }
+        });
+        document.getElementById('tableBody').addEventListener('keydown', e => {
+          const row = e.target.closest('[data-open-receipt]');
+          if (row && e.target === row && (e.key === 'Enter' || e.key === ' ')) {
+            e.preventDefault();
+            location.href = `receipt-form.html?id=${parseInt(row.dataset.openReceipt, 10)}`;
+          }
         });
 
         // Export
@@ -1246,6 +1318,8 @@
             'رقم فاتورة المورد': r.invoice_number || '',
             'المورد': r.suppliers?.name || '',
             'التاريخ': Refad.format.date(r.receipt_date),
+            'عدد الأصناف': (r.receipt_items || []).length,
+            'إجمالي الوحدات': (r.receipt_items || []).reduce((sum, item) => sum + (Number(item.quantity) || 0), 0),
             'الإجمالي': r.total_amount || 0,
             'المدفوع': r.paid_amount || 0,
             'المتبقي': (r.total_amount || 0) - (r.paid_amount || 0),

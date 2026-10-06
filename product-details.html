@@ -970,7 +970,8 @@
                   <th>التاريخ</th>
                   <th>النوع</th>
                   <th>الكمية</th>
-                  <th>المرجع</th>
+                  <th>الطرف</th>
+                  <th>الفاتورة / المرجع</th>
                   <th>ملاحظات</th>
                 </tr>
               </thead>
@@ -1142,7 +1143,8 @@
         discounts: null,
         barcodes: [],
         batches: [],
-        movements: []
+        movements: [],
+        movementReferences: new Map()
       };
 
       // ============================================================
@@ -1358,7 +1360,7 @@
             }).catch(() => []),
             Refad.db.select('inventory_movements', {
               columns: 'id, movement_type, quantity, reference_type, reference_id, notes, created_at',
-              eq: { product_id: productId },
+              eq: { company_id: session.company_id, product_id: productId },
               order: { column: 'created_at', ascending: false },
               limit: 100
             }).catch(() => [])
@@ -1368,6 +1370,7 @@
           state.barcodes = barcodes;
           state.batches = batches;
           state.movements = movements;
+          await loadMovementReferences(movements);
 
           renderDiscounts();
           renderBarcodes();
@@ -1377,6 +1380,99 @@
         } catch (e) {
           console.error('[ProductDetails] related load failed:', e);
         }
+      }
+
+      async function loadMovementReferences(movements) {
+        const references = new Map();
+        const idsByType = new Map();
+        movements.forEach(movement => {
+          const type = movement.reference_type;
+          if (!type || !movement.reference_id) return;
+          if (!idsByType.has(type)) idsByType.set(type, new Set());
+          idsByType.get(type).add(movement.reference_id);
+        });
+        const invoiceIds = Refad.Session.has('sales.view')
+          ? Array.from(idsByType.get('invoice') || []) : [];
+        const canViewReceipts = Refad.Session.has('purchases.view') || Refad.Session.has('purchases.receive');
+        const receiptIds = canViewReceipts ? Array.from(idsByType.get('receipt') || []) : [];
+        const returnIds = (invoiceIds.length || receiptIds.length)
+          ? Array.from(idsByType.get('return') || []) : [];
+        const [invoices, receipts, returns] = await Promise.all([
+          invoiceIds.length ? Refad.db.select('sales_invoices', {
+            columns: 'id, invoice_number, customer_id, supplier_id',
+            eq: { company_id: session.company_id }, in: { id: invoiceIds }
+          }) : [],
+          receiptIds.length ? Refad.db.select('receipts', {
+            columns: 'id, receipt_number, invoice_number, supplier_id',
+            eq: { company_id: session.company_id }, in: { id: receiptIds }
+          }) : [],
+          returnIds.length ? Refad.db.select('inventory_returns', {
+            columns: 'id, return_type, reference_invoice_id, reference_receipt_id',
+            eq: { company_id: session.company_id }, in: { id: returnIds }
+          }).catch(error => {
+            console.warn('[ProductDetails] Return reference lookup failed:', error.message);
+            return [];
+          }) : []
+        ]);
+        const returnInvoiceIds = Refad.Session.has('sales.view')
+          ? returns.filter(row => row.reference_invoice_id).map(row => row.reference_invoice_id) : [];
+        const returnReceiptIds = canViewReceipts
+          ? returns.filter(row => row.reference_receipt_id).map(row => row.reference_receipt_id) : [];
+        const [returnInvoices, returnReceipts] = await Promise.all([
+          returnInvoiceIds.length ? Refad.db.select('sales_invoices', {
+            columns: 'id, invoice_number, customer_id, supplier_id',
+            eq: { company_id: session.company_id }, in: { id: returnInvoiceIds }
+          }) : [],
+          returnReceiptIds.length ? Refad.db.select('receipts', {
+            columns: 'id, receipt_number, invoice_number, supplier_id',
+            eq: { company_id: session.company_id }, in: { id: returnReceiptIds }
+          }) : []
+        ]);
+        const allInvoices = [...invoices, ...returnInvoices];
+        const allReceipts = [...receipts, ...returnReceipts];
+        const customerIds = Array.from(new Set(allInvoices.map(row => row.customer_id).filter(Boolean)));
+        const supplierIds = Array.from(new Set([
+          ...allInvoices.map(row => row.supplier_id),
+          ...allReceipts.map(row => row.supplier_id)
+        ].filter(Boolean)));
+        const [customers, suppliers] = await Promise.all([
+          customerIds.length ? Refad.db.select('customers', {
+            columns: 'id, name', eq: { company_id: session.company_id }, in: { id: customerIds }
+          }) : [],
+          supplierIds.length ? Refad.db.select('suppliers', {
+            columns: 'id, name', eq: { company_id: session.company_id }, in: { id: supplierIds }
+          }) : []
+        ]);
+        const customerById = new Map(customers.map(row => [String(row.id), row.name]));
+        const supplierById = new Map(suppliers.map(row => [String(row.id), row.name]));
+        const invoiceById = new Map(allInvoices.map(row => [String(row.id), row]));
+        const receiptById = new Map(allReceipts.map(row => [String(row.id), row]));
+        invoices.forEach(row => references.set(`invoice:${row.id}`, {
+          number: row.invoice_number,
+          party: row.supplier_id ? supplierById.get(String(row.supplier_id)) : customerById.get(String(row.customer_id)),
+          href: `invoices.html?id=${row.id}`
+        }));
+        receipts.forEach(row => references.set(`receipt:${row.id}`, {
+          number: row.invoice_number || row.receipt_number,
+          party: supplierById.get(String(row.supplier_id)),
+          href: `receipt-form.html?id=${row.id}`
+        }));
+        returns.forEach(row => {
+          const invoice = row.reference_invoice_id && invoiceById.get(String(row.reference_invoice_id));
+          const receipt = row.reference_receipt_id && receiptById.get(String(row.reference_receipt_id));
+          const source = invoice || receipt;
+          if (!source) return;
+          const isInvoice = Boolean(invoice);
+          const party = invoice
+            ? (invoice.supplier_id ? supplierById.get(String(invoice.supplier_id)) : customerById.get(String(invoice.customer_id)))
+            : supplierById.get(String(receipt.supplier_id));
+          references.set(`return:${row.id}`, {
+            number: isInvoice ? source.invoice_number : (source.invoice_number || source.receipt_number),
+            party,
+            href: isInvoice ? `invoices.html?id=${source.id}` : `receipt-form.html?id=${source.id}`
+          });
+        });
+        state.movementReferences = references;
       }
 
       // ============================================================
@@ -1691,7 +1787,7 @@
         if (!state.movements.length) {
           body.innerHTML = `
             <tr class="empty-row" style="border:none;">
-              <td colspan="5">
+              <td colspan="6">
                 <div class="empty-state">
                   <i data-lucide="activity"></i>
                   <p>لا توجد حركات بعد</p>
@@ -1712,12 +1808,17 @@
 
         body.innerHTML = state.movements.map(m => {
           const t = TYPES[m.movement_type] || { label: m.movement_type, cls: 'gray' };
+          const reference = state.movementReferences.get(`${m.reference_type}:${m.reference_id}`);
+          const referenceLabel = reference
+            ? `<a class="movement-invoice-link" href="${reference.href}">${Refad.escapeHtml(reference.number || 'فتح الفاتورة')}</a>`
+            : `${Refad.escapeHtml(m.reference_type || '—')} ${m.reference_id ? '#' + m.reference_id : ''}`;
           return `
-            <tr>
+            <tr ${reference ? `data-movement-href="${reference.href}" tabindex="0" style="cursor:pointer"` : ''}>
               <td>${Refad.format.datetime(m.created_at)}</td>
               <td><span class="badge-tag ${t.cls}">${Refad.escapeHtml(t.label)}</span></td>
               <td><strong>${m.quantity > 0 ? '+' : ''}${Refad.format.number(m.quantity)}</strong></td>
-              <td>${Refad.escapeHtml(m.reference_type || '—')} ${m.reference_id ? '#' + m.reference_id : ''}</td>
+              <td>${Refad.escapeHtml(reference?.party || '—')}</td>
+              <td>${referenceLabel}</td>
               <td>${Refad.escapeHtml(m.notes || '—')}</td>
             </tr>
           `;
@@ -1815,6 +1916,18 @@
       function bindEvents() {
         document.getElementById('editProductBtn').addEventListener('click', openEditModal);
         document.getElementById('editForm').addEventListener('submit', saveEdit);
+        const movementsBody = document.getElementById('movementsBody');
+        movementsBody.addEventListener('click', event => {
+          const row = event.target.closest('[data-movement-href]');
+          if (row && !event.target.closest('a')) window.location.href = row.dataset.movementHref;
+        });
+        movementsBody.addEventListener('keydown', event => {
+          const row = event.target.closest('[data-movement-href]');
+          if (row && event.target === row && (event.key === 'Enter' || event.key === ' ')) {
+            event.preventDefault();
+            window.location.href = row.dataset.movementHref;
+          }
+        });
 
         document.getElementById('editPurchaseDiscount').addEventListener('click', () => openDiscountModal('purchase'));
         document.getElementById('editSaleDiscount').addEventListener('click', () => openDiscountModal('sale'));

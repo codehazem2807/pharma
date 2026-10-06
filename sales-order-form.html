@@ -2035,6 +2035,10 @@
           }
 
           await Refad.db.update('sales_orders', orderId, { status: 'invoiced' });
+          Refad.scanInventoryAlerts(session.company_id).catch(error => {
+            console.error('[Sales order] Alert notification dispatch failed:', error);
+            Refad.toast.warning('تم إنشاء الفاتورة، لكن تعذّر إرسال تنبيهات المخزون');
+          });
 
           const customerId = parseInt(document.getElementById('customerSelect').value, 10);
           if (customerId) {

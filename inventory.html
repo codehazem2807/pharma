@@ -1348,6 +1348,10 @@
             loadProductsAndBatches(),
             loadMovements()
           ]);
+          Refad.scanInventoryAlerts(session.company_id).catch(error => {
+            console.error('[Inventory] Alert notification dispatch failed:', error);
+            Refad.toast.warning('تم تحميل المخزون، لكن تعذّر إرسال تنبيهات المخزون');
+          });
           computeProductStats();
           renderMiniStats();
           applyProductFilters();
@@ -1533,9 +1537,9 @@
           }
 
           return `
-            <tr>
+            <tr data-product-id="${p.id}" tabindex="0" style="cursor:pointer">
               <td>
-                <div class="product-cell" onclick="location.href='product-details.html?id=${p.id}'">
+                <div class="product-cell">
                   <div class="product-avatar">${Refad.escapeHtml(initial)}</div>
                   <div>
                     <div class="product-name">${Refad.escapeHtml(p.name)}</div>
@@ -1660,7 +1664,7 @@
           if (b.quantity_left > 0) qtyCls = 'ok';
 
           return `
-            <tr>
+            <tr data-product-id="${b.product_id}" tabindex="0" style="cursor:pointer">
               <td>
                 <div class="product-name">${Refad.escapeHtml(b.product?.name || '—')}</div>
                 <div class="product-sub">${Refad.escapeHtml([b.product?.form, b.product?.unit].filter(Boolean).join(' • ') || '')}</div>
@@ -2009,19 +2013,41 @@
         // Table actions
         document.getElementById('productsBody').addEventListener('click', e => {
           const btn = e.target.closest('[data-action]');
-          if (!btn) return;
-          if (btn.dataset.action === 'view') {
+          if (btn && btn.dataset.action === 'view') {
             location.href = `product-details.html?id=${btn.dataset.id}`;
+            return;
+          }
+          const row = e.target.closest('tr[data-product-id]');
+          if (row && !e.target.closest('a, input, select, textarea, label')) {
+            location.href = `product-details.html?id=${row.dataset.productId}`;
           }
         });
         document.getElementById('batchesBody').addEventListener('click', e => {
           const btn = e.target.closest('[data-action]');
-          if (!btn) return;
-          if (btn.dataset.action === 'view-product') {
+          if (btn && btn.dataset.action === 'view-product') {
             location.href = `product-details.html?id=${btn.dataset.id}`;
-          } else if (btn.dataset.action === 'edit-batch') {
+          } else if (btn && btn.dataset.action === 'edit-batch') {
             const batch = state.batches.find(item => String(item.id) === btn.dataset.id);
             if (batch) openBatchModal(batch);
+          } else {
+            const row = e.target.closest('tr[data-product-id]');
+            if (row && !e.target.closest('a, input, select, textarea, label')) {
+              location.href = `product-details.html?id=${row.dataset.productId}`;
+            }
+          }
+        });
+        document.getElementById('productsBody').addEventListener('keydown', e => {
+          const row = e.target.closest('tr[data-product-id]');
+          if (row && e.target === row && (e.key === 'Enter' || e.key === ' ')) {
+            e.preventDefault();
+            location.href = `product-details.html?id=${row.dataset.productId}`;
+          }
+        });
+        document.getElementById('batchesBody').addEventListener('keydown', e => {
+          const row = e.target.closest('tr[data-product-id]');
+          if (row && e.target === row && (e.key === 'Enter' || e.key === ' ')) {
+            e.preventDefault();
+            location.href = `product-details.html?id=${row.dataset.productId}`;
           }
         });
         document.getElementById('addBatchBtn').addEventListener('click', () => openBatchModal());

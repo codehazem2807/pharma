@@ -1,10 +1,10 @@
 /* ============================================================
    Refad ERP - Service Worker
-   Version: 1.0.0
+   Version: 1.0.7
    Strategy: Cache-first for static, Network-first for API
    ============================================================ */
 
-const CACHE_VERSION = 'refad-v1.0.0';
+const CACHE_VERSION = 'refad-v1.0.7';
 const STATIC_CACHE = CACHE_VERSION + '-static';
 const RUNTIME_CACHE = CACHE_VERSION + '-runtime';
 
@@ -13,6 +13,8 @@ const PRECACHE_URLS = [
   '/',
   '/index.html',
   '/dashboard.html',
+  '/accounts.html',
+  '/returns.html',
   '/refad-camera-scanner.js',
   '/refad-print.js',
   '/logo.png',

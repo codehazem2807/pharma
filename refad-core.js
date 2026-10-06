@@ -37,6 +37,21 @@
   // 3) Session Manager
   // ============================================================
   let notificationRealtimeChannel = null;
+  let notificationPollTimer = null;
+  let notificationPollCursor = null;
+  let notificationPollWarningAt = 0;
+  const seenNotificationIds = new Set();
+
+  const notificationPermissionByType = {
+    expiry: 'inventory.view',
+    low_stock: 'inventory.view',
+    invoice: 'sales.view',
+    message: 'chat.use',
+    purchase: 'purchases.view',
+    receipt: 'purchases.view',
+    stock: 'inventory.view',
+    payment: 'company.owner'
+  };
 
   const Session = {
     get() {
@@ -83,6 +98,12 @@
         });
         notificationRealtimeChannel = null;
       }
+      if (notificationPollTimer) {
+        window.clearInterval(notificationPollTimer);
+        notificationPollTimer = null;
+      }
+      notificationPollCursor = null;
+      seenNotificationIds.clear();
       localStorage.removeItem(CONFIG.SESSION_KEY);
     },
 
@@ -601,22 +622,12 @@
       }) : []
     ]);
     const permissions = new Set(rolePermissions.map(row => row.permissions?.code).filter(Boolean));
-    const requiredByType = {
-      expiry: 'inventory.view',
-      low_stock: 'inventory.view',
-      invoice: 'sales.view',
-      message: 'chat.use',
-      purchase: 'purchases.view',
-      receipt: 'purchases.view',
-      stock: 'inventory.view',
-      payment: 'company.owner'
-    };
-    const requiredPermission = requiredByType[type];
-    const permitted = permissions.has('notifications.view') &&
-      (!requiredPermission ||
-        (requiredPermission === 'company.owner'
-          ? role?.is_owner === true && role.company_id === user.company_id
-          : permissions.has(requiredPermission)));
+    const requiredPermission = notificationPermissionByType[type];
+    const permitted = requiredPermission
+      ? (requiredPermission === 'company.owner'
+        ? role?.is_owner === true && String(role.company_id) === String(user.company_id)
+        : permissions.has(requiredPermission))
+      : permissions.has('notifications.view');
     if (!permitted) return null;
 
     return db.insert('notifications', {
@@ -640,20 +651,174 @@
     return notifications.filter(Boolean);
   }
 
+  async function notifyCompanyDaily(companyId, title, body, type, referenceId, excludeUserId) {
+    if (referenceId === null || referenceId === undefined) {
+      throw new Error('التنبيه اليومي يحتاج مرجعاً واضحاً لمنع التكرار');
+    }
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+    const [existing, users] = await Promise.all([
+      db.select('notifications', {
+        columns: 'user_id',
+        eq: { company_id: companyId, type, reference_id: referenceId },
+        gte: { created_at: startOfDay.toISOString() },
+        limit: 5000
+      }),
+      db.select('users', {
+        columns: 'id',
+        eq: { company_id: companyId, is_active: true }
+      })
+    ]);
+    const alreadyNotified = new Set(existing.map(row => String(row.user_id)));
+    const targets = users.filter(user =>
+      String(user.id) !== String(excludeUserId || '') && !alreadyNotified.has(String(user.id))
+    );
+    return Promise.all(targets.map(user =>
+      notify(user.id, companyId, title, body, type, referenceId)
+    ));
+  }
+
+  async function scanInventoryAlerts(companyId) {
+    const session = Session.get();
+    if (!session || String(session.company_id) !== String(companyId)) {
+      throw new Error('لا يمكن فحص مخزون شركة أخرى');
+    }
+    if (!Session.has('inventory.view')) return { lowStock: 0, expiring: 0 };
+
+    async function selectAllRows(table, options) {
+      const pageSize = 500;
+      const rows = [];
+      for (let offset = 0; ; offset += pageSize) {
+        const page = await db.select(table, {
+          ...options,
+          range: [offset, offset + pageSize - 1]
+        });
+        rows.push(...page);
+        if (page.length < pageSize) return rows;
+      }
+    }
+    const [products, batches] = await Promise.all([
+      selectAllRows('products', {
+        columns: 'id, name, reorder_level',
+        eq: { company_id: companyId, is_active: true },
+        order: { column: 'id', ascending: true }
+      }),
+      selectAllRows('batches', {
+        columns: 'id, product_id, batch_number, expiry_date, quantity_left',
+        eq: { company_id: companyId },
+        gt: { quantity_left: 0 },
+        order: { column: 'id', ascending: true }
+      })
+    ]);
+
+    const productById = new Map(products.map(product => [String(product.id), product]));
+    const inventoryByProduct = new Map();
+    batches.forEach(batch => {
+      const key = String(batch.product_id);
+      inventoryByProduct.set(key, (inventoryByProduct.get(key) || 0) + (Number(batch.quantity_left) || 0));
+    });
+
+    const lowStock = products.filter(product => {
+      const threshold = Number(product.reorder_level) || 0;
+      return threshold > 0 && (inventoryByProduct.get(String(product.id)) || 0) <= threshold;
+    });
+    const in90Days = dateUtil.addDays(dateUtil.today(), 90);
+    const expiring = batches.filter(batch => batch.expiry_date && batch.expiry_date <= in90Days);
+    const alerts = [
+      ...lowStock.map(product => notifyCompanyDaily(
+        companyId,
+        'مخزون صنف منخفض',
+        `رصيد ${product.name} الحالي ${(inventoryByProduct.get(String(product.id)) || 0).toLocaleString('ar-EG')} عند حد إعادة الطلب أو أقل.`,
+        'low_stock',
+        product.id
+      )),
+      ...expiring.map(batch => notifyCompanyDaily(
+        companyId,
+        'تنبيه صلاحية تشغيلة',
+        `التشغيلة ${batch.batch_number || '—'} من ${productById.get(String(batch.product_id))?.name || 'صنف'} تنتهي صلاحيتها ${format.date(batch.expiry_date)}.`,
+        'expiry',
+        batch.id
+      ))
+    ];
+    const results = [];
+    for (let offset = 0; offset < alerts.length; offset += 10) {
+      results.push(...await Promise.allSettled(alerts.slice(offset, offset + 10)));
+    }
+    const failures = results.filter(result => result.status === 'rejected');
+    failures.forEach(result => console.error('[Refad] Inventory notification failed:', result.reason));
+    return { lowStock: lowStock.length, expiring: expiring.length, failed: failures.length };
+  }
+
+  function canReceiveNotification(notification) {
+    const permission = notificationPermissionByType[notification.type];
+    return permission ? Session.has(permission) : Session.has('notifications.view');
+  }
+
+  function presentNotification(notification) {
+    const session = Session.get();
+    if (!session || String(notification.company_id) !== String(session.company_id)) return;
+    if (!canReceiveNotification(notification)) return;
+    const id = String(notification.id);
+    if (seenNotificationIds.has(id)) return;
+    seenNotificationIds.add(id);
+    if (seenNotificationIds.size > 200) {
+      seenNotificationIds.delete(seenNotificationIds.values().next().value);
+    }
+
+    const message = [notification.title, notification.body].filter(Boolean).join(' — ');
+    if (!window.location.pathname.endsWith('/notifications.html')) {
+      toast.info(message, 6000);
+    }
+    if (window.Notification?.permission === 'granted' && !window.location.pathname.endsWith('/notifications.html')) {
+      try {
+        new window.Notification(notification.title, { body: notification.body || '', icon: 'logo.png' });
+      } catch (error) {
+        console.warn('[Refad] Browser notification failed:', error.message);
+      }
+    }
+  }
+
+  async function pollNotifications() {
+    const session = Session.get();
+    if (!session?.user_id || !session.company_id) return;
+    if (!Object.values(notificationPermissionByType).some(permission => Session.has(permission)) &&
+        !Session.has('notifications.view')) return;
+    if (!notificationPollCursor) notificationPollCursor = new Date(Date.now() - 15000).toISOString();
+
+    try {
+      const rows = await db.select('notifications', {
+        columns: 'id, company_id, user_id, title, body, type, reference_id, created_at',
+        eq: { user_id: session.user_id, company_id: session.company_id },
+        gt: { created_at: notificationPollCursor },
+        order: { column: 'created_at', ascending: true },
+        limit: 100
+      });
+      rows.forEach(presentNotification);
+      notificationPollCursor = rows.length
+        ? rows[rows.length - 1].created_at
+        : new Date().toISOString();
+    } catch (error) {
+      if (Date.now() - notificationPollWarningAt > 60000) {
+        notificationPollWarningAt = Date.now();
+        console.warn('[Refad] Notification polling failed:', error.message);
+        toast.warning('تعذّر تحديث الإشعارات؛ تحقق من اتصال النظام وإعدادات قاعدة البيانات');
+      }
+    }
+  }
+
+  function startNotificationPolling() {
+    if (notificationPollTimer) return;
+    notificationPollCursor = new Date(Date.now() - 15000).toISOString();
+    pollNotifications();
+    notificationPollTimer = window.setInterval(pollNotifications, 20000);
+  }
+
   function startNotificationRealtime() {
     const session = Session.get();
-    if (!session?.user_id || !session.company_id || !Session.has('notifications.view') || notificationRealtimeChannel) return;
-
-    const requiredByType = {
-      expiry: 'inventory.view',
-      low_stock: 'inventory.view',
-      invoice: 'sales.view',
-      message: 'chat.use',
-      purchase: 'purchases.view',
-      receipt: 'purchases.view',
-      stock: 'inventory.view',
-      payment: 'company.owner'
-    };
+    if (!session?.user_id || !session.company_id || notificationRealtimeChannel) return;
+    if (!Object.values(notificationPermissionByType).some(permission => Session.has(permission)) &&
+        !Session.has('notifications.view')) return;
+    startNotificationPolling();
     notificationRealtimeChannel = sb
       .channel(`refad-notifications-${session.user_id}`)
       .on('postgres_changes', {
@@ -662,26 +827,7 @@
         table: 'notifications',
         filter: `user_id=eq.${session.user_id}`
       }, payload => {
-        const notification = payload.new;
-        if (String(notification.company_id) !== String(session.company_id)) return;
-        const requiredPermission = requiredByType[notification.type];
-        if (requiredPermission === 'company.owner' && !Session.has('company.owner')) return;
-        if (requiredPermission && requiredPermission !== 'company.owner' && !Session.has(requiredPermission)) return;
-
-        const message = [notification.title, notification.body].filter(Boolean).join(' — ');
-        if (!window.location.pathname.endsWith('/notifications.html')) {
-          toast.info(message, 6000);
-        }
-        if (window.Notification?.permission === 'granted' && !window.location.pathname.endsWith('/notifications.html')) {
-          try {
-            new window.Notification(notification.title, {
-              body: notification.body || '',
-              icon: 'logo.png'
-            });
-          } catch (error) {
-            console.warn('[Refad] Browser notification failed:', error.message);
-          }
-        }
+        presentNotification(payload.new);
       })
       .subscribe(status => {
         if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
@@ -689,6 +835,58 @@
           toast.warning('تعذّر الاتصال بالإشعارات الفورية؛ راجع إعدادات Supabase Realtime واتصال الإنترنت');
         }
       });
+  }
+
+  function ensureGlobalNavigation(nav) {
+    if (!nav) return;
+    if (Session.has('sales.view') || Session.has('purchases.receive')) {
+      const operationsHeading = Array.from(nav.querySelectorAll('.nav-section'))
+        .find(section => section.textContent.trim() === 'العمليات');
+      if (operationsHeading && !nav.querySelector('a[href="returns.html"]')) {
+        const link = document.createElement('a');
+        link.href = 'returns.html';
+        link.className = 'nav-item';
+        if (window.location.pathname.endsWith('/returns.html')) link.classList.add('active');
+        link.innerHTML = '<i data-lucide="undo-2"></i><span>المرتجعات</span>';
+        let nextSection = operationsHeading.nextElementSibling;
+        while (nextSection && !nextSection.classList.contains('nav-section')) {
+          nextSection = nextSection.nextElementSibling;
+        }
+        nav.insertBefore(link, nextSection);
+        if (window.lucide) window.lucide.createIcons({ root: link });
+      }
+    }
+    if (!Session.has('company.owner') || nav.querySelector('a[href="accounts.html"]')) return;
+    let financialHeading = Array.from(nav.querySelectorAll('.nav-section'))
+      .find(section => section.textContent.trim() === 'المالية');
+    if (!financialHeading) {
+      financialHeading = document.createElement('div');
+      financialHeading.className = 'nav-section';
+      financialHeading.textContent = 'المالية';
+      nav.appendChild(financialHeading);
+    }
+    const link = document.createElement('a');
+    link.href = 'accounts.html';
+    link.className = 'nav-item';
+    if (window.location.pathname.endsWith('/accounts.html')) link.classList.add('active');
+    link.innerHTML = '<i data-lucide="landmark"></i><span>الحسابات</span>';
+    let nextSection = financialHeading.nextElementSibling;
+    while (nextSection && !nextSection.classList.contains('nav-section')) {
+      nextSection = nextSection.nextElementSibling;
+    }
+    nav.insertBefore(link, nextSection);
+    if (window.lucide) window.lucide.createIcons({ root: link });
+  }
+
+  function addSharedNavigation() {
+    if (!Session.has('company.owner') && !Session.has('sales.view') && !Session.has('purchases.receive')) return;
+    const nav = document.getElementById('sidebarNav');
+    if (!nav) return;
+    ensureGlobalNavigation(nav);
+    if (nav.dataset.accountsObserver) return;
+    const observer = new MutationObserver(() => ensureGlobalNavigation(nav));
+    observer.observe(nav, { childList: true });
+    nav.dataset.accountsObserver = 'true';
   }
 
   // ============================================================
@@ -822,6 +1020,9 @@
     logActivity,
     notify,
     notifyCompany,
+    notifyCompanyDaily,
+    scanInventoryAlerts,
+    addSharedNavigation,
     debounce,
     throttle,
     paginate,

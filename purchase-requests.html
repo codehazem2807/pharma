@@ -1090,7 +1090,7 @@
           const st = STATUS[r.status] || { label: r.status, cls: 'gray' };
           const itemCount = r.purchase_request_items?.length || 0;
           return `
-            <tr>
+            <tr class="request-clickable-row" data-open-request="${r.id}" tabindex="0" style="cursor:pointer" aria-label="فتح طلب الشراء ${Refad.escapeHtml(r.request_number)}">
               <td>
                 <span class="req-number" onclick="location.href='purchase-request-form.html?id=${r.id}'">
                   ${Refad.escapeHtml(r.request_number)}
@@ -1114,7 +1114,7 @@
                   <button class="action-btn share" data-action="share" data-id="${r.id}" title="مشاركة">
                     <i data-lucide="share-2"></i>
                   </button>
-                  ${canEdit ? `<button class="action-btn danger" data-action="delete" data-id="${r.id}" title="حذف"><i data-lucide="trash-2"></i></button>` : ''}
+                  ${canEdit && r.status !== 'received' ? `<button class="action-btn danger" data-action="delete" data-id="${r.id}" title="حذف"><i data-lucide="trash-2"></i></button>` : ''}
                 </div>
               </td>
             </tr>
@@ -1292,15 +1292,27 @@
 
         document.getElementById('tableBody').addEventListener('click', e => {
           const btn = e.target.closest('[data-action]');
-          if (!btn) return;
-          const action = btn.dataset.action;
-          const id = parseInt(btn.dataset.id, 10);
-          const r = state.all.find(x => x.id === id);
-          if (!r) return;
-
-          if (action === 'view') location.href = `purchase-request-form.html?id=${id}`;
-          else if (action === 'share') openShareModal(id);
-          else if (action === 'delete') deleteRequest(id, r.request_number);
+          if (btn) {
+            const action = btn.dataset.action;
+            const id = parseInt(btn.dataset.id, 10);
+            const r = state.all.find(x => x.id === id);
+            if (!r) return;
+            if (action === 'view') location.href = `purchase-request-form.html?id=${id}`;
+            else if (action === 'share') openShareModal(id);
+            else if (action === 'delete') deleteRequest(id, r.request_number);
+            return;
+          }
+          const row = e.target.closest('[data-open-request]');
+          if (row && !e.target.closest('a, input, select, textarea, label')) {
+            location.href = `purchase-request-form.html?id=${row.dataset.openRequest}`;
+          }
+        });
+        document.getElementById('tableBody').addEventListener('keydown', e => {
+          const row = e.target.closest('[data-open-request]');
+          if (row && e.target === row && (e.key === 'Enter' || e.key === ' ')) {
+            e.preventDefault();
+            location.href = `purchase-request-form.html?id=${row.dataset.openRequest}`;
+          }
         });
 
         // Modal close

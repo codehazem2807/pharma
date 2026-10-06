@@ -1,5 +1,7 @@
 -- Run once in Supabase SQL Editor for an existing Refad database.
--- Grants notification access to company admin roles and enables realtime delivery.
+-- Grants notification inbox access to users with a permissioned notification scope
+-- and enables realtime delivery. Individual notification types still respect scope
+-- permissions in Refad core.
 
 INSERT INTO permissions (code, name_ar, module)
 VALUES ('notifications.view', 'عرض الإشعارات', 'notifications')
@@ -10,8 +12,17 @@ SELECT r.id, p.id
 FROM roles r
 CROSS JOIN permissions p
 WHERE r.company_id IS NOT NULL
-  AND r.name = 'admin'
   AND p.code = 'notifications.view'
+  AND (
+    r.is_owner = TRUE
+    OR EXISTS (
+      SELECT 1
+      FROM role_permissions rp
+      JOIN permissions scope ON scope.id = rp.permission_id
+      WHERE rp.role_id = r.id
+        AND scope.code IN ('inventory.view', 'sales.view', 'purchases.view', 'chat.use')
+    )
+  )
 ON CONFLICT DO NOTHING;
 
 DO $setup$

@@ -598,6 +598,9 @@
         <button class="icon-btn" id="refreshBtn" title="تحديث">
           <i data-lucide="refresh-cw"></i>
         </button>
+        <button class="icon-btn" id="browserNotifBtn" title="تفعيل إشعارات المتصفح" aria-label="تفعيل إشعارات المتصفح">
+          <i data-lucide="bell-ring"></i>
+        </button>
         <div style="position:relative;">
           <div class="user-menu" id="userMenu">
             <div class="user-avatar" id="userAvatar">م</div>
@@ -747,11 +750,11 @@
       // Route map: on click, where to go based on type/reference
       const ROUTES = {
         expiry:    'inventory.html',
-        low_stock: 'inventory.html',
+        low_stock: 'product-details.html',
         invoice:   'invoices.html',
         purchase:  'purchase-request-form.html',
-        receipt:   'receipts.html',
-        stock:     'inventory.html',
+        receipt:   'receipt-form.html',
+        stock:     'product-details.html',
         message:   'chat.html',
         payment:   'company-settings.html',
         system:    null
@@ -1082,6 +1085,8 @@
             if (route === 'invoices.html') url += `?id=${n.reference_id}`;
             else if (route === 'chat.html') url += `?id=${n.reference_id}`;
             else if (route === 'purchase-request-form.html') url += `?id=${n.reference_id}`;
+            else if (route === 'receipt-form.html') url += `?id=${n.reference_id}`;
+            else if (route === 'product-details.html') url += `?id=${n.reference_id}`;
           }
           setTimeout(() => window.location.href = url, 300);
         }
@@ -1236,6 +1241,26 @@
           Refad.toast.info('جارٍ التحديث...');
           await loadNotifications(true);
           Refad.toast.success('تم التحديث');
+        });
+        document.getElementById('browserNotifBtn').addEventListener('click', async () => {
+          if (!('Notification' in window)) {
+            Refad.toast.warning('هذا المتصفح لا يدعم إشعارات النظام');
+            return;
+          }
+          if (Notification.permission === 'denied') {
+            Refad.toast.warning('إشعارات المتصفح محظورة؛ فعّلها من إعدادات الموقع في المتصفح');
+            return;
+          }
+          try {
+            const permission = Notification.permission === 'granted'
+              ? 'granted'
+              : await Notification.requestPermission();
+            if (permission === 'granted') Refad.toast.success('تم تفعيل إشعارات المتصفح');
+            else Refad.toast.info('ستظهر الإشعارات داخل النظام؛ إشعارات المتصفح لم يتم السماح بها');
+          } catch (error) {
+            console.error('[Notifications] Browser permission request failed:', error);
+            Refad.toast.error('تعذّر طلب إذن إشعارات المتصفح');
+          }
         });
 
         // Keyboard shortcut: R to refresh
