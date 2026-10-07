@@ -258,10 +258,7 @@
       white-space: nowrap;
     }
     .conv-tab:hover { color: var(--text); }
-    .conv-tab.active {
-      color: var(--accent);
-      border-bottom-color: var(--accent);
-    }
+    .conv-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
     .conv-tab i { width: 14px; height: 14px; }
     .conv-tab .tab-badge {
       background: var(--danger);
@@ -282,7 +279,6 @@
       border-bottom: 1px solid var(--border);
       flex-shrink: 0;
     }
-
     .conv-title-row {
       display: flex;
       align-items: center;
@@ -636,21 +632,6 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    .chat-system-msg {
-      align-self: center;
-      background: var(--card);
-      border: 1px solid var(--border);
-      color: var(--text-muted);
-      font-size: 11.5px;
-      font-weight: 700;
-      padding: 6px 16px;
-      border-radius: 20px;
-      margin: 12px 0;
-      box-shadow: var(--shadow-sm);
-      max-width: 80%;
-      text-align: center;
-    }
-
     .chat-date-sep {
       align-self: center;
       background: var(--card);
@@ -889,38 +870,6 @@
     .reply-preview .rp-close:hover { background: var(--card); color: var(--danger); }
     .reply-preview .rp-close i { width: 16px; height: 16px; }
 
-    .typing-indicator {
-      display: none;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 14px;
-      font-size: 11.5px;
-      color: var(--text-muted);
-      font-weight: 600;
-      align-self: flex-start;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      border-bottom-right-radius: 4px;
-      margin-bottom: 8px;
-      box-shadow: var(--shadow-bubble);
-      animation: msgIn 0.3s;
-    }
-    .typing-indicator.show { display: flex; }
-    .typing-dots { display: flex; gap: 3px; }
-    .typing-dot {
-      width: 6px; height: 6px;
-      background: var(--accent);
-      border-radius: 50%;
-      animation: typingBounce 1.4s infinite;
-    }
-    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
-    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
-    @keyframes typingBounce {
-      0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
-      30% { transform: translateY(-5px); opacity: 1; }
-    }
-
     .scroll-bottom-btn {
       position: absolute;
       bottom: 90px;
@@ -1082,6 +1031,7 @@
       display: flex; align-items: center; justify-content: center;
       font-weight: 700; font-size: 13px;
       flex-shrink: 0;
+      overflow: hidden;
     }
     .mention-item .m-info { flex: 1; min-width: 0; }
     .mention-item .m-name { font-size: 13px; font-weight: 700; color: var(--text); }
@@ -1376,6 +1326,9 @@
         <span>الشات</span>
       </div>
       <div class="topbar-actions">
+        <button class="icon-btn" id="soundToggle" title="تفعيل/إيقاف الصوت">
+          <i data-lucide="volume-2" id="soundIcon"></i>
+        </button>
         <button class="icon-btn" id="themeToggle" title="الوضع الليلي/النهاري">
           <i data-lucide="moon" id="themeIcon"></i>
         </button>
@@ -1403,7 +1356,6 @@
 
     <main class="chat-layout">
       <aside class="conv-panel" id="convPanel">
-        <!-- Tabs -->
         <div class="conv-tabs">
           <button class="conv-tab active" data-tab="channels">
             <i data-lucide="hash"></i> القنوات
@@ -1467,7 +1419,6 @@
             </div>
           </div>
 
-          <!-- Pinned bar -->
           <div class="pinned-bar" id="pinnedBar">
             <i data-lucide="pin"></i>
             <div class="pinned-text" id="pinnedText">—</div>
@@ -1508,7 +1459,6 @@
               </button>
             </div>
 
-            <!-- Quick replies -->
             <div class="quick-replies" id="quickReplies"></div>
 
             <div class="emoji-picker" id="emojiPicker"></div>
@@ -1523,7 +1473,6 @@
     </main>
   </div>
 
-  <!-- Modal: New Chat -->
   <div class="modal-backdrop" id="newChatModal">
     <div class="modal">
       <div class="modal-header">
@@ -1558,7 +1507,6 @@
     </div>
   </div>
 
-  <!-- Modal: Pinned Messages -->
   <div class="modal-backdrop" id="pinnedModal">
     <div class="modal modal-lg">
       <div class="modal-header">
@@ -1572,7 +1520,6 @@
     </div>
   </div>
 
-  <!-- Modal: User Profile -->
   <div class="modal-backdrop" id="userProfileModal">
     <div class="modal">
       <div class="modal-header">
@@ -1589,7 +1536,6 @@
     </div>
   </div>
 
-  <!-- Modal: Search in chat -->
   <div class="modal-backdrop" id="searchModal">
     <div class="modal">
       <div class="modal-header">
@@ -1615,7 +1561,7 @@
 
   <script src="refad-core.js"></script>
   <script src="refad-auth.js"></script>
-   <script>
+    <script>
     (function () {
       'use strict';
 
@@ -1642,10 +1588,6 @@
         return 'file';
       }
 
-      function escapeRegExp(str) {
-        return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      }
-
       // ============================================================
       // Guard
       // ============================================================
@@ -1656,14 +1598,126 @@
       const myUserId = parseInt(session.user_id, 10);
 
       // ============================================================
+      // 🔊 Sound System (Web Audio API)
+      // ============================================================
+      let audioCtx = null;
+      let soundUnlocked = false;
+      const SOUND_ENABLED_KEY = 'refad_chat_sound_enabled';
+
+      // حالة تفعيل الصوت (محفوظة)
+      let soundEnabled = localStorage.getItem(SOUND_ENABLED_KEY) !== 'false';
+
+      function initAudioContext() {
+        if (audioCtx) return;
+        try {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        } catch (e) {
+          console.warn('[Chat] AudioContext not supported:', e);
+        }
+      }
+
+      function unlockAudio() {
+        initAudioContext();
+        if (!audioCtx) return;
+        try {
+          if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+          }
+          soundUnlocked = true;
+        } catch (e) {
+          console.warn('[Chat] Audio unlock failed:', e);
+        }
+      }
+
+      // unlock عند أي تفاعل
+      ['click', 'touchstart', 'keydown', 'scroll'].forEach(evt => {
+        document.addEventListener(evt, unlockAudio, { passive: true });
+      });
+
+      // نغمة الإشعار (ding-dong)
+      function playNotificationSound() {
+        if (!soundEnabled) return;
+        
+        try {
+          initAudioContext();
+          if (!audioCtx) {
+            // Fallback: HTML Audio
+            const audio = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
+            audio.volume = 0.5;
+            audio.play().catch(() => {});
+            return;
+          }
+
+          if (audioCtx.state === 'suspended') {
+            audioCtx.resume().catch(() => {});
+          }
+
+          const now = audioCtx.currentTime;
+
+          // نغمة مزدوجة (C5 → E5)
+          const notes = [
+            { freq: 523.25, start: 0,    duration: 0.15 },
+            { freq: 783.99, start: 0.12, duration: 0.25 }
+          ];
+
+          notes.forEach(note => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            
+            osc.type = 'sine';
+            osc.frequency.value = note.freq;
+            
+            const startTime = now + note.start;
+            const endTime = startTime + note.duration;
+            
+            gain.gain.setValueAtTime(0, startTime);
+            gain.gain.linearRampToValueAtTime(0.35, startTime + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.001, endTime);
+            
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            osc.start(startTime);
+            osc.stop(endTime);
+          });
+        } catch (e) {
+          console.warn('[Chat] Play sound failed:', e);
+        }
+      }
+
+      // Vibrate
+      function vibrateDevice() {
+        if (navigator.vibrate) {
+          try { navigator.vibrate([80, 40, 80]); } catch (e) {}
+        }
+      }
+
+      // Toggle Sound
+      function toggleSound() {
+        soundEnabled = !soundEnabled;
+        localStorage.setItem(SOUND_ENABLED_KEY, String(soundEnabled));
+        updateSoundIcon();
+        Refad.toast.success(soundEnabled ? '🔊 تم تفعيل الصوت' : '🔇 تم إيقاف الصوت');
+        if (soundEnabled) playNotificationSound();
+      }
+
+      function updateSoundIcon() {
+        const icon = document.getElementById('soundIcon');
+        if (icon) {
+          icon.setAttribute('data-lucide', soundEnabled ? 'volume-2' : 'volume-x');
+          if (window.lucide) lucide.createIcons();
+        }
+      }
+
+      // ============================================================
       // Default Channels
       // ============================================================
       const DEFAULT_CHANNELS = [
-        { name: 'عام', slug: 'general', icon: 'megaphone', color: '#14B8A6' },
-        { name: 'مبيعات', slug: 'sales', icon: 'shopping-cart', color: '#3b82f6' },
-        { name: 'مخزون', slug: 'inventory', icon: 'warehouse', color: '#F59E0B' },
-        { name: 'مشتريات', slug: 'purchases', icon: 'truck', color: '#8b5cf6' },
-        { name: 'إعلانات', slug: 'announcements', icon: 'bell', color: '#dc2626' }
+        { name: 'عام', slug: 'general' },
+        { name: 'مبيعات', slug: 'sales' },
+        { name: 'مخزون', slug: 'inventory' },
+        { name: 'مشتريات', slug: 'purchases' },
+        { name: 'إعلانات', slug: 'announcements' }
       ];
 
       // ============================================================
@@ -1704,8 +1758,8 @@
         pendingNewMsgs: 0,
         mentionQuery: '',
         mentionStart: -1,
-        mentionedUsers: new Set(),
-        viewingUserId: null
+        viewingUserId: null,
+        hasPinnedColumn: true  // هل عمود is_pinned موجود؟
       };
 
       const EMOJIS = ['😀','😂','😍','🥰','😎','🤔','😅','😢','😡','🥳','👍','👎','👏','🙏','💪','🔥','✨','⭐','❤️','💔','🎉','🎁','💯','✅','❌','⚠️','📌','📎','📞','📧','💬','🕐','📅','🏥','💊','🩺','📊','📈','💰','💵','🛒','🚚','📦','⚡','🌟','🎯','🚀','🔔','👋','🤝'];
@@ -1896,7 +1950,7 @@
       }
 
       // ============================================================
-      // Load channels (من chat_conversations حيث type='channel')
+      // Load channels
       // ============================================================
       async function loadChannels() {
         try {
@@ -1907,14 +1961,13 @@
             limit: 100
           }).catch(() => []);
 
-          // إذا لم توجد قنوات، أنشئ القنوات الافتراضية
           if (!rows.length) {
             rows = await createDefaultChannels();
           }
 
           state.channels = rows;
 
-          // ضم المستخدم للقنوات إذا لم يكن مضافاً
+          // ضم المستخدم للقنوات
           for (const ch of rows) {
             try {
               const parts = await Refad.db.select('chat_participants', {
@@ -1932,7 +1985,6 @@
             } catch (e) { /* ignore */ }
           }
 
-          // حُمّل آخر رسالة لكل قناة
           await attachLastMessages(rows);
         } catch (e) {
           console.error('[Chat] channels load failed:', e);
@@ -1952,7 +2004,6 @@
               last_message_at: new Date().toISOString()
             });
             created.push(row);
-            // أضف نفسك
             await Refad.db.insert('chat_participants', {
               conversation_id: row.id,
               user_id: myUserId,
@@ -2011,7 +2062,6 @@
 
           state.conversations = convs;
 
-          // جلب المشاركين
           const parts = await Refad.db.select('chat_participants', {
             columns: 'conversation_id, user_id',
             in: { conversation_id: convIds }
@@ -2022,7 +2072,6 @@
             state.participantsMap[p.conversation_id].push(p.user_id);
           });
 
-          // آخر رسائل + unread
           await attachLastMessages(convs);
 
           const readMap = {};
@@ -2050,6 +2099,7 @@
           });
 
           renderConversationList();
+          updateTabTitle();
         } catch (e) {
           console.error('[Chat] conversations load failed:', e);
           state.conversations = [];
@@ -2058,7 +2108,7 @@
       }
 
       // ============================================================
-      // Render: Tab Content
+      // Render
       // ============================================================
       function renderConversationList() {
         const list = document.getElementById('convList');
@@ -2071,6 +2121,7 @@
         }
 
         if (window.lucide) lucide.createIcons();
+        updateTabTitle();
       }
 
       function renderChannelsList(list, search) {
@@ -2177,12 +2228,7 @@
           };
         }
         if (conv.type === 'channel') {
-          return {
-            name: conv.title || 'قناة',
-            avatar: '#',
-            isGroup: true,
-            sub: 'قناة'
-          };
+          return { name: conv.title || 'قناة', avatar: '#', isGroup: true, sub: 'قناة' };
         }
         const parts = state.participantsMap[conv.id] || [];
         const otherId = parts.find(id => id !== myUserId);
@@ -2194,6 +2240,30 @@
           avatarUrl: other?.avatar_url,
           sub: other?.username ? '@' + other.username : ''
         };
+      }
+
+      // ============================================================
+      // Tab Title
+      // ============================================================
+      const originalTitle = document.title;
+      function updateTabTitle() {
+        const totalUnread = Object.values(state.unreadMap).reduce((a, b) => a + b, 0);
+        if (totalUnread > 0) {
+          document.title = `(${totalUnread}) ${originalTitle}`;
+        } else {
+          document.title = originalTitle;
+        }
+        // تحديث badge المحادثات
+        const badge = document.getElementById('chatsBadge');
+        const chatUnread = state.conversations.reduce((sum, c) => sum + (c._unread || 0), 0);
+        if (badge) {
+          if (chatUnread > 0) {
+            badge.style.display = 'flex';
+            badge.textContent = chatUnread > 99 ? '99+' : chatUnread;
+          } else {
+            badge.style.display = 'none';
+          }
+        }
       }
 
       // ============================================================
@@ -2216,8 +2286,30 @@
           });
         });
 
-        // Set initial state
         document.getElementById('newChatBtn').style.display = 'none';
+      }
+
+      // ============================================================
+      // Request Notification Permission
+      // ============================================================
+      function requestNotifPermission() {
+        if (!('Notification' in window)) return;
+        if (Notification.permission === 'granted') {
+          console.log('[Chat] ✅ Notifications granted');
+          return;
+        }
+        if (Notification.permission === 'denied') {
+          console.warn('[Chat] ❌ Notifications denied');
+          return;
+        }
+        // اطلب بعد 3 ثواني من التحميل
+        setTimeout(() => {
+          Notification.requestPermission().then(permission => {
+            if (permission === 'granted') {
+              Refad.toast.success('✅ تم تفعيل الإشعارات');
+            }
+          }).catch(() => {});
+        }, 3000);
       }
             // ============================================================
       // Open Conversation
@@ -2240,7 +2332,6 @@
         const d = getConvDisplay(state.activeConv);
         document.getElementById('chatName').textContent = isChannel ? `# ${d.name}` : d.name;
 
-        // Status
         const statusEl = document.getElementById('chatStatus');
         if (isChannel) {
           statusEl.innerHTML = `<span>قناة عامة</span>`;
@@ -2263,7 +2354,6 @@
         await loadMessages(convId);
         await loadPinnedMessages(convId);
 
-        // Clear unread
         state.unreadMap[convId] = 0;
         if (state.activeConv) state.activeConv._unread = 0;
         renderConversationList();
@@ -2291,21 +2381,43 @@
       }
 
       // ============================================================
-      // Load Messages
+      // Load Messages (with fallback for is_pinned)
       // ============================================================
       async function loadMessages(convId) {
         const body = document.getElementById('chatBody');
         body.innerHTML = '<div class="chat-loading">جارٍ التحميل...</div>';
 
         try {
-          const rows = await Refad.db.select('chat_messages', {
-            columns: 'id, conversation_id, sender_id, content, message_type, is_pinned, created_at',
-            eq: { conversation_id: convId },
-            order: { column: 'created_at', ascending: true },
-            limit: 500
-          });
+          let rows;
+          try {
+            // حاول مع is_pinned
+            rows = await Refad.db.select('chat_messages', {
+              columns: 'id, conversation_id, sender_id, content, message_type, is_pinned, created_at',
+              eq: { conversation_id: convId },
+              order: { column: 'created_at', ascending: true },
+              limit: 500
+            });
+            state.hasPinnedColumn = true;
+          } catch (e) {
+            // fallback: بدون is_pinned
+            if (/is_pinned/i.test(e.message || '')) {
+              console.warn('[Chat] is_pinned not available, using fallback');
+              state.hasPinnedColumn = false;
+              rows = await Refad.db.select('chat_messages', {
+                columns: 'id, conversation_id, sender_id, content, message_type, created_at',
+                eq: { conversation_id: convId },
+                order: { column: 'created_at', ascending: true },
+                limit: 500
+              });
+              rows.forEach(r => { r.is_pinned = false; });
+            } else {
+              throw e;
+            }
+          }
+          
           state.messages = rows;
 
+          // جلب الملفات
           if (rows.length) {
             const msgIds = rows.filter(r => r.message_type === 'file').map(r => r.id);
             if (msgIds.length) {
@@ -2400,7 +2512,7 @@
             `;
           } else {
             contentHtml += `
-              <a href="${Refad.escapeHtml(f.file_url)}" target="_blank" class="msg-file" rel="noopener">
+              <a href="${Refad.escapeHtml(f.file_url)}" target="_blank" class="msg-file" rel="noopener" download="${Refad.escapeHtml(f.file_name || '')}">
                 <div class="msg-file-icon"><i data-lucide="${getFileIcon(f.file_type, f.file_name)}"></i></div>
                 <div class="msg-file-info">
                   <div class="msg-file-name">${Refad.escapeHtml(f.file_name || 'ملف')}</div>
@@ -2434,9 +2546,11 @@
               <button class="msg-action-btn" data-reply="${m.id}" title="رد">
                 <i data-lucide="reply"></i>
               </button>
-              <button class="msg-action-btn ${m.is_pinned ? 'active' : ''}" data-pin="${m.id}" title="${m.is_pinned ? 'إلغاء التثبيت' : 'تثبيت'}">
-                <i data-lucide="pin"></i>
-              </button>
+              ${state.hasPinnedColumn ? `
+                <button class="msg-action-btn ${m.is_pinned ? 'active' : ''}" data-pin="${m.id}" title="${m.is_pinned ? 'إلغاء التثبيت' : 'تثبيت'}">
+                  <i data-lucide="pin"></i>
+                </button>
+              ` : ''}
               <button class="msg-action-btn" data-copy="${m.id}" title="نسخ">
                 <i data-lucide="copy"></i>
               </button>
@@ -2447,11 +2561,9 @@
 
       function renderTextWithMentions(text) {
         let escaped = Refad.escapeHtml(text);
-        // Mentions
         escaped = escaped.replace(/@([\w\u0600-\u06FF\-\s]+?)(?=\s|$|[.,!?])/g, (match, name) => {
           return `<span class="msg-mention" data-mention="${Refad.escapeHtml(name.trim())}">@${Refad.escapeHtml(name.trim())}</span>`;
         });
-        // Links
         escaped = escaped.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" style="color:inherit;text-decoration:underline;">$1</a>');
         return escaped;
       }
@@ -2540,6 +2652,11 @@
       // Pinned Messages
       // ============================================================
       async function loadPinnedMessages(convId) {
+        if (!state.hasPinnedColumn) {
+          state.pinnedMessages = [];
+          renderPinnedBar();
+          return;
+        }
         try {
           const rows = await Refad.db.select('chat_messages', {
             columns: 'id, sender_id, content, message_type, is_pinned, created_at',
@@ -2551,6 +2668,7 @@
           renderPinnedBar();
         } catch (e) {
           state.pinnedMessages = [];
+          renderPinnedBar();
         }
       }
 
@@ -2570,6 +2688,10 @@
       }
 
       async function togglePin(messageId) {
+        if (!state.hasPinnedColumn) {
+          Refad.toast.warning('ميزة التثبيت تحتاج تحديث قاعدة البيانات');
+          return;
+        }
         const m = state.messages.find(x => x.id === messageId);
         if (!m) return;
         try {
@@ -2643,8 +2765,6 @@
         const input = e.target;
         const value = input.value;
         const cursor = input.selectionStart;
-
-        // Find @ before cursor
         const beforeCursor = value.slice(0, cursor);
         const atIndex = beforeCursor.lastIndexOf('@');
 
@@ -2654,7 +2774,6 @@
         }
 
         const query = beforeCursor.slice(atIndex + 1);
-        // If query contains space or is too long → close
         if (query.includes(' ') || query.length > 20) {
           closeMentionDropdown();
           return;
@@ -2703,10 +2822,8 @@
         const input = document.getElementById('msgInput');
         const value = input.value;
         const cursor = input.selectionStart;
-
         const before = value.slice(0, state.mentionStart);
         const after = value.slice(cursor);
-
         const newValue = before + '@' + name + ' ' + after;
         input.value = newValue;
         const newCursor = before.length + name.length + 2;
@@ -2799,8 +2916,6 @@
           };
           appendMessage(newMsg);
           scrollToBottom();
-
-          // Update last message in list
           updateConvLastMsg(created);
           cancelReply();
         } catch (e) {
@@ -2818,7 +2933,6 @@
         if (c) {
           c._lastMsg = msg;
           c.last_message_at = msg.created_at;
-          // Reorder
           const idx = list.indexOf(c);
           if (idx > 0) {
             list.splice(idx, 1);
@@ -2829,55 +2943,80 @@
       }
 
       // ============================================================
-      // Send File
+      // Send File (محسّن مع fallback)
       // ============================================================
       async function sendFile(file) {
         if (!file || !state.activeConvId) return;
+        
+        // فعّل الصوت
+        unlockAudio();
+        
         if (file.size > 10 * 1024 * 1024) {
           Refad.toast.warning('حجم الملف أكبر من 10 ميجا');
           return;
         }
 
+        Refad.toast.info('📤 جارٍ رفع الملف...');
+
         try {
           let uploadBlob = file;
-          let uploadType = file.type;
-          let uploadName = file.name;
+          let uploadType = file.type || 'application/octet-stream';
+          let uploadName = file.name || `file-${Date.now()}`;
 
-          if (file.type.startsWith('image/') && file.size > 100 * 1024) {
+          // ضغط الصور (إذا ممكن)
+          if (file.type && file.type.startsWith('image/') && !file.type.includes('svg') && file.size > 200 * 1024) {
             try {
-              Refad.toast.info('جارٍ ضغط الصورة...');
-              uploadBlob = await Refad.storage.compressImage(file, 1200, 0.82);
-              uploadType = 'image/jpeg';
-              uploadName = file.name.replace(/\.[^.]+$/, '.jpg');
+              const compressed = await Refad.storage.compressImage(file, 1400, 0.85);
+              if (compressed && compressed.size < file.size) {
+                uploadBlob = compressed;
+                uploadType = 'image/jpeg';
+                uploadName = file.name.replace(/\.[^.]+$/, '.jpg');
+              }
             } catch (err) {
-              console.warn('Image compression failed:', err);
+              console.warn('Image compression skipped:', err);
             }
           }
-
-          Refad.toast.info('جارٍ رفع الملف...');
 
           const ext = (uploadName.split('.').pop() || 'bin').toLowerCase();
           const path = `conv-${state.activeConvId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
 
+          // الرفع
           const { data, error } = await Refad.sb.storage
             .from('chat-files')
-            .upload(path, uploadBlob, { upsert: false, contentType: uploadType });
+            .upload(path, uploadBlob, { 
+              upsert: false, 
+              contentType: uploadType,
+              cacheControl: '3600'
+            });
 
           if (error) {
-            console.error('[Chat] Storage error:', error);
+            console.error('[Chat] Upload error:', error);
+            const msgLower = (error.message || '').toLowerCase();
             let errMsg = 'فشل رفع الملف';
-            if (error.message?.toLowerCase().includes('bucket')) {
+            
+            if (msgLower.includes('bucket') || msgLower.includes('not found')) {
               errMsg = '⚠️ bucket "chat-files" غير موجود';
+            } else if (msgLower.includes('policy') || msgLower.includes('permission') || msgLower.includes('denied')) {
+              errMsg = '⚠️ لا توجد صلاحيات للرفع';
+            } else if (msgLower.includes('size') || msgLower.includes('too large')) {
+              errMsg = '⚠️ الملف كبير جداً';
+            } else if (msgLower.includes('mime') || msgLower.includes('type')) {
+              errMsg = `⚠️ نوع الملف غير مسموح: ${uploadType}`;
             } else if (error.message) {
               errMsg = error.message;
             }
-            Refad.toast.error(errMsg, 5000);
+            
+            Refad.toast.error(errMsg, 6000);
             return;
           }
 
-          const { data: urlData } = Refad.sb.storage.from('chat-files').getPublicUrl(data.path);
+          const { data: urlData } = Refad.sb.storage
+            .from('chat-files')
+            .getPublicUrl(data.path);
+          
           const fileUrl = urlData.publicUrl;
 
+          // أنشئ رسالة
           const msg = await Refad.db.insert('chat_messages', {
             conversation_id: state.activeConvId,
             sender_id: myUserId,
@@ -2915,9 +3054,9 @@
           });
           scrollToBottom();
           updateConvLastMsg(msg);
-          Refad.toast.success('تم إرسال الملف');
+          Refad.toast.success('✅ تم إرسال الملف');
         } catch (e) {
-          console.error('[Chat] file send failed:', e);
+          console.error('[Chat] File send failed:', e);
           Refad.toast.error('فشل إرسال الملف: ' + (e.message || e));
         }
       }
@@ -2942,7 +3081,7 @@
       }
 
       // ============================================================
-      // Realtime
+      // 🔔 Realtime with Sound Notifications
       // ============================================================
       function setupRealtime() {
         try {
@@ -2954,14 +3093,21 @@
               table: 'chat_messages'
             }, async (payload) => {
               const m = payload.new;
+              
+              // تجاهل رسائلي
+              if (m.sender_id === myUserId) return;
+
               const allConvs = [...state.channels, ...state.conversations];
               const inConv = allConvs.some(c => c.id === m.conversation_id);
+              
               if (!inConv) {
                 await Promise.all([loadChannels(), loadConversations()]);
                 return;
               }
+              
               if (state.messages.some(x => x.id === m.id)) return;
 
+              // جلب الملف
               if (m.message_type === 'file') {
                 try {
                   const files = await Refad.db.select('chat_files', {
@@ -2971,33 +3117,62 @@
                 } catch (e) { /* ignore */ }
               }
 
+              const sender = state.usersMap[m.sender_id];
+              const senderName = sender?.full_name || 'مستخدم';
+
               if (m.conversation_id === state.activeConvId) {
+                // رسالة في المحادثة النشطة
                 appendMessage(m);
                 if (!state.isUserScrolledUp) scrollToBottom();
                 else { state.pendingNewMsgs++; updateScrollBtn(); }
                 markAsRead(m.conversation_id);
-              } else if (m.sender_id !== myUserId) {
-                const sender = state.usersMap[m.sender_id];
-                Refad.toast.info(`💬 رسالة من ${sender?.full_name || 'مستخدم'}`);
-                state.unreadMap[m.conversation_id] = (state.unreadMap[m.conversation_id] || 0) + 1;
 
-                // Play sound
-                try {
-                  const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT');
-                  audio.play().catch(() => {});
-                } catch (e) { /* ignore */ }
-
+                // 🔊 الصوت + الاهتزاز
+                playNotificationSound();
+                vibrateDevice();
+              } else {
+                // رسالة في محادثة أخرى
+                
+                // 🔔 1) الصوت
+                playNotificationSound();
+                
+                // 📳 2) الاهتزاز
+                vibrateDevice();
+                
+                // 💬 3) Toast
+                Refad.toast.info(`💬 رسالة من ${senderName}`);
+                
+                // 🌐 4) Browser Notification
                 if (window.Notification && Notification.permission === 'granted') {
                   try {
-                    new Notification(sender?.full_name || 'رسالة جديدة', {
-                      body: m.content || 'أرسل ملفاً',
-                      icon: 'icon-192.png'
+                    const notif = new Notification(senderName, {
+                      body: m.content || (m._file ? '📎 أرسل ملفاً' : 'رسالة جديدة'),
+                      icon: 'logo.png',
+                      badge: 'logo.png',
+                      tag: `chat-${m.conversation_id}`,
+                      silent: true  // لأننا نشغل صوتنا الخاص
                     });
-                  } catch (e) { /* ignore */ }
+                    notif.onclick = () => {
+                      window.focus();
+                      const isChannel = state.channels.some(c => c.id === m.conversation_id);
+                      if (isChannel) {
+                        document.querySelector('.conv-tab[data-tab="channels"]').click();
+                      } else {
+                        document.querySelector('.conv-tab[data-tab="chats"]').click();
+                      }
+                      openConversation(m.conversation_id, isChannel);
+                      notif.close();
+                    };
+                  } catch (e) {
+                    console.warn('[Chat] Notification failed:', e);
+                  }
                 }
+                
+                // 📊 5) عداد
+                state.unreadMap[m.conversation_id] = (state.unreadMap[m.conversation_id] || 0) + 1;
               }
 
-              // Update last message
+              // تحديث آخر رسالة
               const list = m.conversation_id === state.activeConvId && state.isChannel
                 ? state.channels
                 : [...state.channels, ...state.conversations];
@@ -3030,7 +3205,9 @@
                 }
               }
             })
-            .subscribe();
+            .subscribe((status) => {
+              console.log('[Chat] Realtime:', status);
+            });
         } catch (e) {
           console.warn('[Chat] Realtime not available:', e.message);
         }
@@ -3116,7 +3293,6 @@
             const existing = await findExistingDirect(otherId);
             if (existing) {
               document.getElementById('newChatModal').classList.remove('show');
-              // Switch to chats tab
               document.querySelector('.conv-tab[data-tab="chats"]').click();
               await loadConversations();
               openConversation(existing.id, false);
@@ -3142,7 +3318,7 @@
           }
 
           document.getElementById('newChatModal').classList.remove('show');
-          Refad.toast.success('تم إنشاء المحادثة');
+          Refad.toast.success('✅ تم إنشاء المحادثة');
 
           document.querySelector('.conv-tab[data-tab="chats"]').click();
           await loadConversations();
@@ -3167,7 +3343,7 @@
       }
 
       // ============================================================
-      // Search in Chat
+      // Search Modal
       // ============================================================
       function setupSearchModal() {
         const input = document.getElementById('searchInput');
@@ -3235,7 +3411,6 @@
         });
 
         input.addEventListener('keydown', (e) => {
-          // Mention dropdown navigation
           const dd = document.getElementById('mentionDropdown');
           if (dd.classList.contains('show')) {
             const items = dd.querySelectorAll('.mention-item');
@@ -3273,6 +3448,7 @@
         sendBtn.addEventListener('click', sendMessage);
 
         document.getElementById('attachBtn').addEventListener('click', () => {
+          unlockAudio(); // فعّل الصوت عند التفاعل
           document.getElementById('fileInput').click();
         });
         document.getElementById('fileInput').addEventListener('change', (e) => {
@@ -3302,23 +3478,20 @@
         });
       }
 
-      function requestNotifPermission() {
-        if ('Notification' in window && Notification.permission === 'default') {
-          Notification.requestPermission();
-        }
-      }
-
       // ============================================================
       // Events
       // ============================================================
       function bindEvents() {
+        // Sound toggle
+        document.getElementById('soundToggle').addEventListener('click', toggleSound);
+
+        // New chat
         document.getElementById('newChatBtn').addEventListener('click', openNewChatModal);
         document.getElementById('createChatBtn').addEventListener('click', createConversation);
 
         document.getElementById('newChatType').addEventListener('change', (e) => {
           document.getElementById('groupTitleGroup').style.display = e.target.value === 'group' ? 'block' : 'none';
           updateCreateBtn();
-          // Clear selection when switching
           state.selectedUsers.clear();
           document.querySelectorAll('#userPickList .user-pick-item').forEach(x => x.classList.remove('selected'));
         });
@@ -3350,7 +3523,7 @@
           Refad.toast.success('تم التحديث');
         });
 
-        // Back button (mobile)
+        // Back button
         document.getElementById('backBtn').addEventListener('click', () => {
           document.getElementById('convPanel').classList.remove('hidden');
           document.getElementById('chatActive').style.display = 'none';
@@ -3363,7 +3536,7 @@
         document.getElementById('chatInfoBtn').addEventListener('click', () => {
           if (!state.activeConv) return;
           if (state.isChannel) {
-            Refad.alert.info('قناة عامة', `هذه القناة متاحة لجميع الموظفين للتواصل.`);
+            Refad.alert.info('قناة عامة', 'هذه القناة متاحة لجميع الموظفين للتواصل.');
           } else {
             const parts = state.participantsMap[state.activeConv.id] || [];
             const names = parts.map(id => state.usersMap[id]?.full_name || '؟');
@@ -3374,7 +3547,7 @@
           }
         });
 
-        // Pinned messages
+        // Pinned
         document.getElementById('pinnedBtn').addEventListener('click', openPinnedModal);
         document.getElementById('pinnedBar').addEventListener('click', openPinnedModal);
 
@@ -3386,7 +3559,7 @@
           setTimeout(() => document.getElementById('searchInput').focus(), 100);
         });
 
-        // Chat body - msg actions
+        // Chat body actions
         document.getElementById('chatBody').addEventListener('click', (e) => {
           const replyBtn = e.target.closest('[data-reply]');
           if (replyBtn) { setReply(parseInt(replyBtn.dataset.reply, 10)); return; }
@@ -3425,7 +3598,6 @@
             await loadConversations();
             openConversation(existing.id, false);
           } else {
-            // Open new chat modal pre-selected
             await openNewChatModal();
             const item = document.querySelector(`#userPickList [data-id="${state.viewingUserId}"]`);
             if (item) item.click();
@@ -3464,6 +3636,7 @@
         setupDragDrop();
         setupSearchModal();
         bindEvents();
+        updateSoundIcon();
 
         await loadUsers();
         await loadChannels();
@@ -3471,7 +3644,6 @@
         setupRealtime();
         requestNotifPermission();
 
-        // Auto-open if ?id= in URL
         const cid = parseInt(Refad.getParam('id'), 10);
         if (cid) {
           const isChannel = state.channels.some(c => c.id === cid);
@@ -3485,7 +3657,7 @@
 
         if (Refad.registerServiceWorker) Refad.registerServiceWorker();
 
-        console.log('%c[Refad] Chat ready (Pro v2)', 'color:#14B8A6;font-weight:bold');
+        console.log('%c[Refad] Chat ready (PRO v3 - Sound + Fixed Upload)', 'color:#14B8A6;font-weight:bold');
       }
 
       if (document.readyState === 'loading') {
@@ -3499,3 +3671,4 @@
 
 </body>
 </html>
+
