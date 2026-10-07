@@ -39,6 +39,7 @@
       --success: #10b981;
       --warning: #f59e0b;
       --info: #3b82f6;
+      --purple: #8b5cf6;
       --sidebar-bg: #0B2C4D;
       --sidebar-text: #cbd5e1;
       --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
@@ -232,7 +233,6 @@
        ============================================================ */
     .content { padding: 24px; flex: 1; }
 
-    /* Back button + header */
     .back-bar {
       display: flex;
       align-items: center;
@@ -415,6 +415,7 @@
       align-items: center;
       justify-content: space-between;
       gap: 12px;
+      flex-wrap: wrap;
     }
     .card-header h3 { font-size: 15px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px; }
     .card-header h3 i { width: 18px; height: 18px; color: var(--accent); }
@@ -537,6 +538,7 @@
     .badge-tag.gold   { background: rgba(245,158,11,0.12); color: var(--warning); }
     .badge-tag.gray   { background: rgba(148,163,184,0.15); color: var(--text-muted); }
     .badge-tag.blue   { background: rgba(59,130,246,0.12); color: var(--info); }
+    .badge-tag.purple { background: rgba(139,92,246,0.12); color: var(--purple); }
 
     .action-btn {
       width: 30px;
@@ -682,7 +684,6 @@
     .modal-close:hover { background: var(--bg); color: var(--danger); }
     .modal-close i { width: 18px; height: 18px; }
 
-    /* ⭐ السكرول في الـ body */
     .modal-body {
       padding: 20px;
       overflow-y: auto;
@@ -768,6 +769,34 @@
       0% { background-position: 200% 0; }
       100% { background-position: -200% 0; }
     }
+
+    /* Info grid */
+    .info-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+    .info-item:last-child { border-bottom: none; }
+    .info-item .label { color: var(--text-muted); font-weight: 600; }
+    .info-item .value { color: var(--text); font-weight: 700; }
+
+    /* ABC / Analysis badges */
+    .abc-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      font-weight: 800;
+      font-size: 14px;
+      color: white;
+    }
+    .abc-A { background: linear-gradient(135deg, #10b981, #047857); }
+    .abc-B { background: linear-gradient(135deg, #F59E0B, #d97706); }
+    .abc-C { background: linear-gradient(135deg, #ef4444, #b91c1c); }
 
     /* Responsive */
     @media (max-width: 1024px) {
@@ -879,15 +908,57 @@
 
       <!-- Tabs -->
       <div class="tabs">
-        <button class="tab active" data-tab="discounts"><i data-lucide="percent"></i> الخصومات</button>
+        <button class="tab active" data-tab="overview"><i data-lucide="layout-dashboard"></i> نظرة عامة</button>
+        <button class="tab" data-tab="discounts"><i data-lucide="percent"></i> الخصومات</button>
         <button class="tab" data-tab="barcodes"><i data-lucide="barcode"></i> الباركود</button>
         <button class="tab" data-tab="batches"><i data-lucide="layers"></i> التشغيلات</button>
         <button class="tab" data-tab="movements"><i data-lucide="activity"></i> الحركات</button>
+        <button class="tab" data-tab="returns"><i data-lucide="undo-2"></i> المرتجعات</button>
+        <button class="tab" data-tab="analytics"><i data-lucide="bar-chart-3"></i> التحليلات</button>
         <button class="tab" data-tab="info"><i data-lucide="info"></i> معلومات</button>
       </div>
 
+      <!-- Panel: Overview -->
+      <div class="tab-panel active" data-panel="overview">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px;">
+          
+          <!-- Financial Summary -->
+          <div class="card">
+            <div class="card-header">
+              <h3><i data-lucide="dollar-sign"></i> ملخص مالي</h3>
+            </div>
+            <div class="card-body" id="financialSummary"></div>
+          </div>
+
+          <!-- Top Customers -->
+          <div class="card">
+            <div class="card-header">
+              <h3><i data-lucide="users"></i> أفضل العملاء</h3>
+            </div>
+            <div class="card-body" id="topCustomers"></div>
+          </div>
+
+          <!-- Top Suppliers -->
+          <div class="card">
+            <div class="card-header">
+              <h3><i data-lucide="truck"></i> أفضل الموردين</h3>
+            </div>
+            <div class="card-body" id="topSuppliers"></div>
+          </div>
+
+          <!-- ABC Analysis -->
+          <div class="card">
+            <div class="card-header">
+              <h3><i data-lucide="award"></i> تحليل ABC</h3>
+            </div>
+            <div class="card-body" id="abcAnalysis"></div>
+          </div>
+
+        </div>
+      </div>
+
       <!-- Panel: Discounts -->
-      <div class="tab-panel active" data-panel="discounts">
+      <div class="tab-panel" data-panel="discounts">
         <div class="card">
           <div class="card-header">
             <h3><i data-lucide="trending-up"></i> خصومات الشراء</h3>
@@ -921,7 +992,7 @@
       <div class="tab-panel" data-panel="barcodes">
         <div class="card">
           <div class="card-header">
-            <h3><i data-lucide="barcode"></i> الباركود</h3>
+            <h3><i data-lucide="barcode"></i> الباركود المرتبط بالتشغيلات</h3>
             <button class="btn btn-primary btn-sm" id="addBarcodeBtn">
               <i data-lucide="plus"></i> إضافة باركود
             </button>
@@ -936,7 +1007,15 @@
       <div class="tab-panel" data-panel="batches">
         <div class="card">
           <div class="card-header">
-            <h3><i data-lucide="layers"></i> التشغيلات</h3>
+            <h3><i data-lucide="layers"></i> التشغيلات (مدمجة)</h3>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <button class="btn btn-outline btn-sm" id="mergeBatchesBtn">
+                <i data-lucide="git-merge"></i> دمج المتشابهة
+              </button>
+              <button class="btn btn-outline btn-sm" id="showRawBatchesBtn">
+                <i data-lucide="list"></i> عرض خام
+              </button>
+            </div>
           </div>
           <div class="table-wrap">
             <table>
@@ -949,6 +1028,8 @@
                   <th>سعر البيع</th>
                   <th>تاريخ الصلاحية</th>
                   <th>الأيام المتبقية</th>
+                  <th>الباركود</th>
+                  <th>إجراءات</th>
                 </tr>
               </thead>
               <tbody id="batchesBody"></tbody>
@@ -978,6 +1059,66 @@
               <tbody id="movementsBody"></tbody>
             </table>
           </div>
+        </div>
+      </div>
+
+      <!-- Panel: Returns -->
+      <div class="tab-panel" data-panel="returns">
+        <div class="card">
+          <div class="card-header">
+            <h3><i data-lucide="undo-2"></i> مرتجعات المنتج</h3>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>التاريخ</th>
+                  <th>النوع</th>
+                  <th>الكمية</th>
+                  <th>السعر</th>
+                  <th>الإجمالي</th>
+                  <th>الفاتورة الأصلية</th>
+                  <th>السبب</th>
+                </tr>
+              </thead>
+              <tbody id="returnsBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel: Analytics -->
+      <div class="tab-panel" data-panel="analytics">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px;">
+          
+          <div class="card">
+            <div class="card-header">
+              <h3><i data-lucide="trending-up"></i> معدلات البيع</h3>
+            </div>
+            <div class="card-body" id="salesRates"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3><i data-lucide="clock"></i> معدل الدوران</h3>
+            </div>
+            <div class="card-body" id="turnoverRate"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3><i data-lucide="calendar"></i> المبيعات الشهرية</h3>
+            </div>
+            <div class="card-body" id="monthlySales"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3><i data-lucide="alert-triangle"></i> تنبيهات ذكية</h3>
+            </div>
+            <div class="card-body" id="smartAlerts"></div>
+          </div>
+
         </div>
       </div>
 
@@ -1066,24 +1207,37 @@
   </div>
 
   <!-- ============================================================
-       Modal: Add Barcode
+       Modal: Add/Edit Barcode (with batch link)
        ============================================================ -->
   <div class="modal-backdrop" id="barcodeModal">
-    <div class="modal modal-sm">
+    <div class="modal">
       <div class="modal-header">
-        <h3><i data-lucide="barcode"></i> إضافة باركود</h3>
+        <h3><i data-lucide="barcode"></i> <span id="barcodeModalTitle">إضافة باركود</span></h3>
         <button class="modal-close" data-close><i data-lucide="x"></i></button>
       </div>
       <form id="barcodeForm">
         <div class="modal-body">
-          <div class="form-group">
-            <label>الباركود <span class="req">*</span></label>
-            <input type="text" name="barcode" required maxlength="50" autofocus placeholder="امسح الباركود أو اكتبه">
+          <input type="hidden" name="barcode_id">
+          <div class="form-grid">
+            <div class="form-group full">
+              <label>الباركود <span class="req">*</span></label>
+              <input type="text" name="barcode" required maxlength="50" autofocus placeholder="امسح الباركود أو اكتبه">
+            </div>
+            <div class="form-group full">
+              <label>ربط بتشغيلة (اختياري)</label>
+              <select name="batch_id">
+                <option value="">— بدون ربط —</option>
+              </select>
+            </div>
+            <div class="form-group full">
+              <label>تاريخ الصلاحية (اختياري)</label>
+              <input type="date" name="expiry_date">
+            </div>
           </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-outline" data-close>إلغاء</button>
-          <button type="submit" class="btn btn-primary"><i data-lucide="save"></i> إضافة</button>
+          <button type="submit" class="btn btn-primary"><i data-lucide="save"></i> حفظ</button>
         </div>
       </form>
     </div>
@@ -1107,6 +1261,82 @@
           <button type="submit" class="btn btn-primary"><i data-lucide="save"></i> حفظ</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       Modal: Edit Batch
+       ============================================================ -->
+  <div class="modal-backdrop" id="batchModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3><i data-lucide="layers"></i> تعديل التشغيلة</h3>
+        <button class="modal-close" data-close><i data-lucide="x"></i></button>
+      </div>
+      <form id="batchForm">
+        <div class="modal-body">
+          <input type="hidden" name="batch_id">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>رقم التشغيلة</label>
+              <input type="text" name="batch_number" maxlength="50">
+            </div>
+            <div class="form-group">
+              <label>الباركود</label>
+              <input type="text" name="batch_barcode" maxlength="50">
+            </div>
+            <div class="form-group">
+              <label>الكمية الأصلية</label>
+              <input type="number" name="quantity_in" min="0" step="1">
+            </div>
+            <div class="form-group">
+              <label>الكمية المتبقية</label>
+              <input type="number" name="quantity_left" min="0" step="1">
+            </div>
+            <div class="form-group">
+              <label>سعر الشراء</label>
+              <input type="number" name="cost_price" min="0" step="0.01">
+            </div>
+            <div class="form-group">
+              <label>سعر البيع</label>
+              <input type="number" name="sale_price" min="0" step="0.01">
+            </div>
+            <div class="form-group full">
+              <label>تاريخ الصلاحية</label>
+              <input type="date" name="expiry_date">
+            </div>
+            <div class="form-group full">
+              <label>ملاحظات التعديل</label>
+              <textarea name="adjustment_notes" maxlength="255" placeholder="سبب التعديل (سيُسجَّل في حركات المخزون)"></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" data-close>إلغاء</button>
+          <button type="submit" class="btn btn-primary"><i data-lucide="save"></i> حفظ التعديل</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       Modal: Merge Batches (preview)
+       ============================================================ -->
+  <div class="modal-backdrop" id="mergeModal">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <h3><i data-lucide="git-merge"></i> دمج التشغيلات المتشابهة</h3>
+        <button class="modal-close" data-close><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body" id="mergeModalBody">
+        <!-- JS -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" data-close>إلغاء</button>
+        <button type="button" class="btn btn-primary" id="confirmMergeBtn">
+          <i data-lucide="check"></i> تأكيد الدمج
+        </button>
+      </div>
     </div>
   </div>
 
@@ -1142,9 +1372,13 @@
         product: null,
         discounts: null,
         barcodes: [],
-        batches: [],
+        batchesRaw: [],
+        batches: [],       // merged view
         movements: [],
-        movementReferences: new Map()
+        returns: [],
+        analytics: {},
+        movementReferences: new Map(),
+        showRawBatches: false
       };
 
       // ============================================================
@@ -1276,7 +1510,6 @@
           }
           renderHero();
           renderInfo();
-          renderStats();
         } catch (e) {
           console.error('[ProductDetails] load failed:', e);
           Refad.toast.error('تعذّر تحميل الصنف: ' + e.message);
@@ -1343,18 +1576,18 @@
       }
 
       // ============================================================
-      // 7) Load all related data (parallel)
+      // 7) Load all related data
       // ============================================================
       async function loadRelated() {
         try {
-          const [discount, barcodes, batches, movements] = await Promise.all([
+          const [discount, barcodes, batches, movements, returns] = await Promise.all([
             Refad.db.selectOne('product_discounts', { eq: { product_id: productId } }).catch(() => null),
             Refad.db.select('product_barcodes', {
               eq: { product_id: productId },
               order: { column: 'is_primary', ascending: false }
             }).catch(() => []),
             Refad.db.select('batches', {
-              columns: 'id, batch_number, quantity_in, quantity_left, cost_price, sale_price, expiry_date, created_at',
+              columns: 'id, batch_number, batch_barcode, quantity_in, quantity_left, cost_price, sale_price, expiry_date, created_at, supplier_id, receipt_id',
               eq: { product_id: productId },
               order: { column: 'expiry_date', ascending: true }
             }).catch(() => []),
@@ -1362,128 +1595,203 @@
               columns: 'id, movement_type, quantity, reference_type, reference_id, notes, created_at',
               eq: { company_id: session.company_id, product_id: productId },
               order: { column: 'created_at', ascending: false },
-              limit: 100
-            }).catch(() => [])
+              limit: 200
+            }).catch(() => []),
+            loadReturns()
           ]);
 
           state.discounts = discount;
           state.barcodes = barcodes;
-          state.batches = batches;
+          state.batchesRaw = batches;
           state.movements = movements;
+          state.returns = returns;
+
+          state.batches = mergeBatches(batches);
+
           await loadMovementReferences(movements);
+          computeAnalytics();
 
           renderDiscounts();
           renderBarcodes();
           renderBatches();
           renderMovements();
+          renderReturns();
           renderStats();
+          renderOverview();
+          renderAnalytics();
+
+          populateBatchSelects();
         } catch (e) {
           console.error('[ProductDetails] related load failed:', e);
         }
       }
 
-      async function loadMovementReferences(movements) {
-        const references = new Map();
-        const idsByType = new Map();
-        movements.forEach(movement => {
-          const type = movement.reference_type;
-          if (!type || !movement.reference_id) return;
-          if (!idsByType.has(type)) idsByType.set(type, new Set());
-          idsByType.get(type).add(movement.reference_id);
-        });
-        const invoiceIds = Refad.Session.has('sales.view')
-          ? Array.from(idsByType.get('invoice') || []) : [];
-        const canViewReceipts = Refad.Session.has('purchases.view') || Refad.Session.has('purchases.receive');
-        const receiptIds = canViewReceipts ? Array.from(idsByType.get('receipt') || []) : [];
-        const returnIds = (invoiceIds.length || receiptIds.length)
-          ? Array.from(idsByType.get('return') || []) : [];
-        const [invoices, receipts, returns] = await Promise.all([
-          invoiceIds.length ? Refad.db.select('sales_invoices', {
-            columns: 'id, invoice_number, customer_id, supplier_id',
-            eq: { company_id: session.company_id }, in: { id: invoiceIds }
-          }) : [],
-          receiptIds.length ? Refad.db.select('receipts', {
-            columns: 'id, receipt_number, invoice_number, supplier_id',
-            eq: { company_id: session.company_id }, in: { id: receiptIds }
-          }) : [],
-          returnIds.length ? Refad.db.select('inventory_returns', {
-            columns: 'id, return_type, reference_invoice_id, reference_receipt_id',
-            eq: { company_id: session.company_id }, in: { id: returnIds }
-          }).catch(error => {
-            console.warn('[ProductDetails] Return reference lookup failed:', error.message);
-            return [];
-          }) : []
-        ]);
-        const returnInvoiceIds = Refad.Session.has('sales.view')
-          ? returns.filter(row => row.reference_invoice_id).map(row => row.reference_invoice_id) : [];
-        const returnReceiptIds = canViewReceipts
-          ? returns.filter(row => row.reference_receipt_id).map(row => row.reference_receipt_id) : [];
-        const [returnInvoices, returnReceipts] = await Promise.all([
-          returnInvoiceIds.length ? Refad.db.select('sales_invoices', {
-            columns: 'id, invoice_number, customer_id, supplier_id',
-            eq: { company_id: session.company_id }, in: { id: returnInvoiceIds }
-          }) : [],
-          returnReceiptIds.length ? Refad.db.select('receipts', {
-            columns: 'id, receipt_number, invoice_number, supplier_id',
-            eq: { company_id: session.company_id }, in: { id: returnReceiptIds }
-          }) : []
-        ]);
-        const allInvoices = [...invoices, ...returnInvoices];
-        const allReceipts = [...receipts, ...returnReceipts];
-        const customerIds = Array.from(new Set(allInvoices.map(row => row.customer_id).filter(Boolean)));
-        const supplierIds = Array.from(new Set([
-          ...allInvoices.map(row => row.supplier_id),
-          ...allReceipts.map(row => row.supplier_id)
-        ].filter(Boolean)));
-        const [customers, suppliers] = await Promise.all([
-          customerIds.length ? Refad.db.select('customers', {
-            columns: 'id, name', eq: { company_id: session.company_id }, in: { id: customerIds }
-          }) : [],
-          supplierIds.length ? Refad.db.select('suppliers', {
-            columns: 'id, name', eq: { company_id: session.company_id }, in: { id: supplierIds }
-          }) : []
-        ]);
-        const customerById = new Map(customers.map(row => [String(row.id), row.name]));
-        const supplierById = new Map(suppliers.map(row => [String(row.id), row.name]));
-        const invoiceById = new Map(allInvoices.map(row => [String(row.id), row]));
-        const receiptById = new Map(allReceipts.map(row => [String(row.id), row]));
-        invoices.forEach(row => references.set(`invoice:${row.id}`, {
-          number: row.invoice_number,
-          party: row.supplier_id ? supplierById.get(String(row.supplier_id)) : customerById.get(String(row.customer_id)),
-          href: `invoices.html?id=${row.id}`
-        }));
-        receipts.forEach(row => references.set(`receipt:${row.id}`, {
-          number: row.invoice_number || row.receipt_number,
-          party: supplierById.get(String(row.supplier_id)),
-          href: `receipt-form.html?id=${row.id}`
-        }));
-        returns.forEach(row => {
-          const invoice = row.reference_invoice_id && invoiceById.get(String(row.reference_invoice_id));
-          const receipt = row.reference_receipt_id && receiptById.get(String(row.reference_receipt_id));
-          const source = invoice || receipt;
-          if (!source) return;
-          const isInvoice = Boolean(invoice);
-          const party = invoice
-            ? (invoice.supplier_id ? supplierById.get(String(invoice.supplier_id)) : customerById.get(String(invoice.customer_id)))
-            : supplierById.get(String(receipt.supplier_id));
-          references.set(`return:${row.id}`, {
-            number: isInvoice ? source.invoice_number : (source.invoice_number || source.receipt_number),
-            party,
-            href: isInvoice ? `invoices.html?id=${source.id}` : `receipt-form.html?id=${source.id}`
-          });
-        });
-        state.movementReferences = references;
+      // ============================================================
+      // 8) Returns Loader
+      // ============================================================
+      async function loadReturns() {
+        try {
+          // Try inventory_returns table first
+          const invReturns = await Refad.db.select('inventory_returns', {
+            eq: { company_id: session.company_id },
+            order: { column: 'created_at', ascending: false },
+            limit: 200
+          }).catch(() => null);
+
+          if (invReturns && invReturns.length) {
+            const returnIds = invReturns.map(r => r.id);
+            const items = await Refad.db.select('inventory_return_items', {
+              eq: { product_id: productId },
+              in: { return_id: returnIds }
+            }).catch(() => []);
+
+            return items.map(item => {
+              const parent = invReturns.find(r => r.id === item.return_id);
+              return {
+                id: item.id,
+                date: parent?.created_at,
+                type: parent?.return_type || 'return',
+                quantity: item.quantity,
+                price: item.unit_price,
+                total: item.total,
+                reference: parent?.reference_invoice_id || parent?.reference_receipt_id,
+                reason: parent?.reason || parent?.notes
+              };
+            });
+          }
+          return [];
+        } catch (e) {
+          console.warn('[ProductDetails] returns load failed:', e.message);
+          return [];
+        }
       }
 
       // ============================================================
-      // 8) Stats
+      // 9) MERGE BATCHES ALGORITHM
       // ============================================================
-      function renderStats() {
-        const b = state.batches || [];
-        const totalIn = b.reduce((s, x) => s + (x.quantity_in || 0), 0);
-        const totalLeft = b.reduce((s, x) => s + (x.quantity_left || 0), 0);
-        const sold = totalIn - totalLeft;
-        const saleRate = totalIn > 0 ? Math.round((sold / totalIn) * 100) : 0;
+      /**
+       * قواعد الدمج:
+       * 1. نفس آخر 5 أرقام من رقم التشغيلة (أو الرقم كاملاً لو أقل من 5)
+       * 2. نفس الشهر والسنة لتاريخ الصلاحية (بغض النظر عن اليوم)
+       * 3. نفس سعر الشراء وسعر البيع (بهامش 0.01)
+       * 4. نفس المورد (اختياري - يمكن تعطيله)
+       */
+      function mergeBatches(batches) {
+        const groups = new Map();
+
+        batches.forEach(b => {
+          const key = buildMergeKey(b);
+          if (!groups.has(key)) {
+            groups.set(key, {
+              ids: [],
+              batch_numbers: [],
+              batch_barcodes: [],
+              quantity_in: 0,
+              quantity_left: 0,
+              cost_price: b.cost_price,
+              sale_price: b.sale_price,
+              expiry_date: b.expiry_date,
+              supplier_id: b.supplier_id,
+              items: []
+            });
+          }
+          const g = groups.get(key);
+          g.ids.push(b.id);
+          if (b.batch_number) g.batch_numbers.push(b.batch_number);
+          if (b.batch_barcode) g.batch_barcodes.push(b.batch_barcode);
+          g.quantity_in += Number(b.quantity_in) || 0;
+          g.quantity_left += Number(b.quantity_left) || 0;
+          g.items.push(b);
+          // اختر أقرب تاريخ صلاحية
+          if (b.expiry_date && (!g.expiry_date || b.expiry_date < g.expiry_date)) {
+            g.expiry_date = b.expiry_date;
+          }
+        });
+
+        return Array.from(groups.values()).map((g, idx) => ({
+          id: g.ids[0],
+          ids: g.ids,
+          merged: g.ids.length > 1,
+          batch_number: g.batch_numbers[0] || `MERGED-${idx + 1}`,
+          batch_numbers: g.batch_numbers,
+          batch_barcode: g.batch_barcodes[0] || null,
+          batch_barcodes: g.batch_barcodes,
+          quantity_in: g.quantity_in,
+          quantity_left: g.quantity_left,
+          cost_price: g.cost_price,
+          sale_price: g.sale_price,
+          expiry_date: g.expiry_date,
+          supplier_id: g.supplier_id,
+          items: g.items
+        }));
+      }
+
+      /**
+       * بناء مفتاح الدمج
+       * - آخر 5 أرقام من رقم التشغيلة
+       * - سنة+شهر الصلاحية
+       * - سعر الشراء مقرّب لـ 2 decimals
+       * - سعر البيع مقرّب لـ 2 decimals
+       */
+      function buildMergeKey(b) {
+        const batchNum = String(b.batch_number || '').trim();
+        const last5 = batchNum.slice(-5).toLowerCase();
+
+        let expiryKey = '';
+        if (b.expiry_date) {
+          const d = new Date(b.expiry_date);
+          if (!isNaN(d)) {
+            expiryKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+          }
+        }
+
+        const cost = (Math.round((Number(b.cost_price) || 0) * 100) / 100).toFixed(2);
+        const sale = (Math.round((Number(b.sale_price) || 0) * 100) / 100).toFixed(2);
+
+        return `${last5}|${expiryKey}|${cost}|${sale}`;
+      }
+
+      // ============================================================
+      // 10) ANALYTICS ENGINE
+      // ============================================================
+      function computeAnalytics() {
+        const b = state.batchesRaw || [];
+        const m = state.movements || [];
+        const r = state.returns || [];
+
+        // إجمالي المستلم
+        const totalIn = b.reduce((s, x) => s + (Number(x.quantity_in) || 0), 0);
+
+        // إجمالي المرتجع (من الحركات)
+        const totalReturns = m
+          .filter(x => x.movement_type === 'return')
+          .reduce((s, x) => s + Math.abs(Number(x.quantity) || 0), 0);
+
+        // المبيعات الصافية = إجمالي الخارج - المرتجعات
+        const totalOut = m
+          .filter(x => x.movement_type === 'out')
+          .reduce((s, x) => s + Math.abs(Number(x.quantity) || 0), 0);
+
+        const netSales = Math.max(0, totalOut - totalReturns);
+
+        // المخزون الحالي
+        const totalLeft = b.reduce((s, x) => s + (Number(x.quantity_left) || 0), 0);
+
+        // معدل البيع الصافي (بدون مرتجعات)
+        const netSaleRate = totalIn > 0 ? Math.round((netSales / totalIn) * 100) : 0;
+
+        // معدل البيع الإجمالي
+        const grossSaleRate = totalIn > 0 ? Math.round((totalOut / totalIn) * 100) : 0;
+
+        // معدل المرتجع
+        const returnRate = totalOut > 0 ? Math.round((totalReturns / totalOut) * 100) : 0;
+
+        // القيمة المالية
+        const inventoryValue = b.reduce((s, x) =>
+          s + (Number(x.quantity_left) || 0) * (Number(x.cost_price) || 0), 0);
+        const retailValue = b.reduce((s, x) =>
+          s + (Number(x.quantity_left) || 0) * (Number(x.sale_price) || 0), 0);
+        const potentialProfit = retailValue - inventoryValue;
 
         // تنبيهات الصلاحية
         const expiringSoon = b.filter(x => {
@@ -1498,12 +1806,60 @@
           return d !== null && d < 0;
         }).length;
 
+        // معدل الدوران (Turnover Rate)
+        // = تكلفة المبيعات / متوسط المخزون
+        const cogs = m
+          .filter(x => x.movement_type === 'out')
+          .reduce((s, x) => s + Math.abs(Number(x.quantity) || 0) * (Number(x.unit_cost) || 0), 0);
+        const avgInventory = (totalIn + totalLeft) / 2;
+        const turnoverRate = avgInventory > 0 ? (netSales / avgInventory) : 0;
+
+        // ABC Analysis
+        // نصنف حسب القيمة المالية - لكن هذا منتج واحد، لذا نقارن بمتوسط الشركة
+        const abcClass = classifyABC(inventoryValue);
+
+        // أعلى عملاء وموردين (سنحسبها لاحقاً)
+        state.analytics = {
+          totalIn,
+          totalOut,
+          totalReturns,
+          netSales,
+          totalLeft,
+          netSaleRate,
+          grossSaleRate,
+          returnRate,
+          inventoryValue,
+          retailValue,
+          potentialProfit,
+          expiringSoon,
+          expired,
+          turnoverRate: Math.round(turnoverRate * 100) / 100,
+          abcClass,
+          cogs
+        };
+      }
+
+      function classifyABC(value) {
+        // يمكن تحسينها بمقارنة مع إجمالي مخزون الشركة
+        if (value > 10000) return 'A';
+        if (value > 3000) return 'B';
+        return 'C';
+      }
+
+      // ============================================================
+      // 11) Render Stats
+      // ============================================================
+      function renderStats() {
+        const a = state.analytics;
         const cards = [
-          { label: 'إجمالي المستلم', value: Refad.format.number(totalIn), icon: 'package-plus', cls: 'blue' },
-          { label: 'المخزون الحالي', value: Refad.format.number(totalLeft), icon: 'package', cls: 'teal' },
-          { label: 'معدل البيع', value: saleRate + '%', icon: 'trending-up', cls: 'green' },
-          { label: 'قريبة الانتهاء', value: Refad.format.number(expiringSoon), icon: 'alert-triangle', cls: 'gold' },
-          { label: 'منتهية', value: Refad.format.number(expired), icon: 'x-octagon', cls: 'red' }
+          { label: 'إجمالي المستلم', value: Refad.format.number(a.totalIn), icon: 'package-plus', cls: 'blue', sub: `${state.batchesRaw.length} تشغيلة` },
+          { label: 'المخزون الحالي', value: Refad.format.number(a.totalLeft), icon: 'package', cls: 'teal', sub: `قيمة: ${Refad.format.money(a.inventoryValue)}` },
+          { label: 'صافي المبيعات', value: Refad.format.number(a.netSales), icon: 'shopping-cart', cls: 'green', sub: `معدل: ${a.netSaleRate}%` },
+          { label: 'المرتجعات', value: Refad.format.number(a.totalReturns), icon: 'undo-2', cls: 'gold', sub: `معدل: ${a.returnRate}%` },
+          { label: 'قريبة الانتهاء', value: Refad.format.number(a.expiringSoon), icon: 'alert-triangle', cls: 'gold', sub: 'خلال 90 يوم' },
+          { label: 'منتهية الصلاحية', value: Refad.format.number(a.expired), icon: 'x-octagon', cls: 'red', sub: 'تحتاج إجراء' },
+          { label: 'الربح المتوقع', value: Refad.format.money(a.potentialProfit), icon: 'trending-up', cls: 'purple', sub: 'من المخزون الحالي' },
+          { label: 'معدل الدوران', value: a.turnoverRate, icon: 'refresh-cw', cls: 'blue', sub: 'مرة/فترة' }
         ];
 
         document.getElementById('statsGrid').innerHTML = cards.map(c => `
@@ -1511,7 +1867,8 @@
             <div class="stat-icon ${c.cls}"><i data-lucide="${c.icon}"></i></div>
             <div class="stat-body">
               <div class="label">${Refad.escapeHtml(c.label)}</div>
-              <div class="value">${Refad.escapeHtml(c.value)}</div>
+              <div class="value">${Refad.escapeHtml(String(c.value))}</div>
+              ${c.sub ? `<div class="sub">${Refad.escapeHtml(c.sub)}</div>` : ''}
             </div>
           </div>
         `).join('');
@@ -1519,7 +1876,221 @@
       }
 
       // ============================================================
-      // 9) Discounts
+      // 12) Render Overview
+      // ============================================================
+      async function renderOverview() {
+        const a = state.analytics;
+        const p = state.product;
+
+        // ملخص مالي
+        document.getElementById('financialSummary').innerHTML = `
+          <div class="info-item"><span class="label">قيمة المخزون (بسعر التكلفة)</span><span class="value">${Refad.format.money(a.inventoryValue)}</span></div>
+          <div class="info-item"><span class="label">قيمة المخزون (بسعر البيع)</span><span class="value">${Refad.format.money(a.retailValue)}</span></div>
+          <div class="info-item"><span class="label">الربح المتوقع</span><span class="value" style="color:var(--success)">${Refad.format.money(a.potentialProfit)}</span></div>
+          <div class="info-item"><span class="label">هامش الربح</span><span class="value">${a.retailValue > 0 ? Math.round((a.potentialProfit / a.retailValue) * 100) : 0}%</span></div>
+          <div class="info-item"><span class="label">تكلفة المبيعات (COGS)</span><span class="value">${Refad.format.money(a.cogs)}</span></div>
+          <div class="info-item"><span class="label">السعر الافتراضي</span><span class="value">${Refad.format.money(p.default_price)}</span></div>
+        `;
+
+        // ABC
+        document.getElementById('abcAnalysis').innerHTML = `
+          <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;">
+            <div class="abc-badge abc-${a.abcClass}">${a.abcClass}</div>
+            <div>
+              <div style="font-weight:800;font-size:16px;">تصنيف ${a.abcClass}</div>
+              <div style="font-size:12px;color:var(--text-muted);">${a.abcClass === 'A' ? 'منتج عالي القيمة - يحتاج متابعة دقيقة' : a.abcClass === 'B' ? 'منتج متوسط القيمة' : 'منتج منخفض القيمة'}</div>
+            </div>
+          </div>
+          <div class="info-item"><span class="label">معدل البيع الصافي</span><span class="value">${a.netSaleRate}%</span></div>
+          <div class="info-item"><span class="label">معدل المرتجع</span><span class="value">${a.returnRate}%</span></div>
+          <div class="info-item"><span class="label">معدل الدوران</span><span class="value">${a.turnoverRate}x</span></div>
+        `;
+
+        // Top Customers & Suppliers (async)
+        loadTopParties();
+      }
+
+      async function loadTopParties() {
+        try {
+          // Top Customers
+          const invoiceItems = await Refad.db.select('sales_invoice_items', {
+            columns: 'invoice_id, quantity, total',
+            eq: { product_id: productId },
+            limit: 500
+          }).catch(() => []);
+
+          if (invoiceItems.length) {
+            const invoiceIds = [...new Set(invoiceItems.map(i => i.invoice_id))];
+            const invoices = await Refad.db.select('sales_invoices', {
+              columns: 'id, customer_id, invoice_number',
+              eq: { company_id: session.company_id },
+              in: { id: invoiceIds }
+            }).catch(() => []);
+
+            const customerTotals = new Map();
+            invoiceItems.forEach(item => {
+              const inv = invoices.find(i => i.id === item.invoice_id);
+              if (!inv?.customer_id) return;
+              const key = String(inv.customer_id);
+              customerTotals.set(key, (customerTotals.get(key) || 0) + (Number(item.total) || 0));
+            });
+
+            const custIds = [...customerTotals.keys()];
+            if (custIds.length) {
+              const customers = await Refad.db.select('customers', {
+                columns: 'id, name',
+                eq: { company_id: session.company_id },
+                in: { id: custIds }
+              }).catch(() => []);
+
+              const top = customers
+                .map(c => ({ name: c.name, total: customerTotals.get(String(c.id)) || 0 }))
+                .sort((a, b) => b.total - a.total)
+                .slice(0, 5);
+
+              document.getElementById('topCustomers').innerHTML = top.length
+                ? top.map((c, i) => `
+                    <div class="info-item">
+                      <span class="label">${i + 1}. ${Refad.escapeHtml(c.name)}</span>
+                      <span class="value">${Refad.format.money(c.total)}</span>
+                    </div>
+                  `).join('')
+                : '<div class="empty-state"><p>لا توجد بيانات</p></div>';
+            } else {
+              document.getElementById('topCustomers').innerHTML = '<div class="empty-state"><p>لا توجد بيانات</p></div>';
+            }
+          } else {
+            document.getElementById('topCustomers').innerHTML = '<div class="empty-state"><p>لا توجد مبيعات بعد</p></div>';
+          }
+
+          // Top Suppliers (from batches)
+          const supplierTotals = new Map();
+          state.batchesRaw.forEach(b => {
+            if (!b.supplier_id) return;
+            const key = String(b.supplier_id);
+            supplierTotals.set(key, (supplierTotals.get(key) || 0) + (Number(b.quantity_in) || 0));
+          });
+
+          const supIds = [...supplierTotals.keys()];
+          if (supIds.length) {
+            const suppliers = await Refad.db.select('suppliers', {
+              columns: 'id, name',
+              eq: { company_id: session.company_id },
+              in: { id: supIds }
+            }).catch(() => []);
+
+            const top = suppliers
+              .map(s => ({ name: s.name, qty: supplierTotals.get(String(s.id)) || 0 }))
+              .sort((a, b) => b.qty - a.qty)
+              .slice(0, 5);
+
+            document.getElementById('topSuppliers').innerHTML = top.map((s, i) => `
+              <div class="info-item">
+                <span class="label">${i + 1}. ${Refad.escapeHtml(s.name)}</span>
+                <span class="value">${Refad.format.number(s.qty)} وحدة</span>
+              </div>
+            `).join('');
+          } else {
+            document.getElementById('topSuppliers').innerHTML = '<div class="empty-state"><p>لا توجد بيانات</p></div>';
+          }
+        } catch (e) {
+          console.warn('[Overview] parties load failed:', e);
+        }
+      }
+
+      // ============================================================
+      // 13) Render Analytics
+      // ============================================================
+      function renderAnalytics() {
+        const a = state.analytics;
+
+        // معدلات البيع
+        document.getElementById('salesRates').innerHTML = `
+          <div class="info-item"><span class="label">معدل البيع الإجمالي</span><span class="value">${a.grossSaleRate}%</span></div>
+          <div class="info-item"><span class="label">معدل البيع الصافي (بدون مرتجعات)</span><span class="value" style="color:var(--success)">${a.netSaleRate}%</span></div>
+          <div class="info-item"><span class="label">معدل المرتجع</span><span class="value" style="color:var(--warning)">${a.returnRate}%</span></div>
+          <div class="info-item"><span class="label">إجمالي المبيعات</span><span class="value">${Refad.format.number(a.totalOut)}</span></div>
+          <div class="info-item"><span class="label">صافي المبيعات</span><span class="value">${Refad.format.number(a.netSales)}</span></div>
+          <div class="info-item"><span class="label">إجمالي المرتجعات</span><span class="value">${Refad.format.number(a.totalReturns)}</span></div>
+        `;
+
+        // معدل الدوران
+        document.getElementById('turnoverRate').innerHTML = `
+          <div style="text-align:center;padding:20px 0;">
+            <div style="font-size:48px;font-weight:800;color:var(--accent);">${a.turnoverRate}x</div>
+            <div style="font-size:13px;color:var(--text-muted);margin-top:8px;">معدل دوران المخزون</div>
+          </div>
+          <div class="info-item"><span class="label">التفسير</span><span class="value">${a.turnoverRate > 2 ? 'دوران سريع - ممتاز' : a.turnoverRate > 1 ? 'دوران متوسط' : 'دوران بطيء - يحتاج مراجعة'}</span></div>
+          <div class="info-item"><span class="label">المخزون الحالي</span><span class="value">${Refad.format.number(a.totalLeft)}</span></div>
+        `;
+
+        // المبيعات الشهرية
+        renderMonthlySales();
+
+        // تنبيهات ذكية
+        renderSmartAlerts();
+      }
+
+      function renderMonthlySales() {
+        const months = {};
+        state.movements
+          .filter(m => m.movement_type === 'out')
+          .forEach(m => {
+            const key = m.created_at ? m.created_at.slice(0, 7) : 'unknown';
+            months[key] = (months[key] || 0) + Math.abs(Number(m.quantity) || 0);
+          });
+
+        const sorted = Object.entries(months).sort((a, b) => b[0].localeCompare(a[0])).slice(0, 6);
+
+        if (!sorted.length) {
+          document.getElementById('monthlySales').innerHTML = '<div class="empty-state"><p>لا توجد بيانات</p></div>';
+          return;
+        }
+
+        const max = Math.max(...sorted.map(s => s[1]));
+        document.getElementById('monthlySales').innerHTML = sorted.map(([month, qty]) => {
+          const pct = max > 0 ? (qty / max) * 100 : 0;
+          return `
+            <div style="margin-bottom:12px;">
+              <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">
+                <span style="font-weight:600;">${Refad.escapeHtml(month)}</span>
+                <span style="color:var(--text-muted);">${Refad.format.number(qty)} وحدة</span>
+              </div>
+              <div style="background:var(--bg);border-radius:6px;height:8px;overflow:hidden;">
+                <div style="width:${pct}%;height:100%;background:linear-gradient(90deg,var(--accent),var(--primary));border-radius:6px;"></div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      function renderSmartAlerts() {
+        const a = state.analytics;
+        const alerts = [];
+
+        if (a.expired > 0) alerts.push({ type: 'error', icon: 'x-octagon', msg: `يوجد ${a.expired} تشغيلة منتهية الصلاحية - يجب إتلافها` });
+        if (a.expiringSoon > 0) alerts.push({ type: 'warning', icon: 'alert-triangle', msg: `يوجد ${a.expiringSoon} تشغيلة قاربت على الانتهاء (خلال 90 يوم)` });
+        if (a.returnRate > 10) alerts.push({ type: 'warning', icon: 'undo-2', msg: `معدل المرتجع مرتفع (${a.returnRate}%) - راجع جودة المنتج` });
+        if (a.netSaleRate < 30 && a.totalIn > 0) alerts.push({ type: 'info', icon: 'trending-down', msg: `معدل البيع منخفض (${a.netSaleRate}%) - قد يحتاج عروض ترويجية` });
+        if (a.totalLeft <= (state.product?.reorder_level || 0)) alerts.push({ type: 'error', icon: 'shopping-cart', msg: `المخزون أقل من حد إعادة الطلب (${state.product?.reorder_level}) - اطلب المزيد` });
+        if (a.totalLeft > 0 && a.netSaleRate > 80) alerts.push({ type: 'success', icon: 'check-circle', msg: 'منتج سريع الحركة - تأكد من توفر مخزون كافٍ' });
+
+        if (!alerts.length) {
+          document.getElementById('smartAlerts').innerHTML = '<div class="empty-state"><i data-lucide="check-circle"></i><p>لا توجد تنبيهات</p></div>';
+        } else {
+          const colors = { error: 'var(--danger)', warning: 'var(--warning)', info: 'var(--info)', success: 'var(--success)' };
+          document.getElementById('smartAlerts').innerHTML = alerts.map(a => `
+            <div style="display:flex;gap:10px;padding:12px;background:var(--bg);border-radius:var(--radius-sm);margin-bottom:8px;border-right:3px solid ${colors[a.type]};">
+              <i data-lucide="${a.icon}" style="width:18px;height:18px;color:${colors[a.type]};flex-shrink:0;margin-top:2px;"></i>
+              <span style="font-size:13px;">${Refad.escapeHtml(a.msg)}</span>
+            </div>
+          `).join('');
+        }
+        if (window.lucide) lucide.createIcons();
+      }
+
+      // ============================================================
+      // 14) Discounts
       // ============================================================
       function renderDiscounts() {
         const d = state.discounts || {
@@ -1609,7 +2180,7 @@
       }
 
       // ============================================================
-      // 10) Barcodes
+      // 15) Barcodes (with batch link)
       // ============================================================
       function renderBarcodes() {
         const body = document.getElementById('barcodesBody');
@@ -1623,68 +2194,116 @@
           return;
         }
 
-        body.innerHTML = state.barcodes.map((b, i) => `
-          <div class="barcode-item">
-            <svg id="barcode-svg-${b.id}"></svg>
-            <div class="barcode-code">${Refad.escapeHtml(b.barcode)}</div>
-            <div class="barcode-actions">
-              <button class="action-btn" data-barcode-action="print" data-id="${b.id}" title="طباعة">
-                <i data-lucide="printer"></i>
-              </button>
-              ${canDelete ? `
-                <button class="action-btn danger" data-barcode-action="delete" data-id="${b.id}" title="حذف">
-                  <i data-lucide="trash-2"></i>
-                </button>
-              ` : ''}
-            </div>
-          </div>
-        `).join('');
+        body.innerHTML = state.barcodes.map(b => {
+          const batch = b.batch_id ? state.batchesRaw.find(x => x.id === b.batch_id) : null;
+          const batchInfo = batch
+            ? `<div style="font-size:11px;color:var(--text-muted);margin-top:4px;">
+                 مرتبط بتشغيلة: <strong>${Refad.escapeHtml(batch.batch_number || '—')}</strong>
+                 ${batch.expiry_date ? ' • صلاحية: ' + Refad.format.date(batch.expiry_date) : ''}
+               </div>`
+            : '<div style="font-size:11px;color:var(--text-muted);margin-top:4px;">غير مرتبط بتشغيلة</div>';
 
-        // توليد SVG للباركود
+          return `
+            <div class="barcode-item">
+              <svg id="barcode-svg-${b.id}"></svg>
+              <div style="flex:1;min-width:120px;">
+                <div class="barcode-code">${Refad.escapeHtml(b.barcode)}</div>
+                ${batchInfo}
+              </div>
+              <div class="barcode-actions">
+                <button class="action-btn" data-barcode-action="edit" data-id="${b.id}" title="تعديل">
+                  <i data-lucide="pencil"></i>
+                </button>
+                <button class="action-btn" data-barcode-action="print" data-id="${b.id}" title="طباعة">
+                  <i data-lucide="printer"></i>
+                </button>
+                ${canDelete ? `
+                  <button class="action-btn danger" data-barcode-action="delete" data-id="${b.id}" title="حذف">
+                    <i data-lucide="trash-2"></i>
+                  </button>
+                ` : ''}
+              </div>
+            </div>
+          `;
+        }).join('');
+
         state.barcodes.forEach(b => {
           try {
             JsBarcode(`#barcode-svg-${b.id}`, b.barcode, {
-              format: 'CODE128',
-              width: 1.8,
-              height: 50,
-              displayValue: false,
-              margin: 2,
-              lineColor: '#0f172a'
+              format: 'CODE128', width: 1.8, height: 50,
+              displayValue: false, margin: 2, lineColor: '#0f172a'
             });
-          } catch (e) {
-            console.warn('Barcode render failed:', e);
-          }
+          } catch (e) { console.warn('Barcode render failed:', e); }
         });
 
         if (window.lucide) lucide.createIcons();
       }
 
-      function openBarcodeModal() {
-        document.getElementById('barcodeForm').reset();
+      function openBarcodeModal(barcodeId) {
+        const form = document.getElementById('barcodeForm');
+        form.reset();
+        form.barcode_id.value = '';
+        document.getElementById('barcodeModalTitle').textContent = 'إضافة باركود';
+
+        if (barcodeId) {
+          const bc = state.barcodes.find(b => b.id === barcodeId);
+          if (bc) {
+            form.barcode_id.value = bc.id;
+            form.barcode.value = bc.barcode;
+            form.batch_id.value = bc.batch_id || '';
+            form.expiry_date.value = bc.expiry_date || '';
+            document.getElementById('barcodeModalTitle').textContent = 'تعديل باركود';
+          }
+        }
+
         document.getElementById('barcodeModal').classList.add('show');
-        setTimeout(() => document.querySelector('#barcodeForm [name=barcode]').focus(), 100);
+        setTimeout(() => form.barcode.focus(), 100);
+      }
+
+      function populateBatchSelects() {
+        const options = state.batchesRaw
+          .filter(b => b.quantity_left > 0 || b.quantity_in > 0)
+          .map(b => `<option value="${b.id}">${Refad.escapeHtml(b.batch_number || 'بدون رقم')} • ${Refad.format.number(b.quantity_left)} متبقي${b.expiry_date ? ' • ' + Refad.format.date(b.expiry_date) : ''}</option>`)
+          .join('');
+
+        document.querySelectorAll('select[name="batch_id"]').forEach(sel => {
+          const current = sel.value;
+          sel.innerHTML = '<option value="">— بدون ربط —</option>' + options;
+          if (current) sel.value = current;
+        });
       }
 
       async function saveBarcode(e) {
         e.preventDefault();
-        const barcode = e.target.barcode.value.trim();
+        const form = e.target;
+        const barcodeId = form.barcode_id.value ? parseInt(form.barcode_id.value, 10) : null;
+        const barcode = form.barcode.value.trim();
         if (!barcode) return;
 
+        const payload = {
+          product_id: productId,
+          barcode,
+          batch_id: form.batch_id.value ? parseInt(form.batch_id.value, 10) : null,
+          expiry_date: form.expiry_date.value || null
+        };
+
         try {
-          await Refad.db.insert('product_barcodes', {
-            product_id: productId,
-            barcode,
-            is_primary: state.barcodes.length === 0
-          });
+          if (barcodeId) {
+            await Refad.db.update('product_barcodes', barcodeId, payload);
+            Refad.toast.success('تم تحديث الباركود');
+          } else {
+            payload.is_primary = state.barcodes.length === 0;
+            await Refad.db.insert('product_barcodes', payload);
+            Refad.toast.success('تم إضافة الباركود');
+          }
           closeAllModals();
-          Refad.toast.success('تم إضافة الباركود');
           await loadRelated();
         } catch (err) {
           console.error('[Barcode] save failed:', err);
           if (err.message?.includes('duplicate')) {
             Refad.toast.error('هذا الباركود مستخدم بالفعل');
           } else {
-            Refad.toast.error('فشل الإضافة: ' + err.message);
+            Refad.toast.error('فشل الحفظ: ' + err.message);
           }
         }
       }
@@ -1703,6 +2322,7 @@
       function printBarcode(id) {
         const bc = state.barcodes.find(b => b.id === id);
         if (!bc) return;
+        const batch = bc.batch_id ? state.batchesRaw.find(x => x.id === bc.batch_id) : null;
 
         const printWindow = window.open('', '_blank', 'width=500,height=400');
         printWindow.document.write(`
@@ -1716,6 +2336,7 @@
               p { color: #64748b; margin-bottom: 20px; font-size: 13px; }
               svg { background: white; }
               .code { font-family: monospace; font-size: 16px; margin-top: 8px; letter-spacing: 2px; }
+              .expiry { font-size: 12px; color: #64748b; margin-top: 6px; }
             </style>
           </head>
           <body>
@@ -1723,6 +2344,7 @@
             <p>${Refad.escapeHtml(state.product.form || '')} ${state.product.unit ? '• ' + Refad.escapeHtml(state.product.unit) : ''}</p>
             <svg id="bc"></svg>
             <div class="code">${Refad.escapeHtml(bc.barcode)}</div>
+            ${batch?.expiry_date ? `<div class="expiry">الصلاحية: ${Refad.format.date(batch.expiry_date)}</div>` : ''}
             <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"><\/script>
             <script>
               JsBarcode('#bc', '${bc.barcode.replace(/'/g, "\\'")}', {
@@ -1737,14 +2359,16 @@
       }
 
       // ============================================================
-      // 11) Batches
+      // 16) Batches (merged view + edit)
       // ============================================================
       function renderBatches() {
         const body = document.getElementById('batchesBody');
-        if (!state.batches.length) {
+        const list = state.showRawBatches ? state.batchesRaw : state.batches;
+
+        if (!list.length) {
           body.innerHTML = `
             <tr class="empty-row" style="border:none;">
-              <td colspan="7">
+              <td colspan="9">
                 <div class="empty-state">
                   <i data-lucide="layers"></i>
                   <p>لا توجد تشغيلات بعد</p>
@@ -1755,7 +2379,7 @@
           return;
         }
 
-        body.innerHTML = state.batches.map(b => {
+        body.innerHTML = list.map(b => {
           const days = Refad.format.daysLeft(b.expiry_date);
           let expiryTag = '<span class="badge-tag gray">—</span>';
           if (days !== null) {
@@ -1765,23 +2389,225 @@
             else expiryTag = `<span class="badge-tag green">${days} يوم</span>`;
           }
 
+          const mergeBadge = b.merged
+            ? `<span class="badge-tag purple" title="${b.batch_numbers.join(', ')}">مدمج (${b.ids.length})</span>`
+            : '';
+
+          const barcodeInfo = b.batch_barcodes?.length
+            ? b.batch_barcodes.filter(Boolean).map(c => `<div style="font-family:monospace;font-size:11px;">${Refad.escapeHtml(c)}</div>`).join('')
+            : '<span style="color:var(--text-muted);">—</span>';
+
+          const editBtn = canEdit
+            ? `<button class="action-btn" data-batch-action="edit" data-id="${b.id}" title="تعديل"><i data-lucide="pencil"></i></button>`
+            : '';
+
           return `
             <tr>
-              <td><strong>${Refad.escapeHtml(b.batch_number || '—')}</strong></td>
+              <td>
+                <strong>${Refad.escapeHtml(b.batch_number || '—')}</strong>
+                ${mergeBadge}
+              </td>
               <td>${Refad.format.number(b.quantity_in || 0)}</td>
               <td><strong style="color:${b.quantity_left > 0 ? 'var(--success)' : 'var(--text-muted)'}">${Refad.format.number(b.quantity_left || 0)}</strong></td>
               <td>${Refad.format.money(b.cost_price)}</td>
               <td>${Refad.format.money(b.sale_price)}</td>
               <td>${Refad.format.date(b.expiry_date)}</td>
               <td>${expiryTag}</td>
+              <td>${barcodeInfo}</td>
+              <td>${editBtn}</td>
             </tr>
           `;
         }).join('');
+        if (window.lucide) lucide.createIcons();
+      }
+
+      function openBatchModal(id) {
+        const b = state.batchesRaw.find(x => x.id === id);
+        if (!b) return;
+        const form = document.getElementById('batchForm');
+        form.reset();
+        form.batch_id.value = b.id;
+        form.batch_number.value = b.batch_number || '';
+        form.batch_barcode.value = b.batch_barcode || '';
+        form.quantity_in.value = b.quantity_in || 0;
+        form.quantity_left.value = b.quantity_left || 0;
+        form.cost_price.value = b.cost_price || 0;
+        form.sale_price.value = b.sale_price || 0;
+        form.expiry_date.value = b.expiry_date || '';
+        form.adjustment_notes.value = '';
+        document.getElementById('batchModal').classList.add('show');
+        if (window.lucide) lucide.createIcons();
+      }
+
+      async function saveBatch(e) {
+        e.preventDefault();
+        const form = e.target;
+        const batchId = parseInt(form.batch_id.value, 10);
+        if (!batchId) return;
+
+        const old = state.batchesRaw.find(x => x.id === batchId);
+        if (!old) return;
+
+        const newQtyLeft = parseInt(form.quantity_left.value, 10) || 0;
+        const diff = newQtyLeft - (Number(old.quantity_left) || 0);
+
+        const payload = {
+          batch_number: form.batch_number.value.trim() || null,
+          batch_barcode: form.batch_barcode.value.trim() || null,
+          quantity_in: parseInt(form.quantity_in.value, 10) || 0,
+          quantity_left: newQtyLeft,
+          cost_price: Refad.toNum(form.cost_price.value),
+          sale_price: Refad.toNum(form.sale_price.value),
+          expiry_date: form.expiry_date.value || null
+        };
+
+        const notes = form.adjustment_notes.value.trim();
+
+        try {
+          await Refad.db.update('batches', batchId, payload);
+
+          // سجّل حركة التسوية لو تغيرت الكمية
+          if (diff !== 0) {
+            await Refad.db.insert('inventory_movements', {
+              company_id: session.company_id,
+              product_id: productId,
+              batch_id: batchId,
+              movement_type: 'adjust',
+              reference_type: 'batch_edit',
+              reference_id: batchId,
+              quantity: diff,
+              unit_cost: payload.cost_price,
+              balance_after: newQtyLeft,
+              notes: notes || `تعديل كمية التشغيلة (${diff > 0 ? '+' : ''}${diff})`,
+              user_id: session.user_id
+            });
+
+            await Refad.logActivity('edit_batch', 'batches',
+              `تعديل تشغيلة ${payload.batch_number || batchId}: ${diff > 0 ? '+' : ''}${diff}`, batchId);
+          }
+
+          closeAllModals();
+          Refad.toast.success('تم تحديث التشغيلة');
+          await loadRelated();
+        } catch (err) {
+          console.error('[Batch] save failed:', err);
+          Refad.toast.error('فشل الحفظ: ' + err.message);
+        }
       }
 
       // ============================================================
-      // 12) Movements
+      // 17) Merge Modal
       // ============================================================
+      function openMergeModal() {
+        const merged = state.batches.filter(b => b.merged);
+        const body = document.getElementById('mergeModalBody');
+
+        if (!merged.length) {
+          body.innerHTML = '<div class="empty-state"><i data-lucide="git-merge"></i><p>لا توجد تشغيلات متشابهة قابلة للدمج</p></div>';
+          if (window.lucide) lucide.createIcons();
+          document.getElementById('confirmMergeBtn').disabled = true;
+          document.getElementById('mergeModal').classList.add('show');
+          return;
+        }
+
+        body.innerHTML = `
+          <p style="margin-bottom:16px;font-size:13px;color:var(--text-muted);">
+            سيتم دمج التشغيلات التالية بناءً على: آخر 5 أرقام + نفس الشهر + نفس الأسعار.
+            <strong>ملاحظة:</strong> الدمج هنا هو دمج عرض فقط (لا يحذف البيانات الأصلية).
+          </p>
+          ${merged.map(g => `
+            <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:12px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+                <strong style="font-size:14px;">${Refad.escapeHtml(g.batch_number)}</strong>
+                <span class="badge-tag purple">${g.ids.length} تشغيلات</span>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;font-size:12px;">
+                <div><span style="color:var(--text-muted);">الكمية الكلية:</span> <strong>${Refad.format.number(g.quantity_in)}</strong></div>
+                <div><span style="color:var(--text-muted);">المتبقي:</span> <strong>${Refad.format.number(g.quantity_left)}</strong></div>
+                <div><span style="color:var(--text-muted);">سعر الشراء:</span> <strong>${Refad.format.money(g.cost_price)}</strong></div>
+                <div><span style="color:var(--text-muted);">سعر البيع:</span> <strong>${Refad.format.money(g.sale_price)}</strong></div>
+                <div><span style="color:var(--text-muted);">الصلاحية:</span> <strong>${Refad.format.date(g.expiry_date)}</strong></div>
+              </div>
+              <div style="margin-top:10px;font-size:11px;color:var(--text-muted);">
+                الأرقام الأصلية: ${g.batch_numbers.map(n => Refad.escapeHtml(n)).join(' • ')}
+              </div>
+            </div>
+          `).join('')}
+        `;
+
+        document.getElementById('confirmMergeBtn').disabled = false;
+        document.getElementById('mergeModal').classList.add('show');
+        if (window.lucide) lucide.createIcons();
+      }
+
+      async function confirmMerge() {
+        // الدمج هو عرض فقط - لا نحذف البيانات
+        closeAllModals();
+        Refad.toast.success('تم تفعيل العرض المدمج');
+        state.showRawBatches = false;
+        renderBatches();
+      }
+
+      // ============================================================
+      // 18) Movements
+      // ============================================================
+      async function loadMovementReferences(movements) {
+        const references = new Map();
+        const idsByType = new Map();
+        movements.forEach(m => {
+          const type = m.reference_type;
+          if (!type || !m.reference_id) return;
+          if (!idsByType.has(type)) idsByType.set(type, new Set());
+          idsByType.get(type).add(m.reference_id);
+        });
+
+        const invoiceIds = Refad.Session.has('sales.view') ? Array.from(idsByType.get('invoice') || []) : [];
+        const canViewReceipts = Refad.Session.has('purchases.view') || Refad.Session.has('purchases.receive');
+        const receiptIds = canViewReceipts ? Array.from(idsByType.get('receipt') || []) : [];
+
+        const [invoices, receipts] = await Promise.all([
+          invoiceIds.length ? Refad.db.select('sales_invoices', {
+            columns: 'id, invoice_number, customer_id, supplier_id',
+            eq: { company_id: session.company_id }, in: { id: invoiceIds }
+          }) : [],
+          receiptIds.length ? Refad.db.select('receipts', {
+            columns: 'id, receipt_number, invoice_number, supplier_id',
+            eq: { company_id: session.company_id }, in: { id: receiptIds }
+          }) : []
+        ]);
+
+        const customerIds = [...new Set(invoices.map(r => r.customer_id).filter(Boolean))];
+        const supplierIds = [...new Set([
+          ...invoices.map(r => r.supplier_id),
+          ...receipts.map(r => r.supplier_id)
+        ].filter(Boolean))];
+
+        const [customers, suppliers] = await Promise.all([
+          customerIds.length ? Refad.db.select('customers', {
+            columns: 'id, name', eq: { company_id: session.company_id }, in: { id: customerIds }
+          }) : [],
+          supplierIds.length ? Refad.db.select('suppliers', {
+            columns: 'id, name', eq: { company_id: session.company_id }, in: { id: supplierIds }
+          }) : []
+        ]);
+
+        const customerById = new Map(customers.map(r => [String(r.id), r.name]));
+        const supplierById = new Map(suppliers.map(r => [String(r.id), r.name]));
+
+        invoices.forEach(r => references.set(`invoice:${r.id}`, {
+          number: r.invoice_number,
+          party: r.supplier_id ? supplierById.get(String(r.supplier_id)) : customerById.get(String(r.customer_id)),
+          href: `invoices.html?id=${r.id}`
+        }));
+        receipts.forEach(r => references.set(`receipt:${r.id}`, {
+          number: r.invoice_number || r.receipt_number,
+          party: supplierById.get(String(r.supplier_id)),
+          href: `receipt-form.html?id=${r.id}`
+        }));
+
+        state.movementReferences = references;
+      }
+
       function renderMovements() {
         const body = document.getElementById('movementsBody');
         if (!state.movements.length) {
@@ -1810,8 +2636,9 @@
           const t = TYPES[m.movement_type] || { label: m.movement_type, cls: 'gray' };
           const reference = state.movementReferences.get(`${m.reference_type}:${m.reference_id}`);
           const referenceLabel = reference
-            ? `<a class="movement-invoice-link" href="${reference.href}">${Refad.escapeHtml(reference.number || 'فتح الفاتورة')}</a>`
+            ? `<a class="movement-invoice-link" href="${reference.href}">${Refad.escapeHtml(reference.number || 'فتح')}</a>`
             : `${Refad.escapeHtml(m.reference_type || '—')} ${m.reference_id ? '#' + m.reference_id : ''}`;
+
           return `
             <tr ${reference ? `data-movement-href="${reference.href}" tabindex="0" style="cursor:pointer"` : ''}>
               <td>${Refad.format.datetime(m.created_at)}</td>
@@ -1826,7 +2653,48 @@
       }
 
       // ============================================================
-      // 13) Edit product
+      // 19) Returns
+      // ============================================================
+      function renderReturns() {
+        const body = document.getElementById('returnsBody');
+        if (!state.returns.length) {
+          body.innerHTML = `
+            <tr class="empty-row" style="border:none;">
+              <td colspan="7">
+                <div class="empty-state">
+                  <i data-lucide="undo-2"></i>
+                  <p>لا توجد مرتجعات لهذا المنتج</p>
+                </div>
+              </td>
+            </tr>`;
+          if (window.lucide) lucide.createIcons();
+          return;
+        }
+
+        const TYPES = {
+          'sale_return': { label: 'مرتجع بيع', cls: 'blue' },
+          'purchase_return': { label: 'مرتجع شراء', cls: 'gold' },
+          'return': { label: 'مرتجع', cls: 'blue' }
+        };
+
+        body.innerHTML = state.returns.map(r => {
+          const t = TYPES[r.type] || { label: r.type || 'مرتجع', cls: 'gray' };
+          return `
+            <tr>
+              <td>${Refad.format.datetime(r.date)}</td>
+              <td><span class="badge-tag ${t.cls}">${Refad.escapeHtml(t.label)}</span></td>
+              <td><strong>${Refad.format.number(r.quantity)}</strong></td>
+              <td>${Refad.format.money(r.price)}</td>
+              <td>${Refad.format.money(r.total)}</td>
+              <td>${r.reference ? '#' + r.reference : '—'}</td>
+              <td>${Refad.escapeHtml(r.reason || '—')}</td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      // ============================================================
+      // 20) Edit product
       // ============================================================
       function openEditModal() {
         const p = state.product;
@@ -1870,24 +2738,19 @@
       }
 
       // ============================================================
-      // 14) Modal helpers
+      // 21) Modal helpers
       // ============================================================
       function closeAllModals() {
         document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.remove('show'));
       }
 
       function setupModals() {
-        // إغلاق بـ data-close
         document.querySelectorAll('[data-close]').forEach(btn => {
           btn.addEventListener('click', closeAllModals);
         });
-
-        // إغلاق بـ ESC
         document.addEventListener('keydown', e => {
           if (e.key === 'Escape') closeAllModals();
         });
-
-        // إغلاق بالضغط على الخلفية
         document.querySelectorAll('.modal-backdrop').forEach(m => {
           m.addEventListener('click', e => {
             if (e.target === m) closeAllModals();
@@ -1896,7 +2759,7 @@
       }
 
       // ============================================================
-      // 15) Tabs
+      // 22) Tabs
       // ============================================================
       function setupTabs() {
         document.querySelectorAll('.tab').forEach(tab => {
@@ -1911,37 +2774,33 @@
       }
 
       // ============================================================
-      // 16) Events
+      // 23) Events
       // ============================================================
       function bindEvents() {
         document.getElementById('editProductBtn').addEventListener('click', openEditModal);
         document.getElementById('editForm').addEventListener('submit', saveEdit);
+
         const movementsBody = document.getElementById('movementsBody');
         movementsBody.addEventListener('click', event => {
           const row = event.target.closest('[data-movement-href]');
           if (row && !event.target.closest('a')) window.location.href = row.dataset.movementHref;
-        });
-        movementsBody.addEventListener('keydown', event => {
-          const row = event.target.closest('[data-movement-href]');
-          if (row && event.target === row && (event.key === 'Enter' || event.key === ' ')) {
-            event.preventDefault();
-            window.location.href = row.dataset.movementHref;
-          }
         });
 
         document.getElementById('editPurchaseDiscount').addEventListener('click', () => openDiscountModal('purchase'));
         document.getElementById('editSaleDiscount').addEventListener('click', () => openDiscountModal('sale'));
         document.getElementById('discountForm').addEventListener('submit', saveDiscount);
 
-        document.getElementById('addBarcodeBtn').addEventListener('click', openBarcodeModal);
+        document.getElementById('addBarcodeBtn').addEventListener('click', () => openBarcodeModal());
         document.getElementById('barcodeForm').addEventListener('submit', saveBarcode);
 
         document.getElementById('barcodesBody').addEventListener('click', e => {
           const btn = e.target.closest('[data-barcode-action]');
           if (!btn) return;
           const id = parseInt(btn.dataset.id, 10);
-          if (btn.dataset.barcodeAction === 'print') printBarcode(id);
-          else if (btn.dataset.barcodeAction === 'delete') deleteBarcode(id);
+          const action = btn.dataset.barcodeAction;
+          if (action === 'print') printBarcode(id);
+          else if (action === 'delete') deleteBarcode(id);
+          else if (action === 'edit') openBarcodeModal(id);
         });
 
         document.getElementById('printBarcodeBtn').addEventListener('click', () => {
@@ -1952,16 +2811,38 @@
           printBarcode(state.barcodes[0].id);
         });
 
-        // إخفاء أزرار التعديل لو مفيش صلاحية
+        // Batches
+        document.getElementById('batchesBody').addEventListener('click', e => {
+          const btn = e.target.closest('[data-batch-action]');
+          if (!btn) return;
+          const id = parseInt(btn.dataset.id, 10);
+          if (btn.dataset.batchAction === 'edit') openBatchModal(id);
+        });
+
+        document.getElementById('batchForm').addEventListener('submit', saveBatch);
+
+        document.getElementById('mergeBatchesBtn').addEventListener('click', openMergeModal);
+        document.getElementById('confirmMergeBtn').addEventListener('click', confirmMerge);
+
+        document.getElementById('showRawBatchesBtn').addEventListener('click', () => {
+          state.showRawBatches = !state.showRawBatches;
+          document.getElementById('showRawBatchesBtn').innerHTML = state.showRawBatches
+            ? '<i data-lucide="git-merge"></i> عرض مدمج'
+            : '<i data-lucide="list"></i> عرض خام';
+          if (window.lucide) lucide.createIcons();
+          renderBatches();
+        });
+
         if (!canEdit) {
           document.getElementById('editProductBtn').style.display = 'none';
           document.getElementById('editPurchaseDiscount').style.display = 'none';
           document.getElementById('editSaleDiscount').style.display = 'none';
+          document.getElementById('mergeBatchesBtn').style.display = 'none';
         }
       }
 
       // ============================================================
-      // 17) Init
+      // 24) Init
       // ============================================================
       async function init() {
         buildSidebar();

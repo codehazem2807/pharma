@@ -333,7 +333,7 @@
             padding: 6px;
             text-align: center;
             page-break-inside: avoid;
-          }
+          } 
           .label-name { font-size: 11px; font-weight: 700; margin-bottom: 4px; }
           .label-price { font-size: 13px; font-weight: 800; color: #14B8A6; }
           .label-barcode { max-width: 100%; height: auto; }

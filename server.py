@@ -1,7 +1,7 @@
 import http.server
 import socketserver
 port = 8282
-ip='172.30.64.1'
+ip='192.168.1.18'
 Handler = http.server.SimpleHTTPRequestHandler
 server = socketserver.TCPServer((ip , port),Handler)
 def run():

@@ -19,6 +19,7 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -38,6 +39,7 @@
       --success: #10b981;
       --warning: #f59e0b;
       --info: #3b82f6;
+      --purple: #8b5cf6;
       --sidebar-bg: #0B2C4D;
       --sidebar-text: #cbd5e1;
       --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
@@ -69,9 +71,7 @@
 
     body { display: flex; min-height: 100vh; overflow-x: hidden; }
 
-    /* ============================================================
-       Sidebar
-       ============================================================ */
+    /* Sidebar */
     .sidebar {
       width: var(--sidebar-w);
       height: 100vh;
@@ -142,9 +142,7 @@
     .nav-item .badge.teal { background: var(--accent); }
     .nav-item .badge.gold { background: var(--gold); }
 
-    /* ============================================================
-       Main
-       ============================================================ */
+    /* Main */
     .main { flex: 1; margin-right: var(--sidebar-w); min-width: 0; display: flex; flex-direction: column; }
 
     .topbar {
@@ -226,9 +224,7 @@
     .dropdown-item i { width: 16px; height: 16px; }
     .dropdown-divider { height: 1px; background: var(--border); margin: 6px 0; }
 
-    /* ============================================================
-       Content
-       ============================================================ */
+    /* Content */
     .content { padding: 24px; flex: 1; }
 
     .page-head {
@@ -272,7 +268,7 @@
     /* Mini stats */
     .mini-stats {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
       gap: 12px;
       margin-bottom: 20px;
     }
@@ -305,10 +301,12 @@
     .mini-icon.gold   { background: linear-gradient(135deg, #F59E0B, #d97706); }
     .mini-icon.green  { background: linear-gradient(135deg, #10b981, #047857); }
     .mini-icon.red    { background: linear-gradient(135deg, #ef4444, #b91c1c); }
+    .mini-icon.purple { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
 
     .mini-body { flex: 1; min-width: 0; }
     .mini-body .label { font-size: 11px; color: var(--text-muted); font-weight: 600; margin-bottom: 2px; }
     .mini-body .value { font-size: 18px; font-weight: 800; color: var(--text); line-height: 1; }
+    .mini-body .sub { font-size: 10px; color: var(--text-muted); margin-top: 3px; }
 
     /* Toolbar */
     .toolbar {
@@ -370,6 +368,65 @@
       pointer-events: none;
     }
 
+    /* Advanced filters */
+    .filters-advanced {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .date-range-group {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+    .date-range-group label {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .date-range-group input[type="date"] {
+      padding: 8px 10px;
+      font-family: inherit;
+      font-size: 13px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      outline: none;
+    }
+    .date-range-group input[type="date"]:focus {
+      border-color: var(--accent);
+      background: var(--card);
+    }
+
+    .quick-filters {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .quick-filter-btn {
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+    .quick-filter-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .quick-filter-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+
     /* Table */
     .table-wrap {
       background: var(--card);
@@ -385,7 +442,7 @@
       width: 100%;
       border-collapse: collapse;
       font-size: 14px;
-      min-width: 900px;
+      min-width: 1000px;
     }
 
     thead { background: var(--bg); border-bottom: 1px solid var(--border); }
@@ -406,6 +463,8 @@
     tbody tr:hover { background: var(--bg); }
     tbody tr.receipt-clickable-row { cursor: pointer; }
     tbody tr.receipt-clickable-row:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
+    tbody tr.row-locked { background: rgba(245,158,11,0.03); }
+    tbody tr.row-locked:hover { background: rgba(245,158,11,0.06); }
 
     td { padding: 14px 16px; color: var(--text); vertical-align: middle; }
 
@@ -415,8 +474,12 @@
       cursor: pointer;
       font-family: 'Courier New', monospace;
       letter-spacing: 0.5px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
     }
     .receipt-number:hover { text-decoration: underline; }
+    .receipt-number .lock-icon { width: 12px; height: 12px; color: var(--gold); }
 
     .supplier-name-cell { font-weight: 600; color: var(--text); }
     .supplier-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
@@ -424,6 +487,21 @@
     .money-cell { font-weight: 700; }
     .money-cell.paid { color: var(--success); }
     .money-cell.unpaid { color: var(--danger); }
+
+    .progress-mini {
+      height: 4px;
+      background: var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 6px;
+      min-width: 60px;
+    }
+    .progress-mini > div {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--primary));
+      border-radius: 4px;
+      transition: width 0.3s;
+    }
 
     .badge-tag {
       display: inline-flex;
@@ -440,6 +518,7 @@
     .badge-tag.gold   { background: rgba(245,158,11,0.12); color: var(--warning); }
     .badge-tag.gray   { background: rgba(148,163,184,0.15); color: var(--text-muted); }
     .badge-tag.blue   { background: rgba(59,130,246,0.12); color: var(--info); }
+    .badge-tag.purple { background: rgba(139,92,246,0.12); color: var(--purple); }
 
     .actions-cell { display: flex; gap: 6px; justify-content: flex-end; }
 
@@ -462,7 +541,7 @@
 
     .empty-row td { padding: 60px 20px; text-align: center; color: var(--text-muted); }
     .empty-row i { width: 48px; height: 48px; opacity: 0.4; margin-bottom: 10px; }
-    .empty-row p { font-size: 14px; font-weight: 500; }
+    .empty-row p { font-size: 14px; font-weight: 500; margin-bottom: 14px; }
 
     .skeleton-row td { padding: 18px 16px; }
     .skeleton-bar {
@@ -504,12 +583,179 @@
       font-weight: 600;
       cursor: pointer;
       transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
     }
     .page-btn:hover:not(:disabled):not(.active) { border-color: var(--accent); color: var(--accent); }
     .page-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
     .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        /* Side Panel */
+    .side-panel-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(11, 44, 77, 0.5);
+      backdrop-filter: blur(4px);
+      z-index: 250;
+      display: none;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .side-panel-backdrop.show { display: block; opacity: 1; }
 
-    /* Modal with scroll */
+    .side-panel {
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 540px;
+      max-width: 92vw;
+      background: var(--card);
+      box-shadow: 4px 0 24px rgba(0,0,0,0.15);
+      z-index: 251;
+      transform: translateX(-100%);
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .side-panel.show { transform: translateX(0); }
+
+    .side-panel-header {
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-shrink: 0;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      color: white;
+    }
+    .side-panel-header h3 {
+      font-size: 16px;
+      font-weight: 700;
+      color: white;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .side-panel-header h3 i { width: 18px; height: 18px; }
+    .side-panel-header .modal-close { color: rgba(255,255,255,0.8); }
+    .side-panel-header .modal-close:hover { background: rgba(255,255,255,0.15); color: white; }
+
+    .side-panel-body {
+      padding: 20px;
+      overflow-y: auto;
+      flex: 1;
+      min-height: 0;
+    }
+    .side-panel-body::-webkit-scrollbar { width: 8px; }
+    .side-panel-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+
+    .detail-section {
+      margin-bottom: 22px;
+    }
+    .detail-section-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 10px;
+      padding-bottom: 6px;
+      border-bottom: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .detail-section-title i { width: 14px; height: 14px; color: var(--accent); }
+
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      font-size: 13px;
+      border-bottom: 1px dashed var(--border);
+    }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-row .lbl { color: var(--text-muted); font-weight: 600; }
+    .detail-row .val { color: var(--text); font-weight: 700; text-align: left; }
+    .detail-row .val.success { color: var(--success); }
+    .detail-row .val.danger { color: var(--danger); }
+    .detail-row .val.gold { color: var(--gold); }
+
+    .detail-items-list {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px;
+      max-height: 320px;
+      overflow-y: auto;
+    }
+    .detail-item-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+    }
+    .detail-item-row:last-child { border-bottom: none; }
+    .detail-item-row .item-name {
+      flex: 1;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .detail-item-row .item-sub {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+    .detail-item-row .item-qty {
+      background: var(--accent);
+      color: white;
+      padding: 3px 10px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 700;
+      min-width: 40px;
+      text-align: center;
+    }
+    .detail-item-row.is-return .item-qty { background: var(--gold); }
+
+    /* Panel summary cards */
+    .panel-summary-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+    .panel-summary-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px;
+      text-align: center;
+    }
+    .panel-summary-card .label {
+      font-size: 10px;
+      color: var(--text-muted);
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .panel-summary-card .value {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--text);
+    }
+    .panel-summary-card .value.accent { color: var(--accent); }
+    .panel-summary-card .value.gold { color: var(--gold); }
+    .panel-summary-card .value.success { color: var(--success); }
+    .panel-summary-card .value.danger { color: var(--danger); }
+
+    /* Modal */
     .modal-backdrop {
       position: fixed;
       inset: 0;
@@ -568,19 +814,14 @@
     .modal-close:hover { background: var(--bg); color: var(--danger); }
     .modal-close i { width: 18px; height: 18px; }
 
-    /* ⭐ السكرول */
     .modal-body {
       padding: 20px;
       overflow-y: auto;
       flex: 1;
       min-height: 0;
-      scrollbar-width: thin;
-      scrollbar-color: var(--border) transparent;
     }
     .modal-body::-webkit-scrollbar { width: 8px; }
-    .modal-body::-webkit-scrollbar-track { background: transparent; }
     .modal-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
-    .modal-body::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
 
     .modal-footer {
       padding: 14px 20px;
@@ -592,53 +833,7 @@
       flex-shrink: 0;
     }
 
-    /* Form */
-    .form-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 14px;
-    }
-
-    .form-group { display: flex; flex-direction: column; }
-    .form-group.full { grid-column: 1 / -1; }
-
-    .form-group label {
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--text);
-      margin-bottom: 6px;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-    .form-group label .req { color: var(--danger); }
-
-    .form-group input,
-    .form-group select,
-    .form-group textarea {
-      padding: 10px 12px;
-      font-family: inherit;
-      font-size: 14px;
-      background: var(--bg);
-      border: 1.5px solid var(--border);
-      border-radius: var(--radius-sm);
-      color: var(--text);
-      outline: none;
-      transition: all 0.2s;
-      width: 100%;
-    }
-
-    .form-group textarea { resize: vertical; min-height: 70px; }
-
-    .form-group input:focus,
-    .form-group select:focus,
-    .form-group textarea:focus {
-      border-color: var(--accent);
-      background: var(--card);
-      box-shadow: 0 0 0 3px rgba(20,184,166,0.1);
-    }
-
-    /* Overlay (mobile) */
+    /* Overlay mobile */
     .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; opacity: 0; transition: opacity 0.3s; }
     .overlay.show { display: block; opacity: 1; }
 
@@ -658,10 +853,19 @@
       .page-head { flex-direction: column; align-items: stretch; }
       .page-head h1 { font-size: 20px; }
       .toolbar { padding: 12px; }
+      .filters-advanced { padding: 10px; }
       .search-input { min-width: 100%; }
-      .form-grid { grid-template-columns: 1fr; }
       .modal-footer { flex-direction: column-reverse; }
       .modal-footer .btn { width: 100%; justify-content: center; }
+      .panel-summary-grid { grid-template-columns: 1fr; }
+      .side-panel {
+        width: 100%;
+        max-width: 100%;
+        top: auto;
+        height: 85vh;
+        transform: translateY(100%);
+      }
+      .side-panel.show { transform: translateY(0); }
     }
   </style>
 </head>
@@ -724,6 +928,9 @@
           <p>إدارة فواتير الاستلام والتشغيلات</p>
         </div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn btn-outline" id="refreshBtn">
+            <i data-lucide="refresh-cw"></i> تحديث
+          </button>
           <button class="btn btn-outline" id="exportBtn">
             <i data-lucide="download"></i> تصدير
           </button>
@@ -740,6 +947,7 @@
           <div class="mini-body">
             <div class="label">إجمالي الاستلامات</div>
             <div class="value" id="statTotal">—</div>
+            <div class="sub" id="statTotalSub">—</div>
           </div>
         </div>
         <div class="mini-card">
@@ -747,6 +955,7 @@
           <div class="mini-body">
             <div class="label">مكتمل</div>
             <div class="value" id="statCompleted">—</div>
+            <div class="sub" id="statCompletedSub">—</div>
           </div>
         </div>
         <div class="mini-card">
@@ -754,6 +963,7 @@
           <div class="mini-body">
             <div class="label">جزئي</div>
             <div class="value" id="statPartial">—</div>
+            <div class="sub" id="statPartialSub">—</div>
           </div>
         </div>
         <div class="mini-card">
@@ -761,6 +971,7 @@
           <div class="mini-body">
             <div class="label">معلق</div>
             <div class="value" id="statPending">—</div>
+            <div class="sub" id="statPendingSub">—</div>
           </div>
         </div>
         <div class="mini-card">
@@ -768,6 +979,7 @@
           <div class="mini-body">
             <div class="label">إجمالي القيمة</div>
             <div class="value" id="statValue">—</div>
+            <div class="sub" id="statValueSub">—</div>
           </div>
         </div>
         <div class="mini-card">
@@ -775,6 +987,15 @@
           <div class="mini-body">
             <div class="label">المتبقي للموردين</div>
             <div class="value" id="statDue">—</div>
+            <div class="sub" id="statDueSub">—</div>
+          </div>
+        </div>
+        <div class="mini-card">
+          <div class="mini-icon purple"><i data-lucide="lock"></i></div>
+          <div class="mini-body">
+            <div class="label">فواتير مقفلة</div>
+            <div class="value" id="statLocked">—</div>
+            <div class="sub" id="statLockedSub">—</div>
           </div>
         </div>
       </div>
@@ -801,6 +1022,27 @@
         </div>
       </div>
 
+      <!-- Advanced Filters -->
+      <div class="filters-advanced">
+        <div class="quick-filters">
+          <button type="button" class="quick-filter-btn active" data-quick="all">الكل</button>
+          <button type="button" class="quick-filter-btn" data-quick="today">اليوم</button>
+          <button type="button" class="quick-filter-btn" data-quick="week">آخر 7 أيام</button>
+          <button type="button" class="quick-filter-btn" data-quick="month">هذا الشهر</button>
+          <button type="button" class="quick-filter-btn" data-quick="unpaid">غير مسدد</button>
+          <button type="button" class="quick-filter-btn" data-quick="locked">مقفلة</button>
+        </div>
+        <div class="date-range-group">
+          <label>من:</label>
+          <input type="date" id="dateFrom">
+          <label>إلى:</label>
+          <input type="date" id="dateTo">
+        </div>
+        <button type="button" class="btn btn-outline btn-sm" id="clearFiltersBtn">
+          <i data-lucide="x"></i> مسح الفلاتر
+        </button>
+      </div>
+
       <!-- Table -->
       <div class="table-wrap">
         <div class="table-scroll">
@@ -810,7 +1052,7 @@
                 <th>رقم الفاتورة</th>
                 <th>المورد</th>
                 <th>التاريخ</th>
-                <th>الأصناف المستلمة</th>
+                <th>الأصناف</th>
                 <th>الإجمالي</th>
                 <th>المدفوع</th>
                 <th>المتبقي</th>
@@ -827,9 +1069,19 @@
     </main>
   </div>
 
+  <!-- Side Panel: Receipt Details -->
+  <div class="side-panel-backdrop" id="panelBackdrop"></div>
+  <aside class="side-panel" id="detailPanel">
+    <div class="side-panel-header">
+      <h3><i data-lucide="package-check"></i> تفاصيل الفاتورة</h3>
+      <button class="modal-close" id="closePanelBtn"><i data-lucide="x"></i></button>
+    </div>
+    <div class="side-panel-body" id="panelBody"></div>
+  </aside>
+
   <script src="refad-core.js"></script>
   <script src="refad-auth.js"></script>
-  <script>
+    <script>
     (function () {
       'use strict';
 
@@ -843,7 +1095,7 @@
       const canDelete = Refad.Session.has('purchases.edit');
 
       // ============================================================
-      // 2) Sidebar
+      // 2) Sidebar MENU
       // ============================================================
       const MENU = [
         { section: 'الرئيسية', items: [
@@ -973,11 +1225,15 @@
         search: '',
         filterStatus: '',
         filterSupplier: '',
-        loadError: ''
+        quickFilter: 'all',
+        dateFrom: '',
+        dateTo: '',
+        loadError: '',
+        selectedReceipt: null
       };
 
       // ============================================================
-      // 5) Load suppliers for filter
+      // 5) Load suppliers filter
       // ============================================================
       async function loadSuppliersFilter() {
         try {
@@ -1000,24 +1256,130 @@
       }
 
       // ============================================================
-      // 6) Load receipts
+      // 6) Load receipts — TWO-STEP (no embedding)
       // ============================================================
       async function loadReceipts(silent) {
         state.loadError = '';
         if (!silent) renderSkeleton();
+
         try {
-          const rows = await Refad.db.select('receipts', {
-            columns: `id, receipt_number, invoice_number, receipt_date, total_amount, paid_amount, status, notes,
-                      suppliers(id, name, phone),
-                        purchase_requests(id, request_number),
-                        receipt_items(id, quantity, products(name))`,
-            eq: { company_id: session.company_id },
-            order: { column: 'created_at', ascending: false },
-            limit: 500
+          // ----------------------------------------------------------
+          // Step 1: جلب الفواتير (بدون receipt_items)
+          // ----------------------------------------------------------
+          let receipts;
+          try {
+            receipts = await Refad.db.select('receipts', {
+              columns: `id, receipt_number, invoice_number, receipt_date, total_amount, 
+                        paid_amount, status, notes, is_locked, locked_at,
+                        supplier_id, request_id`,
+              eq: { company_id: session.company_id },
+              order: { column: 'created_at', ascending: false },
+              limit: 500
+            });
+          } catch (e) {
+            // Fallback: بدون is_locked
+            if (/is_locked/i.test(e.message || '')) {
+              receipts = await Refad.db.select('receipts', {
+                columns: `id, receipt_number, invoice_number, receipt_date, total_amount, 
+                          paid_amount, status, notes,
+                          supplier_id, request_id`,
+                eq: { company_id: session.company_id },
+                order: { column: 'created_at', ascending: false },
+                limit: 500
+              });
+              Refad.toast.warning('عمود is_locked غير موجود — بعض الميزات معطلة');
+            } else {
+              throw e;
+            }
+          }
+
+          // ----------------------------------------------------------
+          // Step 2: جلب الموردين وطلبات الشراء يدوياً
+          // ----------------------------------------------------------
+          const supplierIds = [...new Set(receipts.map(r => r.supplier_id).filter(Boolean))];
+          const requestIds = [...new Set(receipts.map(r => r.request_id).filter(Boolean))];
+
+          let suppliers = [];
+          let purchaseRequests = [];
+
+          if (supplierIds.length) {
+            suppliers = await Refad.db.select('suppliers', {
+              columns: 'id, name, phone',
+              eq: { company_id: session.company_id },
+              in: { id: supplierIds }
+            }).catch(() => []);
+          }
+
+          if (requestIds.length) {
+            purchaseRequests = await Refad.db.select('purchase_requests', {
+              columns: 'id, request_number',
+              in: { id: requestIds }
+            }).catch(() => []);
+          }
+
+          const supplierById = new Map(suppliers.map(s => [String(s.id), s]));
+          const requestById = new Map(purchaseRequests.map(p => [String(p.id), p]));
+
+          // ----------------------------------------------------------
+          // Step 3: جلب كل الأصناف لهذه الفواتير
+          // ----------------------------------------------------------
+          let allItems = [];
+          if (receipts.length) {
+            const ids = receipts.map(r => r.id);
+            try {
+              allItems = await Refad.db.select('receipt_items', {
+                columns: 'id, receipt_id, quantity, item_type, product_id',
+                in: { receipt_id: ids }
+              });
+            } catch (e) {
+              // Fallback: بدون item_type
+              if (/item_type/i.test(e.message || '')) {
+                allItems = await Refad.db.select('receipt_items', {
+                  columns: 'id, receipt_id, quantity, product_id',
+                  in: { receipt_id: ids }
+                }).catch(() => []);
+              } else {
+                allItems = [];
+              }
+            }
+          }
+
+          // ----------------------------------------------------------
+          // Step 4: جلب أسماء الأصناف (Products)
+          // ----------------------------------------------------------
+          const productIds = [...new Set(allItems.map(i => i.product_id).filter(Boolean))];
+          let products = [];
+          if (productIds.length) {
+            products = await Refad.db.select('products', {
+              columns: 'id, name',
+              in: { id: productIds }
+            }).catch(() => []);
+          }
+          const productById = new Map(products.map(p => [String(p.id), p]));
+
+          // ----------------------------------------------------------
+          // Step 5: ربط كل شيء
+          // ----------------------------------------------------------
+          const itemsByReceipt = new Map();
+          allItems.forEach(item => {
+            const key = String(item.receipt_id);
+            if (!itemsByReceipt.has(key)) itemsByReceipt.set(key, []);
+            itemsByReceipt.get(key).push({
+              ...item,
+              products: productById.get(String(item.product_id)) || null
+            });
           });
-          state.all = rows;
+
+          state.all = receipts.map(r => ({
+            ...r,
+            suppliers: supplierById.get(String(r.supplier_id)) || null,
+            purchase_requests: requestById.get(String(r.request_id)) || null,
+            receipt_items: itemsByReceipt.get(String(r.id)) || []
+          }));
+
           applyFilters();
           renderStats();
+
         } catch (e) {
           console.error('[Receipts] load failed:', e);
           Refad.toast.error('تعذّر التحميل: ' + e.message);
@@ -1026,12 +1388,18 @@
         }
       }
 
+      // ============================================================
+      // 7) Stats
+      // ============================================================
       function renderStats() {
         const total = state.all.length;
         const completed = state.all.filter(r => r.status === 'completed').length;
         const partial = state.all.filter(r => r.status === 'partial').length;
         const pending = state.all.filter(r => r.status === 'pending').length;
+        const locked = state.all.filter(r => r.is_locked === true).length;
+
         const totalValue = state.all.reduce((s, r) => s + (Number(r.total_amount) || 0), 0);
+        const totalPaid = state.all.reduce((s, r) => s + (Number(r.paid_amount) || 0), 0);
         const totalDue = state.all.reduce((s, r) =>
           s + Math.max(0, (Number(r.total_amount) || 0) - (Number(r.paid_amount) || 0)), 0);
 
@@ -1041,16 +1409,48 @@
         document.getElementById('statPending').textContent = Refad.format.number(pending);
         document.getElementById('statValue').textContent = Refad.format.money(totalValue);
         document.getElementById('statDue').textContent = Refad.format.money(totalDue);
+        document.getElementById('statLocked').textContent = Refad.format.number(locked);
+
+        // Sub texts
+        const totalItems = state.all.reduce((s, r) => s + ((r.receipt_items || []).length), 0);
+        document.getElementById('statTotalSub').textContent = `${Refad.format.number(totalItems)} صنف`;
+        document.getElementById('statCompletedSub').textContent = total ? Math.round((completed / total) * 100) + '%' : '—';
+        document.getElementById('statPartialSub').textContent = total ? Math.round((partial / total) * 100) + '%' : '—';
+        document.getElementById('statPendingSub').textContent = total ? Math.round((pending / total) * 100) + '%' : '—';
+        document.getElementById('statValueSub').textContent = `مدفوع: ${Refad.format.money(totalPaid)}`;
+        document.getElementById('statDueSub').textContent = totalValue > 0 ? Math.round((totalDue / totalValue) * 100) + '% من الإجمالي' : '—';
+        document.getElementById('statLockedSub').textContent = total ? Math.round((locked / total) * 100) + '% من الفواتير' : '—';
       }
 
       // ============================================================
-      // 7) Filters + Pagination
+      // 8) Filters
       // ============================================================
       function applyFilters() {
         const q = state.search.toLowerCase().trim();
+        const today = Refad.date.today();
+
         state.filtered = state.all.filter(r => {
           if (state.filterStatus && r.status !== state.filterStatus) return false;
           if (state.filterSupplier && String(r.suppliers?.id) !== String(state.filterSupplier)) return false;
+
+          if (state.dateFrom && r.receipt_date < state.dateFrom) return false;
+          if (state.dateTo && r.receipt_date > state.dateTo) return false;
+
+          if (state.quickFilter === 'today' && r.receipt_date !== today) return false;
+          if (state.quickFilter === 'week') {
+            const weekAgo = Refad.date.addDays(today, -7);
+            if (r.receipt_date < weekAgo) return false;
+          }
+          if (state.quickFilter === 'month') {
+            const monthStart = Refad.date.startOfMonth();
+            if (r.receipt_date < monthStart) return false;
+          }
+          if (state.quickFilter === 'unpaid') {
+            const remaining = (Number(r.total_amount) || 0) - (Number(r.paid_amount) || 0);
+            if (remaining <= 0) return false;
+          }
+          if (state.quickFilter === 'locked' && r.is_locked !== true) return false;
+
           if (!q) return true;
           return (
             (r.receipt_number || '').toLowerCase().includes(q) ||
@@ -1061,10 +1461,14 @@
             (r.notes || '').toLowerCase().includes(q)
           );
         });
+
         state.page = 1;
         renderTable();
       }
 
+      // ============================================================
+      // 9) Skeleton
+      // ============================================================
       function renderSkeleton() {
         const tbody = document.getElementById('tableBody');
         tbody.innerHTML = Array(6).fill(0).map(() => `
@@ -1082,6 +1486,9 @@
         `).join('');
       }
 
+      // ============================================================
+      // 10) Render Table
+      // ============================================================
       function renderTable() {
         const tbody = document.getElementById('tableBody');
         const pag = Refad.paginate(state.filtered, state.page, state.perPage);
@@ -1104,7 +1511,7 @@
           }
           const msg = state.all.length === 0
             ? 'لا توجد استلامات بعد. ابدأ بإنشاء استلام جديد.'
-            : 'لا توجد نتائج مطابقة.';
+            : 'لا توجد نتائج مطابقة للفلاتر الحالية.';
           tbody.innerHTML = `
             <tr class="empty-row">
               <td colspan="9">
@@ -1127,21 +1534,29 @@
 
         tbody.innerHTML = pag.data.map(r => {
           const st = STATUS[r.status] || { label: r.status, cls: 'gray' };
-          const remaining = Math.max(0, (Number(r.total_amount) || 0) - (Number(r.paid_amount) || 0));
+          const totalAmt = Number(r.total_amount) || 0;
+          const paidAmt = Number(r.paid_amount) || 0;
+          const remaining = Math.max(0, totalAmt - paidAmt);
+          const paidPct = totalAmt > 0 ? Math.min(100, (paidAmt / totalAmt) * 100) : 0;
           const remainingCls = remaining > 0 ? 'unpaid' : 'paid';
+          const isLocked = r.is_locked === true;
+
           const items = r.receipt_items || [];
           const itemCount = items.length;
           const totalQty = items.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0);
           const itemNames = items.slice(0, 2).map(item => item.products?.name).filter(Boolean);
+          const hasReturns = items.some(it => it.item_type === 'return');
 
           return `
-            <tr class="receipt-clickable-row" data-open-receipt="${r.id}" tabindex="0" aria-label="فتح فاتورة الشراء ${Refad.escapeHtml(r.receipt_number)}">
+            <tr class="receipt-clickable-row ${isLocked ? 'row-locked' : ''}" data-open-receipt="${r.id}" tabindex="0" aria-label="فتح فاتورة الشراء ${Refad.escapeHtml(r.receipt_number)}">
               <td>
                 <span class="receipt-number">
                   ${Refad.escapeHtml(r.receipt_number)}
+                  ${isLocked ? '<i data-lucide="lock" class="lock-icon" title="مقفلة"></i>' : ''}
                 </span>
                 ${r.invoice_number ? `<div class="supplier-sub">فاتورة: ${Refad.escapeHtml(r.invoice_number)}</div>` : ''}
                 ${r.purchase_requests?.request_number ? `<div class="supplier-sub">طلب شراء: ${Refad.escapeHtml(r.purchase_requests.request_number)}</div>` : ''}
+                ${hasReturns ? `<div class="supplier-sub"><span class="badge-tag gold" style="padding:1px 6px;font-size:9px;">مرتجع</span></div>` : ''}
               </td>
               <td>
                 ${r.suppliers ? `
@@ -1154,16 +1569,23 @@
                 <strong>${Refad.format.number(itemCount)} أصناف</strong>
                 <div class="supplier-sub">${Refad.format.number(totalQty)} وحدة${itemNames.length ? ` • ${itemNames.map(Refad.escapeHtml).join('، ')}` : ''}${itemCount > itemNames.length ? '…' : ''}</div>
               </td>
-              <td class="money-cell">${Refad.format.money(r.total_amount || 0)}</td>
-              <td class="money-cell paid">${Refad.format.money(r.paid_amount || 0)}</td>
+              <td class="money-cell">${Refad.format.money(totalAmt)}</td>
+              <td class="money-cell paid">
+                ${Refad.format.money(paidAmt)}
+                <div class="progress-mini"><div style="width:${paidPct}%"></div></div>
+              </td>
               <td class="money-cell ${remainingCls}">${Refad.format.money(remaining)}</td>
-              <td><span class="badge-tag ${st.cls}">${Refad.escapeHtml(st.label)}</span></td>
+              <td>
+                <span class="badge-tag ${st.cls}">${Refad.escapeHtml(st.label)}</span>
+                ${isLocked ? '<span class="badge-tag gold" style="margin-top:4px;display:inline-flex;"><i data-lucide="lock" style="width:10px;height:10px;"></i> مقفلة</span>' : ''}
+              </td>
               <td>
                 <div class="actions-cell">
-                  <button class="action-btn" data-action="view" data-id="${r.id}" title="عرض">
+                  <button class="action-btn" data-action="view" data-id="${r.id}" title="عرض التفاصيل">
                     <i data-lucide="eye"></i>
                   </button>
-                  ${canDelete ? `<button class="action-btn danger" data-action="delete" data-id="${r.id}" title="حذف"><i data-lucide="trash-2"></i></button>` : ''}
+                  ${!isLocked && canCreate ? `<button class="action-btn" data-action="edit" data-id="${r.id}" title="تعديل"><i data-lucide="pencil"></i></button>` : ''}
+                  ${canDelete && !isLocked ? `<button class="action-btn danger" data-action="delete" data-id="${r.id}" title="حذف"><i data-lucide="trash-2"></i></button>` : ''}
                 </div>
               </td>
             </tr>
@@ -1174,6 +1596,9 @@
         renderPagination(pag);
       }
 
+      // ============================================================
+      // 11) Pagination
+      // ============================================================
       function renderPagination(pag) {
         const el = document.getElementById('pagination');
         const { page, pages, total, perPage } = pag;
@@ -1220,11 +1645,200 @@
 
         if (window.lucide) lucide.createIcons();
       }
+            // ============================================================
+      // 12) Side Panel — Details (Two-step loading)
+      // ============================================================
+      async function openDetailPanel(receiptId) {
+        const r = state.all.find(x => x.id === receiptId);
+        if (!r) return;
+
+        state.selectedReceipt = r;
+        const body = document.getElementById('panelBody');
+        body.innerHTML = `<div style="text-align:center;padding:40px;color:var(--text-muted);">
+          <i data-lucide="loader" style="width:32px;height:32px;animation:spin 1s linear infinite;"></i>
+          <p style="margin-top:10px;">جارٍ التحميل...</p>
+        </div>`;
+        if (window.lucide) lucide.createIcons();
+
+        document.getElementById('panelBackdrop').classList.add('show');
+        document.getElementById('detailPanel').classList.add('show');
+
+        // ----------------------------------------------------------
+        // جلب تفاصيل الأصناف (بدون embedding)
+        // ----------------------------------------------------------
+        let items = [];
+        try {
+          let rawItems;
+          try {
+            rawItems = await Refad.db.select('receipt_items', {
+              columns: `id, product_id, quantity, unit_price, purchase_discount, 
+                        expiry_date, batch_number, batch_barcode, item_type, 
+                        return_reason, total`,
+              eq: { receipt_id: receiptId },
+              order: { column: 'id', ascending: true }
+            });
+          } catch (e) {
+            // Fallback: بدون item_type و batch_barcode
+            if (/item_type|batch_barcode/i.test(e.message || '')) {
+              rawItems = await Refad.db.select('receipt_items', {
+                columns: `id, product_id, quantity, unit_price, purchase_discount, 
+                          expiry_date, batch_number, total`,
+                eq: { receipt_id: receiptId },
+                order: { column: 'id', ascending: true }
+              });
+            } else {
+              throw e;
+            }
+          }
+
+          // جلب المنتجات منفصلة
+          const pids = [...new Set(rawItems.map(i => i.product_id).filter(Boolean))];
+          let productsData = [];
+          if (pids.length) {
+            productsData = await Refad.db.select('products', {
+              columns: 'id, name, name_en, form, unit',
+              in: { id: pids }
+            }).catch(() => []);
+          }
+          const pMap = new Map(productsData.map(p => [String(p.id), p]));
+
+          items = rawItems.map(it => ({
+            ...it,
+            products: pMap.get(String(it.product_id)) || null
+          }));
+        } catch (e) {
+          console.error('Items fetch failed:', e);
+          items = [];
+        }
+
+        // ----------------------------------------------------------
+        // Render Panel
+        // ----------------------------------------------------------
+        const statusMap = {
+          'completed': { label: 'مكتمل', cls: 'green' },
+          'partial': { label: 'جزئي', cls: 'gold' },
+          'pending': { label: 'معلق', cls: 'gray' },
+          'cancelled': { label: 'ملغي', cls: 'red' }
+        };
+        const st = statusMap[r.status] || { label: r.status, cls: 'gray' };
+        const totalAmt = Number(r.total_amount) || 0;
+        const paidAmt = Number(r.paid_amount) || 0;
+        const remaining = Math.max(0, totalAmt - paidAmt);
+
+        const receiptsItems = items.filter(it => it.item_type !== 'return');
+        const returnsItems = items.filter(it => it.item_type === 'return');
+        const returnsValue = returnsItems.reduce((s, it) => s + (Number(it.total) || 0), 0);
+
+        body.innerHTML = `
+          <!-- Summary Cards -->
+          <div class="panel-summary-grid">
+            <div class="panel-summary-card">
+              <div class="label">الإجمالي</div>
+              <div class="value accent">${Refad.format.money(totalAmt)}</div>
+            </div>
+            <div class="panel-summary-card">
+              <div class="label">المدفوع</div>
+              <div class="value success">${Refad.format.money(paidAmt)}</div>
+            </div>
+            <div class="panel-summary-card">
+              <div class="label">المتبقي</div>
+              <div class="value ${remaining > 0 ? 'danger' : ''}">${Refad.format.money(remaining)}</div>
+            </div>
+            <div class="panel-summary-card">
+              <div class="label">المرتجعات</div>
+              <div class="value gold">${Refad.format.money(returnsValue)}</div>
+            </div>
+          </div>
+
+          <!-- Info -->
+          <div class="detail-section">
+            <div class="detail-section-title"><i data-lucide="info"></i> معلومات أساسية</div>
+            <div class="detail-row"><span class="lbl">رقم الفاتورة</span><span class="val">${Refad.escapeHtml(r.receipt_number)}</span></div>
+            ${r.invoice_number ? `<div class="detail-row"><span class="lbl">رقم فاتورة المورد</span><span class="val">${Refad.escapeHtml(r.invoice_number)}</span></div>` : ''}
+            <div class="detail-row"><span class="lbl">التاريخ</span><span class="val">${Refad.format.date(r.receipt_date)}</span></div>
+            <div class="detail-row"><span class="lbl">الحالة</span><span class="val"><span class="badge-tag ${st.cls}">${Refad.escapeHtml(st.label)}</span></span></div>
+            ${r.is_locked ? `<div class="detail-row"><span class="lbl">مقفلة</span><span class="val gold"><i data-lucide="lock" style="width:12px;height:12px;display:inline;"></i> نعم</span></div>` : ''}
+            ${r.purchase_requests?.request_number ? `<div class="detail-row"><span class="lbl">طلب الشراء</span><span class="val">${Refad.escapeHtml(r.purchase_requests.request_number)}</span></div>` : ''}
+          </div>
+
+          <!-- Supplier -->
+          ${r.suppliers ? `
+            <div class="detail-section">
+              <div class="detail-section-title"><i data-lucide="truck"></i> المورد</div>
+              <div class="detail-row"><span class="lbl">الاسم</span><span class="val">${Refad.escapeHtml(r.suppliers.name)}</span></div>
+              ${r.suppliers.phone ? `<div class="detail-row"><span class="lbl">الهاتف</span><span class="val">${Refad.escapeHtml(r.suppliers.phone)}</span></div>` : ''}
+            </div>
+          ` : ''}
+
+          <!-- Notes -->
+          ${r.notes ? `
+            <div class="detail-section">
+              <div class="detail-section-title"><i data-lucide="file-text"></i> ملاحظات</div>
+              <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;font-size:13px;line-height:1.7;">${Refad.escapeHtml(r.notes)}</div>
+            </div>
+          ` : ''}
+
+          <!-- Items -->
+          <div class="detail-section">
+            <div class="detail-section-title"><i data-lucide="package"></i> الأصناف (${items.length})</div>
+            ${items.length ? `
+              <div class="detail-items-list">
+                ${items.map(it => {
+                  const isReturn = it.item_type === 'return';
+                  return `
+                    <div class="detail-item-row ${isReturn ? 'is-return' : ''}">
+                      <div style="flex:1;min-width:0;">
+                        <div class="item-name">${Refad.escapeHtml(it.products?.name || '—')}</div>
+                        <div class="item-sub">
+                          ${it.batch_number ? `تشغيلة: ${Refad.escapeHtml(it.batch_number)}` : ''}
+                          ${it.expiry_date ? ` • صلاحية: ${Refad.format.date(it.expiry_date)}` : ''}
+                          ${it.unit_price ? ` • ${Refad.format.money(it.unit_price)}` : ''}
+                        </div>
+                      </div>
+                      <div class="item-qty">${isReturn ? '-' : ''}${Refad.format.number(it.quantity)}</div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            ` : '<div style="text-align:center;padding:20px;color:var(--text-muted);font-size:13px;">لا توجد أصناف</div>'}
+          </div>
+
+          <!-- Actions -->
+          <div class="detail-section">
+            <div class="detail-section-title"><i data-lucide="zap"></i> إجراءات</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <a href="receipt-form.html?id=${r.id}" class="btn btn-primary btn-sm" style="flex:1;justify-content:center;">
+                <i data-lucide="${r.is_locked ? 'eye' : 'pencil'}"></i>
+                ${r.is_locked ? 'عرض الفاتورة' : 'تعديل الفاتورة'}
+              </a>
+              ${!r.is_locked && canCreate ? `
+                <a href="returns.html?type=purchase&receipt_id=${r.id}" class="btn btn-outline btn-sm" style="flex:1;justify-content:center;">
+                  <i data-lucide="undo-2"></i> إنشاء مرتجع
+                </a>
+              ` : ''}
+            </div>
+          </div>
+        `;
+
+        if (window.lucide) lucide.createIcons();
+      }
+
+      function closeDetailPanel() {
+        document.getElementById('panelBackdrop').classList.remove('show');
+        document.getElementById('detailPanel').classList.remove('show');
+        state.selectedReceipt = null;
+      }
 
       // ============================================================
-      // 8) Delete
+      // 13) Delete
       // ============================================================
       async function deleteReceipt(id, num) {
+        const r = state.all.find(x => x.id === id);
+        if (r?.is_locked) {
+          Refad.toast.error('لا يمكن حذف فاتورة مقفلة');
+          return;
+        }
+
         const ok = await Refad.alert.confirm(
           'حذف الاستلام',
           `هل أنت متأكد من حذف الاستلام "${num}"؟ سيتم حذف كل الأصناف والتشغيلات المرتبطة.`,
@@ -1239,6 +1853,7 @@
           await Refad.db.removeWhere('batches', { receipt_id: id });
           // حذف الاستلام
           await Refad.db.remove('receipts', id);
+
           await Refad.logActivity('delete_receipt', 'receipts', `حذف استلام: ${num}`, id);
           Refad.toast.success('تم الحذف');
           await loadReceipts(true);
@@ -1249,24 +1864,73 @@
       }
 
       // ============================================================
-      // 9) Events
+      // 14) Events
       // ============================================================
       function bindEvents() {
+        // Search
         const searchHandler = Refad.debounce(v => {
           state.search = v;
           applyFilters();
         }, 250);
         document.getElementById('searchInput').addEventListener('input', e => searchHandler(e.target.value));
 
+        // Filters
         document.getElementById('filterStatus').addEventListener('change', e => {
           state.filterStatus = e.target.value;
           applyFilters();
         });
+
         document.getElementById('filterSupplier').addEventListener('change', e => {
           state.filterSupplier = e.target.value;
           applyFilters();
         });
 
+        document.getElementById('dateFrom').addEventListener('change', e => {
+          state.dateFrom = e.target.value;
+          applyFilters();
+        });
+
+        document.getElementById('dateTo').addEventListener('change', e => {
+          state.dateTo = e.target.value;
+          applyFilters();
+        });
+
+        // Quick filters
+        document.querySelectorAll('.quick-filter-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            document.querySelectorAll('.quick-filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            state.quickFilter = btn.dataset.quick;
+            applyFilters();
+          });
+        });
+
+        // Clear filters
+        document.getElementById('clearFiltersBtn').addEventListener('click', () => {
+          state.search = '';
+          state.filterStatus = '';
+          state.filterSupplier = '';
+          state.quickFilter = 'all';
+          state.dateFrom = '';
+          state.dateTo = '';
+          document.getElementById('searchInput').value = '';
+          document.getElementById('filterStatus').value = '';
+          document.getElementById('filterSupplier').value = '';
+          document.getElementById('dateFrom').value = '';
+          document.getElementById('dateTo').value = '';
+          document.querySelectorAll('.quick-filter-btn').forEach(b => b.classList.remove('active'));
+          document.querySelector('.quick-filter-btn[data-quick="all"]').classList.add('active');
+          applyFilters();
+          Refad.toast.info('تم مسح الفلاتر');
+        });
+
+        // Refresh
+        document.getElementById('refreshBtn').addEventListener('click', async () => {
+          await loadReceipts();
+          Refad.toast.success('تم التحديث');
+        });
+
+        // Add
         if (canCreate) {
           document.getElementById('addBtn').addEventListener('click', () => {
             location.href = 'receipt-form.html';
@@ -1277,9 +1941,11 @@
           b.title = 'ليس لديك صلاحية';
         }
 
+        // Table click
         document.getElementById('tableBody').addEventListener('click', e => {
           const btn = e.target.closest('[data-action]');
           if (btn) {
+            e.stopPropagation();
             const action = btn.dataset.action;
             if (action === 'retry') {
               loadReceipts();
@@ -1289,28 +1955,42 @@
             const r = state.all.find(x => x.id === id);
             if (!r) return;
 
-            if (action === 'view') location.href = `receipt-form.html?id=${id}`;
+            if (action === 'view') openDetailPanel(id);
+            else if (action === 'edit') location.href = `receipt-form.html?id=${id}`;
             else if (action === 'delete') deleteReceipt(id, r.receipt_number);
             return;
           }
 
           const row = e.target.closest('[data-open-receipt]');
-          if (row && !e.target.closest('a, input, select, textarea, label')) {
-            location.href = `receipt-form.html?id=${parseInt(row.dataset.openReceipt, 10)}`;
+          if (row) {
+            const id = parseInt(row.dataset.openReceipt, 10);
+            openDetailPanel(id);
           }
         });
+
         document.getElementById('tableBody').addEventListener('keydown', e => {
           const row = e.target.closest('[data-open-receipt]');
           if (row && e.target === row && (e.key === 'Enter' || e.key === ' ')) {
             e.preventDefault();
-            location.href = `receipt-form.html?id=${parseInt(row.dataset.openReceipt, 10)}`;
+            openDetailPanel(parseInt(row.dataset.openReceipt, 10));
           }
+        });
+
+        // Side panel close
+        document.getElementById('closePanelBtn').addEventListener('click', closeDetailPanel);
+        document.getElementById('panelBackdrop').addEventListener('click', closeDetailPanel);
+        document.addEventListener('keydown', e => {
+          if (e.key === 'Escape' && state.selectedReceipt) closeDetailPanel();
         });
 
         // Export
         document.getElementById('exportBtn').addEventListener('click', () => {
           if (!state.filtered.length) {
             Refad.toast.warning('لا توجد بيانات للتصدير');
+            return;
+          }
+          if (typeof XLSX === 'undefined') {
+            Refad.toast.error('مكتبة Excel غير محمّلة');
             return;
           }
           const rows = state.filtered.map(r => ({
@@ -1320,10 +2000,11 @@
             'التاريخ': Refad.format.date(r.receipt_date),
             'عدد الأصناف': (r.receipt_items || []).length,
             'إجمالي الوحدات': (r.receipt_items || []).reduce((sum, item) => sum + (Number(item.quantity) || 0), 0),
-            'الإجمالي': r.total_amount || 0,
-            'المدفوع': r.paid_amount || 0,
-            'المتبقي': (r.total_amount || 0) - (r.paid_amount || 0),
-            'الحالة': r.status
+            'الإجمالي': Number(r.total_amount) || 0,
+            'المدفوع': Number(r.paid_amount) || 0,
+            'المتبقي': Math.max(0, (Number(r.total_amount) || 0) - (Number(r.paid_amount) || 0)),
+            'الحالة': r.status,
+            'مقفلة': r.is_locked ? 'نعم' : 'لا'
           }));
           const ws = XLSX.utils.json_to_sheet(rows);
           const wb = XLSX.utils.book_new();
@@ -1331,10 +2012,34 @@
           XLSX.writeFile(wb, `receipts-${Refad.date.today()}.xlsx`);
           Refad.toast.success('تم التصدير');
         });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', e => {
+          // Ctrl+K → Focus search
+          if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+            e.preventDefault();
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) { searchInput.focus(); searchInput.select(); }
+          }
+
+          // Ctrl+N → Add new
+          if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+            e.preventDefault();
+            const addBtn = document.getElementById('addBtn');
+            if (addBtn && !addBtn.disabled) addBtn.click();
+          }
+
+          // Ctrl+R → Refresh
+          if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
+            e.preventDefault();
+            const refreshBtn = document.getElementById('refreshBtn');
+            if (refreshBtn) refreshBtn.click();
+          }
+        });
       }
 
       // ============================================================
-      // 10) Init
+      // 15) Init
       // ============================================================
       async function init() {
         buildSidebar();
@@ -1357,12 +2062,15 @@
         init();
       }
 
-      console.log('%c[Refad] Receipts ready', 'color:#14B8A6;font-weight:bold');
+      // Spinner animation
+      const spinnerStyle = document.createElement('style');
+      spinnerStyle.textContent = '@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }';
+      document.head.appendChild(spinnerStyle);
+
+      console.log('%c[Refad] Receipts ready (Two-step loading)', 'color:#14B8A6;font-weight:bold');
 
     })();
   </script>
-
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 </body>
 </html>
