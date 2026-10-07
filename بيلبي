@@ -1,0 +1,32 @@
+-- فحص الأعمدة الجديدة
+SELECT 
+  'chat_messages' AS tbl,
+  string_agg(column_name, ', ' ORDER BY ordinal_position) AS cols
+FROM information_schema.columns
+WHERE table_schema = 'public' 
+  AND table_name = 'chat_messages'
+  AND column_name IN ('is_pinned', 'pinned_at', 'pinned_by', 'reply_to_id', 'edited_at', 'mentions')
+GROUP BY table_name
+UNION ALL
+SELECT 
+  'chat_conversations',
+  string_agg(column_name, ', ' ORDER BY ordinal_position)
+FROM information_schema.columns
+WHERE table_schema = 'public' 
+  AND table_name = 'chat_conversations'
+  AND column_name IN ('is_channel', 'channel_slug', 'channel_icon', 'channel_color', 'description')
+GROUP BY table_name;
+
+-- فحص الدوال الجديدة
+SELECT proname AS function_name
+FROM pg_proc
+WHERE proname IN (
+  'create_default_channels',
+  'join_user_to_all_channels',
+  'toggle_message_pin',
+  'get_pinned_messages',
+  'search_messages',
+  'get_or_create_direct_conversation',
+  'get_conversation_stats'
+)
+ORDER BY proname;

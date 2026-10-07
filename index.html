@@ -7,19 +7,15 @@
   <meta name="description" content="نظام رفاد - إدارة شركات توزيع الأدوية">
   <title>تسجيل الدخول - رفاد</title>
 
-  <!-- Favicon -->
   <link rel="icon" type="image/png" href="logo.png">
   <link rel="apple-touch-icon" href="icon-192.png">
 
-  <!-- PWA Manifest -->
   <link rel="manifest" href="manifest.json">
 
-  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <!-- Libraries (CDN) -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
@@ -28,9 +24,6 @@
   <script src="https://unpkg.com/lucide@latest"></script>
 
   <style>
-    /* ============================================================
-       Reset & Base
-       ============================================================ */
     * {
       margin: 0;
       padding: 0;
@@ -85,9 +78,7 @@
       position: relative;
     }
 
-    /* ============================================================
-       Background decoration
-       ============================================================ */
+    /* Background Decoration */
     .bg-decoration {
       position: fixed;
       inset: 0;
@@ -131,9 +122,7 @@
       50% { transform: translate(30px, -30px) scale(1.1); }
     }
 
-    /* ============================================================
-       Theme Toggle
-       ============================================================ */
+    /* Theme Toggle */
     .theme-toggle {
       position: fixed;
       top: 20px;
@@ -159,9 +148,78 @@
       color: var(--accent);
     }
 
-    /* ============================================================
-       Login Card
-       ============================================================ */
+    /* Install App Button */
+    .install-btn {
+      position: fixed;
+      top: 20px;
+      left: 76px;
+      height: 44px;
+      padding: 0 18px;
+      border-radius: 22px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+      border: none;
+      color: white;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 20px rgba(20, 184, 166, 0.4);
+      transition: all 0.3s;
+      z-index: 10;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .install-btn.show {
+      display: flex;
+    }
+
+    .install-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(20, 184, 166, 0.55);
+    }
+
+    .install-btn i {
+      width: 18px;
+      height: 18px;
+    }
+
+    /* Network Status */
+    .network-status {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 8px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      display: none;
+      align-items: center;
+      gap: 6px;
+      z-index: 10;
+      box-shadow: var(--shadow);
+    }
+
+    .network-status.show {
+      display: flex;
+    }
+
+    .network-status.offline {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--danger);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .network-status.online {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--success);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    /* Login Card */
     .login-wrapper {
       width: 100%;
       max-width: 440px;
@@ -186,7 +244,7 @@
       box-shadow: var(--shadow-hover);
     }
 
-    /* Logo & Header */
+    /* Brand */
     .brand {
       text-align: center;
       margin-bottom: 32px;
@@ -305,6 +363,11 @@
       opacity: 0.7;
     }
 
+    .input-wrap input:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
     .toggle-password {
       position: absolute;
       left: 12px;
@@ -332,6 +395,8 @@
       justify-content: space-between;
       margin-bottom: 24px;
       font-size: 13px;
+      flex-wrap: wrap;
+      gap: 10px;
     }
 
     .checkbox-wrap {
@@ -352,6 +417,18 @@
 
     .checkbox-wrap:hover {
       color: var(--text);
+    }
+
+    .forgot-link {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .forgot-link:hover {
+      text-decoration: underline;
     }
 
     /* Submit Button */
@@ -426,9 +503,7 @@
       to { transform: rotate(360deg); }
     }
 
-    /* ============================================================
-       Alerts (inline)
-       ============================================================ */
+    /* Alerts */
     .alert {
       padding: 12px 16px;
       border-radius: var(--radius-sm);
@@ -457,15 +532,19 @@
       border: 1px solid rgba(245, 158, 11, 0.3);
     }
 
+    .alert.success {
+      background: rgba(16, 185, 129, 0.1);
+      color: var(--success);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
     @keyframes shake {
       0%, 100% { transform: translateX(0); }
       25% { transform: translateX(-6px); }
       75% { transform: translateX(6px); }
     }
 
-    /* ============================================================
-       Footer
-       ============================================================ */
+    /* Footer */
     .login-footer {
       text-align: center;
       margin-top: 24px;
@@ -482,9 +561,62 @@
       font-weight: 600;
     }
 
-    /* ============================================================
-       Responsive
-       ============================================================ */
+    /* Install Helper Modal */
+    .install-helper {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(11, 44, 77, 0.7);
+      backdrop-filter: blur(6px);
+      z-index: 300;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .install-helper.show {
+      display: flex;
+    }
+
+    .install-helper-content {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 28px;
+      max-width: 420px;
+      width: 100%;
+      text-align: center;
+      box-shadow: var(--shadow-hover);
+    }
+
+    .install-helper-content h2 {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+
+    .install-helper-content p {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.7;
+      margin-bottom: 20px;
+    }
+
+    .install-helper-content .steps {
+      text-align: right;
+      background: var(--bg);
+      padding: 16px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      font-size: 13px;
+      line-height: 2;
+    }
+
+    .install-helper-content .steps strong {
+      color: var(--accent);
+    }
+
+    /* Responsive */
     @media (max-width: 480px) {
       .login-card {
         padding: 28px 22px;
@@ -502,24 +634,41 @@
         width: 40px;
         height: 40px;
       }
+      .install-btn {
+        top: 12px;
+        left: 60px;
+        height: 40px;
+        padding: 0 14px;
+        font-size: 12px;
+      }
+      .network-status {
+        top: 12px;
+        right: 12px;
+      }
     }
   </style>
 </head>
 <body>
 
-  <!-- Background Decoration -->
   <div class="bg-decoration"></div>
 
-  <!-- Theme Toggle -->
   <button class="theme-toggle" id="themeToggle" title="الوضع الليلي/النهاري">
     <i data-lucide="moon" id="themeIcon" style="width:20px;height:20px;"></i>
   </button>
 
-  <!-- Login Card -->
+  <button class="install-btn" id="installBtn" title="تثبيت التطبيق">
+    <i data-lucide="download"></i>
+    <span>تثبيت التطبيق</span>
+  </button>
+
+  <div class="network-status" id="networkStatus">
+    <i data-lucide="wifi-off" style="width:14px;height:14px;"></i>
+    <span id="networkText">غير متصل</span>
+  </div>
+
   <div class="login-wrapper">
     <div class="login-card">
 
-      <!-- Brand -->
       <div class="brand">
         <div class="brand-logo">
           <img src="logo.png" alt="رفاد" onerror="this.style.display='none';this.nextElementSibling.style.display='block';">
@@ -529,13 +678,11 @@
         <p>نظام إدارة شركات توزيع الأدوية</p>
       </div>
 
-      <!-- Alert -->
       <div class="alert error" id="alertBox">
         <i data-lucide="alert-circle" style="width:18px;height:18px;flex-shrink:0;"></i>
         <span id="alertMessage"></span>
       </div>
 
-      <!-- Form -->
       <form id="loginForm" autocomplete="off">
 
         <div class="form-group">
@@ -575,6 +722,7 @@
             <input type="checkbox" id="rememberMe">
             <span>تذكرني</span>
           </label>
+          <a class="forgot-link" id="forgotLink">نسيت كلمة المرور؟</a>
         </div>
 
         <button type="submit" class="btn-login" id="loginBtn">
@@ -586,11 +734,11 @@
         </button>
 
       </form>
+
       <p style="margin-top:16px;text-align:center;font-size:12px;color:var(--text-muted);">
-        يتم الدخول لإدارة الشركات من نفس الشاشة باستخدام حساب مدير الشركات.
+        للدخول لإدارة الشركات استخدم حساب مدير الشركات.
       </p>
 
-      <!-- Footer -->
       <div class="login-footer">
         <div>© <span id="year"></span> رفاد - جميع الحقوق محفوظة</div>
         <span class="version" id="appVersion">v1.0.0</span>
@@ -599,9 +747,24 @@
     </div>
   </div>
 
-  <!-- ============================================================
-       Scripts
-       ============================================================ -->
+  <!-- Install Helper Modal -->
+  <div class="install-helper" id="installHelper">
+    <div class="install-helper-content">
+      <div style="width:70px;height:70px;background:linear-gradient(135deg,var(--primary),var(--accent));border-radius:20px;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;">
+        <i data-lucide="download" style="width:34px;height:34px;color:white;"></i>
+      </div>
+      <h2>تثبيت تطبيق رفاد</h2>
+      <p id="installInstruction">لتثبيت التطبيق على جهازك، اتبع الخطوات:</p>
+      <div class="steps" id="installSteps"></div>
+      <button class="btn-login" onclick="document.getElementById('installHelper').classList.remove('show')">
+        <span style="display:flex;align-items:center;gap:8px;">
+          <i data-lucide="check" style="width:18px;height:18px;"></i>
+          فهمت
+        </span>
+      </button>
+    </div>
+  </div>
+
   <script src="refad-core.js"></script>
   <script src="refad-auth.js"></script>
 
@@ -609,7 +772,9 @@
     (function () {
       'use strict';
 
-      // ---------- Elements ----------
+      // ============================================================
+      // Elements
+      // ============================================================
       const form          = document.getElementById('loginForm');
       const usernameInput = document.getElementById('username');
       const passwordInput = document.getElementById('password');
@@ -621,15 +786,25 @@
       const alertMessage  = document.getElementById('alertMessage');
       const themeToggle   = document.getElementById('themeToggle');
       const themeIcon     = document.getElementById('themeIcon');
+      const installBtn    = document.getElementById('installBtn');
+      const installHelper = document.getElementById('installHelper');
+      const networkStatus = document.getElementById('networkStatus');
+      const networkText   = document.getElementById('networkText');
 
-      // ---------- Init Lucide Icons ----------
+      // ============================================================
+      // Init Lucide
+      // ============================================================
       if (window.lucide) lucide.createIcons();
 
-      // ---------- Year & Version ----------
+      // ============================================================
+      // Year & Version
+      // ============================================================
       document.getElementById('year').textContent = new Date().getFullYear();
       document.getElementById('appVersion').textContent = 'v' + (window.Refad?.version || '1.0.0');
 
-      // ---------- Theme ----------
+      // ============================================================
+      // Theme
+      // ============================================================
       function refreshThemeIcon() {
         const isDark = Refad.theme.get() === 'dark';
         themeIcon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
@@ -642,11 +817,115 @@
         refreshThemeIcon();
       });
 
-      // ---------- Check: already logged in? ----------
+      // ============================================================
+      // Network Status
+      // ============================================================
+      function updateNetworkStatus() {
+        if (!navigator.onLine) {
+          networkStatus.classList.add('show', 'offline');
+          networkStatus.classList.remove('online');
+          networkText.textContent = 'غير متصل بالإنترنت';
+          const icon = networkStatus.querySelector('i');
+          if (icon) icon.setAttribute('data-lucide', 'wifi-off');
+        } else {
+          networkStatus.classList.remove('show', 'offline', 'online');
+        }
+        if (window.lucide) lucide.createIcons();
+      }
+
+      window.addEventListener('online', updateNetworkStatus);
+      window.addEventListener('offline', updateNetworkStatus);
+      updateNetworkStatus();
+
+      // ============================================================
+      // PWA Install
+      // ============================================================
+      let deferredPrompt = null;
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+      const isAndroid = /Android/.test(navigator.userAgent);
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+
+      // إذا كان مثبتاً، لا نعرض الزر
+      if (isStandalone) {
+        installBtn.style.display = 'none';
+      }
+
+      // استقبال Prompt للتثبيت (Android/Chrome/Edge)
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        installBtn.classList.add('show');
+      });
+
+      // iOS: لا يوجد Prompt، نعرض الزر مع إرشادات
+      if (isIOS && !isStandalone) {
+        setTimeout(() => {
+          installBtn.classList.add('show');
+        }, 2000);
+      }
+
+      // Handle install button click
+      installBtn.addEventListener('click', async () => {
+        // إذا كان Android/Desktop مع prompt
+        if (deferredPrompt) {
+          deferredPrompt.prompt();
+          const { outcome } = await deferredPrompt.userChoice;
+          console.log('[PWA] Install outcome:', outcome);
+          if (outcome === 'accepted') {
+            Refad.toast.success('✅ تم تثبيت التطبيق');
+            installBtn.style.display = 'none';
+          }
+          deferredPrompt = null;
+          return;
+        }
+
+        // iOS أو حالة عدم وجود prompt
+        showInstallInstructions();
+      });
+
+      function showInstallInstructions() {
+        const stepsEl = document.getElementById('installSteps');
+        const instructionEl = document.getElementById('installInstruction');
+
+        if (isIOS) {
+          instructionEl.textContent = 'لتثبيت التطبيق على iPhone/iPad:';
+          stepsEl.innerHTML = `
+            <div><strong>1.</strong> اضغط على زر <strong>المشاركة</strong> <span style="font-family:serif;">⎙</span> في Safari</div>
+            <div><strong>2.</strong> اختر <strong>"إضافة إلى الشاشة الرئيسية"</strong></div>
+            <div><strong>3.</strong> اضغط <strong>"إضافة"</strong></div>
+          `;
+        } else if (isAndroid) {
+          instructionEl.textContent = 'لتثبيت التطبيق على Android:';
+          stepsEl.innerHTML = `
+            <div><strong>1.</strong> افتح القائمة <strong>(⋮)</strong> في المتصفح</div>
+            <div><strong>2.</strong> اختر <strong>"تثبيت التطبيق"</strong> أو <strong>"إضافة إلى الشاشة الرئيسية"</strong></div>
+            <div><strong>3.</strong> اضغط <strong>"تثبيت"</strong></div>
+          `;
+        } else {
+          instructionEl.textContent = 'لتثبيت التطبيق على الكمبيوتر:';
+          stepsEl.innerHTML = `
+            <div><strong>1.</strong> في Chrome/Edge: ابحث عن أيقونة <strong>تثبيت</strong> <span style="font-family:serif;">⊕</span> في شريط العنوان</div>
+            <div><strong>2.</strong> أو افتح قائمة المتصفح <strong>(⋮)</strong></div>
+            <div><strong>3.</strong> اختر <strong>"تثبيت رفاد"</strong></div>
+          `;
+        }
+
+        installHelper.classList.add('show');
+        if (window.lucide) lucide.createIcons();
+      }
+
+      // إخفاء عند انتهاء التثبيت
+      window.addEventListener('appinstalled', () => {
+        installBtn.style.display = 'none';
+        Refad.toast.success('✅ تم تثبيت التطبيق بنجاح');
+      });
+
+      // ============================================================
+      // Session Check
+      // ============================================================
       (function checkExistingSession() {
         const s = Refad.Session.get();
         if (s) {
-          // تحقق من أن المستخدم ما زال موجود ومفعّل
           Refad.db.selectOne('users', { eq: { id: s.user_id } })
             .then(user => {
               if (user && user.is_active) {
@@ -661,7 +940,9 @@
         }
       })();
 
-      // ---------- Remember Me: استرجاع آخر username ----------
+      // ============================================================
+      // Remember Me
+      // ============================================================
       const savedUser = localStorage.getItem('refad_last_user');
       if (savedUser) {
         usernameInput.value = savedUser;
@@ -671,7 +952,9 @@
         usernameInput.focus();
       }
 
-      // ---------- Toggle Password Visibility ----------
+      // ============================================================
+      // Toggle Password
+      // ============================================================
       togglePwd.addEventListener('click', () => {
         const isPwd = passwordInput.type === 'password';
         passwordInput.type = isPwd ? 'text' : 'password';
@@ -679,11 +962,12 @@
         if (window.lucide) lucide.createIcons();
       });
 
-      // ---------- Show Alert ----------
+      // ============================================================
+      // Alert
+      // ============================================================
       function showAlert(message, type) {
         alertMessage.textContent = message;
         alertBox.className = 'alert ' + (type || 'error') + ' show';
-        // إعادة تشغيل animation
         alertBox.style.animation = 'none';
         void alertBox.offsetWidth;
         alertBox.style.animation = '';
@@ -693,7 +977,9 @@
         alertBox.classList.remove('show');
       }
 
-      // ---------- Loading State ----------
+      // ============================================================
+      // Loading State
+      // ============================================================
       function setLoading(loading) {
         loginBtn.disabled = loading;
         loginBtn.classList.toggle('loading', loading);
@@ -701,7 +987,68 @@
         passwordInput.disabled = loading;
       }
 
-      // ---------- Submit Handler ----------
+      // ============================================================
+      // Forgot Password
+      // ============================================================
+      document.getElementById('forgotLink').addEventListener('click', (e) => {
+        e.preventDefault();
+        Refad.alert.info(
+          'نسيت كلمة المرور؟',
+          `تواصل مع مدير النظام أو الشركة لإعادة تعيين كلمة المرور.\n\n`
+        );
+      });
+
+      // ============================================================
+      // Company Validation
+      // ============================================================
+      async function validateCompanyAccess(companyId) {
+        if (!companyId) {
+          return { valid: true, reason: null };
+        }
+
+        try {
+          const company = await Refad.db.selectOne('companies', {
+            columns: 'id, name, is_active, subscription_end',
+            eq: { id: companyId }
+          });
+
+          if (!company) {
+            return {
+              valid: false,
+              reason: 'الشركة المرتبطة بحسابك غير موجودة. تواصل مع مدير النظام.'
+            };
+          }
+
+          // 1) الشركة موقوفة
+          if (company.is_active === false) {
+            return {
+              valid: false,
+              reason: `⚠️ تم إيقاف شركة "${company.name}" من قِبل الإدارة.\n\nتواصل مع مدير النظام لتفعيل الحساب.`
+            };
+          }
+
+          // 2) الاشتراك منتهي
+          if (company.subscription_end) {
+            const days = Refad.date.diffDays(company.subscription_end);
+            if (days < 0) {
+              return {
+                valid: false,
+                reason: `⚠️ انتهى اشتراك شركة "${company.name}" منذ ${Math.abs(days)} يوم.\n\nتواصل مع مدير النظام لتجديد الاشتراك.`
+              };
+            }
+          }
+
+          return { valid: true, reason: null, company };
+        } catch (e) {
+          console.warn('[Login] Company validation failed:', e);
+          // في حالة فشل الاتصال، نسمح بالدخول (أفضل من منع المستخدم)
+          return { valid: true, reason: null };
+        }
+      }
+
+      // ============================================================
+      // Submit Handler
+      // ============================================================
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
         hideAlert();
@@ -714,22 +1061,52 @@
           return;
         }
 
+        // Check network
+        if (!navigator.onLine) {
+          showAlert('لا يوجد اتصال بالإنترنت. تحقق من الشبكة وحاول مرة أخرى.', 'warning');
+          return;
+        }
+
         setLoading(true);
 
         try {
+          // 1) تسجيل الدخول
           const session = await Refad.Auth.login(username, password, rememberMe.checked);
 
-          // حفظ آخر username إذا "تذكرني"
+          // 2) فحص حالة الشركة (لغير superadmin)
+          if (!session.is_superadmin && session.company_id) {
+            const companyCheck = await validateCompanyAccess(session.company_id);
+
+            if (!companyCheck.valid) {
+              // امسح الجلسة
+              Refad.Session.clear();
+              setLoading(false);
+              showAlert(companyCheck.reason, 'error');
+
+              // تفاصيل إضافية
+              await Refad.alert.error('🚫 لا يمكن الدخول', companyCheck.reason);
+
+              // Log
+              try {
+                await Refad.logActivity('login_blocked', 'auth',
+                  `محاولة دخول مرفوضة - ${companyCheck.reason}`, session.user_id);
+              } catch (logErr) { /* ignore */ }
+
+              return;
+            }
+          }
+
+          // 3) حفظ "تذكرني"
           if (rememberMe.checked) {
             localStorage.setItem('refad_last_user', username);
           } else {
             localStorage.removeItem('refad_last_user');
           }
 
-          // رسالة نجاح سريعة
+          // 4) Success Toast
           if (window.Toastify) {
             Toastify({
-              text: `أهلاً بك، ${session.full_name}`,
+              text: `✅ أهلاً بك، ${session.full_name}`,
               duration: 2000,
               gravity: 'top',
               position: 'left',
@@ -742,7 +1119,7 @@
             }).showToast();
           }
 
-          // Redirect
+          // 5) Redirect
           setTimeout(() => {
             window.location.href = session.is_superadmin ? 'admin.html' : 'dashboard.html';
           }, 500);
@@ -750,17 +1127,31 @@
         } catch (err) {
           setLoading(false);
           showAlert(err.message || 'حدث خطأ غير متوقع');
-
-          // اهتزاز الحقل
           passwordInput.focus();
           passwordInput.select();
         }
       });
 
-      // ---------- Register Service Worker ----------
-      Refad.registerServiceWorker();
+      // ============================================================
+      // Keyboard Shortcuts
+      // ============================================================
+      document.addEventListener('keydown', (e) => {
+        // Escape → إغلاق modal
+        if (e.key === 'Escape' && installHelper.classList.contains('show')) {
+          installHelper.classList.remove('show');
+        }
+      });
 
-      console.log('%c[Refad] Login page ready', 'color:#14B8A6;font-weight:bold');
+      // ============================================================
+      // PWA Service Worker
+      // ============================================================
+      if ('serviceWorker' in navigator && location.protocol === 'https:') {
+        navigator.serviceWorker.register('sw.js').catch(err => {
+          console.log('[PWA] SW registration skipped:', err.message);
+        });
+      }
+
+      console.log('%c[Refad] Login page PRO ready', 'color:#14B8A6;font-weight:bold');
 
     })();
   </script>
