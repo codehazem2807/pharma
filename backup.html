@@ -5,104 +5,515 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex, nofollow">
   <title>النسخ الاحتياطي - رفاد</title>
+
   <link rel="icon" type="image/png" href="logo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
+
   <style>
     * { box-sizing: border-box; }
-    :root { --primary:#0B2C4D; --accent:#14B8A6; --bg:#F1F5F9; --card:#fff; --text:#0f172a; --muted:#64748b; --border:#e2e8f0; --success:#10b981; --warning:#f59e0b; --radius:14px; }
-    [data-theme="dark"] { --bg:#0a1628; --card:#0f2137; --text:#f1f5f9; --muted:#94a3b8; --border:#1e3a5f; }
-    body { margin:0; min-height:100vh; background:var(--bg); color:var(--text); font-family:'Cairo',sans-serif; }
-    .topbar { height:64px; display:flex; align-items:center; padding:0 max(20px,calc((100vw - 1120px)/2)); background:var(--card); border-bottom:1px solid var(--border); }
-    .brand { color:var(--primary); font-size:18px; font-weight:800; text-decoration:none; }
-    [data-theme="dark"] .brand { color:var(--text); }
-    main { width:min(100% - 32px,900px); margin:28px auto; }
-    .page-head { margin-bottom:18px; }
-    h1 { margin:0 0 6px; font-size:24px; }
-    .muted { color:var(--muted); }
-    .card { padding:22px; margin-bottom:16px; border:1px solid var(--border); border-radius:var(--radius); background:var(--card); box-shadow:0 4px 20px rgba(11,44,77,.06); }
-    .card h2 { display:flex; align-items:center; gap:9px; margin:0 0 10px; font-size:17px; }
-    .card h2 svg { width:20px; color:var(--accent); }
-    .form-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin-top:16px; }
-    label { display:flex; flex-direction:column; gap:6px; font-size:12px; font-weight:700; color:var(--muted); }
-    input { width:100%; padding:11px 12px; border:1px solid var(--border); border-radius:9px; background:var(--bg); color:var(--text); font:inherit; }
-    input:focus { outline:2px solid rgba(20,184,166,.25); border-color:var(--accent); }
-    .btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:42px; padding:9px 15px; border:0; border-radius:9px; background:var(--accent); color:white; font:700 14px 'Cairo',sans-serif; cursor:pointer; }
-    .btn:disabled { opacity:.6; cursor:wait; }
-    .btn svg { width:17px; }
-    .status { min-height:24px; margin-top:14px; font-size:13px; font-weight:700; }
-    .notice { padding:12px 14px; margin-top:14px; border-radius:10px; background:rgba(245,158,11,.1); color:var(--text); font-size:12px; line-height:1.8; }
-    .steps { margin:10px 0 0; padding-right:20px; color:var(--muted); line-height:1.9; font-size:13px; }
-    .steps code { direction:ltr; display:inline-block; padding:1px 5px; border-radius:4px; background:var(--bg); }
-    @media (max-width:600px) { .form-grid { grid-template-columns:1fr; } .card { padding:16px; } h1 { font-size:20px; } }
+
+    :root {
+      --primary: #0B2C4D;
+      --accent: #14B8A6;
+      --accent-dark: #0d9488;
+      --bg: #F1F5F9;
+      --card: #fff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --radius: 14px;
+    }
+
+    [data-theme="dark"] {
+      --bg: #0a1628;
+      --card: #0f2137;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --border: #1e3a5f;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Cairo', sans-serif;
+    }
+
+    .topbar {
+      height: 64px;
+      display: flex;
+      align-items: center;
+      padding: 0 max(20px, calc((100vw - 1120px) / 2));
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      gap: 16px;
+    }
+
+    .brand {
+      color: var(--primary);
+      font-size: 18px;
+      font-weight: 800;
+      text-decoration: none;
+    }
+
+    [data-theme="dark"] .brand { color: var(--text); }
+
+    .topbar-actions { margin-right: auto; display: flex; gap: 8px; }
+
+    main {
+      width: min(100% - 32px, 900px);
+      margin: 28px auto;
+    }
+
+    .page-head { margin-bottom: 18px; }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: 24px;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .card {
+      padding: 22px;
+      margin-bottom: 16px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--card);
+      box-shadow: 0 4px 20px rgba(11, 44, 77, 0.06);
+    }
+
+    .card h2 {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin: 0 0 10px;
+      font-size: 17px;
+    }
+
+    .card h2 svg {
+      width: 20px;
+      color: var(--accent);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 42px;
+      padding: 9px 18px;
+      border: 0;
+      border-radius: 9px;
+      background: var(--accent);
+      color: white;
+      font: 700 14px 'Cairo', sans-serif;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+    }
+
+    .btn:hover:not(:disabled) {
+      background: var(--accent-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(20, 184, 166, 0.3);
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: wait;
+      transform: none;
+    }
+
+    .btn svg { width: 17px; height: 17px; }
+
+    .btn-outline {
+      background: var(--card);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-outline:hover:not(:disabled) {
+      background: var(--bg);
+      border-color: var(--accent);
+      color: var(--accent);
+      box-shadow: none;
+    }
+
+    .status {
+      min-height: 24px;
+      margin-top: 14px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .status.success { color: var(--success); }
+    .status.error { color: var(--danger); }
+
+    .notice {
+      padding: 12px 14px;
+      margin-top: 14px;
+      border-radius: 10px;
+      background: rgba(245, 158, 11, 0.1);
+      color: var(--text);
+      font-size: 12px;
+      line-height: 1.8;
+      border-right: 3px solid var(--warning);
+    }
+
+    .notice.info {
+      background: rgba(20, 184, 166, 0.08);
+      border-right-color: var(--accent);
+    }
+
+    .progress-box {
+      margin-top: 16px;
+      padding: 14px;
+      background: var(--bg);
+      border-radius: 10px;
+      display: none;
+    }
+
+    .progress-box.show { display: block; }
+
+    .progress-bar {
+      height: 6px;
+      background: var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+
+    .progress-bar > div {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--primary));
+      border-radius: 4px;
+      transition: width 0.3s;
+      width: 0%;
+    }
+
+    .progress-text {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 700;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .stat-box {
+      background: var(--bg);
+      padding: 12px;
+      border-radius: 10px;
+      text-align: center;
+    }
+
+    .stat-box .num {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--accent);
+      line-height: 1.2;
+    }
+
+    .stat-box .lbl {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 4px;
+      font-weight: 600;
+    }
+
+    .tables-list {
+      max-height: 260px;
+      overflow-y: auto;
+      margin-top: 12px;
+      background: var(--bg);
+      border-radius: 10px;
+      padding: 8px;
+    }
+
+    .table-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 10px;
+      font-size: 13px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .table-row:last-child { border-bottom: none; }
+
+    .table-row .name {
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .table-row .count {
+      background: var(--accent);
+      color: white;
+      padding: 2px 10px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .table-row .count.empty {
+      background: var(--border);
+      color: var(--muted);
+    }
+
+    .toggle-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+
+    @media (max-width: 600px) {
+      .card { padding: 16px; }
+      h1 { font-size: 20px; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    }
   </style>
 </head>
 <body>
-  <header class="topbar"><a class="brand" href="dashboard.html">رفاد</a></header>
+
+  <header class="topbar">
+    <a class="brand" href="dashboard.html">رفاد</a>
+    <div class="topbar-actions">
+      <button class="btn btn-outline" id="themeToggle" type="button" style="min-height: 38px; padding: 6px 12px;" title="الوضع الليلي">
+        <i data-lucide="moon" id="themeIcon"></i>
+      </button>
+    </div>
+  </header>
+
   <main>
     <div class="page-head">
       <h1>النسخ الاحتياطي</h1>
-      <div class="muted">نسخة مشفّرة لبيانات الشركة، مع أرشفة سحابية يومية بعد إعداد الخدمة.</div>
+      <div class="muted">نسخة كاملة من جميع بيانات الشركة (بدون تشفير)</div>
     </div>
+
+    <!-- Download Section -->
     <section class="card">
-      <h2><i data-lucide="lock-keyhole"></i> تنزيل نسخة مشفّرة الآن</h2>
+      <h2><i data-lucide="database"></i> تنزيل نسخة احتياطية كاملة</h2>
       <p class="muted" style="font-size:13px;line-height:1.8;margin:0;">
-        تُشفّر النسخة في متصفحك قبل تنزيلها باستخدام AES‑GCM، ولا يُرسل مفتاح التشفير إلى الخادم.
-        احتفظ بكلمة المرور في مكان آمن؛ لا يمكن استرجاعها إذا فُقدت.
+        هذه النسخة تحتوي على <strong>جميع بيانات شركتك</strong> في ملف واحد — بدون تشفير وبدون كلمة مرور.
+        الملف يمكن فتحه ومراجعته بسهولة.
       </p>
-      <div class="form-grid">
-        <label>كلمة مرور التشفير
-          <input type="password" id="backupPassword" minlength="12" autocomplete="new-password" placeholder="12 حرفاً على الأقل">
-        </label>
-        <label>تأكيد كلمة المرور
-          <input type="password" id="backupPasswordConfirm" minlength="12" autocomplete="new-password" placeholder="أعد كتابة كلمة المرور">
-        </label>
+
+      <div class="notice info">
+        <strong>💡 ملاحظة:</strong> الملف يحتوي على كل السجلات:
+        (المستخدمين، الأصناف، الفواتير، الحركات، الشات، الحضور، الرواتب، وجميع البيانات الأخرى).
       </div>
-      <button class="btn" id="downloadBackupBtn" type="button" style="margin-top:16px;">
-        <i data-lucide="download"></i> إنشاء وتنزيل النسخة
+
+      <!-- Options -->
+      <div class="toggle-row">
+        <button class="btn btn-outline" id="jsonFormatBtn" type="button" data-selected="true">
+          <i data-lucide="file-json"></i> JSON (موصى به)
+        </button>
+        <button class="btn btn-outline" id="excelFormatBtn" type="button" data-selected="false">
+          <i data-lucide="file-spreadsheet"></i> Excel (منظم)
+        </button>
+      </div>
+
+      <button class="btn" id="downloadBackupBtn" type="button" style="margin-top:16px;width:100%;">
+        <i data-lucide="download"></i> إنشاء وتنزيل النسخة الاحتياطية
       </button>
+
       <div class="status" id="backupStatus" role="status" aria-live="polite"></div>
-      <div class="notice">
-        تتضمن النسخة سجلات الشركة التجارية والموظفين دون كلمات المرور. وهي لا تتضمن الملفات الثنائية المخزنة خارج قاعدة البيانات. الملف أرشيف بيانات مشفّر؛ لا تتوفر حالياً استعادة مباشرة من داخل النظام.
+
+      <!-- Progress -->
+      <div class="progress-box" id="progressBox">
+        <div class="progress-text">
+          <span id="progressLabel">جارٍ التحضير...</span>
+          <span id="progressPercent">0%</span>
+        </div>
+        <div class="progress-bar"><div id="progressBar"></div></div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-grid" id="statsGrid" style="display:none;">
+        <div class="stat-box">
+          <div class="num" id="statTables">0</div>
+          <div class="lbl">جدول</div>
+        </div>
+        <div class="stat-box">
+          <div class="num" id="statRecords">0</div>
+          <div class="lbl">سجل</div>
+        </div>
+        <div class="stat-box">
+          <div class="num" id="statSize">0</div>
+          <div class="lbl">حجم (KB)</div>
+        </div>
+        <div class="stat-box">
+          <div class="num" id="statTime">0</div>
+          <div class="lbl">ثانية</div>
+        </div>
+      </div>
+
+      <!-- Tables Details -->
+      <div style="margin-top:16px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+          <strong style="font-size:13px;">تفاصيل الجداول:</strong>
+          <button class="btn btn-outline" id="toggleTablesBtn" type="button" style="min-height:32px;padding:4px 12px;font-size:12px;">
+            <i data-lucide="eye"></i> عرض
+          </button>
+        </div>
+        <div class="tables-list" id="tablesList" style="display:none;"></div>
       </div>
     </section>
+
+    <!-- Info Section -->
     <section class="card">
-      <h2><i data-lucide="cloud"></i> النسخ السحابي اليومي</h2>
-      <p class="muted" style="font-size:13px;line-height:1.8;margin:0;">
-        النسخ المجدول يُرفع إلى حاوية Supabase Storage خاصة، ويُحتفظ بآخر 30 يوماً. لأسباب أمنية لا تحفظ الواجهة مفاتيح الخدمة؛ يلزم نشر Edge Function وإعداد سرّ الجدولة مرة واحدة.
-      </p>
-      <ol class="steps">
-        <li>شغّل <code>purchase-request-response-setup.sql</code> أولاً إذا لم تكن قد فعلت سجل ردود الموردين.</li>
-        <li>انشر <code>supabase/functions/refad-backup</code>، واضبط السر نفسه باسم <code>BACKUP_CRON_SECRET</code> في إعدادات الدالة وفي Supabase Vault باسم <code>refad_backup_cron_secret</code>.</li>
-        <li>عدّل عنوان مشروعك في <code>backup-schedule-setup.sql</code> ثم شغّله في SQL Editor. يعمل الجدول يومياً الساعة 02:00 UTC.</li>
-      </ol>
-      <div class="notice">تظهر حالة النسخ السحابي ونتائجه في Supabase Edge Function Logs وملفات الحاوية الخاصة؛ لا يُعدّ الجدول مفعّلاً حتى تنفّذ خطوات النشر والجدولة.</div>
+      <h2><i data-lucide="info"></i> معلومات مهمة</h2>
+      <ul style="margin:0;padding-right:20px;color:var(--muted);line-height:2;font-size:13px;">
+        <li>النسخة <strong>غير مشفرة</strong> — احفظها في مكان آمن.</li>
+        <li>تحتوي على <strong>كل شيء</strong> ما عدا ملفات الشات الفعلية (الصور/المرفقات).</li>
+        <li>كلمات المرور محفوظة — لا تشارك الملف مع أي شخص غير موثوق.</li>
+        <li>الملف بصيغة JSON يمكن فتحه بأي محرر نصوص.</li>
+        <li>يُنصح بأخذ نسخة أسبوعياً على الأقل.</li>
+      </ul>
     </section>
   </main>
+
   <script src="refad-core.js"></script>
   <script src="refad-auth.js"></script>
+
   <script>
     (function () {
       'use strict';
+
+      // ============================================================
+      // Guard
+      // ============================================================
       const session = Refad.Auth.guardPage('company.owner');
       if (!session) return;
 
+      // ============================================================
+      // Config
+      // ============================================================
       const PAGE_SIZE = 1000;
       const ID_CHUNK = 100;
-      const directTables = [
-        'roles', 'users', 'products', 'suppliers', 'customers',
-        'supplier_transactions', 'purchase_requests', 'receipts', 'batches',
-        'sales_orders', 'sales_invoices', 'inventory_returns', 'representative_settlements', 'inventory_movements', 'stock_adjustments',
-        'attendance', 'payroll', 'deductions', 'bonuses', 'expenses',
-        'notifications', 'activity_log', 'chat_conversations', 'share_links', 'admin_payments'
+
+      // Tables with direct company_id
+      const DIRECT_TABLES = [
+        { key: 'companies', label: 'الشركات', useId: true },
+        { key: 'roles', label: 'الأدوار' },
+        { key: 'users', label: 'المستخدمين', stripFields: ['password', 'failed_attempts', 'locked_until'] },
+        { key: 'products', label: 'الأصناف' },
+        { key: 'suppliers', label: 'الموردين' },
+        { key: 'customers', label: 'العملاء' },
+        { key: 'supplier_transactions', label: 'معاملات الموردين' },
+        { key: 'purchase_requests', label: 'طلبات الشراء' },
+        { key: 'receipts', label: 'الاستلامات' },
+        { key: 'batches', label: 'التشغيلات' },
+        { key: 'sales_orders', label: 'طلبات البيع' },
+        { key: 'sales_invoices', label: 'فواتير البيع' },
+        { key: 'inventory_returns', label: 'المرتجعات المخزنية' },
+        { key: 'representative_settlements', label: 'تسويات المندوبين' },
+        { key: 'inventory_movements', label: 'حركات المخزون' },
+        { key: 'stock_adjustments', label: 'تسويات المخزون' },
+        { key: 'attendance', label: 'الحضور' },
+        { key: 'payroll', label: 'الرواتب' },
+        { key: 'deductions', label: 'الخصومات' },
+        { key: 'bonuses', label: 'المكافآت' },
+        { key: 'expenses', label: 'المصاريف' },
+        { key: 'notifications', label: 'الإشعارات' },
+        { key: 'activity_log', label: 'سجل النشاط' },
+        { key: 'chat_conversations', label: 'محادثات الشات' },
+        { key: 'share_links', label: 'روابط المشاركة' },
+        { key: 'admin_payments', label: 'مدفوعات الأدمن' }
       ];
 
+      // Dependent tables (fetched via parent)
+      const DEPENDENT_TABLES = [
+        { key: 'product_barcodes', label: 'باركود الأصناف', parentTable: 'products', parentColumn: 'product_id' },
+        { key: 'product_discounts', label: 'خصومات الأصناف', parentTable: 'products', parentColumn: 'product_id' },
+        { key: 'purchase_request_items', label: 'أصناف طلبات الشراء', parentTable: 'purchase_requests', parentColumn: 'request_id' },
+        { key: 'purchase_request_responses', label: 'ردود الموردين', parentTable: 'purchase_requests', parentColumn: 'request_id' },
+        { key: 'receipt_items', label: 'أصناف الاستلامات', parentTable: 'receipts', parentColumn: 'receipt_id' },
+        { key: 'sales_order_items', label: 'أصناف طلبات البيع', parentTable: 'sales_orders', parentColumn: 'order_id' },
+        { key: 'sales_invoice_items', label: 'أصناف الفواتير', parentTable: 'sales_invoices', parentColumn: 'invoice_id' },
+        { key: 'inventory_return_items', label: 'أصناف المرتجعات', parentTable: 'inventory_returns', parentColumn: 'return_id' },
+        { key: 'stock_adjustment_items', label: 'أصناف التسويات', parentTable: 'stock_adjustments', parentColumn: 'adjustment_id' },
+        { key: 'chat_participants', label: 'مشاركو الشات', parentTable: 'chat_conversations', parentColumn: 'conversation_id' },
+        { key: 'chat_messages', label: 'رسائل الشات', parentTable: 'chat_conversations', parentColumn: 'conversation_id' },
+        { key: 'role_permissions', label: 'صلاحيات الأدوار', parentTable: 'roles', parentColumn: 'role_id' }
+      ];
+
+      // Standalone tables (all records)
+      const STANDALONE_TABLES = [
+        { key: 'permissions', label: 'الصلاحيات' },
+        { key: 'system_settings', label: 'إعدادات النظام' }
+      ];
+
+      // ============================================================
+      // State
+      // ============================================================
+      let selectedFormat = 'json';
+      let lastBackupData = null;
+
+      // ============================================================
+      // UI Helpers
+      // ============================================================
+      function fillUser() {
+        // Not needed - simple page
+      }
+
+      function setupTheme() {
+        const btn = document.getElementById('themeToggle');
+        const icon = document.getElementById('themeIcon');
+        const refresh = () => {
+          const isDark = Refad.theme.get() === 'dark';
+          icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+          if (window.lucide) lucide.createIcons();
+        };
+        refresh();
+        btn.addEventListener('click', () => { Refad.theme.toggle(); refresh(); });
+      }
+
+      function updateStatus(text, type) {
+        const el = document.getElementById('backupStatus');
+        el.textContent = text;
+        el.className = 'status ' + (type || '');
+      }
+
+      function showProgress(label, percent) {
+        document.getElementById('progressBox').classList.add('show');
+        document.getElementById('progressLabel').textContent = label;
+        document.getElementById('progressPercent').textContent = percent + '%';
+        document.getElementById('progressBar').style.width = percent + '%';
+      }
+
+      function hideProgress() {
+        setTimeout(() => {
+          document.getElementById('progressBox').classList.remove('show');
+        }, 1500);
+      }
+
+      // ============================================================
+      // Fetch Helpers
+      // ============================================================
       async function selectAll(table, options) {
         const result = [];
         for (let offset = 0; ; offset += PAGE_SIZE) {
@@ -116,6 +527,7 @@
       }
 
       async function selectByIds(table, column, ids) {
+        if (!ids.length) return [];
         const result = [];
         for (let offset = 0; offset < ids.length; offset += ID_CHUNK) {
           const batch = ids.slice(offset, offset + ID_CHUNK);
@@ -124,149 +536,354 @@
         return result;
       }
 
-      async function createBackup() {
-        const password = document.getElementById('backupPassword').value;
-        const confirmation = document.getElementById('backupPasswordConfirm').value;
-        if (password.length < 12) {
-          Refad.toast.warning('كلمة المرور يجب أن تكون 12 حرفاً على الأقل');
-          return;
-        }
-        if (password !== confirmation) {
-          Refad.toast.warning('كلمتا المرور غير متطابقتين');
-          return;
-        }
-        if (!window.crypto?.subtle || !window.isSecureContext) {
-          Refad.toast.error('التشفير الآمن يتطلب اتصال HTTPS أو localhost');
-          return;
-        }
+      function stripFields(rows, fields) {
+        return rows.map(row => {
+          const copy = { ...row };
+          fields.forEach(f => delete copy[f]);
+          return copy;
+        });
+      }
 
+      // ============================================================
+      // Create Backup
+      // ============================================================
+      async function createBackup() {
         const button = document.getElementById('downloadBackupBtn');
-        const status = document.getElementById('backupStatus');
         button.disabled = true;
-        status.textContent = 'جارٍ جمع بيانات الشركة...';
+        const startTime = Date.now();
+
         try {
           const companyId = session.company_id;
           const tables = {};
-          for (const table of directTables) {
-            tables[table] = await selectAll(table, {
-              eq: { company_id: companyId }
-            });
+          const tablesReport = [];
+
+          // Total steps for progress
+          const totalSteps = DIRECT_TABLES.length + DEPENDENT_TABLES.length + STANDALONE_TABLES.length + 2;
+          let currentStep = 0;
+
+          const updateProgress = (label) => {
+            currentStep++;
+            const percent = Math.round((currentStep / totalSteps) * 100);
+            showProgress(label, percent);
+          };
+
+          updateStatus('⏳ جارٍ تجميع البيانات...');
+          showProgress('بدء الجمع...', 0);
+
+          // ============================================================
+          // 1) Direct tables
+          // ============================================================
+          for (const table of DIRECT_TABLES) {
+            updateProgress(`تحميل ${table.label}...`);
+
+            let rows;
+            if (table.useId) {
+              // For companies: use id, not company_id
+              rows = await selectAll(table.key, { eq: { id: companyId } });
+            } else {
+              rows = await selectAll(table.key, { eq: { company_id: companyId } });
+            }
+
+            // Strip sensitive fields
+            if (table.stripFields && table.stripFields.length) {
+              rows = stripFields(rows, table.stripFields);
+            }
+
+            tables[table.key] = rows;
+            tablesReport.push({ key: table.key, label: table.label, count: rows.length });
           }
-          tables.companies = await selectAll('companies', { eq: { id: companyId } });
 
-          const productIds = tables.products.map(row => row.id);
-          const supplierIds = tables.suppliers.map(row => row.id);
-          const requestIds = tables.purchase_requests.map(row => row.id);
-          const receiptIds = tables.receipts.map(row => row.id);
-          const orderIds = tables.sales_orders.map(row => row.id);
-          const invoiceIds = tables.sales_invoices.map(row => row.id);
-          const returnIds = tables.inventory_returns.map(row => row.id);
-          const adjustmentIds = tables.stock_adjustments.map(row => row.id);
-          const conversationIds = tables.chat_conversations.map(row => row.id);
-          const roleIds = tables.roles.map(row => row.id);
+          // ============================================================
+          // 2) Dependent tables
+          // ============================================================
+          for (const table of DEPENDENT_TABLES) {
+            updateProgress(`تحميل ${table.label}...`);
 
-          const dependentData = await Promise.all([
-            selectByIds('product_barcodes', 'product_id', productIds),
-            selectByIds('product_discounts', 'product_id', productIds),
-            selectByIds('purchase_request_items', 'request_id', requestIds),
-            selectByIds('purchase_request_responses', 'request_id', requestIds),
-            selectByIds('receipt_items', 'receipt_id', receiptIds),
-            selectByIds('sales_order_items', 'order_id', orderIds),
-            selectByIds('sales_invoice_items', 'invoice_id', invoiceIds),
-            selectByIds('inventory_return_items', 'return_id', returnIds),
-            selectByIds('stock_adjustment_items', 'adjustment_id', adjustmentIds),
-            selectByIds('chat_participants', 'conversation_id', conversationIds),
-            selectByIds('chat_messages', 'conversation_id', conversationIds),
-            selectByIds('role_permissions', 'role_id', roleIds),
-            selectAll('permissions')
-          ]);
-          [
-            tables.product_barcodes,
-            tables.product_discounts,
-            tables.purchase_request_items,
-            tables.purchase_request_responses,
-            tables.receipt_items,
-            tables.sales_order_items,
-            tables.sales_invoice_items,
-            tables.inventory_return_items,
-            tables.stock_adjustment_items,
-            tables.chat_participants,
-            tables.chat_messages,
-            tables.role_permissions,
-            tables.permissions
-          ] = dependentData;
+            const parentRows = tables[table.parentTable] || [];
+            const parentIds = parentRows.map(r => r.id).filter(Boolean);
 
-          const messageIds = tables.chat_messages.map(row => row.id);
-          tables.chat_files = await selectByIds('chat_files', 'message_id', messageIds);
-          tables.users = tables.users.map(({ password, failed_attempts, locked_until, ...user }) => user);
+            let rows = [];
+            if (parentIds.length) {
+              rows = await selectByIds(table.key, table.parentColumn, parentIds);
+            }
+
+            tables[table.key] = rows;
+            tablesReport.push({ key: table.key, label: table.label, count: rows.length });
+          }
+
+          // ============================================================
+          // 3) Standalone tables (all records)
+          // ============================================================
+          for (const table of STANDALONE_TABLES) {
+            updateProgress(`تحميل ${table.label}...`);
+            try {
+              const rows = await selectAll(table.key);
+              tables[table.key] = rows;
+              tablesReport.push({ key: table.key, label: table.label, count: rows.length });
+            } catch (e) {
+              console.warn(`Table ${table.key} failed:`, e.message);
+              tables[table.key] = [];
+              tablesReport.push({ key: table.key, label: table.label, count: 0 });
+            }
+          }
+
+          // ============================================================
+          // 4) Additional: chat_files (via chat_messages)
+          // ============================================================
+          updateProgress('تحميل ملفات الشات...');
+          try {
+            const msgIds = (tables.chat_messages || []).map(m => m.id).filter(Boolean);
+            tables.chat_files = msgIds.length
+              ? await selectByIds('chat_files', 'message_id', msgIds)
+              : [];
+            tablesReport.push({ key: 'chat_files', label: 'ملفات الشات', count: tables.chat_files.length });
+          } catch (e) {
+            tables.chat_files = [];
+            tablesReport.push({ key: 'chat_files', label: 'ملفات الشات', count: 0 });
+          }
+
+          // ============================================================
+          // Calculate stats
+          // ============================================================
+          const totalRecords = tablesReport.reduce((sum, t) => sum + t.count, 0);
+          const totalTables = tablesReport.length;
+
+          // ============================================================
+          // 5) Build backup object
+          // ============================================================
+          updateProgress('تجهيز الملف...');
 
           const backup = {
             format: 'refad-company-backup',
             version: 1,
+            encrypted: false,
             company_id: companyId,
+            company_name: (tables.companies[0]?.name) || 'Unknown',
             created_at: new Date().toISOString(),
-            encryption: 'PBKDF2-SHA-256/AES-256-GCM',
-            tables
+            created_by: session.full_name,
+            total_tables: totalTables,
+            total_records: totalRecords,
+            tables_report: tablesReport,
+            data: tables
           };
-          status.textContent = 'جارٍ تشفير النسخة...';
-          const salt = crypto.getRandomValues(new Uint8Array(16));
-          const iv = crypto.getRandomValues(new Uint8Array(12));
-          const keyMaterial = await crypto.subtle.importKey(
-            'raw',
-            new TextEncoder().encode(password),
-            'PBKDF2',
-            false,
-            ['deriveKey']
-          );
-          const key = await crypto.subtle.deriveKey(
-            { name: 'PBKDF2', salt, iterations: 310000, hash: 'SHA-256' },
-            keyMaterial,
-            { name: 'AES-GCM', length: 256 },
-            false,
-            ['encrypt']
-          );
-          const ciphertext = await crypto.subtle.encrypt(
-            { name: 'AES-GCM', iv },
-            key,
-            new TextEncoder().encode(JSON.stringify(backup))
-          );
-          const toBase64 = bytes => {
-            let binary = '';
-            const chunkSize = 0x8000;
-            for (let offset = 0; offset < bytes.length; offset += chunkSize) {
-              binary += String.fromCharCode(...bytes.subarray(offset, offset + chunkSize));
-            }
-            return btoa(binary);
-          };
-          const encryptedFile = {
-            format: 'refad-encrypted-backup',
-            version: 1,
-            kdf: { name: 'PBKDF2', hash: 'SHA-256', iterations: 310000, salt: toBase64(salt) },
-            cipher: { name: 'AES-GCM', iv: toBase64(iv), data: toBase64(new Uint8Array(ciphertext)) }
-          };
-          const blob = new Blob([JSON.stringify(encryptedFile)], { type: 'application/vnd.refad.backup+json' });
-          const date = new Date().toISOString().replace(/[:.]/g, '-');
-          const url = URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = `refad-company-${companyId}-${date}.refadbackup`;
-          link.click();
-          URL.revokeObjectURL(url);
-          status.textContent = 'تم إنشاء النسخة المشفّرة وتنزيلها.';
-          await Refad.logActivity('download_company_backup', 'system', `نسخة احتياطية مشفّرة للشركة ${companyId}`);
+
+          lastBackupData = backup;
+
+          // ============================================================
+          // 6) Download based on format
+          // ============================================================
+          updateProgress('إنشاء الملف...');
+
+          if (selectedFormat === 'excel') {
+            downloadAsExcel(backup);
+          } else {
+            downloadAsJSON(backup);
+          }
+
+          // ============================================================
+          // 7) Stats display
+          // ============================================================
+          const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
+
+          // Get file size
+          const jsonStr = JSON.stringify(backup);
+          const sizeKB = Math.round(new Blob([jsonStr]).size / 1024);
+
+          document.getElementById('statTables').textContent = Refad.format.number(totalTables);
+          document.getElementById('statRecords').textContent = Refad.format.number(totalRecords);
+          document.getElementById('statSize').textContent = Refad.format.number(sizeKB);
+          document.getElementById('statTime').textContent = elapsed;
+          document.getElementById('statsGrid').style.display = 'grid';
+
+          // Tables list
+          const tablesListEl = document.getElementById('tablesList');
+          tablesListEl.innerHTML = tablesReport
+            .sort((a, b) => b.count - a.count)
+            .map(t => `
+              <div class="table-row">
+                <span class="name">${Refad.escapeHtml(t.label)} <span style="color:var(--muted);font-size:11px;">(${Refad.escapeHtml(t.key)})</span></span>
+                <span class="count ${t.count === 0 ? 'empty' : ''}">${Refad.format.number(t.count)}</span>
+              </div>
+            `).join('');
+
+          // Final status
+          showProgress('تم بنجاح!', 100);
+          updateStatus(`✅ تم إنشاء النسخة — ${Refad.format.number(totalRecords)} سجل من ${totalTables} جدول (${sizeKB} KB)`, 'success');
+
+          // Log activity
+          try {
+            await Refad.logActivity('download_company_backup', 'system',
+              `نسخة احتياطية كاملة — ${totalRecords} سجل`, companyId);
+          } catch (e) { /* ignore */ }
+
+          Refad.toast.success(`تم إنشاء النسخة (${Refad.format.number(totalRecords)} سجل)`);
         } catch (error) {
           console.error('[Backup] Create failed:', error);
-          status.textContent = 'تعذّر إنشاء النسخة. راجع وحدة التحكم للتفاصيل.';
+          updateStatus('❌ تعذّر إنشاء النسخة: ' + error.message, 'error');
           Refad.toast.error('فشل النسخ الاحتياطي: ' + error.message);
         } finally {
           button.disabled = false;
+          hideProgress();
         }
       }
 
-      document.getElementById('downloadBackupBtn').addEventListener('click', createBackup);
-      if (window.lucide) lucide.createIcons();
-      Refad.registerServiceWorker();
+      // ============================================================
+      // Download as JSON
+      // ============================================================
+      function downloadAsJSON(backup) {
+        const json = JSON.stringify(backup, null, 2);
+        const blob = new Blob([json], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const date = new Date().toISOString().replace(/[:.]/g, '-');
+        const companyName = (backup.company_name || 'company').replace(/[^a-z0-9\u0600-\u06FF]/gi, '_');
+        const filename = `refad-backup-${companyName}-${date}.json`;
+
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        link.click();
+
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }
+
+      // ============================================================
+      // Download as Excel
+      // ============================================================
+      function downloadAsExcel(backup) {
+        const wb = XLSX.utils.book_new();
+
+        // Meta sheet
+        const metaRows = [
+          ['النظام', 'رفاد ERP'],
+          ['الإصدار', backup.version],
+          ['اسم الشركة', backup.company_name],
+          ['معرف الشركة', backup.company_id],
+          ['تاريخ الإنشاء', backup.created_at],
+          ['أنشأها', backup.created_by],
+          ['إجمالي الجداول', backup.total_tables],
+          ['إجمالي السجلات', backup.total_records],
+          ['', ''],
+          ['تفاصيل الجداول', ''],
+          ['الجدول', 'عدد السجلات']
+        ];
+        backup.tables_report.forEach(t => {
+          metaRows.push([t.label + ' (' + t.key + ')', t.count]);
+        });
+
+        const metaWs = XLSX.utils.aoa_to_sheet(metaRows);
+        metaWs['!cols'] = [{ wch: 30 }, { wch: 40 }];
+        XLSX.utils.book_append_sheet(wb, metaWs, 'معلومات');
+
+        // Data sheets
+        for (const [tableName, rows] of Object.entries(backup.data)) {
+          if (!rows.length) continue;
+
+          // Find label
+          const report = backup.tables_report.find(r => r.key === tableName);
+          const label = report?.label || tableName;
+
+          // Sanitize sheet name (Excel limit: 31 chars, no special chars)
+          let sheetName = label.slice(0, 28).replace(/[\[\]:*?\/\\]/g, '_');
+          if (!sheetName.trim()) sheetName = tableName.slice(0, 28);
+
+          // Clean rows
+          const cleanRows = rows.map(row => {
+            const clean = {};
+            for (const [k, v] of Object.entries(row)) {
+              if (v === null || v === undefined) {
+                clean[k] = '';
+              } else if (Array.isArray(v)) {
+                clean[k] = v.join(', ');
+              } else if (typeof v === 'object') {
+                clean[k] = JSON.stringify(v);
+              } else {
+                clean[k] = v;
+              }
+            }
+            return clean;
+          });
+
+          try {
+            const ws = XLSX.utils.json_to_sheet(cleanRows);
+            XLSX.utils.book_append_sheet(wb, ws, sheetName);
+          } catch (e) {
+            console.warn('Failed to add sheet:', sheetName, e);
+          }
+        }
+
+        const date = new Date().toISOString().replace(/[:.]/g, '-');
+        const companyName = (backup.company_name || 'company').replace(/[^a-z0-9\u0600-\u06FF]/gi, '_');
+        const filename = `refad-backup-${companyName}-${date}.xlsx`;
+
+        XLSX.writeFile(wb, filename);
+      }
+
+      // ============================================================
+      // Format Toggle
+      // ============================================================
+      function setupFormatButtons() {
+        const jsonBtn = document.getElementById('jsonFormatBtn');
+        const excelBtn = document.getElementById('excelFormatBtn');
+
+        const updateButtons = () => {
+          jsonBtn.dataset.selected = String(selectedFormat === 'json');
+          excelBtn.dataset.selected = String(selectedFormat === 'excel');
+
+          [jsonBtn, excelBtn].forEach(btn => {
+            const selected = btn.dataset.selected === 'true';
+            if (selected) {
+              btn.style.background = 'linear-gradient(135deg, var(--accent), var(--accent-dark))';
+              btn.style.color = 'white';
+              btn.style.borderColor = 'transparent';
+            } else {
+              btn.style.background = 'var(--card)';
+              btn.style.color = 'var(--text)';
+              btn.style.borderColor = 'var(--border)';
+            }
+          });
+        };
+
+        jsonBtn.addEventListener('click', () => { selectedFormat = 'json'; updateButtons(); });
+        excelBtn.addEventListener('click', () => { selectedFormat = 'excel'; updateButtons(); });
+
+        updateButtons();
+      }
+
+      // ============================================================
+      // Init
+      // ============================================================
+      function init() {
+        setupTheme();
+        setupFormatButtons();
+
+        document.getElementById('downloadBackupBtn').addEventListener('click', createBackup);
+
+        document.getElementById('toggleTablesBtn').addEventListener('click', () => {
+          const el = document.getElementById('tablesList');
+          const btn = document.getElementById('toggleTablesBtn');
+          const visible = el.style.display !== 'none';
+          el.style.display = visible ? 'none' : 'block';
+          btn.innerHTML = visible
+            ? '<i data-lucide="eye"></i> عرض'
+            : '<i data-lucide="eye-off"></i> إخفاء';
+          if (window.lucide) lucide.createIcons();
+        });
+
+        if (window.lucide) lucide.createIcons();
+
+        if (Refad.registerServiceWorker) Refad.registerServiceWorker();
+
+        console.log('%c[Refad] Backup ready (no encryption)', 'color:#14B8A6;font-weight:bold');
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+
     })();
   </script>
+
 </body>
 </html>
