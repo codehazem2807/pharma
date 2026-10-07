@@ -19,6 +19,7 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -38,6 +39,7 @@
       --success: #10b981;
       --warning: #f59e0b;
       --info: #3b82f6;
+      --purple: #8b5cf6;
       --sidebar-bg: #0B2C4D;
       --sidebar-text: #cbd5e1;
       --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
@@ -69,9 +71,7 @@
 
     body { display: flex; min-height: 100vh; overflow-x: hidden; }
 
-    /* ============================================================
-       Sidebar
-       ============================================================ */
+    /* Sidebar */
     .sidebar {
       width: var(--sidebar-w);
       height: 100vh;
@@ -86,7 +86,6 @@
       transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       box-shadow: -4px 0 20px rgba(0,0,0,0.1);
     }
-
     .sidebar-header {
       padding: 20px 22px;
       border-bottom: 1px solid rgba(255,255,255,0.08);
@@ -96,7 +95,6 @@
       height: var(--topbar-h);
       box-sizing: border-box;
     }
-
     .sidebar-logo {
       width: 40px;
       height: 40px;
@@ -110,16 +108,12 @@
     }
     .sidebar-logo img { width: 70%; height: 70%; object-fit: contain; }
     .sidebar-logo .fallback { color: white; font-weight: 800; font-size: 18px; }
-
     .sidebar-brand h2 { color: white; font-size: 20px; font-weight: 800; letter-spacing: -0.5px; line-height: 1.2; }
     .sidebar-brand p { font-size: 10px; color: var(--sidebar-text); opacity: 0.7; font-weight: 500; margin-top: 2px; }
-
     .sidebar-nav { flex: 1; overflow-y: auto; padding: 12px 0; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.15) transparent; }
     .sidebar-nav::-webkit-scrollbar { width: 5px; }
     .sidebar-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 10px; }
-
     .nav-section { padding: 8px 20px 4px; font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 1px; margin-top: 8px; }
-
     .nav-item {
       display: flex;
       align-items: center;
@@ -142,11 +136,8 @@
     .nav-item .badge.teal { background: var(--accent); }
     .nav-item .badge.gold { background: var(--gold); }
 
-    /* ============================================================
-       Main
-       ============================================================ */
+    /* Main */
     .main { flex: 1; margin-right: var(--sidebar-w); min-width: 0; display: flex; flex-direction: column; }
-
     .topbar {
       height: var(--topbar-h);
       background: var(--card);
@@ -160,13 +151,10 @@
       z-index: 50;
       box-shadow: var(--shadow-sm);
     }
-
     .menu-toggle { display: none; background: transparent; border: none; color: var(--text); cursor: pointer; padding: 8px; border-radius: 8px; }
     .menu-toggle:hover { background: var(--bg); }
-
     .topbar-title { font-size: 18px; font-weight: 700; color: var(--text); flex-shrink: 0; }
     .topbar-actions { display: flex; align-items: center; gap: 8px; margin-right: auto; }
-
     .icon-btn {
       width: 40px;
       height: 40px;
@@ -184,7 +172,6 @@
     .icon-btn:hover { border-color: var(--accent); color: var(--accent); }
     .icon-btn i, .icon-btn svg { width: 18px; height: 18px; }
     .icon-btn .dot { position: absolute; top: 8px; left: 8px; width: 8px; height: 8px; background: var(--danger); border-radius: 50%; border: 2px solid var(--card); }
-
     .user-menu {
       display: flex;
       align-items: center;
@@ -197,7 +184,6 @@
       background: var(--card);
     }
     .user-menu:hover { background: var(--bg); }
-
     .user-avatar {
       width: 34px;
       height: 34px;
@@ -216,7 +202,6 @@
     .user-info { display: flex; flex-direction: column; line-height: 1.2; }
     .user-info .name { font-size: 13px; font-weight: 700; color: var(--text); }
     .user-info .role { font-size: 11px; color: var(--text-muted); }
-
     .dropdown { position: absolute; top: calc(100% + 8px); left: 0; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: var(--shadow-lg); min-width: 200px; padding: 6px; opacity: 0; visibility: hidden; transform: translateY(-8px); transition: all 0.2s; z-index: 100; }
     .dropdown.show { opacity: 1; visibility: visible; transform: translateY(0); }
     .dropdown-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; color: var(--text); font-size: 13px; font-weight: 500; cursor: pointer; transition: background 0.15s; text-decoration: none; }
@@ -226,11 +211,8 @@
     .dropdown-item i { width: 16px; height: 16px; }
     .dropdown-divider { height: 1px; background: var(--border); margin: 6px 0; }
 
-    /* ============================================================
-       Content
-       ============================================================ */
+    /* Content */
     .content { padding: 24px; flex: 1; }
-
     .page-head {
       display: flex;
       align-items: center;
@@ -239,7 +221,6 @@
       margin-bottom: 20px;
       flex-wrap: wrap;
     }
-
     .page-head h1 { font-size: 24px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
     .page-head p { font-size: 13px; color: var(--text-muted); }
 
@@ -260,23 +241,19 @@
     }
     .btn:disabled { opacity: 0.6; cursor: not-allowed; }
     .btn i { width: 16px; height: 16px; }
-
     .btn-primary { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; }
     .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(20,184,166,0.35); }
-
     .btn-outline { background: var(--card); color: var(--text); border: 1px solid var(--border); }
     .btn-outline:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
-
     .btn-sm { padding: 6px 12px; font-size: 12px; }
 
     /* Mini stats */
     .mini-stats {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
       gap: 12px;
       margin-bottom: 20px;
     }
-
     .mini-card {
       background: var(--card);
       border: 1px solid var(--border);
@@ -289,7 +266,6 @@
       box-shadow: var(--shadow-sm);
     }
     .mini-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: var(--shadow); }
-
     .mini-icon {
       width: 42px;
       height: 42px;
@@ -305,10 +281,12 @@
     .mini-icon.gold   { background: linear-gradient(135deg, #F59E0B, #d97706); }
     .mini-icon.green  { background: linear-gradient(135deg, #10b981, #047857); }
     .mini-icon.gray   { background: linear-gradient(135deg, #94a3b8, #64748b); }
-
+    .mini-icon.purple { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
+    .mini-icon.red    { background: linear-gradient(135deg, #ef4444, #b91c1c); }
     .mini-body { flex: 1; min-width: 0; }
     .mini-body .label { font-size: 11px; color: var(--text-muted); font-weight: 600; margin-bottom: 2px; }
     .mini-body .value { font-size: 18px; font-weight: 800; color: var(--text); line-height: 1; }
+    .mini-body .sub { font-size: 10px; color: var(--text-muted); margin-top: 3px; }
 
     /* Toolbar */
     .toolbar {
@@ -323,7 +301,6 @@
       flex-wrap: wrap;
       box-shadow: var(--shadow-sm);
     }
-
     .search-input { position: relative; flex: 1; min-width: 220px; }
     .search-input input {
       width: 100%;
@@ -339,7 +316,6 @@
     }
     .search-input input:focus { border-color: var(--accent); background: var(--card); box-shadow: 0 0 0 3px rgba(20,184,166,0.1); }
     .search-input i { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--text-muted); pointer-events: none; }
-
     .select-wrap { position: relative; min-width: 150px; }
     .select-wrap select {
       width: 100%;
@@ -370,6 +346,28 @@
       pointer-events: none;
     }
 
+    /* Quick filters */
+    .quick-filters {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+    .quick-filter-btn {
+      padding: 7px 14px;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .quick-filter-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .quick-filter-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+
     /* Table */
     .table-wrap {
       background: var(--card);
@@ -378,18 +376,14 @@
       box-shadow: var(--shadow-sm);
       overflow: hidden;
     }
-
     .table-scroll { overflow-x: auto; }
-
     table {
       width: 100%;
       border-collapse: collapse;
       font-size: 14px;
-      min-width: 900px;
+      min-width: 1000px;
     }
-
     thead { background: var(--bg); border-bottom: 1px solid var(--border); }
-
     th {
       text-align: right;
       padding: 14px 16px;
@@ -400,22 +394,19 @@
       letter-spacing: 0.5px;
       white-space: nowrap;
     }
-
     tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
     tbody tr:last-child { border-bottom: none; }
     tbody tr:hover { background: var(--bg); }
-
+    tbody tr.request-clickable-row { cursor: pointer; }
+    tbody tr.request-clickable-row:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
     td { padding: 14px 16px; color: var(--text); vertical-align: middle; }
 
     .req-number {
       font-weight: 800;
       color: var(--accent);
-      cursor: pointer;
       font-family: 'Courier New', monospace;
       letter-spacing: 0.5px;
     }
-    .req-number:hover { text-decoration: underline; }
-
     .supplier-name-cell { font-weight: 600; color: var(--text); }
     .supplier-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
 
@@ -434,9 +425,9 @@
     .badge-tag.gold   { background: rgba(245,158,11,0.12); color: var(--warning); }
     .badge-tag.gray   { background: rgba(148,163,184,0.15); color: var(--text-muted); }
     .badge-tag.blue   { background: rgba(59,130,246,0.12); color: var(--info); }
+    .badge-tag.purple { background: rgba(139,92,246,0.12); color: var(--purple); }
 
     .actions-cell { display: flex; gap: 6px; justify-content: flex-end; }
-
     .action-btn {
       width: 32px;
       height: 32px;
@@ -485,7 +476,6 @@
       flex-wrap: wrap;
     }
     .pagination .controls { display: flex; gap: 6px; align-items: center; }
-
     .page-btn {
       min-width: 34px;
       height: 34px;
@@ -504,7 +494,7 @@
     .page-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
     .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
-    /* Modal with scroll */
+    /* Modal */
     .modal-backdrop {
       position: fixed;
       inset: 0;
@@ -519,7 +509,6 @@
       transition: opacity 0.2s;
     }
     .modal-backdrop.show { display: flex; opacity: 1; }
-
     .modal {
       background: var(--card);
       border-radius: var(--radius);
@@ -533,9 +522,8 @@
       transition: transform 0.2s;
       overflow: hidden;
     }
-    .modal.modal-lg { max-width: 780px; }
+    .modal.modal-lg { max-width: 900px; }
     .modal-backdrop.show .modal { transform: scale(1); }
-
     .modal-header {
       padding: 16px 20px;
       border-bottom: 1px solid var(--border);
@@ -547,7 +535,6 @@
     }
     .modal-header h3 { font-size: 16px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px; }
     .modal-header h3 i { width: 18px; height: 18px; color: var(--accent); }
-
     .modal-close {
       width: 32px;
       height: 32px;
@@ -563,8 +550,6 @@
     }
     .modal-close:hover { background: var(--bg); color: var(--danger); }
     .modal-close i { width: 18px; height: 18px; }
-
-    /* ⭐ السكرول */
     .modal-body {
       padding: 20px;
       overflow-y: auto;
@@ -574,10 +559,7 @@
       scrollbar-color: var(--border) transparent;
     }
     .modal-body::-webkit-scrollbar { width: 8px; }
-    .modal-body::-webkit-scrollbar-track { background: transparent; }
     .modal-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
-    .modal-body::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
-
     .modal-footer {
       padding: 14px 20px;
       border-top: 1px solid var(--border);
@@ -587,6 +569,85 @@
       background: var(--bg);
       flex-shrink: 0;
     }
+
+    /* Detail Panel */
+    .detail-section { margin-bottom: 20px; }
+    .detail-section-title {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 10px;
+      padding-bottom: 6px;
+      border-bottom: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      font-size: 13px;
+      border-bottom: 1px dashed var(--border);
+    }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-row .lbl { color: var(--text-muted); font-weight: 600; }
+    .detail-row .val { color: var(--text); font-weight: 700; text-align: left; }
+    .detail-row .val.success { color: var(--success); }
+    .detail-row .val.danger { color: var(--danger); }
+    .detail-row .val.gold { color: var(--gold); }
+    .detail-row .val.accent { color: var(--accent); }
+
+    .detail-items-list {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px;
+      max-height: 320px;
+      overflow-y: auto;
+    }
+    .detail-item-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+    }
+    .detail-item-row:last-child { border-bottom: none; }
+    .detail-item-row .item-name { flex: 1; font-weight: 700; color: var(--text); }
+    .detail-item-row .item-sub { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+    .detail-item-row .item-qty {
+      background: var(--accent);
+      color: white;
+      padding: 3px 10px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 700;
+      min-width: 40px;
+      text-align: center;
+    }
+
+    .panel-summary-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+    .panel-summary-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px;
+      text-align: center;
+    }
+    .panel-summary-card .label { font-size: 10px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 4px; }
+    .panel-summary-card .value { font-size: 16px; font-weight: 800; color: var(--text); }
+    .panel-summary-card .value.accent { color: var(--accent); }
+    .panel-summary-card .value.gold { color: var(--gold); }
+    .panel-summary-card .value.success { color: var(--success); }
 
     /* Share link box */
     .share-link-box {
@@ -610,7 +671,7 @@
       min-width: 0;
     }
 
-    /* Overlay (mobile) */
+    /* Overlay */
     .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; opacity: 0; transition: opacity 0.3s; }
     .overlay.show { display: block; opacity: 1; }
 
@@ -622,7 +683,6 @@
       .menu-toggle { display: flex; }
       .user-info { display: none; }
     }
-
     @media (max-width: 640px) {
       .content { padding: 16px; }
       .topbar { padding: 0 14px; gap: 10px; }
@@ -695,6 +755,9 @@
           <p>إدارة طلبات الشراء من الموردين مع التتبع الكامل</p>
         </div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn btn-outline" id="refreshBtn">
+            <i data-lucide="refresh-cw"></i> تحديث
+          </button>
           <button class="btn btn-outline" id="exportBtn">
             <i data-lucide="download"></i> تصدير
           </button>
@@ -711,6 +774,7 @@
           <div class="mini-body">
             <div class="label">إجمالي الطلبات</div>
             <div class="value" id="statTotal">—</div>
+            <div class="sub" id="statTotalSub">—</div>
           </div>
         </div>
         <div class="mini-card">
@@ -718,6 +782,7 @@
           <div class="mini-body">
             <div class="label">مسودات</div>
             <div class="value" id="statDraft">—</div>
+            <div class="sub" id="statDraftSub">—</div>
           </div>
         </div>
         <div class="mini-card">
@@ -725,6 +790,7 @@
           <div class="mini-body">
             <div class="label">مُرسل</div>
             <div class="value" id="statSent">—</div>
+            <div class="sub" id="statSentSub">—</div>
           </div>
         </div>
         <div class="mini-card">
@@ -732,6 +798,23 @@
           <div class="mini-body">
             <div class="label">مستلم</div>
             <div class="value" id="statReceived">—</div>
+            <div class="sub" id="statReceivedSub">—</div>
+          </div>
+        </div>
+        <div class="mini-card">
+          <div class="mini-icon gold"><i data-lucide="banknote"></i></div>
+          <div class="mini-body">
+            <div class="label">إجمالي القيمة</div>
+            <div class="value" id="statValue">—</div>
+            <div class="sub" id="statValueSub">—</div>
+          </div>
+        </div>
+        <div class="mini-card">
+          <div class="mini-icon purple"><i data-lucide="clock"></i></div>
+          <div class="mini-body">
+            <div class="label">هذا الشهر</div>
+            <div class="value" id="statMonth">—</div>
+            <div class="sub" id="statMonthSub">—</div>
           </div>
         </div>
       </div>
@@ -759,6 +842,15 @@
         </div>
       </div>
 
+      <!-- Quick Filters -->
+      <div class="quick-filters">
+        <button type="button" class="quick-filter-btn active" data-quick="all">الكل</button>
+        <button type="button" class="quick-filter-btn" data-quick="today">اليوم</button>
+        <button type="button" class="quick-filter-btn" data-quick="week">آخر 7 أيام</button>
+        <button type="button" class="quick-filter-btn" data-quick="month">هذا الشهر</button>
+        <button type="button" class="quick-filter-btn" data-quick="pending">تحتاج متابعة</button>
+      </div>
+
       <!-- Table -->
       <div class="table-wrap">
         <div class="table-scroll">
@@ -770,7 +862,7 @@
                 <th>التاريخ</th>
                 <th>الأصناف</th>
                 <th>الحالة</th>
-                <th>الإجمالي</th>
+                <th>القيمة التقديرية</th>
                 <th></th>
               </tr>
             </thead>
@@ -815,9 +907,26 @@
     </div>
   </div>
 
+  <!-- Modal: Request Details -->
+  <div class="modal-backdrop" id="detailModal">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <h3><i data-lucide="clipboard-list"></i> تفاصيل الطلب</h3>
+        <button class="modal-close" data-close><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body" id="detailModalBody"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" data-close>إغلاق</button>
+        <a class="btn btn-primary" id="editFromModalBtn" href="#">
+          <i data-lucide="pencil"></i> تعديل الطلب
+        </a>
+      </div>
+    </div>
+  </div>
+
   <script src="refad-core.js"></script>
   <script src="refad-auth.js"></script>
-  <script>
+    <script>
     (function () {
       'use strict';
 
@@ -831,7 +940,7 @@
       const canEdit   = Refad.Session.has('purchases.edit');
 
       // ============================================================
-      // 2) Sidebar
+      // 2) Sidebar MENU
       // ============================================================
       const MENU = [
         { section: 'الرئيسية', items: [
@@ -955,16 +1064,20 @@
         all: [],
         filtered: [],
         suppliers: [],
+        productsMap: {},
+        purchaseBenchmarks: {},
         page: 1,
         perPage: 15,
         search: '',
         filterStatus: '',
         filterSupplier: '',
-        shareRequestId: null
+        quickFilter: 'all',
+        shareRequestId: null,
+        detailRequestId: null
       };
 
       // ============================================================
-      // 5) Load suppliers for filter
+      // 5) Load suppliers filter
       // ============================================================
       async function loadSuppliersFilter() {
         try {
@@ -987,20 +1100,149 @@
       }
 
       // ============================================================
-      // 6) Load requests
+      // 6) Load Products Map (للأسعار والمقارنة)
+      // ============================================================
+      async function loadProductsMap() {
+        try {
+          const products = await Refad.db.select('products', {
+            columns: 'id, name, form, unit, default_price',
+            eq: { company_id: session.company_id }
+          }).catch(() => []);
+
+          state.productsMap = {};
+          products.forEach(p => { state.productsMap[p.id] = p; });
+
+          // تحميل benchmarks آخر 180 يوم
+          const purchaseSince = Refad.date.addDays(Refad.date.today(), -180);
+          const purchases = await Refad.db.select('receipt_items', {
+            columns: 'product_id, unit_price, purchase_discount, receipts!inner(company_id, supplier_id, receipt_date, status, suppliers(id, name))',
+            in: { product_id: products.map(p => p.id) },
+            gte: { 'receipts.receipt_date': purchaseSince },
+            eq: { 'receipts.company_id': session.company_id },
+            neq: { 'receipts.status': 'cancelled' },
+            limit: 10000
+          }).catch(() => []);
+
+          state.purchaseBenchmarks = {};
+          purchases.forEach(row => {
+            const receipt = row.receipts;
+            const supplier = receipt?.suppliers;
+            const unitPrice = Number(row.unit_price);
+            if (!receipt || !supplier || !Number.isFinite(unitPrice) || unitPrice < 0) return;
+
+            const discount = Math.max(0, Math.min(100, Number(row.purchase_discount) || 0));
+            const netPrice = unitPrice * (1 - discount / 100);
+
+            const benchmark = state.purchaseBenchmarks[row.product_id] || { best: null, latest: null };
+            const purchase = {
+              supplierId: receipt.supplier_id,
+              supplierName: supplier.name,
+              netPrice,
+              discount,
+              date: receipt.receipt_date,
+              unitPrice
+            };
+
+            if (!benchmark.best || netPrice < benchmark.best.netPrice) benchmark.best = purchase;
+            if (!benchmark.latest || receipt.receipt_date > benchmark.latest.date) benchmark.latest = purchase;
+            state.purchaseBenchmarks[row.product_id] = benchmark;
+          });
+        } catch (e) {
+          console.warn('Products map failed:', e.message);
+        }
+      }
+
+      // ============================================================
+      // 7) Load Requests (مع Fallback لحساب الإجمالي)
       // ============================================================
       async function loadRequests(silent) {
         if (!silent) renderSkeleton();
         try {
-          const rows = await Refad.db.select('purchase_requests', {
-            columns: `id, request_number, status, total_amount, notes, share_token, created_at,
-                      suppliers(id, name, phone),
-                      purchase_request_items(id, requested_qty)`,
+          // جلب الطلبات أولاً
+          const requests = await Refad.db.select('purchase_requests', {
+            columns: `id, request_number, status, total_amount, notes, share_token, created_at, updated_at,
+                      supplier_id, created_by`,
             eq: { company_id: session.company_id },
             order: { column: 'created_at', ascending: false },
             limit: 500
           });
-          state.all = rows;
+
+          if (!requests.length) {
+            state.all = [];
+            applyFilters();
+            renderStats();
+            return;
+          }
+
+          // جلب الموردين
+          const supplierIds = [...new Set(requests.map(r => r.supplier_id).filter(Boolean))];
+          const suppliers = supplierIds.length ? await Refad.db.select('suppliers', {
+            columns: 'id, name, phone, balance',
+            in: { id: supplierIds }
+          }).catch(() => []) : [];
+          const supplierById = new Map(suppliers.map(s => [String(s.id), s]));
+
+          // جلب أصناف الطلبات مع المنتجات
+          const requestIds = requests.map(r => r.id);
+          const items = await Refad.db.select('purchase_request_items', {
+            columns: 'id, request_id, product_id, requested_qty, requested_discount, supplier_price, supplier_discount, supplier_response_at, products(id, name, form, unit, default_price)',
+            in: { request_id: requestIds },
+            order: { column: 'id', ascending: true }
+          }).catch(() => []);
+
+          const itemsByRequest = new Map();
+          items.forEach(item => {
+            const key = String(item.request_id);
+            if (!itemsByRequest.has(key)) itemsByRequest.set(key, []);
+            itemsByRequest.get(key).push(item);
+          });
+
+          // ربط كل شيء + حساب الإجمالي الفعلي
+          state.all = requests.map(r => {
+            const rItems = itemsByRequest.get(String(r.id)) || [];
+
+            // حساب الإجمالي الفعلي من الأصناف
+            let computedTotal = 0;
+            let hasEstimatedPrices = false;
+
+            rItems.forEach(item => {
+              const qty = Number(item.requested_qty) || 0;
+
+              // أولوية: سعر المورد → آخر سعر شراء → السعر الافتراضي
+              let unitPrice = null;
+              if (item.supplier_price !== null && item.supplier_price !== undefined) {
+                unitPrice = Number(item.supplier_price);
+              } else {
+                const benchmark = state.purchaseBenchmarks[item.product_id];
+                if (benchmark?.best?.netPrice) {
+                  unitPrice = Number(benchmark.best.netPrice);
+                  hasEstimatedPrices = true;
+                } else if (item.products?.default_price) {
+                  unitPrice = Number(item.products.default_price);
+                  hasEstimatedPrices = true;
+                }
+              }
+
+              if (unitPrice !== null) {
+                const discount = Number(item.supplier_discount || item.requested_discount) || 0;
+                computedTotal += qty * unitPrice * (1 - discount / 100);
+              }
+            });
+
+            // استخدم total_amount المخزن، وإلا المحسوب
+            const storedTotal = Number(r.total_amount) || 0;
+            const finalTotal = storedTotal > 0 ? storedTotal : computedTotal;
+
+            return {
+              ...r,
+              suppliers: supplierById.get(String(r.supplier_id)) || null,
+              purchase_request_items: rItems,
+              computed_total: computedTotal,
+              final_total: finalTotal,
+              has_estimated_prices: hasEstimatedPrices
+            };
+          });
+
           applyFilters();
           renderStats();
         } catch (e) {
@@ -1008,29 +1250,76 @@
           Refad.toast.error('تعذّر التحميل: ' + e.message);
           state.all = [];
           applyFilters();
+          renderStats();
         }
       }
 
+      // ============================================================
+      // 8) Render Stats
+      // ============================================================
       function renderStats() {
         const total = state.all.length;
         const draft = state.all.filter(r => r.status === 'draft').length;
         const sent = state.all.filter(r => r.status === 'sent').length;
         const received = state.all.filter(r => r.status === 'received').length;
 
+        const totalValue = state.all.reduce((s, r) => s + (r.final_total || 0), 0);
+
+        const monthStart = Refad.date.startOfMonth();
+        const monthCount = state.all.filter(r => {
+          const date = (r.created_at || '').slice(0, 10);
+          return date >= monthStart;
+        }).length;
+
         document.getElementById('statTotal').textContent = Refad.format.number(total);
+        document.getElementById('statTotalSub').textContent = `إجمالي الطلبات`;
+
         document.getElementById('statDraft').textContent = Refad.format.number(draft);
+        document.getElementById('statDraftSub').textContent = total ? Math.round((draft / total) * 100) + '%' : '—';
+
         document.getElementById('statSent').textContent = Refad.format.number(sent);
+        document.getElementById('statSentSub').textContent = total ? Math.round((sent / total) * 100) + '%' : '—';
+
         document.getElementById('statReceived').textContent = Refad.format.number(received);
+        document.getElementById('statReceivedSub').textContent = total ? Math.round((received / total) * 100) + '%' : '—';
+
+        document.getElementById('statValue').textContent = Refad.format.money(totalValue);
+        document.getElementById('statValueSub').textContent = total ? `متوسط: ${Refad.format.money(totalValue / total)}` : '—';
+
+        document.getElementById('statMonth').textContent = Refad.format.number(monthCount);
+        document.getElementById('statMonthSub').textContent = `هذا الشهر`;
       }
 
       // ============================================================
-      // 7) Filters + Pagination
+      // 9) Apply Filters
       // ============================================================
       function applyFilters() {
         const q = state.search.toLowerCase().trim();
+        const today = Refad.date.today();
+
         state.filtered = state.all.filter(r => {
+          // Status filter
           if (state.filterStatus && r.status !== state.filterStatus) return false;
+
+          // Supplier filter
           if (state.filterSupplier && String(r.suppliers?.id) !== String(state.filterSupplier)) return false;
+
+          // Quick filters
+          const date = (r.created_at || '').slice(0, 10);
+          if (state.quickFilter === 'today' && date !== today) return false;
+          if (state.quickFilter === 'week') {
+            const weekAgo = Refad.date.addDays(today, -7);
+            if (date < weekAgo) return false;
+          }
+          if (state.quickFilter === 'month') {
+            const monthStart = Refad.date.startOfMonth();
+            if (date < monthStart) return false;
+          }
+          if (state.quickFilter === 'pending') {
+            if (r.status !== 'draft' && r.status !== 'sent' && r.status !== 'partial') return false;
+          }
+
+          // Search
           if (!q) return true;
           return (
             (r.request_number || '').toLowerCase().includes(q) ||
@@ -1042,6 +1331,9 @@
         renderTable();
       }
 
+      // ============================================================
+      // 10) Skeleton
+      // ============================================================
       function renderSkeleton() {
         const tbody = document.getElementById('tableBody');
         tbody.innerHTML = Array(6).fill(0).map(() => `
@@ -1057,6 +1349,9 @@
         `).join('');
       }
 
+      // ============================================================
+      // 11) Render Table
+      // ============================================================
       function renderTable() {
         const tbody = document.getElementById('tableBody');
         const pag = Refad.paginate(state.filtered, state.page, state.perPage);
@@ -1064,7 +1359,7 @@
         if (state.filtered.length === 0) {
           const msg = state.all.length === 0
             ? 'لا توجد طلبات شراء بعد. ابدأ بإنشاء طلب جديد.'
-            : 'لا توجد نتائج مطابقة.';
+            : 'لا توجد نتائج مطابقة للفلاتر الحالية.';
           tbody.innerHTML = `
             <tr class="empty-row">
               <td colspan="7">
@@ -1079,22 +1374,25 @@
         }
 
         const STATUS = {
-          'draft':     { label: 'مسودة',  cls: 'gray' },
-          'sent':      { label: 'مُرسل',  cls: 'blue' },
-          'partial':   { label: 'جزئي',   cls: 'gold' },
-          'received':  { label: 'مستلم',  cls: 'green' },
-          'cancelled': { label: 'ملغي',   cls: 'red' }
+          'draft':     { label: 'مسودة',  cls: 'gray', icon: 'file-edit' },
+          'sent':      { label: 'مُرسل',  cls: 'blue', icon: 'send' },
+          'partial':   { label: 'جزئي',   cls: 'gold', icon: 'clock' },
+          'received':  { label: 'مستلم',  cls: 'green', icon: 'check-circle-2' },
+          'cancelled': { label: 'ملغي',   cls: 'red', icon: 'x-circle' }
         };
 
         tbody.innerHTML = pag.data.map(r => {
-          const st = STATUS[r.status] || { label: r.status, cls: 'gray' };
+          const st = STATUS[r.status] || { label: r.status, cls: 'gray', icon: 'circle' };
           const itemCount = r.purchase_request_items?.length || 0;
+          const totalQty = r.purchase_request_items?.reduce((s, it) => s + (Number(it.requested_qty) || 0), 0) || 0;
+          const finalTotal = r.final_total || 0;
+          const hasResponses = r.purchase_request_items?.some(it => it.supplier_response_at);
+
           return `
-            <tr class="request-clickable-row" data-open-request="${r.id}" tabindex="0" style="cursor:pointer" aria-label="فتح طلب الشراء ${Refad.escapeHtml(r.request_number)}">
+            <tr class="request-clickable-row" data-open-request="${r.id}" tabindex="0" aria-label="فتح الطلب ${Refad.escapeHtml(r.request_number)}">
               <td>
-                <span class="req-number" onclick="location.href='purchase-request-form.html?id=${r.id}'">
-                  ${Refad.escapeHtml(r.request_number)}
-                </span>
+                <span class="req-number">${Refad.escapeHtml(r.request_number)}</span>
+                ${hasResponses ? '<div class="supplier-sub"><span class="badge-tag green" style="padding:1px 6px;font-size:9px;">رد المورد</span></div>' : ''}
               </td>
               <td>
                 ${r.suppliers ? `
@@ -1103,12 +1401,25 @@
                 ` : '<span style="color:var(--text-muted);">—</span>'}
               </td>
               <td>${Refad.format.date(r.created_at)}</td>
-              <td>${Refad.format.number(itemCount)}</td>
-              <td><span class="badge-tag ${st.cls}">${Refad.escapeHtml(st.label)}</span></td>
-              <td><strong>${Refad.format.money(r.total_amount || 0)}</strong></td>
+              <td>
+                <strong>${Refad.format.number(itemCount)} صنف</strong>
+                <div class="supplier-sub">${Refad.format.number(totalQty)} وحدة</div>
+              </td>
+              <td>
+                <span class="badge-tag ${st.cls}">
+                  <i data-lucide="${st.icon}" style="width:10px;height:10px;"></i>
+                  ${Refad.escapeHtml(st.label)}
+                </span>
+              </td>
+              <td>
+                <strong style="color:${finalTotal > 0 ? 'var(--accent)' : 'var(--text-muted)'};">
+                  ${finalTotal > 0 ? Refad.format.money(finalTotal) : '—'}
+                </strong>
+                ${r.has_estimated_prices && finalTotal > 0 ? '<div class="supplier-sub">تقديري</div>' : ''}
+              </td>
               <td>
                 <div class="actions-cell">
-                  <button class="action-btn" data-action="view" data-id="${r.id}" title="عرض">
+                  <button class="action-btn" data-action="view" data-id="${r.id}" title="عرض التفاصيل">
                     <i data-lucide="eye"></i>
                   </button>
                   <button class="action-btn share" data-action="share" data-id="${r.id}" title="مشاركة">
@@ -1125,6 +1436,9 @@
         renderPagination(pag);
       }
 
+      // ============================================================
+      // 12) Pagination
+      // ============================================================
       function renderPagination(pag) {
         const el = document.getElementById('pagination');
         const { page, pages, total, perPage } = pag;
@@ -1171,9 +1485,162 @@
 
         if (window.lucide) lucide.createIcons();
       }
+            // ============================================================
+      // 13) Detail Modal
+      // ============================================================
+      async function openDetailModal(id) {
+        const r = state.all.find(x => x.id === id);
+        if (!r) return;
+
+        state.detailRequestId = id;
+        const body = document.getElementById('detailModalBody');
+
+        body.innerHTML = `
+          <div style="text-align:center;padding:40px;color:var(--text-muted);">
+            <i data-lucide="loader" style="width:32px;height:32px;animation:spin 1s linear infinite;"></i>
+            <p style="margin-top:10px;">جارٍ التحميل...</p>
+          </div>
+        `;
+        document.getElementById('detailModal').classList.add('show');
+        if (window.lucide) lucide.createIcons();
+
+        // جلب بيانات الردود الكاملة
+        let supplierResponses = [];
+        try {
+          supplierResponses = await Refad.db.select('purchase_request_responses', {
+            columns: 'id, product_id, supplier_price, supplier_discount, submitted_at',
+            eq: { request_id: id },
+            order: { column: 'submitted_at', ascending: false },
+            limit: 100
+          }).catch(() => []);
+        } catch (e) {
+          console.warn('Responses fetch failed:', e);
+        }
+
+        const STATUS = {
+          'draft':     { label: 'مسودة',  cls: 'gray' },
+          'sent':      { label: 'مُرسل',  cls: 'blue' },
+          'partial':   { label: 'جزئي',   cls: 'gold' },
+          'received':  { label: 'مستلم',  cls: 'green' },
+          'cancelled': { label: 'ملغي',   cls: 'red' }
+        };
+        const st = STATUS[r.status] || { label: r.status, cls: 'gray' };
+
+        const items = r.purchase_request_items || [];
+        const totalQty = items.reduce((s, it) => s + (Number(it.requested_qty) || 0), 0);
+        const finalTotal = r.final_total || 0;
+
+        const responseCount = items.filter(it => it.supplier_response_at).length;
+
+        body.innerHTML = `
+          <!-- Summary Cards -->
+          <div class="panel-summary-grid">
+            <div class="panel-summary-card">
+              <div class="label">عدد الأصناف</div>
+              <div class="value accent">${Refad.format.number(items.length)}</div>
+            </div>
+            <div class="panel-summary-card">
+              <div class="label">إجمالي الكميات</div>
+              <div class="value">${Refad.format.number(totalQty)}</div>
+            </div>
+            <div class="panel-summary-card">
+              <div class="label">القيمة التقديرية</div>
+              <div class="value gold">${finalTotal > 0 ? Refad.format.money(finalTotal) : '—'}</div>
+            </div>
+            <div class="panel-summary-card">
+              <div class="label">ردود المورد</div>
+              <div class="value success">${Refad.format.number(responseCount)} / ${Refad.format.number(items.length)}</div>
+            </div>
+          </div>
+
+          <!-- Info -->
+          <div class="detail-section">
+            <div class="detail-section-title"><i data-lucide="info" style="width:14px;height:14px;"></i> معلومات أساسية</div>
+            <div class="detail-row"><span class="lbl">رقم الطلب</span><span class="val accent">${Refad.escapeHtml(r.request_number)}</span></div>
+            <div class="detail-row"><span class="lbl">التاريخ</span><span class="val">${Refad.format.date(r.created_at)}</span></div>
+            <div class="detail-row"><span class="lbl">الحالة</span><span class="val"><span class="badge-tag ${st.cls}">${Refad.escapeHtml(st.label)}</span></span></div>
+            ${r.updated_at ? `<div class="detail-row"><span class="lbl">آخر تحديث</span><span class="val">${Refad.format.datetime(r.updated_at)}</span></div>` : ''}
+          </div>
+
+          <!-- Supplier -->
+          ${r.suppliers ? `
+            <div class="detail-section">
+              <div class="detail-section-title"><i data-lucide="truck" style="width:14px;height:14px;"></i> المورد</div>
+              <div class="detail-row"><span class="lbl">الاسم</span><span class="val">${Refad.escapeHtml(r.suppliers.name)}</span></div>
+              ${r.suppliers.phone ? `<div class="detail-row"><span class="lbl">الهاتف</span><span class="val">${Refad.escapeHtml(r.suppliers.phone)}</span></div>` : ''}
+              ${r.suppliers.balance !== undefined ? `<div class="detail-row"><span class="lbl">الرصيد</span><span class="val ${r.suppliers.balance > 0 ? 'danger' : 'success'}">${Refad.format.money(r.suppliers.balance)}</span></div>` : ''}
+            </div>
+          ` : ''}
+
+          <!-- Notes -->
+          ${r.notes ? `
+            <div class="detail-section">
+              <div class="detail-section-title"><i data-lucide="file-text" style="width:14px;height:14px;"></i> ملاحظات</div>
+              <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;font-size:13px;line-height:1.7;">${Refad.escapeHtml(r.notes)}</div>
+            </div>
+          ` : ''}
+
+          <!-- Items -->
+          <div class="detail-section">
+            <div class="detail-section-title"><i data-lucide="package" style="width:14px;height:14px;"></i> الأصناف (${items.length})</div>
+            ${items.length ? `
+              <div class="detail-items-list">
+                ${items.map(it => {
+                  const p = it.products || state.productsMap[it.product_id] || {};
+                  const hasResponse = it.supplier_response_at;
+                  const benchmark = state.purchaseBenchmarks[it.product_id];
+
+                  return `
+                    <div class="detail-item-row">
+                      <div style="flex:1;min-width:0;">
+                        <div class="item-name">${Refad.escapeHtml(p.name || 'صنف')}</div>
+                        <div class="item-sub">
+                          ${[p.form, p.unit].filter(Boolean).join(' • ') || ''}
+                          ${benchmark?.best ? ` • أفضل سعر سابق: ${Refad.format.money(benchmark.best.netPrice)}` : ''}
+                          ${hasResponse ? ` • <span style="color:var(--success);font-weight:700;">رد المورد: ${Refad.format.money(it.supplier_price || 0)} (خصم ${Refad.format.number(it.supplier_discount || 0, 1)}%)</span>` : ''}
+                        </div>
+                      </div>
+                      <div class="item-qty">${Refad.format.number(it.requested_qty)}</div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            ` : '<div style="text-align:center;padding:20px;color:var(--text-muted);font-size:13px;">لا توجد أصناف</div>'}
+          </div>
+
+          <!-- Supplier Responses History -->
+          ${supplierResponses.length ? `
+            <div class="detail-section">
+              <div class="detail-section-title"><i data-lucide="history" style="width:14px;height:14px;"></i> سجل ردود المورد (${supplierResponses.length})</div>
+              <div class="detail-items-list" style="max-height:240px;">
+                ${supplierResponses.map(resp => {
+                  const p = state.productsMap[resp.product_id] || {};
+                  return `
+                    <div class="detail-item-row">
+                      <div style="flex:1;min-width:0;">
+                        <div class="item-name">${Refad.escapeHtml(p.name || 'صنف محذوف')}</div>
+                        <div class="item-sub">${Refad.format.datetime(resp.submitted_at)}</div>
+                      </div>
+                      <div style="text-align:left;">
+                        <div style="font-weight:700;color:var(--accent);">${Refad.format.money(resp.supplier_price || 0)}</div>
+                        <div style="font-size:10px;color:var(--success);font-weight:700;">خصم ${Refad.format.number(resp.supplier_discount || 0, 1)}%</div>
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+          ` : ''}
+        `;
+
+        // تحديث زر التعديل
+        document.getElementById('editFromModalBtn').href = `purchase-request-form.html?id=${id}`;
+
+        if (window.lucide) lucide.createIcons();
+      }
 
       // ============================================================
-      // 8) Share modal
+      // 14) Share Modal
       // ============================================================
       async function openShareModal(id) {
         const r = state.all.find(x => x.id === id);
@@ -1182,13 +1649,12 @@
         state.shareRequestId = id;
         let token = r.share_token;
 
-        // لو مفيش token → نولّد واحد
         if (!token) {
           token = Refad.randomToken(48);
           try {
             await Refad.db.update('purchase_requests', id, { share_token: token });
             r.share_token = token;
-            // نسجل في share_links أيضاً
+
             await Refad.db.insert('share_links', {
               company_id: session.company_id,
               token,
@@ -1196,7 +1662,7 @@
               resource_id: id,
               created_by: session.user_id,
               expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
-            });
+            }).catch(() => {});
           } catch (e) {
             console.error('Share token failed:', e);
             Refad.toast.error('تعذّر توليد الرابط');
@@ -1231,13 +1697,12 @@
         });
 
         document.getElementById('openLinkBtn').addEventListener('click', () => {
-          const url = document.getElementById('shareLinkInput').value;
-          window.open(url, '_blank');
+          window.open(document.getElementById('shareLinkInput').value, '_blank');
         });
       }
 
       // ============================================================
-      // 9) Delete
+      // 15) Delete Request
       // ============================================================
       async function deleteRequest(id, num) {
         const ok = await Refad.alert.confirm(
@@ -1248,9 +1713,8 @@
         if (!ok) return;
 
         try {
-          // حذف العناصر أولاً
           await Refad.db.removeWhere('purchase_request_items', { request_id: id });
-          // حذف الطلب
+          await Refad.db.removeWhere('purchase_request_responses', { request_id: id }).catch(() => {});
           await Refad.db.remove('purchase_requests', id);
           await Refad.logActivity('delete_purchase_request', 'purchases', `حذف طلب: ${num}`, id);
           Refad.toast.success('تم الحذف');
@@ -1262,7 +1726,39 @@
       }
 
       // ============================================================
-      // 10) Events
+      // 16) Export
+      // ============================================================
+      function exportExcel() {
+        if (!state.filtered.length) {
+          Refad.toast.warning('لا توجد بيانات للتصدير');
+          return;
+        }
+
+        const rows = state.filtered.map(r => ({
+          'رقم الطلب': r.request_number,
+          'المورد': r.suppliers?.name || '',
+          'الهاتف': r.suppliers?.phone || '',
+          'التاريخ': Refad.format.date(r.created_at),
+          'الحالة': r.status,
+          'عدد الأصناف': r.purchase_request_items?.length || 0,
+          'إجمالي الوحدات': r.purchase_request_items?.reduce((s, it) => s + (Number(it.requested_qty) || 0), 0) || 0,
+          'القيمة التقديرية': r.final_total || 0,
+          'ملاحظات': r.notes || ''
+        }));
+
+        const ws = XLSX.utils.json_to_sheet(rows);
+        ws['!cols'] = [
+          { wch: 15 }, { wch: 25 }, { wch: 15 }, { wch: 12 }, { wch: 10 },
+          { wch: 10 }, { wch: 12 }, { wch: 15 }, { wch: 30 }
+        ];
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'PurchaseRequests');
+        XLSX.writeFile(wb, `purchase-requests-${Refad.date.today()}.xlsx`);
+        Refad.toast.success(`تم تصدير ${rows.length} طلب`);
+      }
+
+      // ============================================================
+      // 17) Events
       // ============================================================
       function bindEvents() {
         const searchHandler = Refad.debounce(v => {
@@ -1275,11 +1771,36 @@
           state.filterStatus = e.target.value;
           applyFilters();
         });
+
         document.getElementById('filterSupplier').addEventListener('change', e => {
           state.filterSupplier = e.target.value;
           applyFilters();
         });
 
+        // Quick filters
+        document.querySelectorAll('.quick-filter-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            document.querySelectorAll('.quick-filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            state.quickFilter = btn.dataset.quick;
+            applyFilters();
+          });
+        });
+
+        // Refresh
+        document.getElementById('refreshBtn').addEventListener('click', async () => {
+          const btn = document.getElementById('refreshBtn');
+          btn.disabled = true;
+          try {
+            await loadProductsMap();
+            await loadRequests();
+            Refad.toast.success('تم التحديث');
+          } finally {
+            btn.disabled = false;
+          }
+        });
+
+        // Add
         if (canCreate) {
           document.getElementById('addBtn').addEventListener('click', () => {
             location.href = 'purchase-request-form.html';
@@ -1290,70 +1811,82 @@
           b.title = 'ليس لديك صلاحية';
         }
 
+        // Export
+        document.getElementById('exportBtn').addEventListener('click', exportExcel);
+
+        // Table click
         document.getElementById('tableBody').addEventListener('click', e => {
           const btn = e.target.closest('[data-action]');
           if (btn) {
+            e.stopPropagation();
             const action = btn.dataset.action;
             const id = parseInt(btn.dataset.id, 10);
             const r = state.all.find(x => x.id === id);
             if (!r) return;
-            if (action === 'view') location.href = `purchase-request-form.html?id=${id}`;
+
+            if (action === 'view') openDetailModal(id);
             else if (action === 'share') openShareModal(id);
             else if (action === 'delete') deleteRequest(id, r.request_number);
             return;
           }
+
           const row = e.target.closest('[data-open-request]');
-          if (row && !e.target.closest('a, input, select, textarea, label')) {
-            location.href = `purchase-request-form.html?id=${row.dataset.openRequest}`;
+          if (row) {
+            const id = parseInt(row.dataset.openRequest, 10);
+            openDetailModal(id);
           }
         });
+
         document.getElementById('tableBody').addEventListener('keydown', e => {
           const row = e.target.closest('[data-open-request]');
           if (row && e.target === row && (e.key === 'Enter' || e.key === ' ')) {
             e.preventDefault();
-            location.href = `purchase-request-form.html?id=${row.dataset.openRequest}`;
+            openDetailModal(parseInt(row.dataset.openRequest, 10));
           }
         });
 
-        // Modal close
+        // Modal closes
         document.querySelectorAll('[data-close]').forEach(b => {
           b.addEventListener('click', () => {
             document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.remove('show'));
           });
         });
+
         document.addEventListener('keydown', e => {
           if (e.key === 'Escape') {
             document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.remove('show'));
           }
         });
-        document.getElementById('shareModal').addEventListener('click', e => {
-          if (e.target.id === 'shareModal') e.target.classList.remove('show');
+
+        document.querySelectorAll('.modal-backdrop').forEach(m => {
+          m.addEventListener('click', e => {
+            if (e.target === m) m.classList.remove('show');
+          });
         });
 
-        // Export
-        document.getElementById('exportBtn').addEventListener('click', () => {
-          if (!state.filtered.length) {
-            Refad.toast.warning('لا توجد بيانات للتصدير');
-            return;
+        // Keyboard shortcuts
+        document.addEventListener('keydown', e => {
+          if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+            e.preventDefault();
+            const search = document.getElementById('searchInput');
+            search.focus();
+            search.select();
           }
-          const rows = state.filtered.map(r => ({
-            'رقم الطلب': r.request_number,
-            'المورد': r.suppliers?.name || '',
-            'التاريخ': Refad.format.date(r.created_at),
-            'الحالة': r.status,
-            'عدد الأصناف': r.purchase_request_items?.length || 0,
-            'الإجمالي': r.total_amount || 0
-          }));
-          const ws = XLSX.utils.json_to_sheet(rows);
-          const wb = XLSX.utils.book_new();
-          XLSX.utils.book_append_sheet(wb, ws, 'PurchaseRequests');
-          XLSX.writeFile(wb, `purchase-requests-${Refad.date.today()}.xlsx`);
-          Refad.toast.success('تم التصدير');
+          if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+            e.preventDefault();
+            const addBtn = document.getElementById('addBtn');
+            if (addBtn && !addBtn.disabled) addBtn.click();
+          }
+          if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
+            e.preventDefault();
+            const refreshBtn = document.getElementById('refreshBtn');
+            if (refreshBtn) refreshBtn.click();
+          }
         });
       }
 
       // ============================================================
-      // 11) Init
+      // 18) Init
       // ============================================================
       async function init() {
         buildSidebar();
@@ -1366,6 +1899,7 @@
         setupShareModal();
 
         await loadSuppliersFilter();
+        await loadProductsMap();
         await loadRequests();
 
         Refad.registerServiceWorker();
@@ -1377,12 +1911,15 @@
         init();
       }
 
-      console.log('%c[Refad] Purchase requests ready', 'color:#14B8A6;font-weight:bold');
+      // Spinner animation
+      const spinnerStyle = document.createElement('style');
+      spinnerStyle.textContent = '@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }';
+      document.head.appendChild(spinnerStyle);
+
+      console.log('%c[Refad] Purchase requests ready (PRO v2)', 'color:#14B8A6;font-weight:bold');
 
     })();
   </script>
-
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 </body>
 </html>

@@ -5,242 +5,1418 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#0B2C4D">
   <title>الحسابات - رفاد</title>
+
   <link rel="icon" type="image/png" href="logo.png">
   <link rel="manifest" href="manifest.json">
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
   <style>
-    * { box-sizing: border-box; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
     :root {
-      --primary: #0B2C4D; --accent: #14B8A6; --bg: #F1F5F9; --card: #fff;
-      --text: #0f172a; --muted: #64748b; --border: #e2e8f0;
-      --green: #059669; --red: #dc2626; --gold: #d97706;
-      --shadow: 0 4px 20px rgba(11,44,77,.07); --radius: 16px;
+      --primary: #0B2C4D;
+      --primary-light: #1e4a73;
+      --accent: #14B8A6;
+      --accent-dark: #0d9488;
+      --gold: #F59E0B;
+      --bg: #F1F5F9;
+      --card: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --danger: #ef4444;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --info: #3b82f6;
+      --purple: #8b5cf6;
+      --sidebar-bg: #0B2C4D;
+      --sidebar-text: #cbd5e1;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+      --shadow: 0 4px 20px rgba(11, 44, 77, 0.08);
+      --shadow-lg: 0 10px 40px rgba(11, 44, 77, 0.12);
+      --radius: 14px;
+      --radius-sm: 10px;
+      --sidebar-w: 260px;
+      --topbar-h: 64px;
     }
+
     [data-theme="dark"] {
-      --bg: #0a1628; --card: #0f2137; --text: #f1f5f9; --muted: #94a3b8; --border: #1e3a5f;
+      --bg: #0a1628;
+      --card: #0f2137;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --border: #1e3a5f;
+      --sidebar-bg: #061a2e;
+      --sidebar-text: #94a3b8;
     }
-    body { margin: 0; background: var(--bg); color: var(--text); font-family: Cairo, sans-serif; }
-    .shell { max-width: 1500px; margin: auto; padding: 24px; }
-    header { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:24px; }
-    .brand { display:flex; align-items:center; gap:14px; min-width:0; }
-    .brand img { width:48px;height:48px;object-fit:contain;background:var(--card);border-radius:14px;padding:5px;box-shadow:var(--shadow); }
-    h1 { margin:0;font-size:26px;font-weight:800; }
-    .subtitle { color:var(--muted);font-size:13px;margin-top:3px; }
-    .header-actions,.quick-links { display:flex;align-items:center;gap:9px;flex-wrap:wrap; }
-    button,select,.link-btn { font:inherit; }
-    button,.link-btn { border:1px solid var(--border);border-radius:10px;background:var(--card);color:var(--text);padding:9px 13px;display:inline-flex;align-items:center;justify-content:center;gap:7px;text-decoration:none;cursor:pointer;transition:.15s; }
-    button:hover,.link-btn:hover { border-color:var(--accent);color:var(--accent); }
-    button:disabled { opacity:.55;cursor:wait; }
-    .primary { background:linear-gradient(135deg,var(--primary),var(--accent));border:0;color:#fff; }
-    .primary:hover { color:#fff;filter:brightness(1.06); }
-    .filters { display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px; }
-    .period { background:var(--card);border:1px solid var(--border);border-radius:10px;color:var(--text);padding:10px 14px;min-width:190px; }
-    .updated { color:var(--muted);font-size:12px; }
-    .cards { display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:18px; }
-    .metric { min-height:124px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);position:relative;overflow:hidden; }
-    .metric::after { content:"";position:absolute;inset:0 0 auto;height:3px;background:var(--metric,var(--accent)); }
-    .metric-head { display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:12px;font-weight:700;gap:8px; }
-    .metric-icon { width:36px;height:36px;border-radius:11px;background:color-mix(in srgb,var(--metric,var(--accent)) 13%,transparent);color:var(--metric,var(--accent));display:grid;place-items:center;flex:none; }
-    .metric-icon svg { width:19px;height:19px; }
-    .metric-value { font-size:21px;font-weight:800;margin-top:12px;overflow-wrap:anywhere; }
-    .metric-note { color:var(--muted);font-size:11px;margin-top:2px; }
-    .grid { display:grid;grid-template-columns:minmax(0,1.45fr) minmax(300px,1fr);gap:16px;margin-bottom:16px; }
-    .panel { background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);min-width:0; }
-    .panel-head { padding:16px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px; }
-    .panel-head h2 { margin:0;font-size:15px;display:flex;align-items:center;gap:8px; }
-    .panel-head svg { width:18px;height:18px;color:var(--accent); }
-    .panel-body { padding:16px 18px; }
-    .legend { display:flex;gap:14px;flex-wrap:wrap;color:var(--muted);font-size:11px; }
-    .legend span { display:flex;align-items:center;gap:5px; }
-    .dot { width:9px;height:9px;border-radius:50%;background:var(--dot); }
-    .chart { display:grid;grid-template-columns:repeat(14,minmax(15px,1fr));align-items:end;gap:8px;min-height:205px;padding-top:14px;overflow-x:auto; }
-    .day-col { min-width:18px;height:180px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:6px; }
-    .bars { height:150px;width:100%;display:flex;align-items:flex-end;justify-content:center;gap:2px;border-bottom:1px solid var(--border); }
-    .bar { width:28%;min-height:2px;border-radius:4px 4px 0 0;background:var(--bar);transition:height .25s; }
-    .day-label { color:var(--muted);font-size:9px;white-space:nowrap; }
-    .chart-empty { color:var(--muted);text-align:center;padding:35px 10px;font-size:13px; }
-    .balance-list { display:flex;flex-direction:column;gap:10px; }
-    .balance-row { display:flex;justify-content:space-between;align-items:center;gap:12px;padding-bottom:9px;border-bottom:1px solid var(--border); }
-    .balance-row:last-child { border-bottom:0;padding-bottom:0; }
-    .balance-name { min-width:0; }
-    .balance-name a { color:var(--text);font-weight:700;text-decoration:none; }
-    .balance-name a:hover { color:var(--accent); }
-    .balance-name small { display:block;color:var(--muted);font-size:10px; }
-    .balance-value { font-weight:800;white-space:nowrap; }
-    .table-wrap { overflow:auto; }
-    table { width:100%;border-collapse:collapse;min-width:720px;font-size:12px; }
-    th,td { padding:11px 14px;text-align:right;border-bottom:1px solid var(--border);white-space:nowrap; }
-    th { color:var(--muted);font-size:11px;background:var(--bg); }
-    tbody tr:last-child td { border-bottom:0; }
-    tbody tr:hover { background:color-mix(in srgb,var(--accent) 5%,var(--card)); }
-    .status { border-radius:20px;padding:3px 9px;font-size:10px;font-weight:700;background:var(--status-bg);color:var(--status); }
-    .type-link { color:var(--primary);font-weight:700;text-decoration:none; }
-    [data-theme="dark"] .type-link { color:#5eead4; }
-    .notice { border-radius:12px;padding:11px 14px;margin-bottom:16px;font-size:12px;background:rgba(59,130,246,.08);color:#2563eb;border:1px solid rgba(59,130,246,.2); }
-    [data-theme="dark"] .notice { color:#93c5fd; }
-    .error-box { display:none;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);color:var(--red);padding:16px;border-radius:12px;margin-bottom:16px; }
-    .empty { text-align:center;padding:24px;color:var(--muted); }
-    .footer { text-align:center;color:var(--muted);font-size:10px;padding:18px; }
-    .rep-toolbar { display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 18px;border-bottom:1px solid var(--border); }
-    .rep-toolbar label { font-size:12px;font-weight:700;color:var(--muted); }
-    .rep-filter { min-width:220px;max-width:100%;background:var(--bg);border:1px solid var(--border);border-radius:10px;color:var(--text);padding:9px 12px;font:inherit; }
-    .rep-summary { display:flex;gap:10px;flex-wrap:wrap;margin-inline-start:auto; }
-    .rep-summary span { border:1px solid var(--border);border-radius:10px;padding:7px 11px;font-size:12px;color:var(--muted); }
-    .rep-summary strong { color:var(--text);margin-inline-start:5px; }
-    .settle-btn { border:0;background:var(--accent);color:#fff;padding:7px 10px;border-radius:8px;font-weight:700;font-size:11px;white-space:nowrap; }
-    .settle-btn:hover { color:#fff;background:#0d9488; }
-    .settle-btn:disabled { opacity:.55;cursor:wait; }
-    .settlement-section { margin-top:16px; }
-    .settlement-log { border-top:1px solid var(--border); }
-    .settlement-log h3 { font-size:13px;margin:0;padding:13px 18px 0; }
-    @media(max-width:1050px) { .cards { grid-template-columns:repeat(2,minmax(0,1fr)); } .grid { grid-template-columns:1fr; } }
-    @media(max-width:600px) {
-      .shell { padding:14px; } header { align-items:flex-start; } h1 { font-size:21px; }
-      .brand img { width:40px;height:40px; } .header-actions { justify-content:flex-end; }
-      .header-actions .link-btn span { display:none; } .cards { gap:9px; }
-      .metric { min-height:112px;padding:13px; } .metric-value { font-size:17px; }
-      .panel-head,.panel-body { padding:13px; } .period { width:100%; }
-      .rep-toolbar { padding:13px;align-items:stretch; } .rep-filter { width:100%;min-width:0; }
-      .rep-summary { margin-inline-start:0; } .rep-summary span { flex:1; }
+
+    html, body {
+      height: 100%;
+      font-family: 'Cairo', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      transition: background 0.3s, color 0.3s;
+    }
+
+    body { display: flex; min-height: 100vh; overflow-x: hidden; }
+
+    /* Sidebar */
+    .sidebar {
+      width: var(--sidebar-w);
+      height: 100vh;
+      background: var(--sidebar-bg);
+      color: var(--sidebar-text);
+      position: fixed;
+      top: 0;
+      right: 0;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: -4px 0 20px rgba(0,0,0,0.1);
+    }
+    .sidebar-header {
+      padding: 20px 22px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      height: var(--topbar-h);
+      box-sizing: border-box;
+    }
+    .sidebar-logo {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 4px 12px rgba(20,184,166,0.4);
+    }
+    .sidebar-logo img { width: 70%; height: 70%; object-fit: contain; }
+    .sidebar-logo .fallback { color: white; font-weight: 800; font-size: 18px; }
+    .sidebar-brand h2 { color: white; font-size: 20px; font-weight: 800; letter-spacing: -0.5px; line-height: 1.2; }
+    .sidebar-brand p { font-size: 10px; color: var(--sidebar-text); opacity: 0.7; font-weight: 500; margin-top: 2px; }
+    .sidebar-nav { flex: 1; overflow-y: auto; padding: 12px 0; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.15) transparent; }
+    .sidebar-nav::-webkit-scrollbar { width: 5px; }
+    .sidebar-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 10px; }
+    .nav-section { padding: 8px 20px 4px; font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 1px; margin-top: 8px; }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 22px;
+      color: var(--sidebar-text);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      border-right: 3px solid transparent;
+      transition: all 0.2s;
+      position: relative;
+      cursor: pointer;
+    }
+    .nav-item:hover { background: rgba(255,255,255,0.05); color: white; border-right-color: rgba(20,184,166,0.5); }
+    .nav-item.active { background: rgba(20,184,166,0.12); color: white; border-right-color: var(--accent); font-weight: 600; }
+    .nav-item.active::before { content: ''; position: absolute; right: 0; top: 50%; transform: translateY(-50%); width: 3px; height: 60%; background: var(--accent); border-radius: 0 4px 4px 0; }
+    .nav-item i, .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; opacity: 0.85; }
+    .nav-item .badge { margin-right: auto; background: var(--danger); color: white; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
+    .nav-item .badge.teal { background: var(--accent); }
+    .nav-item .badge.gold { background: var(--gold); }
+
+    /* Main */
+    .main { flex: 1; margin-right: var(--sidebar-w); min-width: 0; display: flex; flex-direction: column; }
+    .topbar {
+      height: var(--topbar-h);
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 0 24px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      box-shadow: var(--shadow-sm);
+    }
+    .menu-toggle { display: none; background: transparent; border: none; color: var(--text); cursor: pointer; padding: 8px; border-radius: 8px; }
+    .menu-toggle:hover { background: var(--bg); }
+    .topbar-title { font-size: 18px; font-weight: 700; color: var(--text); flex-shrink: 0; }
+    .topbar-actions { display: flex; align-items: center; gap: 8px; margin-right: auto; }
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      transition: all 0.2s;
+    }
+    .icon-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .icon-btn i, .icon-btn svg { width: 18px; height: 18px; }
+    .icon-btn .dot { position: absolute; top: 8px; left: 8px; width: 8px; height: 8px; background: var(--danger); border-radius: 50%; border: 2px solid var(--card); }
+    .user-menu {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 5px 12px 5px 5px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.2s;
+      border: 1px solid var(--border);
+      background: var(--card);
+    }
+    .user-menu:hover { background: var(--bg); }
+    .user-avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 700;
+      font-size: 14px;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .user-info { display: flex; flex-direction: column; line-height: 1.2; }
+    .user-info .name { font-size: 13px; font-weight: 700; color: var(--text); }
+    .user-info .role { font-size: 11px; color: var(--text-muted); }
+    .dropdown { position: absolute; top: calc(100% + 8px); left: 0; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: var(--shadow-lg); min-width: 200px; padding: 6px; opacity: 0; visibility: hidden; transform: translateY(-8px); transition: all 0.2s; z-index: 100; }
+    .dropdown.show { opacity: 1; visibility: visible; transform: translateY(0); }
+    .dropdown-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; color: var(--text); font-size: 13px; font-weight: 500; cursor: pointer; transition: background 0.15s; text-decoration: none; }
+    .dropdown-item:hover { background: var(--bg); }
+    .dropdown-item.danger { color: var(--danger); }
+    .dropdown-item.danger:hover { background: rgba(239,68,68,0.08); }
+    .dropdown-item i { width: 16px; height: 16px; }
+    .dropdown-divider { height: 1px; background: var(--border); margin: 6px 0; }
+
+    /* Content */
+    .content { padding: 24px; flex: 1; }
+    .page-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .page-head h1 { font-size: 24px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+    .page-head p { font-size: 13px; color: var(--text-muted); }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: var(--radius-sm);
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn i { width: 16px; height: 16px; }
+    .btn-primary { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; }
+    .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(20,184,166,0.35); }
+    .btn-outline { background: var(--card); color: var(--text); border: 1px solid var(--border); }
+    .btn-outline:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+    .btn-success { background: var(--success); color: white; }
+    .btn-success:hover:not(:disabled) { background: #047857; }
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-danger:hover:not(:disabled) { background: #b91c1c; }
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+    /* Filters bar */
+    .filters-bar {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      box-shadow: var(--shadow-sm);
+    }
+    .period-select {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      padding: 10px 14px;
+      min-width: 190px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      outline: none;
+    }
+    .period-select:focus { border-color: var(--accent); }
+    .updated-info {
+      color: var(--text-muted);
+      font-size: 12px;
+      margin-right: auto;
+    }
+
+    /* Metric Cards */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+    .metric-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.2s;
+    }
+    .metric-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); border-color: var(--metric, var(--accent)); }
+    .metric-card::before {
+      content: '';
+      position: absolute;
+      inset: 0 0 auto 0;
+      height: 3px;
+      background: var(--metric, var(--accent));
+    }
+    .metric-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .metric-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    .metric-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: color-mix(in srgb, var(--metric, var(--accent)) 13%, transparent);
+      color: var(--metric, var(--accent));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .metric-icon i { width: 18px; height: 18px; }
+    .metric-value {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1.1;
+      margin-bottom: 4px;
+      overflow-wrap: anywhere;
+    }
+    .metric-value.success { color: var(--success); }
+    .metric-value.danger { color: var(--danger); }
+    .metric-value.gold { color: var(--gold); }
+    .metric-value.accent { color: var(--accent); }
+    .metric-note {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    /* Cards (Panels) */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+    .card-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .card-header h3 { font-size: 15px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px; }
+    .card-header h3 i { width: 18px; height: 18px; color: var(--accent); }
+    .card-body { padding: 18px; }
+
+    /* Quick actions bar */
+    .quick-actions-bar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding: 12px 14px;
+      background: linear-gradient(135deg, rgba(20,184,166,0.05), rgba(11,44,77,0.03));
+      border-bottom: 1px solid var(--border);
+    }
+    .quick-action-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .quick-action-btn:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
+    .quick-action-btn.primary { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; border: none; }
+    .quick-action-btn.primary:hover { color: white; box-shadow: 0 4px 12px rgba(20,184,166,0.35); }
+    .quick-action-btn.success { background: var(--success); color: white; border: none; }
+    .quick-action-btn.success:hover { color: white; background: #047857; }
+    .quick-action-btn.gold { background: var(--gold); color: white; border: none; }
+    .quick-action-btn.gold:hover { color: white; background: #d97706; }
+    .quick-action-btn i { width: 14px; height: 14px; }
+
+    /* Chart */
+    .chart-container {
+      display: grid;
+      grid-template-columns: repeat(14, minmax(15px, 1fr));
+      align-items: end;
+      gap: 8px;
+      min-height: 220px;
+      padding-top: 14px;
+      overflow-x: auto;
+    }
+    .day-col {
+      min-width: 18px;
+      height: 195px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 6px;
+    }
+    .bars {
+      height: 165px;
+      width: 100%;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 2px;
+      border-bottom: 1px solid var(--border);
+    }
+    .bar {
+      width: 28%;
+      min-height: 2px;
+      border-radius: 4px 4px 0 0;
+      background: var(--bar);
+      transition: height 0.25s;
+    }
+    .day-label {
+      color: var(--text-muted);
+      font-size: 9px;
+      white-space: nowrap;
+    }
+    .chart-empty { color: var(--text-muted); text-align: center; padding: 35px 10px; font-size: 13px; }
+    .legend { display: flex; gap: 14px; flex-wrap: wrap; color: var(--text-muted); font-size: 11px; }
+    .legend span { display: flex; align-items: center; gap: 5px; }
+    .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--dot); }
+
+    /* Balance list */
+    .balance-list { display: flex; flex-direction: column; gap: 10px; }
+    .balance-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .balance-row:last-child { border-bottom: 0; padding-bottom: 0; }
+    .balance-name { min-width: 0; }
+    .balance-name a { color: var(--text); font-weight: 700; text-decoration: none; }
+    .balance-name a:hover { color: var(--accent); }
+    .balance-name small { display: block; color: var(--text-muted); font-size: 10px; }
+    .balance-value { font-weight: 800; white-space: nowrap; }
+
+    /* Table */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 800px; font-size: 13px; }
+    thead { background: var(--bg); border-bottom: 1px solid var(--border); }
+    th {
+      text-align: right;
+      padding: 12px 14px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      white-space: nowrap;
+    }
+    tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--bg); }
+    tbody tr[data-row-href] { cursor: pointer; }
+    td { padding: 12px 14px; color: var(--text); vertical-align: middle; }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      border-radius: 20px;
+      white-space: nowrap;
+      background: var(--status-bg, rgba(148,163,184,0.15));
+      color: var(--status, var(--text-muted));
+    }
+    .status-badge.green { background: rgba(16,185,129,0.12); color: var(--success); }
+    .status-badge.red   { background: rgba(239,68,68,0.12); color: var(--danger); }
+    .status-badge.gold  { background: rgba(245,158,11,0.12); color: var(--warning); }
+    .status-badge.blue  { background: rgba(59,130,246,0.12); color: var(--info); }
+    .status-badge.gray  { background: rgba(148,163,184,0.15); color: var(--text-muted); }
+
+    .type-link { color: var(--accent); font-weight: 700; text-decoration: none; }
+    .type-link:hover { text-decoration: underline; }
+
+    .settle-btn {
+      border: 0;
+      background: var(--accent);
+      color: white;
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 11px;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .settle-btn:hover { color: white; background: var(--accent-dark); }
+    .settle-btn:disabled { opacity: 0.55; cursor: wait; }
+
+    .pay-btn {
+      border: 0;
+      background: var(--primary);
+      color: white;
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 11px;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .pay-btn:hover { color: white; background: var(--primary-light); }
+
+    /* P&L table */
+    .pl-table { width: 100%; font-size: 13px; }
+    .pl-table tr { border-bottom: 1px solid var(--border); }
+    .pl-table tr:last-child { border-bottom: none; }
+    .pl-table tr.section-header {
+      background: var(--bg);
+      font-weight: 800;
+      font-size: 12px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+    .pl-table tr.section-header td { padding: 10px 14px; font-weight: 800; }
+    .pl-table tr.total {
+      background: linear-gradient(135deg, rgba(20,184,166,0.08), rgba(11,44,77,0.04));
+      font-weight: 800;
+      font-size: 15px;
+    }
+    .pl-table tr.total td { padding: 14px; }
+    .pl-table tr.total .val { color: var(--accent); font-size: 17px; }
+    .pl-table tr.total.negative .val { color: var(--danger); }
+    .pl-table td { padding: 10px 14px; }
+    .pl-table td:last-child { text-align: left; font-weight: 700; }
+    .pl-table .indent { padding-right: 30px; color: var(--text-muted); }
+
+    /* Empty state */
+    .empty {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-muted);
+    }
+    .empty i { width: 42px; height: 42px; opacity: 0.4; margin-bottom: 10px; }
+    .empty p { font-size: 13px; font-weight: 500; }
+
+    /* Error box */
+    .error-box {
+      display: none;
+      background: rgba(239,68,68,0.08);
+      border: 1px solid rgba(239,68,68,0.25);
+      color: var(--danger);
+      padding: 14px 16px;
+      border-radius: var(--radius-sm);
+      margin-bottom: 16px;
+      font-size: 13px;
+      line-height: 1.7;
+    }
+    .error-box.show { display: block; }
+
+    /* Notice */
+    .notice {
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      font-size: 12px;
+      line-height: 1.7;
+      background: rgba(59,130,246,0.08);
+      color: var(--info);
+      border: 1px solid rgba(59,130,246,0.2);
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .notice i { width: 18px; height: 18px; flex-shrink: 0; margin-top: 2px; }
+
+    /* Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(11, 44, 77, 0.5);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .modal-backdrop.show { display: flex; opacity: 1; }
+    .modal {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-lg);
+      width: 100%;
+      max-width: 620px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      transform: scale(0.95);
+      transition: transform 0.2s;
+      overflow: hidden;
+    }
+    .modal.modal-lg { max-width: 900px; }
+    .modal-backdrop.show .modal { transform: scale(1); }
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+    .modal-header h3 { font-size: 16px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px; }
+    .modal-header h3 i { width: 18px; height: 18px; color: var(--accent); }
+    .modal-close {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    .modal-close:hover { background: var(--bg); color: var(--danger); }
+    .modal-close i { width: 18px; height: 18px; }
+    .modal-body {
+      padding: 20px;
+      overflow-y: auto;
+      flex: 1;
+      min-height: 0;
+    }
+    .modal-body::-webkit-scrollbar { width: 8px; }
+    .modal-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+    .modal-footer {
+      padding: 14px 20px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      background: var(--bg);
+      flex-shrink: 0;
+    }
+
+    /* Form */
+    .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+    .form-group { display: flex; flex-direction: column; }
+    .form-group.full { grid-column: 1 / -1; }
+    .form-group label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .form-group label .req { color: var(--danger); }
+    .form-group input, .form-group select, .form-group textarea {
+      padding: 10px 14px;
+      font-family: inherit;
+      font-size: 14px;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      outline: none;
+      transition: all 0.2s;
+      width: 100%;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      border-color: var(--accent);
+      background: var(--card);
+      box-shadow: 0 0 0 3px rgba(20,184,166,0.1);
+    }
+
+    /* Overlay */
+    .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; opacity: 0; transition: opacity 0.3s; }
+    .overlay.show { display: block; opacity: 1; }
+
+    /* Aging Bars */
+    .aging-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 12px;
+    }
+    .aging-card {
+      background: var(--bg);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      text-align: center;
+      border-right: 3px solid var(--aging-color, var(--accent));
+    }
+    .aging-card .range {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .aging-card .amount {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--text);
+    }
+    .aging-card .count {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 6px;
+      margin-bottom: 16px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tab {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: transparent;
+      border: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .tab:hover { background: var(--bg); color: var(--text); }
+    .tab.active { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; box-shadow: 0 4px 12px rgba(20,184,166,0.3); }
+    .tab i { width: 16px; height: 16px; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; animation: fadeIn 0.3s; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .sidebar { transform: translateX(100%); }
+      .sidebar.open { transform: translateX(0); }
+      .main { margin-right: 0; }
+      .menu-toggle { display: flex; }
+      .user-info { display: none; }
+    }
+    @media (max-width: 640px) {
+      .content { padding: 16px; }
+      .topbar { padding: 0 14px; gap: 10px; }
+      .topbar-title { font-size: 15px; }
+      .page-head { flex-direction: column; align-items: stretch; }
+      .page-head h1 { font-size: 20px; }
+      .filters-bar { padding: 12px; }
+      .period-select { width: 100%; min-width: 0; }
+      .modal-footer { flex-direction: column-reverse; }
+      .modal-footer .btn { width: 100%; justify-content: center; }
+      .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+      .metric-value { font-size: 18px; }
+      .form-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
-  <main class="shell">
-    <header>
-      <div class="brand">
-        <img src="logo.png" alt="رفاد" onerror="this.style.display='none'">
-        <div><h1>الحسابات</h1><div class="subtitle" id="companySubtitle">ملخص مالي واضح من سجلات الشركة</div></div>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <img src="logo.png" alt="رفاد" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=fallback>R</span>';">
       </div>
-      <div class="header-actions">
-        <a class="link-btn" href="dashboard.html"><i data-lucide="layout-dashboard"></i><span>الرئيسية</span></a>
-        <button type="button" id="refreshBtn"><i data-lucide="refresh-cw"></i><span>تحديث</span></button>
-        <button type="button" id="exportBtn"><i data-lucide="download"></i><span>تصدير الملخص</span></button>
+      <div class="sidebar-brand">
+        <h2>رفاد</h2>
+        <p>نظام إدارة الأدوية</p>
+      </div>
+    </div>
+    <nav class="sidebar-nav" id="sidebarNav"></nav>
+  </aside>
+
+  <div class="overlay" id="overlay"></div>
+
+  <!-- Main -->
+  <div class="main">
+    <header class="topbar">
+      <button class="menu-toggle" id="menuToggle"><i data-lucide="menu"></i></button>
+      <div class="topbar-title">الحسابات</div>
+      <div class="topbar-actions">
+        <button class="icon-btn" id="themeToggle" title="الوضع الليلي/النهاري">
+          <i data-lucide="moon" id="themeIcon"></i>
+        </button>
+        <button class="icon-btn" id="notifBtn" title="الإشعارات" style="position:relative;">
+          <i data-lucide="bell"></i>
+          <span class="dot" id="notifDot" style="display:none;"></span>
+        </button>
+        <div style="position:relative;">
+          <div class="user-menu" id="userMenu">
+            <div class="user-avatar" id="userAvatar">م</div>
+            <div class="user-info">
+              <span class="name" id="userName">—</span>
+              <span class="role" id="userRole">—</span>
+            </div>
+            <i data-lucide="chevron-down" style="width:14px;height:14px;opacity:0.5;"></i>
+          </div>
+          <div class="dropdown" id="userDropdown">
+            <a href="company-settings.html" class="dropdown-item"><i data-lucide="settings"></i> الإعدادات</a>
+            <a href="employees.html" class="dropdown-item"><i data-lucide="user-cog"></i> الملف الشخصي</a>
+            <div class="dropdown-divider"></div>
+            <div class="dropdown-item danger" id="logoutBtn"><i data-lucide="log-out"></i> تسجيل الخروج</div>
+          </div>
+        </div>
       </div>
     </header>
 
-    <div class="filters">
-      <select class="period" id="periodSelect" aria-label="الفترة الحسابية">
-        <option value="month">هذا الشهر</option>
-        <option value="today">اليوم</option>
-        <option value="7d">آخر 7 أيام</option>
-        <option value="30d">آخر 30 يوماً</option>
-        <option value="year">هذه السنة</option>
-        <option value="all">كل السجلات المحملة</option>
-      </select>
-      <span class="updated" id="updatedAt">جارٍ تحميل البيانات...</span>
-    </div>
+    <main class="content">
 
-    <div class="error-box" id="errorBox" role="alert"></div>
-    <div class="notice">
-      هذا ملخص إداري يعتمد على الفواتير والاستلامات والمصاريف المسجلة، وليس دفتر قيود محاسبي أو رصيداً بنكياً. نتيجة التشغيل تقديرية: إجمالي ربح الفواتير ناقص المصاريف المسجلة للفترة.
-    </div>
-
-    <section class="panel settlement-section" aria-label="تسوية حسابات المندوبين">
-      <div class="panel-head">
-        <h2><i data-lucide="hand-coins"></i> تسوية حسابات المندوبين والفواتير الآجلة</h2>
+      <div class="page-head">
+        <div>
+          <h1>الحسابات</h1>
+          <p>ملخص مالي شامل وإدارة كاملة للحسابات والمدفوعات</p>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn btn-outline" id="refreshBtn">
+            <i data-lucide="refresh-cw"></i> تحديث
+          </button>
+          <button class="btn btn-outline" id="exportBtn">
+            <i data-lucide="download"></i> تصدير
+          </button>
+          <button class="btn btn-success" id="quickPaymentBtn">
+            <i data-lucide="banknote"></i> تسجيل دفعة
+          </button>
+          <button class="btn btn-gold" id="quickExpenseBtn" style="background:var(--gold);color:white;">
+            <i data-lucide="receipt-text"></i> تسجيل مصروف
+          </button>
+        </div>
       </div>
-      <div class="rep-toolbar">
-        <label for="repFilter">المندوب</label>
-        <select class="rep-filter" id="repFilter">
-          <option value="">كل المندوبين</option>
+
+      <!-- Filters Bar -->
+      <div class="filters-bar">
+        <select class="period-select" id="periodSelect" aria-label="الفترة">
+          <option value="today">اليوم</option>
+          <option value="7d">آخر 7 أيام</option>
+          <option value="30d">آخر 30 يوماً</option>
+          <option value="month" selected>هذا الشهر</option>
+          <option value="year">هذه السنة</option>
+          <option value="all">كل السجلات</option>
         </select>
-        <div class="rep-summary">
-          <span>فواتير مفتوحة <strong id="repOpenCount">0</strong></span>
-          <span>المتبقي للتحصيل <strong id="repOpenDue">—</strong></span>
-        </div>
+        <span class="updated-info" id="updatedAt">جارٍ التحميل...</span>
       </div>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>المندوب</th><th>رقم الفاتورة</th><th>العميل / المورد</th><th>تاريخ الفاتورة</th><th>الإجمالي</th><th>المحصل</th><th>المتبقي</th><th>الإجراء</th></tr></thead>
-          <tbody id="repInvoiceRows"><tr><td colspan="8" class="empty">جارٍ تحميل الفواتير الآجلة...</td></tr></tbody>
-        </table>
-      </div>
-      <div class="settlement-log">
-        <h3>آخر تسويات المندوبين</h3>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>التاريخ</th><th>المندوب</th><th>الفاتورة</th><th>سجّلها</th><th>المبلغ</th><th>ملاحظات</th></tr></thead>
-            <tbody id="repSettlementRows"><tr><td colspan="6" class="empty">جارٍ تحميل سجل التسويات...</td></tr></tbody>
-          </table>
-        </div>
-      </div>
-    </section>
 
-    <section class="cards" aria-label="المؤشرات المالية">
-      <article class="metric" style="--metric:#2563eb"><div class="metric-head"><span>صافي المبيعات</span><span class="metric-icon"><i data-lucide="trending-up"></i></span></div><div class="metric-value" id="salesValue">—</div><div class="metric-note" id="salesCount">يشمل الفواتير غير الملغاة</div></article>
-      <article class="metric" style="--metric:#059669"><div class="metric-head"><span>المبالغ المحصلة من المبيعات</span><span class="metric-icon"><i data-lucide="banknote"></i></span></div><div class="metric-value" id="collectionsValue">—</div><div class="metric-note">حسب المدفوع المسجل على الفواتير</div></article>
-      <article class="metric" style="--metric:#0d9488"><div class="metric-head"><span>إجمالي الربح المسجل</span><span class="metric-icon"><i data-lucide="badge-dollar-sign"></i></span></div><div class="metric-value" id="profitValue">—</div><div class="metric-note">قبل المصاريف التشغيلية</div></article>
-      <article class="metric" style="--metric:#7c3aed"><div class="metric-head"><span>النتيجة بعد المصاريف</span><span class="metric-icon"><i data-lucide="scale"></i></span></div><div class="metric-value" id="netValue">—</div><div class="metric-note">تقدير الربح ناقص المصاريف المسجلة</div></article>
-      <article class="metric" style="--metric:#d97706"><div class="metric-head"><span>قيمة المشتريات المستلمة</span><span class="metric-icon"><i data-lucide="package-check"></i></span></div><div class="metric-value" id="purchaseValue">—</div><div class="metric-note" id="purchasePaid">من فواتير الاستلام</div></article>
-      <article class="metric" style="--metric:#dc2626"><div class="metric-head"><span>المصاريف المسجلة</span><span class="metric-icon"><i data-lucide="receipt-text"></i></span></div><div class="metric-value" id="expenseValue">—</div><div class="metric-note" id="expenseCount">للفترة المختارة</div></article>
-      <article class="metric" style="--metric:#0891b2"><div class="metric-head"><span>أرصدة العملاء المدينة</span><span class="metric-icon"><i data-lucide="users"></i></span></div><div class="metric-value" id="customerDue">—</div><div class="metric-note">من أرصدة حسابات العملاء المسجلة</div></article>
-      <article class="metric" style="--metric:#be123c"><div class="metric-head"><span>أرصدة الموردين الدائنة</span><span class="metric-icon"><i data-lucide="truck"></i></span></div><div class="metric-value" id="supplierDue">—</div><div class="metric-note">من أرصدة حسابات الموردين المسجلة</div></article>
-    </section>
+      <div class="error-box" id="errorBox"></div>
 
-    <section class="grid">
-      <article class="panel">
-        <div class="panel-head"><h2><i data-lucide="chart-no-axes-column-increasing"></i> حركة آخر 14 يوماً</h2>
-          <div class="legend"><span><i class="dot" style="--dot:#2563eb"></i>بيع</span><span><i class="dot" style="--dot:#d97706"></i>استلام</span><span><i class="dot" style="--dot:#dc2626"></i>مصروف</span></div>
+      <div class="notice">
+        <i data-lucide="info"></i>
+        <div>هذا ملخص إداري يعتمد على الفواتير والاستلامات والمصاريف المسجلة، وليس دفتر قيود محاسبي. النتيجة بعد المصاريف = إجمالي ربح الفواتير ناقص المصاريف المسجلة للفترة المختارة.</div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tabs">
+        <button class="tab active" data-tab="overview"><i data-lucide="layout-dashboard"></i> نظرة عامة</button>
+        <button class="tab" data-tab="receivables"><i data-lucide="arrow-down-circle"></i> الذمم المدينة</button>
+        <button class="tab" data-tab="payables"><i data-lucide="arrow-up-circle"></i> الذمم الدائنة</button>
+        <button class="tab" data-tab="representatives"><i data-lucide="hand-coins"></i> المندوبين</button>
+        <button class="tab" data-tab="pl"><i data-lucide="bar-chart-3"></i> الأرباح والخسائر</button>
+        <button class="tab" data-tab="aging"><i data-lucide="hourglass"></i> تحليل الأعمار</button>
+      </div>
+
+      <!-- TAB: Overview -->
+      <div class="tab-panel active" data-panel="overview">
+
+        <!-- Metrics -->
+        <div class="metrics-grid" id="metricsGrid">
+          <!-- JS -->
         </div>
-        <div class="panel-body"><div class="chart" id="trendChart"><div class="chart-empty">جارٍ تحميل الحركة...</div></div></div>
-      </article>
-      <article class="panel">
-        <div class="panel-head"><h2><i data-lucide="hand-coins"></i> أكبر الأرصدة المفتوحة</h2></div>
-        <div class="panel-body">
-          <div class="balance-list" id="balanceList"><div class="empty">جارٍ تحميل الأرصدة...</div></div>
-          <div class="quick-links" style="margin-top:16px">
-            <a class="link-btn" href="suppliers.html"><i data-lucide="truck"></i> حسابات الموردين</a>
-            <a class="link-btn" href="customers.html"><i data-lucide="users"></i> حسابات العملاء</a>
+
+        <!-- Charts & Balances -->
+        <div style="display:grid;grid-template-columns:minmax(0,1.5fr) minmax(300px,1fr);gap:16px;margin-bottom:16px;">
+          <div class="card">
+            <div class="card-header">
+              <h3><i data-lucide="chart-no-axes-column-increasing"></i> حركة آخر 14 يوماً</h3>
+              <div class="legend">
+                <span><i class="dot" style="--dot:#2563eb"></i>مبيعات</span>
+                <span><i class="dot" style="--dot:#d97706"></i>مشتريات</span>
+                <span><i class="dot" style="--dot:#dc2626"></i>مصاريف</span>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="chart-container" id="trendChart">
+                <div class="chart-empty">جارٍ تحميل الحركة...</div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <h3><i data-lucide="scale"></i> أكبر الأرصدة المفتوحة</h3>
+            </div>
+            <div class="card-body">
+              <div class="balance-list" id="balanceList">
+                <div class="empty"><i data-lucide="loader"></i><p>جارٍ التحميل...</p></div>
+              </div>
+            </div>
           </div>
         </div>
-      </article>
-    </section>
 
-    <section class="panel">
-      <div class="panel-head">
-        <h2><i data-lucide="history"></i> أحدث الحركات المالية</h2>
-        <div class="quick-links">
-          <a class="link-btn" href="invoices.html">فواتير البيع</a>
-          <a class="link-btn" href="receipts.html">الاستلامات</a>
-          <a class="link-btn" href="expenses.html">المصاريف</a>
+        <!-- Recent Transactions -->
+        <div class="card">
+          <div class="card-header">
+            <h3><i data-lucide="history"></i> أحدث الحركات المالية</h3>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <a class="btn btn-outline btn-sm" href="invoices.html">فواتير البيع</a>
+              <a class="btn btn-outline btn-sm" href="receipts.html">الاستلامات</a>
+              <a class="btn btn-outline btn-sm" href="expenses.html">المصاريف</a>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>النوع</th>
+                  <th>الرقم / البيان</th>
+                  <th>الطرف</th>
+                  <th>التاريخ</th>
+                  <th>الإجمالي</th>
+                  <th>المدفوع</th>
+                  <th>المتبقي</th>
+                </tr>
+              </thead>
+              <tbody id="recentRows">
+                <tr><td colspan="7" class="empty">جارٍ التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- TAB: Receivables (العملاء) -->
+      <div class="tab-panel" data-panel="receivables">
+        <div class="card">
+          <div class="card-header">
+            <h3><i data-lucide="users"></i> ذمم العملاء المدينة</h3>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <span class="status-badge red" id="receivablesTotal">—</span>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>العميل</th>
+                  <th>الهاتف</th>
+                  <th>إجمالي الفواتير</th>
+                  <th>المحصل</th>
+                  <th>الرصيد المتبقي</th>
+                  <th>آخر فاتورة</th>
+                  <th>إجراءات</th>
+                </tr>
+              </thead>
+              <tbody id="receivablesRows">
+                <tr><td colspan="7" class="empty">جارٍ التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>النوع</th><th>الرقم / البيان</th><th>الطرف</th><th>التاريخ</th><th>الإجمالي</th><th>المدفوع</th><th>المتبقي</th></tr></thead>
-          <tbody id="recentRows"><tr><td colspan="7" class="empty">جارٍ تحميل الحركات...</td></tr></tbody>
-        </table>
+
+      <!-- TAB: Payables (الموردين) -->
+      <div class="tab-panel" data-panel="payables">
+        <div class="card">
+          <div class="card-header">
+            <h3><i data-lucide="truck"></i> ذمم الموردين الدائنة</h3>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <span class="status-badge gold" id="payablesTotal">—</span>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>المورد</th>
+                  <th>الهاتف</th>
+                  <th>إجمالي المشتريات</th>
+                  <th>المدفوع</th>
+                  <th>الرصيد المتبقي</th>
+                  <th>آخر استلام</th>
+                  <th>إجراءات</th>
+                </tr>
+              </thead>
+              <tbody id="payablesRows">
+                <tr><td colspan="7" class="empty">جارٍ التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
-    </section>
-    <div class="footer">رفاد • المؤشرات مبنية على السجلات المتاحة للشركة المسجل دخولها</div>
-  </main>
+
+      <!-- TAB: Representatives -->
+      <div class="tab-panel" data-panel="representatives">
+        <div class="card">
+          <div class="card-header">
+            <h3><i data-lucide="hand-coins"></i> تسوية حسابات المندوبين</h3>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+              <label style="font-size:12px;font-weight:600;">المندوب:</label>
+              <select class="period-select" id="repFilter" style="min-width:180px;">
+                <option value="">كل المندوبين</option>
+              </select>
+              <span class="status-badge red">فواتير مفتوحة: <strong id="repOpenCount">0</strong></span>
+              <span class="status-badge gold">المتبقي: <strong id="repOpenDue">—</strong></span>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>المندوب</th>
+                  <th>رقم الفاتورة</th>
+                  <th>العميل / المورد</th>
+                  <th>تاريخ الفاتورة</th>
+                  <th>الإجمالي</th>
+                  <th>المحصل</th>
+                  <th>المتبقي</th>
+                  <th>إجراء</th>
+                </tr>
+              </thead>
+              <tbody id="repInvoiceRows">
+                <tr><td colspan="8" class="empty">جارٍ التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3><i data-lucide="history"></i> آخر تسويات المندوبين</h3>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>التاريخ</th>
+                  <th>المندوب</th>
+                  <th>الفاتورة</th>
+                  <th>سجّلها</th>
+                  <th>المبلغ</th>
+                  <th>ملاحظات</th>
+                </tr>
+              </thead>
+              <tbody id="repSettlementRows">
+                <tr><td colspan="6" class="empty">جارٍ التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: P&L -->
+      <div class="tab-panel" data-panel="pl">
+        <div class="card">
+          <div class="card-header">
+            <h3><i data-lucide="bar-chart-3"></i> قائمة الدخل المبسطة</h3>
+            <span class="status-badge blue" id="plPeriod">—</span>
+          </div>
+          <div class="card-body">
+            <table class="pl-table" id="plTable">
+              <!-- JS -->
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: Aging -->
+      <div class="tab-panel" data-panel="aging">
+        <div class="card">
+          <div class="card-header">
+            <h3><i data-lucide="users"></i> تحليل أعمار الذمم المدينة (العملاء)</h3>
+          </div>
+          <div class="card-body">
+            <div class="aging-grid" id="agingReceivables">
+              <!-- JS -->
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <h3><i data-lucide="truck"></i> تحليل أعمار الذمم الدائنة (الموردين)</h3>
+          </div>
+          <div class="card-body">
+            <div class="aging-grid" id="agingPayables">
+              <!-- JS -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Modal: Quick Payment -->
+  <div class="modal-backdrop" id="paymentModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3><i data-lucide="banknote"></i> تسجيل دفعة</h3>
+        <button class="modal-close" data-close><i data-lucide="x"></i></button>
+      </div>
+      <form id="paymentForm">
+        <div class="modal-body">
+          <div class="form-grid">
+            <div class="form-group full">
+              <label>نوع الدفعة <span class="req">*</span></label>
+              <select id="paymentType" required>
+                <option value="supplier">دفعة لمورد</option>
+                <option value="customer">تحصيل من عميل</option>
+                <option value="invoice">سداد فاتورة بيع</option>
+              </select>
+            </div>
+            <div class="form-group full">
+              <label id="paymentPartyLabel">المورد <span class="req">*</span></label>
+              <select id="paymentParty" required>
+                <option value="">اختر...</option>
+              </select>
+            </div>
+            <div class="form-group full" id="invoiceSelectGroup" style="display:none;">
+              <label>الفاتورة</label>
+              <select id="paymentInvoice">
+                <option value="">— بدون فاتورة محددة —</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>المبلغ <span class="req">*</span></label>
+              <input type="number" id="paymentAmount" min="0.01" step="0.01" required placeholder="0.00">
+            </div>
+            <div class="form-group">
+              <label>التاريخ</label>
+              <input type="date" id="paymentDate">
+            </div>
+            <div class="form-group">
+              <label>طريقة الدفع</label>
+              <select id="paymentMethod">
+                <option value="cash">نقدي</option>
+                <option value="transfer">تحويل بنكي</option>
+                <option value="vodafone">فودافون كاش</option>
+                <option value="check">شيك</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>مرجع (اختياري)</label>
+              <input type="text" id="paymentReference" maxlength="50">
+            </div>
+            <div class="form-group full">
+              <label>ملاحظات</label>
+              <textarea id="paymentNotes" maxlength="255"></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" data-close>إلغاء</button>
+          <button type="submit" class="btn btn-success" id="paymentSubmitBtn">
+            <i data-lucide="check"></i> تسجيل الدفعة
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Quick Expense -->
+  <div class="modal-backdrop" id="expenseModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3><i data-lucide="receipt-text"></i> تسجيل مصروف</h3>
+        <button class="modal-close" data-close><i data-lucide="x"></i></button>
+      </div>
+      <form id="expenseForm">
+        <div class="modal-body">
+          <div class="form-grid">
+            <div class="form-group full">
+              <label>الفئة <span class="req">*</span></label>
+              <select id="expenseCategory" required>
+                <option value="rent">إيجار</option>
+                <option value="salary">رواتب</option>
+                <option value="utilities">كهرباء وماء</option>
+                <option value="transport">مواصلات</option>
+                <option value="maintenance">صيانة</option>
+                <option value="marketing">تسويق</option>
+                <option value="other">أخرى</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>المبلغ <span class="req">*</span></label>
+              <input type="number" id="expenseAmount" min="0.01" step="0.01" required placeholder="0.00">
+            </div>
+            <div class="form-group">
+              <label>التاريخ</label>
+              <input type="date" id="expenseDate">
+            </div>
+            <div class="form-group full">
+              <label>الوصف</label>
+              <input type="text" id="expenseDescription" maxlength="255" placeholder="تفاصيل المصروف...">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" data-close>إلغاء</button>
+          <button type="submit" class="btn btn-gold" style="background:var(--gold);color:white;">
+            <i data-lucide="check"></i> تسجيل المصروف
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Customer Statement -->
+  <div class="modal-backdrop" id="statementModal">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <h3><i data-lucide="file-text"></i> كشف حساب</h3>
+        <button class="modal-close" data-close><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body" id="statementModalBody"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" data-close>إغلاق</button>
+      </div>
+    </div>
+  </div>
 
   <script src="refad-core.js"></script>
   <script src="refad-auth.js"></script>
-  <script>
+    <script>
     (function () {
       'use strict';
+
+      // ============================================================
+      // 1) Guard
+      // ============================================================
       const session = Refad.Auth.guardPage('company.owner');
       if (!session) return;
-      const state = { invoices: [], receipts: [], expenses: [], suppliers: [], customers: [], users: [], settlements: [] };
-      const today = () => {
-        const d = new Date();
-        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+      // ============================================================
+      // 2) Sidebar MENU
+      // ============================================================
+      const MENU = [
+        { section: 'الرئيسية', items: [
+          { label: 'لوحة التحكم', icon: 'layout-dashboard', href: 'dashboard.html' },
+          { label: 'الشات', icon: 'message-circle', href: 'chat.html', permission: 'chat.use' },
+          { label: 'الإشعارات', icon: 'bell', href: 'notifications.html', permission: 'notifications.view' }
+        ]},
+        { section: 'العمليات', items: [
+          { label: 'الأصناف', icon: 'package', href: 'products.html', permission: 'products.view' },
+          { label: 'المخزون', icon: 'warehouse', href: 'inventory.html', permission: 'inventory.view' },
+          { label: 'طلبات الشراء', icon: 'clipboard-list', href: 'purchase-requests.html', permission: 'purchases.view' },
+          { label: 'الاستلامات', icon: 'package-check', href: 'receipts.html', permission: 'purchases.receive' },
+          { label: 'طلبات البيع', icon: 'shopping-cart', href: 'sales-orders.html', permission: 'sales.view' },
+          { label: 'نقطة البيع', icon: 'scan-barcode', href: 'pos.html', permission: 'sales.pos', badge: 'POS', badgeClass: 'teal' },
+          { label: 'الفواتير', icon: 'receipt', href: 'invoices.html', permission: 'sales.view' }
+        ]},
+        { section: 'الأطراف', items: [
+          { label: 'الموردين', icon: 'truck', href: 'suppliers.html', permission: 'suppliers.view' },
+          { label: 'العملاء', icon: 'users', href: 'customers.html', permission: 'customers.view' }
+        ]},
+        { section: 'المخزون', items: [
+          { label: 'الجرد', icon: 'clipboard-check', href: 'stocktake.html', permission: 'inventory.stocktake' },
+          { label: 'التسويات', icon: 'sliders-horizontal', href: 'adjustments.html', permission: 'inventory.adjust' }
+        ]},
+        { section: 'الموارد البشرية', items: [
+          { label: 'الموظفين', icon: 'user-cog', href: 'employees.html', permission: 'employees.view' },
+          { label: 'الصلاحيات', icon: 'shield-check', href: 'permissions.html', permission: 'permissions.manage' },
+          { label: 'الحضور', icon: 'calendar-check', href: 'attendance.html', permission: 'attendance.view' },
+          { label: 'الرواتب', icon: 'wallet', href: 'payroll.html', permission: 'payroll.view' }
+        ]},
+        { section: 'المالية', items: [
+          { label: 'الحسابات', icon: 'landmark', href: 'accounts.html', permission: 'company.owner' },
+          { label: 'المصاريف', icon: 'banknote', href: 'expenses.html', permission: 'expenses.view' },
+          { label: 'التقارير', icon: 'bar-chart-3', href: 'reports.html', permission: 'reports.view' }
+        ]},
+        { section: 'النظام', items: [
+          { label: 'إعدادات الشركة', icon: 'settings', href: 'company-settings.html', permission: 'settings.view' },
+          { label: 'شاشة الأدمن', icon: 'shield', href: 'admin.html', permission: 'admin.full', badge: 'Admin', badgeClass: 'gold' }
+        ]}
+      ];
+
+      function buildSidebar() {
+        const nav = document.getElementById('sidebarNav');
+        const currentPage = 'accounts.html';
+        const frag = document.createDocumentFragment();
+        MENU.forEach(group => {
+          const allowed = group.items.filter(it => !it.permission || Refad.Session.has(it.permission));
+          if (!allowed.length) return;
+          frag.appendChild(Refad.el('div', { class: 'nav-section' }, group.section));
+          allowed.forEach(item => {
+            const a = Refad.el('a', {
+              href: item.href,
+              class: 'nav-item' + (item.href === currentPage ? ' active' : '')
+            });
+            a.innerHTML = `<i data-lucide="${item.icon}"></i><span>${Refad.escapeHtml(item.label)}</span>${item.badge ? `<span class="badge ${item.badgeClass || ''}">${item.badge}</span>` : ''}`;
+            frag.appendChild(a);
+          });
+        });
+        nav.innerHTML = '';
+        nav.appendChild(frag);
+        if (window.lucide) lucide.createIcons();
+      }
+
+      // ============================================================
+      // 3) UI Helpers
+      // ============================================================
+      function fillUser() {
+        const av = document.getElementById('userAvatar');
+        const initial = (session.full_name || '؟').trim().charAt(0);
+        if (session.avatar_url) av.innerHTML = `<img src="${Refad.escapeHtml(session.avatar_url)}" alt="">`;
+        else av.textContent = initial;
+        document.getElementById('userName').textContent = session.full_name;
+        document.getElementById('userRole').textContent = Refad.Session.has('company.owner') ? 'صاحب الشركة' : 'موظف';
+      }
+
+      function setupTheme() {
+        const btn = document.getElementById('themeToggle');
+        const icon = document.getElementById('themeIcon');
+        const refresh = () => {
+          const isDark = Refad.theme.get() === 'dark';
+          icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+          if (window.lucide) lucide.createIcons();
+        };
+        refresh();
+        btn.addEventListener('click', () => { Refad.theme.toggle(); refresh(); });
+      }
+
+      function setupSidebarMobile() {
+        const sb = document.getElementById('sidebar');
+        const ov = document.getElementById('overlay');
+        document.getElementById('menuToggle').addEventListener('click', () => {
+          sb.classList.add('open'); ov.classList.add('show');
+        });
+        ov.addEventListener('click', () => {
+          sb.classList.remove('open'); ov.classList.remove('show');
+        });
+      }
+
+      function setupUserMenu() {
+        const m = document.getElementById('userMenu');
+        const d = document.getElementById('userDropdown');
+        m.addEventListener('click', e => { e.stopPropagation(); d.classList.toggle('show'); });
+        document.addEventListener('click', () => d.classList.remove('show'));
+        d.addEventListener('click', e => e.stopPropagation());
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+          if (await Refad.alert.confirm('تسجيل الخروج', 'هل تريد الخروج؟', 'خروج')) {
+            await Refad.Auth.logout();
+          }
+        });
+      }
+
+      function setupNotifBtn() {
+        document.getElementById('notifBtn').addEventListener('click', () => {
+          window.location.href = 'notifications.html';
+        });
+      }
+
+      // ============================================================
+      // 4) State
+      // ============================================================
+      const state = {
+        invoices: [],
+        receipts: [],
+        expenses: [],
+        suppliers: [],
+        customers: [],
+        users: [],
+        settlements: [],
+        supplierTransactions: []
       };
-      const dateShift = (date, days) => {
-        const d = new Date(`${date}T12:00:00`);
-        d.setDate(d.getDate() + days);
-        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-      };
+
+      const money = v => Refad.format.money(v);
+      const amount = v => Number(v) || 0;
+
+      const today = () => Refad.date.today();
+      const dateShift = (date, days) => Refad.date.addDays(date, days);
+
       const periodRange = value => {
         const now = today();
         if (value === 'today') return { from: now, to: now };
@@ -250,88 +1426,1127 @@
         if (value === 'all') return { from: null, to: null };
         return { from: `${now.slice(0, 7)}-01`, to: now };
       };
-      const inRange = (date, range) => (!range.from || date >= range.from) && (!range.to || date <= range.to);
-      const amount = value => Number(value) || 0;
-      const money = value => Refad.format.money(value);
 
-      function setText(id, value) { document.getElementById(id).textContent = value; }
-      function withinPeriod(rows, dateKey, range) { return rows.filter(row => inRange(row[dateKey] || '', range)); }
+      const inRange = (date, range) =>
+        (!range.from || date >= range.from) && (!range.to || date <= range.to);
+
+      // ============================================================
+      // 5) Load Data (5-step, no embedding)
+      // ============================================================
+      async function loadAllData() {
+        const btn = document.getElementById('refreshBtn');
+        const errorBox = document.getElementById('errorBox');
+        btn.disabled = true;
+        errorBox.classList.remove('show');
+
+        try {
+          // 1) الفواتير
+          const invoices = await Refad.db.select('sales_invoices', {
+            columns: 'id, invoice_number, invoice_type, invoice_date, grand_total, paid_amount, total_profit, status, customer_id, supplier_id, cashier_id',
+            eq: { company_id: session.company_id },
+            order: { column: 'id', ascending: false },
+            limit: 5000
+          });
+
+          // 2) الاستلامات
+          const receipts = await Refad.db.select('receipts', {
+            columns: 'id, receipt_number, receipt_date, total_amount, paid_amount, status, supplier_id, request_id',
+            eq: { company_id: session.company_id },
+            order: { column: 'id', ascending: false },
+            limit: 5000
+          });
+
+          // 3) المصاريف
+          const expenses = await Refad.db.select('expenses', {
+            columns: 'id, category, amount, description, expense_date, user_id',
+            eq: { company_id: session.company_id },
+            order: { column: 'id', ascending: false },
+            limit: 5000
+          });
+
+          // 4) الموردين
+          const suppliers = await Refad.db.select('suppliers', {
+            columns: 'id, name, phone, balance, is_active',
+            eq: { company_id: session.company_id },
+            order: { column: 'name', ascending: true }
+          });
+
+          // 5) العملاء
+          const customers = await Refad.db.select('customers', {
+            columns: 'id, name, phone, balance, is_active',
+            eq: { company_id: session.company_id },
+            order: { column: 'name', ascending: true }
+          });
+
+          // 6) المستخدمين
+          const users = await Refad.db.select('users', {
+            columns: 'id, full_name, is_active',
+            eq: { company_id: session.company_id }
+          });
+
+          // 7) تسويات المندوبين
+          const settlements = await Refad.db.select('representative_settlements', {
+            columns: 'id, representative_id, invoice_id, amount, settlement_date, notes, received_by',
+            eq: { company_id: session.company_id },
+            order: { column: 'id', ascending: false },
+            limit: 100
+          }).catch(() => []);
+
+          // 8) معاملات الموردين
+          const supplierTransactions = await Refad.db.select('supplier_transactions', {
+            columns: 'id, supplier_id, type, amount, balance_after, notes, created_at',
+            eq: { company_id: session.company_id },
+            order: { column: 'id', ascending: false },
+            limit: 1000
+          }).catch(() => []);
+
+          Object.assign(state, {
+            invoices, receipts, expenses, suppliers, customers, users,
+            settlements, supplierTransactions
+          });
+
+          document.getElementById('updatedAt').textContent = `آخر تحديث: ${new Date().toLocaleString('ar-EG')}`;
+
+        } catch (e) {
+          console.error('[Accounts] Load failed:', e);
+          errorBox.textContent = `تعذّر تحميل البيانات: ${e.message}`;
+          errorBox.classList.add('show');
+          Refad.toast.error('تعذّر تحميل البيانات');
+        } finally {
+          btn.disabled = false;
+        }
+      }
+
+      // ============================================================
+      // 6) Helpers
+      // ============================================================
       function userName(id) {
-        return state.users.find(row => String(row.id) === String(id))?.full_name || '—';
+        return state.users.find(u => String(u.id) === String(id))?.full_name || '—';
       }
-      function openInvoices() {
-        return state.invoices.filter(row =>
-          row.status !== 'cancelled' &&
-          (row.invoice_type || 'sale') === 'sale' &&
-          row.cashier_id &&
-          amount(row.grand_total) - amount(row.paid_amount) > 0.009
+
+      function supplierName(id) {
+        return state.suppliers.find(s => String(s.id) === String(id))?.name || '—';
+      }
+
+      function customerName(id) {
+        return state.customers.find(c => String(c.id) === String(id))?.name || 'عميل نقدي';
+      }
+
+      function partyName(invoice) {
+        if (invoice.supplier_id) return supplierName(invoice.supplier_id);
+        if (invoice.customer_id) return customerName(invoice.customer_id);
+        return 'عميل نقدي';
+      }
+
+      function setText(id, value) {
+        const el = document.getElementById(id);
+        if (el) el.textContent = value;
+      }
+
+      // ============================================================
+      // 7) Metrics Calculation
+      // ============================================================
+      function calculateMetrics() {
+        const range = periodRange(document.getElementById('periodSelect').value);
+
+        const invoices = state.invoices.filter(r =>
+          r.status !== 'cancelled' &&
+          (r.invoice_type || 'sale') === 'sale' &&
+          inRange(r.invoice_date || '', range)
         );
+
+        const receipts = state.receipts.filter(r =>
+          r.status !== 'cancelled' &&
+          inRange(r.receipt_date || '', range)
+        );
+
+        const expenses = state.expenses.filter(r =>
+          inRange(r.expense_date || '', range)
+        );
+
+        const sales = invoices.reduce((s, r) => s + amount(r.grand_total), 0);
+        const collections = invoices.reduce((s, r) => s + amount(r.paid_amount), 0);
+        const profit = invoices.reduce((s, r) => s + amount(r.total_profit), 0);
+        const salesReturns = invoices.filter(r => r.invoice_type === 'return')
+          .reduce((s, r) => s + amount(r.grand_total), 0);
+
+        const purchaseValue = receipts.reduce((s, r) => s + amount(r.total_amount), 0);
+        const purchasePaid = receipts.reduce((s, r) => s + amount(r.paid_amount), 0);
+
+        const expenseValue = expenses.reduce((s, r) => s + amount(r.amount), 0);
+
+        const netResult = profit - expenseValue;
+
+        // الرصيد النقدي (تقديري)
+        const cashIn = collections;
+        const cashOut = purchasePaid + expenseValue;
+        const cashBalance = cashIn - cashOut;
+
+        // الذمم
+        const customerDue = state.customers.reduce((s, c) => s + Math.max(0, amount(c.balance)), 0);
+        const supplierDue = state.suppliers.reduce((s, c) => s + Math.max(0, amount(c.balance)), 0);
+
+        // الذمم من الفواتير غير المسددة
+        const invoiceDue = invoices.reduce((s, r) =>
+          s + Math.max(0, amount(r.grand_total) - amount(r.paid_amount)), 0);
+
+        const receiptDue = receipts.reduce((s, r) =>
+          s + Math.max(0, amount(r.total_amount) - amount(r.paid_amount)), 0);
+
+        return {
+          range,
+          invoices, receipts, expenses,
+          sales, collections, profit, salesReturns,
+          purchaseValue, purchasePaid,
+          expenseValue, netResult,
+          cashIn, cashOut, cashBalance,
+          customerDue, supplierDue, invoiceDue, receiptDue
+        };
       }
-      function populateRepresentatives() {
-        const select = document.getElementById('repFilter');
-        const selected = select.value;
-        const representativeIds = new Set(openInvoices().map(row => String(row.cashier_id)));
-        const representatives = state.users
-          .filter(user => representativeIds.has(String(user.id)))
-          .sort((a, b) => String(a.full_name).localeCompare(String(b.full_name), 'ar'));
-        select.innerHTML = '<option value="">كل المندوبين</option>' + representatives.map(user =>
-          `<option value="${user.id}">${Refad.escapeHtml(user.full_name || 'مندوب')}</option>`
-        ).join('');
-        if (representativeIds.has(selected)) select.value = selected;
-      }
-      function renderRepresentativeAccounts() {
-        populateRepresentatives();
-        const selectedRep = document.getElementById('repFilter').value;
-        const rows = openInvoices()
-          .filter(row => !selectedRep || String(row.cashier_id) === selectedRep)
-          .sort((a, b) => String(b.invoice_date || '').localeCompare(String(a.invoice_date || '')));
-        const dueTotal = rows.reduce((sum, row) => sum + Math.max(0, amount(row.grand_total) - amount(row.paid_amount)), 0);
-        setText('repOpenCount', Refad.format.number(rows.length));
-        setText('repOpenDue', money(dueTotal));
-        document.getElementById('repInvoiceRows').innerHTML = rows.length ? rows.map(row => {
-          const due = Math.max(0, amount(row.grand_total) - amount(row.paid_amount));
-          const party = row.supplier_id
-            ? (state.suppliers.find(item => String(item.id) === String(row.supplier_id))?.name || 'مورد')
-            : (state.customers.find(item => String(item.id) === String(row.customer_id))?.name || 'عميل نقدي');
-          return `<tr>
-            <td>${Refad.escapeHtml(userName(row.cashier_id))}</td>
-            <td><a class="type-link" href="invoices.html?id=${row.id}">${Refad.escapeHtml(row.invoice_number || '—')}</a></td>
-            <td>${Refad.escapeHtml(party)}</td><td>${Refad.format.date(row.invoice_date)}</td>
-            <td>${money(row.grand_total)}</td><td>${money(row.paid_amount)}</td>
-            <td><strong>${money(due)}</strong></td>
-            <td><button type="button" class="settle-btn" data-settle-invoice="${row.id}" data-due="${due}">تسجيل تحصيل</button></td>
-          </tr>`;
-        }).join('') : '<tr><td colspan="8" class="empty">لا توجد فواتير آجلة مرتبطة بمندوب في الوقت الحالي.</td></tr>';
-        const recent = state.settlements.slice(0, 20);
-        document.getElementById('repSettlementRows').innerHTML = recent.length ? recent.map(row => {
-          const invoice = state.invoices.find(item => String(item.id) === String(row.invoice_id));
-          return `<tr>
-            <td>${Refad.format.date(row.settlement_date)}</td><td>${Refad.escapeHtml(userName(row.representative_id))}</td>
-            <td>${invoice ? `<a class="type-link" href="invoices.html?id=${invoice.id}">${Refad.escapeHtml(invoice.invoice_number || '—')}</a>` : '—'}</td>
-            <td>${Refad.escapeHtml(userName(row.received_by))}</td><td><strong>${money(row.amount)}</strong></td>
-            <td>${Refad.escapeHtml(row.notes || '—')}</td>
-          </tr>`;
-        }).join('') : '<tr><td colspan="6" class="empty">لا توجد تسويات مسجلة حتى الآن.</td></tr>';
+
+      // ============================================================
+      // 8) Render Metrics
+      // ============================================================
+      function renderMetrics() {
+        const m = calculateMetrics();
+
+        const metrics = [
+          {
+            label: 'صافي المبيعات',
+            value: money(m.sales),
+            note: `${Refad.format.number(m.invoices.length)} فاتورة`,
+            icon: 'trending-up',
+            color: '#2563eb'
+          },
+          {
+            label: 'المبالغ المحصلة',
+            value: money(m.collections),
+            note: m.sales > 0 ? `${Math.round((m.collections / m.sales) * 100)}% من المبيعات` : '—',
+            icon: 'banknote',
+            color: '#059669',
+            valueClass: 'success'
+          },
+          {
+            label: 'إجمالي الربح',
+            value: money(m.profit),
+            note: m.sales > 0 ? `هامش ${Math.round((m.profit / m.sales) * 100)}%` : 'قبل المصاريف',
+            icon: 'badge-dollar-sign',
+            color: '#0d9488',
+            valueClass: 'accent'
+          },
+          {
+            label: 'النتيجة بعد المصاريف',
+            value: money(m.netResult),
+            note: m.netResult >= 0 ? 'ربح صافي' : 'خسارة صافية',
+            icon: 'scale',
+            color: m.netResult >= 0 ? '#7c3aed' : '#dc2626',
+            valueClass: m.netResult >= 0 ? '' : 'danger'
+          },
+          {
+            label: 'الرصيد النقدي التقديري',
+            value: money(m.cashBalance),
+            note: `داخل: ${money(m.cashIn)} • خارج: ${money(m.cashOut)}`,
+            icon: 'wallet',
+            color: '#0891b2',
+            valueClass: m.cashBalance >= 0 ? 'success' : 'danger'
+          },
+          {
+            label: 'المشتريات المستلمة',
+            value: money(m.purchaseValue),
+            note: `مدفوع: ${money(m.purchasePaid)} • ${Refad.format.number(m.receipts.length)} استلام`,
+            icon: 'package-check',
+            color: '#d97706'
+          },
+          {
+            label: 'المصاريف المسجلة',
+            value: money(m.expenseValue),
+            note: `${Refad.format.number(m.expenses.length)} مصروف`,
+            icon: 'receipt-text',
+            color: '#dc2626'
+          },
+          {
+            label: 'ذمم العملاء المدينة',
+            value: money(m.customerDue),
+            note: `${Refad.format.number(state.customers.filter(c => amount(c.balance) > 0).length)} عميل`,
+            icon: 'users',
+            color: '#0891b2',
+            valueClass: 'accent'
+          },
+          {
+            label: 'ذمم الموردين الدائنة',
+            value: money(m.supplierDue),
+            note: `${Refad.format.number(state.suppliers.filter(c => amount(c.balance) > 0).length)} مورد`,
+            icon: 'truck',
+            color: '#be123c',
+            valueClass: 'danger'
+          },
+          {
+            label: 'فواتير بيع غير مسددة',
+            value: money(m.invoiceDue),
+            note: `${Refad.format.number(m.invoices.filter(r => amount(r.grand_total) - amount(r.paid_amount) > 0.01).length)} فاتورة`,
+            icon: 'clock',
+            color: '#f59e0b',
+            valueClass: 'gold'
+          },
+          {
+            label: 'استلامات غير مسددة',
+            value: money(m.receiptDue),
+            note: `${Refad.format.number(m.receipts.filter(r => amount(r.total_amount) - amount(r.paid_amount) > 0.01).length)} استلام`,
+            icon: 'hourglass',
+            color: '#8b5cf6',
+            valueClass: 'gold'
+          },
+          {
+            label: 'المبيعات الراجعة',
+            value: money(m.salesReturns),
+            note: m.sales > 0 ? `${Math.round((m.salesReturns / m.sales) * 100)}% من المبيعات` : '—',
+            icon: 'undo-2',
+            color: '#f97316'
+          }
+        ];
+
+        document.getElementById('metricsGrid').innerHTML = metrics.map(m => `
+          <div class="metric-card" style="--metric:${m.color};">
+            <div class="metric-header">
+              <span class="metric-label">${Refad.escapeHtml(m.label)}</span>
+              <div class="metric-icon"><i data-lucide="${m.icon}"></i></div>
+            </div>
+            <div class="metric-value ${m.valueClass || ''}">${Refad.escapeHtml(String(m.value))}</div>
+            <div class="metric-note">${Refad.escapeHtml(m.note)}</div>
+          </div>
+        `).join('');
+
         if (window.lucide) lucide.createIcons();
       }
 
-      async function settleRepresentativeInvoice(invoiceId, due, button) {
-        const invoice = state.invoices.find(row => String(row.id) === String(invoiceId));
+      // ============================================================
+      // 9) Trend Chart
+      // ============================================================
+      function renderTrend() {
+        const rows = Array.from({ length: 14 }, (_, i) => {
+          const date = dateShift(today(), i - 13);
+          return { date, sales: 0, purchases: 0, expenses: 0 };
+        });
+        const byDate = new Map(rows.map(r => [r.date, r]));
+
+        state.invoices.forEach(r => {
+          if (r.status === 'cancelled' || (r.invoice_type || 'sale') !== 'sale') return;
+          const bucket = byDate.get(r.invoice_date);
+          if (bucket) bucket.sales += amount(r.grand_total);
+        });
+
+        state.receipts.forEach(r => {
+          if (r.status === 'cancelled') return;
+          const bucket = byDate.get(r.receipt_date);
+          if (bucket) bucket.purchases += amount(r.total_amount);
+        });
+
+        state.expenses.forEach(r => {
+          const bucket = byDate.get(r.expense_date);
+          if (bucket) bucket.expenses += amount(r.amount);
+        });
+
+        const max = Math.max(1, ...rows.flatMap(r => [r.sales, r.purchases, r.expenses]));
+
+        document.getElementById('trendChart').innerHTML = rows.map(r => `
+          <div class="day-col" title="${r.date} | بيع: ${money(r.sales)} | استلام: ${money(r.purchases)} | مصروف: ${money(r.expenses)}">
+            <div class="bars">
+              <div class="bar" style="--bar:#2563eb;height:${Math.max(r.sales ? 3 : 0, r.sales / max * 100)}%"></div>
+              <div class="bar" style="--bar:#d97706;height:${Math.max(r.purchases ? 3 : 0, r.purchases / max * 100)}%"></div>
+              <div class="bar" style="--bar:#dc2626;height:${Math.max(r.expenses ? 3 : 0, r.expenses / max * 100)}%"></div>
+            </div>
+            <span class="day-label">${r.date.slice(5)}</span>
+          </div>
+        `).join('');
+      }
+
+      // ============================================================
+      // 10) Balance List
+      // ============================================================
+      function renderBalances() {
+        const suppliers = state.suppliers
+          .map(r => ({ kind: 'supplier', name: r.name, id: r.id, balance: amount(r.balance) }))
+          .filter(r => r.balance > 0)
+          .sort((a, b) => b.balance - a.balance).slice(0, 4);
+
+        const customers = state.customers
+          .map(r => ({ kind: 'customer', name: r.name, id: r.id, balance: amount(r.balance) }))
+          .filter(r => r.balance > 0)
+          .sort((a, b) => b.balance - a.balance).slice(0, 4);
+
+        const items = [
+          ...customers.map(r => ({ ...r, label: 'مستحق من عميل', color: 'var(--success)', link: 'customers.html' })),
+          ...suppliers.map(r => ({ ...r, label: 'مستحق لمورد', color: 'var(--danger)', link: 'suppliers.html' }))
+        ].sort((a, b) => b.balance - a.balance).slice(0, 6);
+
+        document.getElementById('balanceList').innerHTML = items.length ? items.map(r => `
+          <div class="balance-row">
+            <div class="balance-name">
+              <a href="${r.link}">${Refad.escapeHtml(r.name || '—')}</a>
+              <small>${Refad.escapeHtml(r.label)}</small>
+            </div>
+            <strong class="balance-value" style="color:${r.color}">${money(r.balance)}</strong>
+          </div>
+        `).join('') : '<div class="empty"><i data-lucide="check-circle"></i><p>لا توجد أرصدة مفتوحة</p></div>';
+
+        if (window.lucide) lucide.createIcons();
+      }
+
+      // ============================================================
+      // 11) Recent Transactions
+      // ============================================================
+      function renderRecent() {
+        const range = periodRange(document.getElementById('periodSelect').value);
+
+        const invoices = state.invoices.filter(r =>
+          r.status !== 'cancelled' &&
+          (r.invoice_type || 'sale') === 'sale' &&
+          inRange(r.invoice_date || '', range)
+        );
+
+        const receipts = state.receipts.filter(r =>
+          r.status !== 'cancelled' && inRange(r.receipt_date || '', range)
+        );
+
+        const expenses = state.expenses.filter(r => inRange(r.expense_date || '', range));
+
+        const rows = [
+          ...invoices.map(r => ({
+            kind: 'بيع', color: '#2563eb',
+            number: r.invoice_number,
+            party: partyName(r),
+            date: r.invoice_date,
+            total: amount(r.grand_total),
+            paid: amount(r.paid_amount),
+            href: `invoices.html?id=${r.id}`
+          })),
+          ...receipts.map(r => ({
+            kind: 'استلام', color: '#d97706',
+            number: r.receipt_number,
+            party: supplierName(r.supplier_id),
+            date: r.receipt_date,
+            total: amount(r.total_amount),
+            paid: amount(r.paid_amount),
+            href: `receipt-form.html?id=${r.id}`
+          })),
+          ...expenses.map(r => ({
+            kind: 'مصروف', color: '#dc2626',
+            number: r.description || r.category || 'مصروف',
+            party: 'الشركة',
+            date: r.expense_date,
+            total: amount(r.amount),
+            paid: amount(r.amount),
+            href: 'expenses.html'
+          }))
+        ]
+        .sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')))
+        .slice(0, 15);
+
+        document.getElementById('recentRows').innerHTML = rows.length ? rows.map(r => `
+          <tr data-row-href="${r.href}" tabindex="0">
+            <td>
+              <span class="status-badge" style="--status:${r.color};--status-bg:color-mix(in srgb,${r.color} 12%,transparent);">
+                ${Refad.escapeHtml(r.kind)}
+              </span>
+            </td>
+            <td><a class="type-link" href="${r.href}">${Refad.escapeHtml(r.number || '—')}</a></td>
+            <td>${Refad.escapeHtml(r.party)}</td>
+            <td>${Refad.format.date(r.date)}</td>
+            <td><strong>${money(r.total)}</strong></td>
+            <td>${money(r.paid)}</td>
+            <td>${money(Math.max(0, r.total - r.paid))}</td>
+          </tr>
+        `).join('') : '<tr><td colspan="7" class="empty">لا توجد حركات للفترة المختارة</td></tr>';
+
+        if (window.lucide) lucide.createIcons();
+      }
+
+      // ============================================================
+      // 12) Receivables (ذمم العملاء)
+      // ============================================================
+      function renderReceivables() {
+        const customersWithDue = state.customers
+          .map(c => {
+            const customerInvoices = state.invoices.filter(i =>
+              String(i.customer_id) === String(c.id) && i.status !== 'cancelled'
+            );
+            const totalInvoiced = customerInvoices.reduce((s, i) => s + amount(i.grand_total), 0);
+            const totalPaid = customerInvoices.reduce((s, i) => s + amount(i.paid_amount), 0);
+            const balance = Math.max(0, amount(c.balance));
+            const lastInvoice = customerInvoices
+              .sort((a, b) => String(b.invoice_date).localeCompare(String(a.invoice_date)))[0];
+
+            return {
+              id: c.id,
+              name: c.name,
+              phone: c.phone,
+              totalInvoiced,
+              totalPaid,
+              balance,
+              lastInvoice: lastInvoice?.invoice_date
+            };
+          })
+          .filter(c => c.balance > 0.01)
+          .sort((a, b) => b.balance - a.balance);
+
+        const total = customersWithDue.reduce((s, c) => s + c.balance, 0);
+        setText('receivablesTotal', money(total));
+
+        document.getElementById('receivablesRows').innerHTML = customersWithDue.length
+          ? customersWithDue.map(c => `
+              <tr>
+                <td><strong>${Refad.escapeHtml(c.name)}</strong></td>
+                <td>${Refad.escapeHtml(c.phone || '—')}</td>
+                <td>${money(c.totalInvoiced)}</td>
+                <td style="color:var(--success);">${money(c.totalPaid)}</td>
+                <td><strong style="color:var(--danger);">${money(c.balance)}</strong></td>
+                <td>${c.lastInvoice ? Refad.format.date(c.lastInvoice) : '—'}</td>
+                <td>
+                  <button class="pay-btn" data-collect-from="${c.id}" data-due="${c.balance}">
+                    <i data-lucide="banknote" style="width:12px;height:12px;display:inline;"></i> تحصيل
+                  </button>
+                  <button class="action-btn" data-statement="customer" data-id="${c.id}" title="كشف حساب" style="width:30px;height:30px;">
+                    <i data-lucide="file-text" style="width:14px;height:14px;"></i>
+                  </button>
+                </td>
+              </tr>
+            `).join('')
+          : '<tr><td colspan="7" class="empty"><i data-lucide="check-circle"></i><p>لا توجد ذمم مدينة</p></td></tr>';
+
+        if (window.lucide) lucide.createIcons();
+      }
+
+      // ============================================================
+      // 13) Payables (ذمم الموردين)
+      // ============================================================
+      function renderPayables() {
+        const suppliersWithDue = state.suppliers
+          .map(s => {
+            const supplierReceipts = state.receipts.filter(r =>
+              String(r.supplier_id) === String(s.id) && r.status !== 'cancelled'
+            );
+            const totalPurchased = supplierReceipts.reduce((sum, r) => sum + amount(r.total_amount), 0);
+            const totalPaid = supplierReceipts.reduce((sum, r) => sum + amount(r.paid_amount), 0);
+            const balance = Math.max(0, amount(s.balance));
+            const lastReceipt = supplierReceipts
+              .sort((a, b) => String(b.receipt_date).localeCompare(String(a.receipt_date)))[0];
+
+            return {
+              id: s.id,
+              name: s.name,
+              phone: s.phone,
+              totalPurchased,
+              totalPaid,
+              balance,
+              lastReceipt: lastReceipt?.receipt_date
+            };
+          })
+          .filter(s => s.balance > 0.01)
+          .sort((a, b) => b.balance - a.balance);
+
+        const total = suppliersWithDue.reduce((s, c) => s + c.balance, 0);
+        setText('payablesTotal', money(total));
+
+        document.getElementById('payablesRows').innerHTML = suppliersWithDue.length
+          ? suppliersWithDue.map(s => `
+              <tr>
+                <td><strong>${Refad.escapeHtml(s.name)}</strong></td>
+                <td>${Refad.escapeHtml(s.phone || '—')}</td>
+                <td>${money(s.totalPurchased)}</td>
+                <td style="color:var(--success);">${money(s.totalPaid)}</td>
+                <td><strong style="color:var(--danger);">${money(s.balance)}</strong></td>
+                <td>${s.lastReceipt ? Refad.format.date(s.lastReceipt) : '—'}</td>
+                <td>
+                  <button class="pay-btn" data-pay-supplier="${s.id}" data-due="${s.balance}">
+                    <i data-lucide="banknote" style="width:12px;height:12px;display:inline;"></i> دفع
+                  </button>
+                  <button class="action-btn" data-statement="supplier" data-id="${s.id}" title="كشف حساب" style="width:30px;height:30px;">
+                    <i data-lucide="file-text" style="width:14px;height:14px;"></i>
+                  </button>
+                </td>
+              </tr>
+            `).join('')
+          : '<tr><td colspan="7" class="empty"><i data-lucide="check-circle"></i><p>لا توجد ذمم دائنة</p></td></tr>';
+
+        if (window.lucide) lucide.createIcons();
+      }
+
+      // ============================================================
+      // 14) Representatives (المندوبين)
+      // ============================================================
+      function openInvoices() {
+        return state.invoices.filter(r =>
+          r.status !== 'cancelled' &&
+          (r.invoice_type || 'sale') === 'sale' &&
+          r.cashier_id &&
+          amount(r.grand_total) - amount(r.paid_amount) > 0.009
+        );
+      }
+
+      function populateRepresentatives() {
+        const select = document.getElementById('repFilter');
+        const selected = select.value;
+        const repIds = new Set(openInvoices().map(r => String(r.cashier_id)));
+        const reps = state.users
+          .filter(u => repIds.has(String(u.id)))
+          .sort((a, b) => String(a.full_name).localeCompare(String(b.full_name), 'ar'));
+
+        select.innerHTML = '<option value="">كل المندوبين</option>' +
+          reps.map(u => `<option value="${u.id}">${Refad.escapeHtml(u.full_name || 'مندوب')}</option>`).join('');
+
+        if (repIds.has(selected)) select.value = selected;
+      }
+
+      function renderRepresentatives() {
+        populateRepresentatives();
+        const selectedRep = document.getElementById('repFilter').value;
+
+        const rows = openInvoices()
+          .filter(r => !selectedRep || String(r.cashier_id) === selectedRep)
+          .sort((a, b) => String(b.invoice_date || '').localeCompare(String(a.invoice_date || '')));
+
+        const dueTotal = rows.reduce((s, r) =>
+          s + Math.max(0, amount(r.grand_total) - amount(r.paid_amount)), 0);
+
+        setText('repOpenCount', Refad.format.number(rows.length));
+        setText('repOpenDue', money(dueTotal));
+
+        document.getElementById('repInvoiceRows').innerHTML = rows.length
+          ? rows.map(r => {
+              const due = Math.max(0, amount(r.grand_total) - amount(r.paid_amount));
+              return `
+                <tr>
+                  <td>${Refad.escapeHtml(userName(r.cashier_id))}</td>
+                  <td><a class="type-link" href="invoices.html?id=${r.id}">${Refad.escapeHtml(r.invoice_number || '—')}</a></td>
+                  <td>${Refad.escapeHtml(partyName(r))}</td>
+                  <td>${Refad.format.date(r.invoice_date)}</td>
+                  <td>${money(r.grand_total)}</td>
+                  <td>${money(r.paid_amount)}</td>
+                  <td><strong>${money(due)}</strong></td>
+                  <td><button type="button" class="settle-btn" data-settle-invoice="${r.id}" data-due="${due}">تسجيل تحصيل</button></td>
+                </tr>
+              `;
+            }).join('')
+          : '<tr><td colspan="8" class="empty">لا توجد فواتير آجلة مرتبطة بمندوب</td></tr>';
+
+        // سجل التسويات
+        const recent = state.settlements.slice(0, 20);
+        document.getElementById('repSettlementRows').innerHTML = recent.length
+          ? recent.map(s => {
+              const inv = state.invoices.find(i => String(i.id) === String(s.invoice_id));
+              return `
+                <tr>
+                  <td>${Refad.format.date(s.settlement_date)}</td>
+                  <td>${Refad.escapeHtml(userName(s.representative_id))}</td>
+                  <td>${inv ? `<a class="type-link" href="invoices.html?id=${inv.id}">${Refad.escapeHtml(inv.invoice_number || '—')}</a>` : '—'}</td>
+                  <td>${Refad.escapeHtml(userName(s.received_by))}</td>
+                  <td><strong>${money(s.amount)}</strong></td>
+                  <td>${Refad.escapeHtml(s.notes || '—')}</td>
+                </tr>
+              `;
+            }).join('')
+          : '<tr><td colspan="6" class="empty">لا توجد تسويات مسجلة</td></tr>';
+
+        if (window.lucide) lucide.createIcons();
+      }
+      // ============================================================
+      // 15) P&L (قائمة الدخل)
+      // ============================================================
+      function renderPL() {
+        const m = calculateMetrics();
+
+        // تفصيل المصاريف حسب الفئة
+        const expensesByCategory = {};
+        m.expenses.forEach(e => {
+          const cat = e.category || 'other';
+          expensesByCategory[cat] = (expensesByCategory[cat] || 0) + amount(e.amount);
+        });
+
+        const CATEGORY_LABELS = {
+          rent: 'إيجار',
+          salary: 'رواتب',
+          utilities: 'كهرباء وماء',
+          transport: 'مواصلات',
+          maintenance: 'صيانة',
+          marketing: 'تسويق',
+          other: 'أخرى'
+        };
+
+        // COGS تقديري (تكلفة المبيعات)
+        const cogs = m.sales - m.profit;
+
+        const grossProfit = m.sales - cogs;
+        const operatingProfit = grossProfit - m.expenseValue;
+        const netProfit = operatingProfit;
+
+        document.getElementById('plPeriod').textContent =
+          m.range.from ? `${Refad.format.date(m.range.from)} → ${Refad.format.date(m.range.to)}` : 'كل السجلات';
+
+        document.getElementById('plTable').innerHTML = `
+          <tr class="section-header">
+            <td colspan="2"><i data-lucide="trending-up" style="width:14px;height:14px;display:inline;"></i> الإيرادات</td>
+          </tr>
+          <tr>
+            <td class="indent">إجمالي المبيعات</td>
+            <td>${money(m.sales)}</td>
+          </tr>
+          <tr>
+            <td class="indent">(-) المبيعات الراجعة</td>
+            <td style="color:var(--danger);">${money(m.salesReturns)}</td>
+          </tr>
+          <tr style="background:rgba(37,99,235,0.05);font-weight:700;">
+            <td class="indent">صافي الإيرادات</td>
+            <td>${money(m.sales - m.salesReturns)}</td>
+          </tr>
+
+          <tr class="section-header">
+            <td colspan="2"><i data-lucide="package" style="width:14px;height:14px;display:inline;"></i> تكلفة المبيعات</td>
+          </tr>
+          <tr>
+            <td class="indent">تكلفة البضاعة المباعة (COGS)</td>
+            <td style="color:var(--danger);">${money(cogs)}</td>
+          </tr>
+
+          <tr class="section-header">
+            <td colspan="2"><i data-lucide="badge-dollar-sign" style="width:14px;height:14px;display:inline;"></i> الربح الإجمالي</td>
+          </tr>
+          <tr class="total">
+            <td>الربح الإجمالي</td>
+            <td class="val">${money(grossProfit)}</td>
+          </tr>
+
+          <tr class="section-header">
+            <td colspan="2"><i data-lucide="receipt-text" style="width:14px;height:14px;display:inline;"></i> المصاريف التشغيلية</td>
+          </tr>
+          ${Object.keys(expensesByCategory).length
+            ? Object.entries(expensesByCategory)
+                .sort((a, b) => b[1] - a[1])
+                .map(([cat, val]) => `
+                  <tr>
+                    <td class="indent">${Refad.escapeHtml(CATEGORY_LABELS[cat] || cat)}</td>
+                    <td style="color:var(--danger);">${money(val)}</td>
+                  </tr>
+                `).join('')
+            : '<tr><td class="indent" colspan="2" style="color:var(--text-muted);">لا توجد مصاريف مسجلة</td></tr>'
+          }
+          <tr style="background:rgba(220,38,38,0.05);font-weight:700;">
+            <td class="indent">إجمالي المصاريف</td>
+            <td style="color:var(--danger);">${money(m.expenseValue)}</td>
+          </tr>
+
+          <tr class="section-header">
+            <td colspan="2"><i data-lucide="scale" style="width:14px;height:14px;display:inline;"></i> صافي الربح</td>
+          </tr>
+          <tr class="total ${netProfit < 0 ? 'negative' : ''}">
+            <td>صافي الربح / (الخسارة)</td>
+            <td class="val">${money(netProfit)}</td>
+          </tr>
+        `;
+
+        if (window.lucide) lucide.createIcons();
+      }
+
+      // ============================================================
+      // 16) Aging Analysis (تحليل الأعمار)
+      // ============================================================
+      function renderAging() {
+        const today = Refad.date.today();
+
+        // تحليل أعمار الذمم المدينة (فواتير بيع غير مسددة)
+        const openInvoices = state.invoices.filter(r =>
+          r.status !== 'cancelled' &&
+          (r.invoice_type || 'sale') === 'sale' &&
+          amount(r.grand_total) - amount(r.paid_amount) > 0.01
+        );
+
+        const receivablesBuckets = {
+          '0-30': { amount: 0, count: 0, label: '0-30 يوم', color: '#10b981' },
+          '31-60': { amount: 0, count: 0, label: '31-60 يوم', color: '#f59e0b' },
+          '61-90': { amount: 0, count: 0, label: '61-90 يوم', color: '#f97316' },
+          '90+': { amount: 0, count: 0, label: 'أكثر من 90 يوم', color: '#dc2626' }
+        };
+
+        openInvoices.forEach(inv => {
+          const days = Refad.date.diffDays(today, inv.invoice_date);
+          const due = amount(inv.grand_total) - amount(inv.paid_amount);
+          let bucket = '90+';
+          if (days <= 30) bucket = '0-30';
+          else if (days <= 60) bucket = '31-60';
+          else if (days <= 90) bucket = '61-90';
+
+          receivablesBuckets[bucket].amount += due;
+          receivablesBuckets[bucket].count += 1;
+        });
+
+        document.getElementById('agingReceivables').innerHTML = Object.values(receivablesBuckets).map(b => `
+          <div class="aging-card" style="--aging-color:${b.color};">
+            <div class="range">${Refad.escapeHtml(b.label)}</div>
+            <div class="amount" style="color:${b.color};">${money(b.amount)}</div>
+            <div class="count">${Refad.format.number(b.count)} فاتورة</div>
+          </div>
+        `).join('');
+
+        // تحليل أعمار الذمم الدائنة (استلامات غير مسددة)
+        const openReceipts = state.receipts.filter(r =>
+          r.status !== 'cancelled' &&
+          amount(r.total_amount) - amount(r.paid_amount) > 0.01
+        );
+
+        const payablesBuckets = {
+          '0-30': { amount: 0, count: 0, label: '0-30 يوم', color: '#10b981' },
+          '31-60': { amount: 0, count: 0, label: '31-60 يوم', color: '#f59e0b' },
+          '61-90': { amount: 0, count: 0, label: '61-90 يوم', color: '#f97316' },
+          '90+': { amount: 0, count: 0, label: 'أكثر من 90 يوم', color: '#dc2626' }
+        };
+
+        openReceipts.forEach(rec => {
+          const days = Refad.date.diffDays(today, rec.receipt_date);
+          const due = amount(rec.total_amount) - amount(rec.paid_amount);
+          let bucket = '90+';
+          if (days <= 30) bucket = '0-30';
+          else if (days <= 60) bucket = '31-60';
+          else if (days <= 90) bucket = '61-90';
+
+          payablesBuckets[bucket].amount += due;
+          payablesBuckets[bucket].count += 1;
+        });
+
+        document.getElementById('agingPayables').innerHTML = Object.values(payablesBuckets).map(b => `
+          <div class="aging-card" style="--aging-color:${b.color};">
+            <div class="range">${Refad.escapeHtml(b.label)}</div>
+            <div class="amount" style="color:${b.color};">${money(b.amount)}</div>
+            <div class="count">${Refad.format.number(b.count)} استلام</div>
+          </div>
+        `).join('');
+      }
+
+      // ============================================================
+      // 17) Quick Payment Modal
+      // ============================================================
+      function openPaymentModal(prefill = {}) {
+        const form = document.getElementById('paymentForm');
+        form.reset();
+
+        document.getElementById('paymentDate').value = today();
+
+        // Populate parties based on type
+        if (prefill.type) {
+          document.getElementById('paymentType').value = prefill.type;
+        }
+        updatePaymentParties(prefill.partyId);
+        updatePaymentPartyLabel();
+
+        if (prefill.amount) {
+          document.getElementById('paymentAmount').value = prefill.amount;
+        }
+
+        document.getElementById('paymentModal').classList.add('show');
+        if (window.lucide) lucide.createIcons();
+      }
+
+      function updatePaymentPartyLabel() {
+        const type = document.getElementById('paymentType').value;
+        const label = document.getElementById('paymentPartyLabel');
+        const invoiceGroup = document.getElementById('invoiceSelectGroup');
+
+        if (type === 'supplier') {
+          label.innerHTML = 'المورد <span class="req">*</span>';
+          invoiceGroup.style.display = 'none';
+        } else if (type === 'customer') {
+          label.innerHTML = 'العميل <span class="req">*</span>';
+          invoiceGroup.style.display = 'none';
+        } else {
+          label.innerHTML = 'العميل <span class="req">*</span>';
+          invoiceGroup.style.display = 'block';
+        }
+      }
+
+      function updatePaymentParties(selectedId) {
+        const type = document.getElementById('paymentType').value;
+        const sel = document.getElementById('paymentParty');
+        sel.innerHTML = '<option value="">اختر...</option>';
+
+        const list = type === 'supplier' ? state.suppliers : state.customers;
+        list.forEach(item => {
+          const opt = document.createElement('option');
+          opt.value = item.id;
+          opt.textContent = item.name + (item.balance > 0 ? ` (رصيد: ${money(item.balance)})` : '');
+          sel.appendChild(opt);
+        });
+
+        if (selectedId) sel.value = selectedId;
+      }
+
+      function updatePaymentInvoices() {
+        const type = document.getElementById('paymentType').value;
+        if (type !== 'invoice') return;
+
+        const customerId = document.getElementById('paymentParty').value;
+        if (!customerId) return;
+
+        const sel = document.getElementById('paymentInvoice');
+        sel.innerHTML = '<option value="">— بدون فاتورة محددة —</option>';
+
+        const invoices = state.invoices.filter(r =>
+          String(r.customer_id) === String(customerId) &&
+          r.status !== 'cancelled' &&
+          (r.invoice_type || 'sale') === 'sale' &&
+          amount(r.grand_total) - amount(r.paid_amount) > 0.01
+        );
+
+        invoices.forEach(inv => {
+          const due = amount(inv.grand_total) - amount(inv.paid_amount);
+          const opt = document.createElement('option');
+          opt.value = inv.id;
+          opt.textContent = `${inv.invoice_number} • متبقي: ${money(due)}`;
+          opt.dataset.due = due;
+          sel.appendChild(opt);
+        });
+      }
+
+      async function submitPayment(e) {
+        e.preventDefault();
+        const btn = document.getElementById('paymentSubmitBtn');
+        btn.disabled = true;
+
+        try {
+          const type = document.getElementById('paymentType').value;
+          const partyId = parseInt(document.getElementById('paymentParty').value, 10);
+          const invoiceId = parseInt(document.getElementById('paymentInvoice').value, 10) || null;
+          const amountVal = Refad.toNum(document.getElementById('paymentAmount').value);
+          const dateVal = document.getElementById('paymentDate').value || today();
+          const method = document.getElementById('paymentMethod').value;
+          const reference = document.getElementById('paymentReference').value.trim() || null;
+          const notes = document.getElementById('paymentNotes').value.trim() || null;
+
+          if (!partyId) {
+            Refad.toast.warning('اختر الطرف');
+            btn.disabled = false;
+            return;
+          }
+          if (amountVal <= 0) {
+            Refad.toast.warning('أدخل مبلغاً صحيحاً');
+            btn.disabled = false;
+            return;
+          }
+
+          // حالة 1: دفعة لمورد
+          if (type === 'supplier') {
+            const supplier = state.suppliers.find(s => s.id === partyId);
+            if (!supplier) throw new Error('المورد غير موجود');
+
+            const newBalance = Math.max(0, (supplier.balance || 0) - amountVal);
+
+            // سجل الحركة
+            await Refad.db.insert('supplier_transactions', {
+              supplier_id: partyId,
+              company_id: session.company_id,
+              type: 'payment',
+              amount: amountVal,
+              balance_after: newBalance,
+              notes: notes || `دفعة ${method}`,
+              user_id: session.user_id
+            });
+
+            // حدّث رصيد المورد
+            await Refad.db.update('suppliers', partyId, { balance: newBalance });
+
+            // حدّث الاستلامات غير المسددة (FIFO)
+            let remaining = amountVal;
+            const unpaidReceipts = state.receipts
+              .filter(r => String(r.supplier_id) === String(partyId) &&
+                           r.status !== 'cancelled' &&
+                           amount(r.total_amount) - amount(r.paid_amount) > 0.01)
+              .sort((a, b) => String(a.receipt_date).localeCompare(String(b.receipt_date)));
+
+            for (const rec of unpaidReceipts) {
+              if (remaining <= 0) break;
+              const due = amount(rec.total_amount) - amount(rec.paid_amount);
+              const applied = Math.min(remaining, due);
+              const newPaid = amount(rec.paid_amount) + applied;
+              const newStatus = newPaid >= amount(rec.total_amount) ? 'completed' : 'partial';
+
+              await Refad.db.update('receipts', rec.id, {
+                paid_amount: newPaid,
+                status: newStatus
+              });
+
+              rec.paid_amount = newPaid;
+              rec.status = newStatus;
+              remaining -= applied;
+            }
+
+            supplier.balance = newBalance;
+            Refad.toast.success(`تم تسجيل دفعة ${money(amountVal)} للمورد ${supplier.name}`);
+
+          // حالة 2: تحصيل من عميل
+          } else if (type === 'customer') {
+            const customer = state.customers.find(c => c.id === partyId);
+            if (!customer) throw new Error('العميل غير موجود');
+
+            const newBalance = Math.max(0, (customer.balance || 0) - amountVal);
+            await Refad.db.update('customers', partyId, { balance: newBalance });
+            customer.balance = newBalance;
+
+            // FIFO على الفواتير
+            let remaining = amountVal;
+            const unpaidInvoices = state.invoices
+              .filter(r => String(r.customer_id) === String(partyId) &&
+                           r.status !== 'cancelled' &&
+                           amount(r.grand_total) - amount(r.paid_amount) > 0.01)
+              .sort((a, b) => String(a.invoice_date).localeCompare(String(b.invoice_date)));
+
+            for (const inv of unpaidInvoices) {
+              if (remaining <= 0) break;
+              const due = amount(inv.grand_total) - amount(inv.paid_amount);
+              const applied = Math.min(remaining, due);
+              const newPaid = amount(inv.paid_amount) + applied;
+              const newStatus = newPaid >= amount(inv.grand_total) ? 'paid' : 'partial';
+
+              await Refad.db.update('sales_invoices', inv.id, {
+                paid_amount: newPaid,
+                status: newStatus
+              });
+
+              inv.paid_amount = newPaid;
+              inv.status = newStatus;
+              remaining -= applied;
+            }
+
+            Refad.toast.success(`تم تسجيل تحصيل ${money(amountVal)} من ${customer.name}`);
+
+          // حالة 3: سداد فاتورة محددة
+          } else {
+            if (!invoiceId) {
+              Refad.toast.warning('اختر الفاتورة');
+              btn.disabled = false;
+              return;
+            }
+
+            const inv = state.invoices.find(i => i.id === invoiceId);
+            if (!inv) throw new Error('الفاتورة غير موجودة');
+
+            const due = amount(inv.grand_total) - amount(inv.paid_amount);
+            if (amountVal > due + 0.01) {
+              Refad.toast.warning(`المبلغ أكبر من المتبقي (${money(due)})`);
+              btn.disabled = false;
+              return;
+            }
+
+            const newPaid = amount(inv.paid_amount) + amountVal;
+            const newStatus = newPaid >= amount(inv.grand_total) ? 'paid' : 'partial';
+
+            await Refad.db.update('sales_invoices', inv.id, {
+              paid_amount: newPaid,
+              status: newStatus
+            });
+
+            // حدّث رصيد العميل إن وُجد
+            if (inv.customer_id) {
+              const customer = state.customers.find(c => c.id === inv.customer_id);
+              if (customer) {
+                const newBalance = Math.max(0, (customer.balance || 0) - amountVal);
+                await Refad.db.update('customers', inv.customer_id, { balance: newBalance });
+                customer.balance = newBalance;
+              }
+            }
+
+            inv.paid_amount = newPaid;
+            inv.status = newStatus;
+
+            Refad.toast.success(`تم تسجيل دفعة ${money(amountVal)} على الفاتورة ${inv.invoice_number}`);
+          }
+
+          await Refad.logActivity('register_payment', 'accounts',
+            `دفعة ${money(amountVal)} - ${type}`, partyId);
+
+          document.getElementById('paymentModal').classList.remove('show');
+          await loadAllData();
+          renderAll();
+
+        } catch (err) {
+          console.error('Payment failed:', err);
+          Refad.toast.error('فشل تسجيل الدفعة: ' + err.message);
+        } finally {
+          btn.disabled = false;
+        }
+      }
+
+      // ============================================================
+      // 18) Quick Expense Modal
+      // ============================================================
+      function openExpenseModal() {
+        document.getElementById('expenseForm').reset();
+        document.getElementById('expenseDate').value = today();
+        document.getElementById('expenseModal').classList.add('show');
+        if (window.lucide) lucide.createIcons();
+      }
+
+      async function submitExpense(e) {
+        e.preventDefault();
+        const btn = e.target.querySelector('button[type="submit"]');
+        btn.disabled = true;
+
+        try {
+          const category = document.getElementById('expenseCategory').value;
+          const amountVal = Refad.toNum(document.getElementById('expenseAmount').value);
+          const dateVal = document.getElementById('expenseDate').value || today();
+          const description = document.getElementById('expenseDescription').value.trim() || null;
+
+          if (amountVal <= 0) {
+            Refad.toast.warning('أدخل مبلغاً صحيحاً');
+            btn.disabled = false;
+            return;
+          }
+
+          const created = await Refad.db.insert('expenses', {
+            company_id: session.company_id,
+            category,
+            amount: amountVal,
+            description,
+            expense_date: dateVal,
+            user_id: session.user_id
+          });
+
+          await Refad.logActivity('create_expense', 'expenses',
+            `مصروف: ${category} - ${money(amountVal)}`, created.id);
+
+          Refad.toast.success(`تم تسجيل المصروف ${money(amountVal)}`);
+          document.getElementById('expenseModal').classList.remove('show');
+          await loadAllData();
+          renderAll();
+
+        } catch (err) {
+          console.error('Expense failed:', err);
+          Refad.toast.error('فشل تسجيل المصروف: ' + err.message);
+        } finally {
+          btn.disabled = false;
+        }
+      }
+
+      // ============================================================
+      // 19) Settlement (Representative)
+      // ============================================================
+      async function settleRepresentative(invoiceId, due, button) {
+        const invoice = state.invoices.find(r => String(r.id) === String(invoiceId));
         if (!invoice) {
-          Refad.toast.error('الفاتورة غير موجودة في البيانات الحالية؛ حدّث الصفحة وحاول مجدداً');
+          Refad.toast.error('الفاتورة غير موجودة');
           return;
         }
+
         const result = await Swal.fire({
           title: 'تسجيل تحصيل من المندوب',
-          html: `<div style="text-align:right;font-size:13px;line-height:1.9">
-            <div>المندوب: <strong>${Refad.escapeHtml(userName(invoice.cashier_id))}</strong></div>
-            <div>الفاتورة: <strong>${Refad.escapeHtml(invoice.invoice_number || '—')}</strong></div>
-            <div>المبلغ المتبقي: <strong>${money(due)}</strong></div>
-            <label for="settlementAmount" style="display:block;margin-top:12px">المبلغ المستلم</label>
-            <input id="settlementAmount" type="number" min="0.01" max="${due}" step="0.01" value="${due}" class="swal2-input" style="width:100%;margin:4px 0 10px">
-            <label for="settlementNotes" style="display:block">ملاحظات التسوية (اختياري)</label>
-            <input id="settlementNotes" type="text" maxlength="255" class="swal2-input" style="width:100%;margin:4px 0">
-          </div>`,
+          html: `
+            <div style="text-align:right;font-size:13px;line-height:1.9;">
+              <div>المندوب: <strong>${Refad.escapeHtml(userName(invoice.cashier_id))}</strong></div>
+              <div>الفاتورة: <strong>${Refad.escapeHtml(invoice.invoice_number || '—')}</strong></div>
+              <div>المبلغ المتبقي: <strong>${money(due)}</strong></div>
+              <label style="display:block;margin-top:12px;">المبلغ المستلم</label>
+              <input id="settlementAmount" type="number" min="0.01" max="${due}" step="0.01" value="${due}" class="swal2-input" style="width:100%;margin:4px 0 10px;">
+              <label style="display:block;">ملاحظات (اختياري)</label>
+              <input id="settlementNotes" type="text" maxlength="255" class="swal2-input" style="width:100%;margin:4px 0;">
+            </div>
+          `,
           showCancelButton: true,
           confirmButtonText: 'تأكيد التحصيل',
           cancelButtonText: 'إلغاء',
@@ -341,14 +2556,19 @@
             const input = document.getElementById('settlementAmount');
             const value = Math.round((Number(input.value) + Number.EPSILON) * 100) / 100;
             if (!Number.isFinite(value) || value <= 0 || value > due) {
-              Swal.showValidationMessage(`أدخل مبلغاً أكبر من صفر ولا يتجاوز ${money(due)}`);
+              Swal.showValidationMessage(`أدخل مبلغاً بين 0.01 و ${money(due)}`);
               return false;
             }
-            return { amount: value, notes: document.getElementById('settlementNotes').value.trim() };
+            return {
+              amount: value,
+              notes: document.getElementById('settlementNotes').value.trim()
+            };
           }
         });
+
         if (!result.isConfirmed) return;
         button.disabled = true;
+
         try {
           const settlement = await Refad.db.rpc('settle_representative_invoice', {
             p_company_id: session.company_id,
@@ -359,11 +2579,10 @@
             p_settlement_date: today(),
             p_notes: result.value.notes || null
           });
-          const invoiceRow = state.invoices.find(row => String(row.id) === String(invoiceId));
-          if (invoiceRow) {
-            invoiceRow.paid_amount = settlement.paid_amount;
-            invoiceRow.status = settlement.status;
-          }
+
+          invoice.paid_amount = settlement.paid_amount;
+          invoice.status = settlement.status;
+
           state.settlements.unshift({
             id: settlement.settlement_id,
             company_id: session.company_id,
@@ -374,250 +2593,403 @@
             notes: result.value.notes || null,
             received_by: session.user_id
           });
-          renderRepresentativeAccounts();
+
+          renderRepresentatives();
           renderMetrics();
-          Refad.toast.success(settlement.status === 'paid'
-            ? 'تمت التسوية وأصبحت الفاتورة مدفوعة بالكامل'
-            : `تم تسجيل التحصيل الجزئي، والمتبقي ${money(settlement.remaining_amount)}`);
-        } catch (error) {
-          console.error('[Accounts] Representative settlement failed:', error);
-          Refad.toast.error(`تعذّر تسجيل التحصيل: ${error.message || error}`);
+          Refad.toast.success(
+            settlement.status === 'paid'
+              ? 'تمت التسوية بالكامل'
+              : `تم تسجيل تحصيل جزئي، متبقي ${money(settlement.remaining_amount)}`
+          );
+
+        } catch (err) {
+          console.error('[Accounts] Settlement failed:', err);
+          Refad.toast.error('تعذّر تسجيل التحصيل: ' + err.message);
         } finally {
           button.disabled = false;
         }
       }
-      async function selectAllRows(table, options) {
-        const pageSize = 500;
-        const rows = [];
-        for (let offset = 0; ; offset += pageSize) {
-          const page = await Refad.db.select(table, {
-            ...options,
-            range: [offset, offset + pageSize - 1]
-          });
-          rows.push(...page);
-          if (page.length < pageSize) return rows;
-        }
-      }
 
-      function renderBalances() {
-        const suppliers = state.suppliers
-          .map(row => ({ kind: 'supplier', name: row.name, id: row.id, balance: amount(row.balance) }))
-          .filter(row => row.balance > 0)
-          .sort((a, b) => b.balance - a.balance).slice(0, 4);
-        const customers = state.customers
-          .map(row => ({ kind: 'customer', name: row.name, id: row.id, balance: amount(row.balance) }))
-          .filter(row => row.balance > 0)
-          .sort((a, b) => b.balance - a.balance).slice(0, 4);
-        const items = [
-          ...customers.map(row => ({ ...row, label: 'مستحق للشركة من عميل', href: `customer-details.html?id=${row.id}`, cls: 'var(--green)' })),
-          ...suppliers.map(row => ({ ...row, label: 'مستحق للمورد', href: `supplier-details.html?id=${row.id}`, cls: 'var(--red)' }))
-        ].sort((a, b) => b.balance - a.balance).slice(0, 6);
-        setText('customerDue', money(state.customers.reduce((sum, row) => sum + Math.max(0, amount(row.balance)), 0)));
-        setText('supplierDue', money(state.suppliers.reduce((sum, row) => sum + Math.max(0, amount(row.balance)), 0)));
-        document.getElementById('balanceList').innerHTML = items.length ? items.map(row => `
-          <div class="balance-row">
-            <div class="balance-name"><a href="${row.href}">${Refad.escapeHtml(row.name || '—')}</a><small>${row.label}</small></div>
-            <strong class="balance-value" style="color:${row.cls}">${money(row.balance)}</strong>
-          </div>`).join('') : '<div class="empty">لا توجد أرصدة موجبة مسجلة على العملاء أو الموردين.</div>';
-      }
+      // ============================================================
+      // 20) Customer/Supplier Statement
+      // ============================================================
+      async function openStatement(type, id) {
+        const body = document.getElementById('statementModalBody');
+        body.innerHTML = '<div style="text-align:center;padding:40px;"><i data-lucide="loader" style="width:32px;height:32px;animation:spin 1s linear infinite;"></i></div>';
+        document.getElementById('statementModal').classList.add('show');
+        if (window.lucide) lucide.createIcons();
 
-      function renderMetrics() {
-        renderRepresentativeAccounts();
-        const range = periodRange(document.getElementById('periodSelect').value);
-        const invoices = withinPeriod(state.invoices, 'invoice_date', range).filter(row =>
-          row.status !== 'cancelled' && (row.invoice_type || 'sale') === 'sale'
-        );
-        const receipts = withinPeriod(state.receipts, 'receipt_date', range).filter(row => row.status !== 'cancelled');
-        const expenses = withinPeriod(state.expenses, 'expense_date', range);
-        const sales = invoices.reduce((sum, row) => sum + amount(row.grand_total), 0);
-        const collections = invoices.reduce((sum, row) => sum + amount(row.paid_amount), 0);
-        const profit = invoices.reduce((sum, row) => sum + amount(row.total_profit), 0);
-        const purchaseValue = receipts.reduce((sum, row) => sum + amount(row.total_amount), 0);
-        const purchasePaid = receipts.reduce((sum, row) => sum + amount(row.paid_amount), 0);
-        const expenseValue = expenses.reduce((sum, row) => sum + amount(row.amount), 0);
-        setText('salesValue', money(sales));
-        setText('salesCount', `${Refad.format.number(invoices.length)} فاتورة بيع`);
-        setText('collectionsValue', money(collections));
-        setText('profitValue', money(profit));
-        setText('netValue', money(profit - expenseValue));
-        setText('purchaseValue', money(purchaseValue));
-        setText('purchasePaid', `المدفوع: ${money(purchasePaid)} • ${Refad.format.number(receipts.length)} استلام`);
-        setText('expenseValue', money(expenseValue));
-        setText('expenseCount', `${Refad.format.number(expenses.length)} مصروف مسجل`);
-        renderBalances();
-        renderTrend();
-        renderRecent(invoices, receipts, expenses);
-        setText('updatedAt', `آخر تحديث: ${new Date().toLocaleString('ar-EG')}`);
-      }
-
-      function renderTrend() {
-        const rows = Array.from({ length: 14 }, (_, index) => {
-          const date = dateShift(today(), index - 13);
-          return { date, sales: 0, purchases: 0, expenses: 0 };
-        });
-        const byDate = new Map(rows.map(row => [row.date, row]));
-        state.invoices.forEach(row => {
-          if (row.status === 'cancelled' || (row.invoice_type || 'sale') !== 'sale') return;
-          const bucket = byDate.get(row.invoice_date);
-          if (bucket) bucket.sales += amount(row.grand_total);
-        });
-        state.receipts.forEach(row => {
-          const bucket = byDate.get(row.receipt_date);
-          if (bucket && row.status !== 'cancelled') bucket.purchases += amount(row.total_amount);
-        });
-        state.expenses.forEach(row => {
-          const bucket = byDate.get(row.expense_date);
-          if (bucket) bucket.expenses += amount(row.amount);
-        });
-        const max = Math.max(1, ...rows.flatMap(row => [row.sales, row.purchases, row.expenses]));
-        document.getElementById('trendChart').innerHTML = rows.map(row => `
-          <div class="day-col" title="${row.date} | بيع: ${money(row.sales)} | استلام: ${money(row.purchases)} | مصروف: ${money(row.expenses)}">
-            <div class="bars">
-              <div class="bar" style="--bar:#2563eb;height:${Math.max(row.sales ? 3 : 0, row.sales / max * 100)}%"></div>
-              <div class="bar" style="--bar:#d97706;height:${Math.max(row.purchases ? 3 : 0, row.purchases / max * 100)}%"></div>
-              <div class="bar" style="--bar:#dc2626;height:${Math.max(row.expenses ? 3 : 0, row.expenses / max * 100)}%"></div>
-            </div>
-            <span class="day-label">${row.date.slice(5)}</span>
-          </div>`).join('');
-      }
-
-      function renderRecent(invoices, receipts, expenses) {
-        const rows = [
-          ...invoices.map(row => ({
-              kind: 'بيع', number: row.invoice_number,
-              party: row.supplier_id
-                ? (state.suppliers.find(item => String(item.id) === String(row.supplier_id))?.name || 'مورد')
-                : (state.customers.find(item => String(item.id) === String(row.customer_id))?.name || 'عميل نقدي'),
-              date: row.invoice_date, total: amount(row.grand_total), paid: amount(row.paid_amount),
-              href: `invoices.html?id=${row.id}`, color: '#2563eb'
-            })),
-            ...receipts.map(row => ({
-              kind: 'استلام', number: row.receipt_number,
-              party: state.suppliers.find(item => String(item.id) === String(row.supplier_id))?.name || '—',
-            date: row.receipt_date, total: amount(row.total_amount), paid: amount(row.paid_amount),
-            href: `receipt-form.html?id=${row.id}`, color: '#d97706'
-          })),
-          ...expenses.map(row => ({
-            kind: 'مصروف', number: row.description || row.category || 'مصروف', party: 'الشركة',
-            date: row.expense_date, total: amount(row.amount), paid: amount(row.amount),
-            href: 'expenses.html', color: '#dc2626'
-          }))
-        ].sort((a, b) => String(b.date || '').localeCompare(String(a.date || ''))).slice(0, 10);
-        document.getElementById('recentRows').innerHTML = rows.length ? rows.map(row => `
-          <tr data-row-href="${row.href}" tabindex="0" style="cursor:pointer">
-            <td><span class="status" style="--status:${row.color};--status-bg:color-mix(in srgb,${row.color} 12%,transparent)">${row.kind}</span></td>
-            <td><a class="type-link" href="${row.href}">${Refad.escapeHtml(row.number || '—')}</a></td>
-            <td>${Refad.escapeHtml(row.party)}</td><td>${Refad.format.date(row.date)}</td>
-            <td><strong>${money(row.total)}</strong></td><td>${money(row.paid)}</td><td>${money(Math.max(0, row.total - row.paid))}</td>
-          </tr>`).join('') : '<tr><td colspan="7" class="empty">لا توجد حركات للفترة المختارة.</td></tr>';
-      }
-
-      function exportSummary() {
-        const range = periodRange(document.getElementById('periodSelect').value);
-        const values = [
-          ['المؤشر', 'القيمة'],
-          ['الفترة من', range.from || 'كل السجلات المحملة'],
-          ['الفترة إلى', range.to || '—'],
-          ['صافي المبيعات', document.getElementById('salesValue').textContent],
-          ['المبالغ المحصلة', document.getElementById('collectionsValue').textContent],
-          ['إجمالي الربح المسجل', document.getElementById('profitValue').textContent],
-          ['النتيجة بعد المصاريف', document.getElementById('netValue').textContent],
-          ['قيمة المشتريات المستلمة', document.getElementById('purchaseValue').textContent],
-          ['المصاريف المسجلة', document.getElementById('expenseValue').textContent],
-          ['أرصدة العملاء المدينة', document.getElementById('customerDue').textContent],
-          ['أرصدة الموردين الدائنة', document.getElementById('supplierDue').textContent]
-        ];
-        const csv = '\uFEFF' + values.map(row => row.map(value => `"${String(value).replace(/"/g, '""')}"`).join(',')).join('\r\n');
-        const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `refad-accounts-${today()}.csv`;
-        link.click();
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
-      }
-
-      async function loadData() {
-        const button = document.getElementById('refreshBtn');
-        const errorBox = document.getElementById('errorBox');
-        button.disabled = true;
-        errorBox.style.display = 'none';
         try {
-          const [invoices, receipts, expenses, suppliers, customers, users, settlements] = await Promise.all([
-            selectAllRows('sales_invoices', {
-              columns: 'id, invoice_number, invoice_type, invoice_date, grand_total, paid_amount, total_profit, status, customer_id, supplier_id, cashier_id',
-              eq: { company_id: session.company_id },
-              order: { column: 'id', ascending: true }
-            }),
-            selectAllRows('receipts', {
-              columns: 'id, receipt_number, receipt_date, total_amount, paid_amount, status, supplier_id',
-              eq: { company_id: session.company_id },
-              order: { column: 'id', ascending: true }
-            }),
-            selectAllRows('expenses', {
-              columns: 'id, category, amount, description, expense_date',
-              eq: { company_id: session.company_id },
-              order: { column: 'id', ascending: true }
-            }),
-            selectAllRows('suppliers', {
-              columns: 'id, name, balance',
-              eq: { company_id: session.company_id, is_active: true },
-              order: { column: 'id', ascending: true }
-            }),
-            selectAllRows('customers', {
-              columns: 'id, name, balance',
-              eq: { company_id: session.company_id, is_active: true },
-              order: { column: 'id', ascending: true }
-            }),
-            selectAllRows('users', {
-              columns: 'id, full_name, is_active',
-              eq: { company_id: session.company_id },
-              order: { column: 'id', ascending: true }
-            }),
-            selectAllRows('representative_settlements', {
-              columns: 'id, representative_id, invoice_id, amount, settlement_date, notes, received_by',
-              eq: { company_id: session.company_id },
-              order: { column: 'id', ascending: false },
-              limit: 20
-            })
-          ]);
-          Object.assign(state, { invoices, receipts, expenses, suppliers, customers, users, settlements });
-          renderMetrics();
-          setText('companySubtitle', `الملخص المالي • ${session.company_name || 'الشركة الحالية'}`);
-        } catch (error) {
-          console.error('[Accounts] Dashboard load failed:', error);
-          errorBox.textContent = `تعذّر تحميل بيانات الحسابات: ${error.message || error}`;
-          errorBox.style.display = 'block';
-          document.getElementById('recentRows').innerHTML = '<tr><td colspan="7" class="empty">لم يكتمل تحميل البيانات؛ أعد المحاولة.</td></tr>';
-          document.getElementById('balanceList').innerHTML = '<div class="empty">تعذّر تحميل الأرصدة.</div>';
-          document.getElementById('trendChart').innerHTML = '<div class="chart-empty">تعذّر تحميل الحركة.</div>';
-          Refad.toast.error('تعذّر تحميل البيانات الحسابية');
-        } finally {
-          button.disabled = false;
-          if (window.lucide) lucide.createIcons();
+          if (type === 'customer') {
+            const customer = state.customers.find(c => c.id === id);
+            if (!customer) return;
+
+            const invoices = state.invoices
+              .filter(i => String(i.customer_id) === String(id) && i.status !== 'cancelled')
+              .sort((a, b) => String(a.invoice_date).localeCompare(String(b.invoice_date)));
+
+            const totalInvoiced = invoices.reduce((s, i) => s + amount(i.grand_total), 0);
+            const totalPaid = invoices.reduce((s, i) => s + amount(i.paid_amount), 0);
+
+            body.innerHTML = `
+              <div style="margin-bottom:20px;padding:16px;background:linear-gradient(135deg,var(--primary),var(--primary-light));border-radius:12px;color:white;">
+                <h3 style="font-size:20px;font-weight:800;margin-bottom:8px;">${Refad.escapeHtml(customer.name)}</h3>
+                <div style="font-size:13px;opacity:0.9;">${Refad.escapeHtml(customer.phone || '—')}</div>
+                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px;">
+                  <div>
+                    <div style="font-size:10px;opacity:0.75;">إجمالي المبيعات</div>
+                    <div style="font-size:16px;font-weight:800;">${money(totalInvoiced)}</div>
+                  </div>
+                  <div>
+                    <div style="font-size:10px;opacity:0.75;">المحصل</div>
+                    <div style="font-size:16px;font-weight:800;color:#86efac;">${money(totalPaid)}</div>
+                  </div>
+                  <div>
+                    <div style="font-size:10px;opacity:0.75;">المتبقي</div>
+                    <div style="font-size:16px;font-weight:800;color:#fca5a5;">${money(totalInvoiced - totalPaid)}</div>
+                  </div>
+                </div>
+              </div>
+              <table style="width:100%;font-size:13px;border-collapse:collapse;">
+                <thead>
+                  <tr style="background:var(--bg);">
+                    <th style="padding:10px;text-align:right;font-size:11px;">التاريخ</th>
+                    <th style="padding:10px;text-align:right;font-size:11px;">رقم الفاتورة</th>
+                    <th style="padding:10px;text-align:right;font-size:11px;">الإجمالي</th>
+                    <th style="padding:10px;text-align:right;font-size:11px;">المدفوع</th>
+                    <th style="padding:10px;text-align:right;font-size:11px;">المتبقي</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${invoices.length ? invoices.map(inv => {
+                    const due = amount(inv.grand_total) - amount(inv.paid_amount);
+                    return `
+                      <tr style="border-bottom:1px solid var(--border);">
+                        <td style="padding:10px;">${Refad.format.date(inv.invoice_date)}</td>
+                        <td style="padding:10px;"><a href="invoices.html?id=${inv.id}" class="type-link">${Refad.escapeHtml(inv.invoice_number || '—')}</a></td>
+                        <td style="padding:10px;">${money(inv.grand_total)}</td>
+                        <td style="padding:10px;color:var(--success);">${money(inv.paid_amount)}</td>
+                        <td style="padding:10px;color:${due > 0 ? 'var(--danger)' : 'var(--success)'};font-weight:700;">${money(due)}</td>
+                      </tr>
+                    `;
+                  }).join('') : '<tr><td colspan="5" style="padding:20px;text-align:center;color:var(--text-muted);">لا توجد فواتير</td></tr>'}
+                </tbody>
+              </table>
+            `;
+
+          } else {
+            const supplier = state.suppliers.find(s => s.id === id);
+            if (!supplier) return;
+
+            const receipts = state.receipts
+              .filter(r => String(r.supplier_id) === String(id) && r.status !== 'cancelled')
+              .sort((a, b) => String(a.receipt_date).localeCompare(String(b.receipt_date)));
+
+            const totalPurchased = receipts.reduce((s, r) => s + amount(r.total_amount), 0);
+            const totalPaid = receipts.reduce((s, r) => s + amount(r.paid_amount), 0);
+
+            body.innerHTML = `
+              <div style="margin-bottom:20px;padding:16px;background:linear-gradient(135deg,var(--primary),var(--primary-light));border-radius:12px;color:white;">
+                <h3 style="font-size:20px;font-weight:800;margin-bottom:8px;">${Refad.escapeHtml(supplier.name)}</h3>
+                <div style="font-size:13px;opacity:0.9;">${Refad.escapeHtml(supplier.phone || '—')}</div>
+                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px;">
+                  <div>
+                    <div style="font-size:10px;opacity:0.75;">إجمالي المشتريات</div>
+                    <div style="font-size:16px;font-weight:800;">${money(totalPurchased)}</div>
+                  </div>
+                  <div>
+                    <div style="font-size:10px;opacity:0.75;">المدفوع</div>
+                    <div style="font-size:16px;font-weight:800;color:#86efac;">${money(totalPaid)}</div>
+                  </div>
+                  <div>
+                    <div style="font-size:10px;opacity:0.75;">المتبقي</div>
+                    <div style="font-size:16px;font-weight:800;color:#fca5a5;">${money(totalPurchased - totalPaid)}</div>
+                  </div>
+                </div>
+              </div>
+              <table style="width:100%;font-size:13px;border-collapse:collapse;">
+                <thead>
+                  <tr style="background:var(--bg);">
+                    <th style="padding:10px;text-align:right;font-size:11px;">التاريخ</th>
+                    <th style="padding:10px;text-align:right;font-size:11px;">رقم الاستلام</th>
+                    <th style="padding:10px;text-align:right;font-size:11px;">الإجمالي</th>
+                    <th style="padding:10px;text-align:right;font-size:11px;">المدفوع</th>
+                    <th style="padding:10px;text-align:right;font-size:11px;">المتبقي</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${receipts.length ? receipts.map(rec => {
+                    const due = amount(rec.total_amount) - amount(rec.paid_amount);
+                    return `
+                      <tr style="border-bottom:1px solid var(--border);">
+                        <td style="padding:10px;">${Refad.format.date(rec.receipt_date)}</td>
+                        <td style="padding:10px;"><a href="receipt-form.html?id=${rec.id}" class="type-link">${Refad.escapeHtml(rec.receipt_number || '—')}</a></td>
+                        <td style="padding:10px;">${money(rec.total_amount)}</td>
+                        <td style="padding:10px;color:var(--success);">${money(rec.paid_amount)}</td>
+                        <td style="padding:10px;color:${due > 0 ? 'var(--danger)' : 'var(--success)'};font-weight:700;">${money(due)}</td>
+                      </tr>
+                    `;
+                  }).join('') : '<tr><td colspan="5" style="padding:20px;text-align:center;color:var(--text-muted);">لا توجد استلامات</td></tr>'}
+                </tbody>
+              </table>
+            `;
+          }
+
+        } catch (e) {
+          console.error('Statement failed:', e);
+          body.innerHTML = '<p style="color:var(--danger);text-align:center;padding:20px;">تعذّر تحميل كشف الحساب</p>';
         }
       }
 
-      document.getElementById('periodSelect').addEventListener('change', renderMetrics);
-      document.getElementById('repFilter').addEventListener('change', renderRepresentativeAccounts);
-      document.getElementById('refreshBtn').addEventListener('click', loadData);
-      document.getElementById('exportBtn').addEventListener('click', exportSummary);
-      document.getElementById('repInvoiceRows').addEventListener('click', event => {
-        const button = event.target.closest('[data-settle-invoice]');
-        if (button) settleRepresentativeInvoice(button.dataset.settleInvoice, Number(button.dataset.due), button);
-      });
-      document.getElementById('recentRows').addEventListener('click', event => {
-        const row = event.target.closest('[data-row-href]');
-        if (row && !event.target.closest('a, button')) window.location.href = row.dataset.rowHref;
-      });
-      document.getElementById('recentRows').addEventListener('keydown', event => {
-        const row = event.target.closest('[data-row-href]');
-        if (row && event.target === row && (event.key === 'Enter' || event.key === ' ')) {
-          event.preventDefault();
-          window.location.href = row.dataset.rowHref;
+      // ============================================================
+      // 21) Export
+      // ============================================================
+      function exportSummary() {
+        const m = calculateMetrics();
+        const period = document.getElementById('periodSelect').value;
+        const periodLabels = {
+          today: 'اليوم', '7d': 'آخر 7 أيام', '30d': 'آخر 30 يوم',
+          month: 'هذا الشهر', year: 'هذه السنة', all: 'كل السجلات'
+        };
+
+        const rows = [
+          ['تقرير الحسابات - رفاد'],
+          ['الفترة', periodLabels[period]],
+          ['من', m.range.from || 'البداية'],
+          ['إلى', m.range.to || 'الآن'],
+          [''],
+          ['المؤشر', 'القيمة'],
+          ['صافي المبيعات', m.sales],
+          ['المبالغ المحصلة', m.collections],
+          ['إجمالي الربح', m.profit],
+          ['المبيعات الراجعة', m.salesReturns],
+          ['المشتريات المستلمة', m.purchaseValue],
+          ['المدفوع للموردين', m.purchasePaid],
+          ['المصاريف المسجلة', m.expenseValue],
+          ['النتيجة بعد المصاريف', m.netResult],
+          ['الرصيد النقدي التقديري', m.cashBalance],
+          ['ذمم العملاء', m.customerDue],
+          ['ذمم الموردين', m.supplierDue],
+          ['فواتير بيع غير مسددة', m.invoiceDue],
+          ['استلامات غير مسددة', m.receiptDue]
+        ];
+
+        if (typeof XLSX !== 'undefined') {
+          const ws = XLSX.utils.aoa_to_sheet(rows);
+          const wb = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(wb, ws, 'Accounts');
+          XLSX.writeFile(wb, `accounts-summary-${today()}.xlsx`);
+        } else {
+          // Fallback CSV
+          const csv = '\uFEFF' + rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\r\n');
+          const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `accounts-summary-${today()}.csv`;
+          a.click();
+          setTimeout(() => URL.revokeObjectURL(url), 1000);
         }
-      });
-      loadData();
+        Refad.toast.success('تم التصدير');
+      }
+
+      // ============================================================
+      // 22) Tabs
+      // ============================================================
+      function setupTabs() {
+        document.querySelectorAll('.tab').forEach(tab => {
+          tab.addEventListener('click', () => {
+            const name = tab.dataset.tab;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            tab.classList.add('active');
+            document.querySelector(`.tab-panel[data-panel="${name}"]`).classList.add('active');
+
+            // Render content when switching
+            if (name === 'receivables') renderReceivables();
+            else if (name === 'payables') renderPayables();
+            else if (name === 'representatives') renderRepresentatives();
+            else if (name === 'pl') renderPL();
+            else if (name === 'aging') renderAging();
+          });
+        });
+      }
+
+      // ============================================================
+      // 23) Modal Setup
+      // ============================================================
+      function setupModals() {
+        document.querySelectorAll('[data-close]').forEach(b => {
+          b.addEventListener('click', () => {
+            document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.remove('show'));
+          });
+        });
+
+        document.addEventListener('keydown', e => {
+          if (e.key === 'Escape') {
+            document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.remove('show'));
+          }
+        });
+
+        document.querySelectorAll('.modal-backdrop').forEach(m => {
+          m.addEventListener('click', e => {
+            if (e.target === m) m.classList.remove('show');
+          });
+        });
+
+        // Payment form
+        document.getElementById('paymentType').addEventListener('change', () => {
+          updatePaymentPartyLabel();
+          updatePaymentParties();
+          updatePaymentInvoices();
+        });
+
+        document.getElementById('paymentParty').addEventListener('change', updatePaymentInvoices);
+
+        document.getElementById('paymentInvoice').addEventListener('change', e => {
+          const opt = e.target.selectedOptions[0];
+          if (opt?.dataset.due) {
+            document.getElementById('paymentAmount').value = opt.dataset.due;
+          }
+        });
+
+        document.getElementById('paymentForm').addEventListener('submit', submitPayment);
+        document.getElementById('expenseForm').addEventListener('submit', submitExpense);
+      }
+
+      // ============================================================
+      // 24) Render All
+      // ============================================================
+      function renderAll() {
+        renderMetrics();
+        renderTrend();
+        renderBalances();
+        renderRecent();
+        renderReceivables();
+        renderPayables();
+        renderRepresentatives();
+        renderPL();
+        renderAging();
+        if (window.lucide) lucide.createIcons();
+      }
+
+      // ============================================================
+      // 25) Bind Events
+      // ============================================================
+      function bindEvents() {
+        // Period change
+        document.getElementById('periodSelect').addEventListener('change', renderAll);
+
+        // Rep filter
+        document.getElementById('repFilter').addEventListener('change', renderRepresentatives);
+
+        // Refresh
+        document.getElementById('refreshBtn').addEventListener('click', async () => {
+          await loadAllData();
+          renderAll();
+          Refad.toast.success('تم التحديث');
+        });
+
+        // Export
+        document.getElementById('exportBtn').addEventListener('click', exportSummary);
+
+        // Quick actions
+        document.getElementById('quickPaymentBtn').addEventListener('click', () => openPaymentModal());
+        document.getElementById('quickExpenseBtn').addEventListener('click', openExpenseModal);
+
+        // Recent rows click
+        document.getElementById('recentRows').addEventListener('click', e => {
+          const row = e.target.closest('[data-row-href]');
+          if (row && !e.target.closest('a, button')) {
+            window.location.href = row.dataset.rowHref;
+          }
+        });
+
+        document.getElementById('recentRows').addEventListener('keydown', e => {
+          const row = e.target.closest('[data-row-href]');
+          if (row && e.target === row && (e.key === 'Enter' || e.key === ' ')) {
+            e.preventDefault();
+            window.location.href = row.dataset.rowHref;
+          }
+        });
+
+        // Representatives settle
+        document.getElementById('repInvoiceRows').addEventListener('click', e => {
+          const btn = e.target.closest('[data-settle-invoice]');
+          if (btn) {
+            settleRepresentative(btn.dataset.settleInvoice, Number(btn.dataset.due), btn);
+          }
+        });
+
+        // Receivables collect
+        document.getElementById('receivablesRows').addEventListener('click', e => {
+          const collectBtn = e.target.closest('[data-collect-from]');
+          if (collectBtn) {
+            openPaymentModal({
+              type: 'customer',
+              partyId: parseInt(collectBtn.dataset.collectFrom, 10),
+              amount: Number(collectBtn.dataset.due)
+            });
+            return;
+          }
+          const statementBtn = e.target.closest('[data-statement]');
+          if (statementBtn) {
+            openStatement(statementBtn.dataset.statement, parseInt(statementBtn.dataset.id, 10));
+          }
+        });
+
+        // Payables pay
+        document.getElementById('payablesRows').addEventListener('click', e => {
+          const payBtn = e.target.closest('[data-pay-supplier]');
+          if (payBtn) {
+            openPaymentModal({
+              type: 'supplier',
+              partyId: parseInt(payBtn.dataset.paySupplier, 10),
+              amount: Number(payBtn.dataset.due)
+            });
+            return;
+          }
+          const statementBtn = e.target.closest('[data-statement]');
+          if (statementBtn) {
+            openStatement(statementBtn.dataset.statement, parseInt(statementBtn.dataset.id, 10));
+          }
+        });
+      }
+
+      // ============================================================
+      // 26) Init
+      // ============================================================
+      async function init() {
+        buildSidebar();
+        fillUser();
+        setupTheme();
+        setupSidebarMobile();
+        setupUserMenu();
+        setupNotifBtn();
+        setupTabs();
+        setupModals();
+        bindEvents();
+
+        await loadAllData();
+        renderAll();
+
+        Refad.registerServiceWorker();
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+
+      // Spinner animation
+      const spinnerStyle = document.createElement('style');
+      spinnerStyle.textContent = '@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }';
+      document.head.appendChild(spinnerStyle);
+
+      console.log('%c[Refad] Accounts ready (PRO)', 'color:#14B8A6;font-weight:bold');
+
     })();
   </script>
+
 </body>
 </html>

@@ -5,176 +5,970 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#0B2C4D">
   <title>المرتجعات - رفاد</title>
+
   <link rel="icon" type="image/png" href="logo.png">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+  <link rel="manifest" href="manifest.json">
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
   <style>
-    * { box-sizing: border-box; }
-    :root { --primary:#0B2C4D;--accent:#14B8A6;--bg:#f1f5f9;--card:#fff;--text:#0f172a;--muted:#64748b;--border:#e2e8f0;--red:#dc2626;--green:#059669;--shadow:0 5px 22px rgba(11,44,77,.07); }
-    [data-theme="dark"] { --bg:#0a1628;--card:#0f2137;--text:#f1f5f9;--muted:#94a3b8;--border:#1e3a5f; }
-    body { margin:0;background:var(--bg);color:var(--text);font-family:Cairo,sans-serif; }
-    .shell { max-width:1440px;margin:auto;padding:24px; }
-    header { display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:20px; }
-    h1 { margin:0;font-size:25px;font-weight:800; }
-    h2 { margin:0;font-size:16px; }
-    .subtitle { color:var(--muted);font-size:12px;margin-top:2px; }
-    .heading { display:flex;align-items:center;gap:12px; }
-    .heading-icon { width:46px;height:46px;border-radius:14px;background:linear-gradient(135deg,var(--primary),var(--accent));color:white;display:grid;place-items:center; }
-    .toolbar,.actions { display:flex;align-items:center;gap:8px;flex-wrap:wrap; }
-    button,select,input,textarea { font:inherit; }
-    button,.button { display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid var(--border);border-radius:10px;padding:9px 13px;background:var(--card);color:var(--text);cursor:pointer;text-decoration:none; }
-    button:hover,.button:hover { border-color:var(--accent);color:var(--accent); }
-    button:disabled { cursor:wait;opacity:.6; }
-    .primary { background:linear-gradient(135deg,var(--primary),var(--accent));border:0;color:#fff; }
-    .primary:hover { color:#fff;filter:brightness(1.05); }
-    .layout { display:grid;grid-template-columns:minmax(0,1.3fr) minmax(340px,.85fr);gap:16px;align-items:start; }
-    .card { background:var(--card);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);overflow:hidden;margin-bottom:16px; }
-    .card-head { display:flex;align-items:center;justify-content:space-between;gap:10px;padding:15px 18px;border-bottom:1px solid var(--border); }
-    .card-head h2 { display:flex;align-items:center;gap:8px; }
-    .card-head svg { width:18px;height:18px;color:var(--accent); }
-    .card-body { padding:17px 18px; }
-    .form-grid { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px; }
-    .field { display:flex;flex-direction:column;gap:5px;min-width:0; }
-    .field.full { grid-column:1/-1; }
-    label { font-size:12px;font-weight:700;color:var(--muted); }
-    input,select,textarea { width:100%;min-width:0;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:9px;padding:10px 11px;outline:0; }
-    input:focus,select:focus,textarea:focus { border-color:var(--accent);box-shadow:0 0 0 3px rgba(20,184,166,.11); }
-    textarea { resize:vertical;min-height:72px; }
-    .notice { border:1px solid rgba(217,119,6,.24);background:rgba(245,158,11,.08);color:#b45309;padding:10px 13px;border-radius:11px;font-size:11px;margin-bottom:14px; }
-    [data-theme="dark"] .notice { color:#fbbf24; }
-    .error { display:none;border:1px solid rgba(220,38,38,.3);background:rgba(220,38,38,.08);color:var(--red);padding:12px;border-radius:10px;margin-bottom:14px;font-size:12px; }
-    .table-wrap { overflow:auto; }
-    table { border-collapse:collapse;width:100%;min-width:680px;font-size:12px; }
-    th,td { text-align:right;padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:middle; }
-    th { color:var(--muted);background:var(--bg);font-size:11px;white-space:nowrap; }
-    tbody tr:last-child td { border-bottom:0; }
-    .qty-input { width:90px;padding:7px; }
-    .product-name { font-weight:700; }
-    .sub { color:var(--muted);font-size:10px; }
-    .party { padding:8px 10px;border-radius:9px;background:var(--bg);font-size:12px;margin-top:12px; }
-    .summary { display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 0 2px;font-size:12px;color:var(--muted); }
-    .summary strong { font-size:17px;color:var(--text); }
-    .empty { text-align:center;color:var(--muted);padding:26px 12px;font-size:12px; }
-    .history-table { min-width:740px; }
-    .history-link { color:var(--primary);text-decoration:none;font-weight:700; }
-    [data-theme="dark"] .history-link { color:#5eead4; }
-    .pill { display:inline-block;border-radius:20px;background:rgba(20,184,166,.12);color:var(--accent);padding:3px 8px;font-size:10px;font-weight:700; }
-    @media(max-width:950px) { .layout { grid-template-columns:1fr; } }
-    @media(max-width:600px) {
-      .shell { padding:14px; } header { align-items:flex-start; } h1 { font-size:21px; }
-      .form-grid { grid-template-columns:1fr; } .field.full { grid-column:auto; }
-      .card-head,.card-body { padding:13px; } .toolbar .button span { display:none; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --primary: #0B2C4D;
+      --primary-light: #1e4a73;
+      --accent: #14B8A6;
+      --accent-dark: #0d9488;
+      --gold: #F59E0B;
+      --bg: #F1F5F9;
+      --card: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --danger: #ef4444;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --info: #3b82f6;
+      --purple: #8b5cf6;
+      --sidebar-bg: #0B2C4D;
+      --sidebar-text: #cbd5e1;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+      --shadow: 0 4px 20px rgba(11, 44, 77, 0.08);
+      --shadow-lg: 0 10px 40px rgba(11, 44, 77, 0.12);
+      --radius: 14px;
+      --radius-sm: 10px;
+      --sidebar-w: 260px;
+      --topbar-h: 64px;
+    }
+
+    [data-theme="dark"] {
+      --bg: #0a1628;
+      --card: #0f2137;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --border: #1e3a5f;
+      --sidebar-bg: #061a2e;
+      --sidebar-text: #94a3b8;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Cairo', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      transition: background 0.3s, color 0.3s;
+    }
+
+    body { display: flex; min-height: 100vh; overflow-x: hidden; }
+
+    /* Sidebar */
+    .sidebar {
+      width: var(--sidebar-w);
+      height: 100vh;
+      background: var(--sidebar-bg);
+      color: var(--sidebar-text);
+      position: fixed;
+      top: 0;
+      right: 0;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: -4px 0 20px rgba(0,0,0,0.1);
+    }
+    .sidebar-header {
+      padding: 20px 22px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      height: var(--topbar-h);
+      box-sizing: border-box;
+    }
+    .sidebar-logo {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 4px 12px rgba(20,184,166,0.4);
+    }
+    .sidebar-logo img { width: 70%; height: 70%; object-fit: contain; }
+    .sidebar-logo .fallback { color: white; font-weight: 800; font-size: 18px; }
+    .sidebar-brand h2 { color: white; font-size: 20px; font-weight: 800; letter-spacing: -0.5px; line-height: 1.2; }
+    .sidebar-brand p { font-size: 10px; color: var(--sidebar-text); opacity: 0.7; font-weight: 500; margin-top: 2px; }
+    .sidebar-nav { flex: 1; overflow-y: auto; padding: 12px 0; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.15) transparent; }
+    .sidebar-nav::-webkit-scrollbar { width: 5px; }
+    .sidebar-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 10px; }
+    .nav-section { padding: 8px 20px 4px; font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 1px; margin-top: 8px; }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 22px;
+      color: var(--sidebar-text);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      border-right: 3px solid transparent;
+      transition: all 0.2s;
+      position: relative;
+      cursor: pointer;
+    }
+    .nav-item:hover { background: rgba(255,255,255,0.05); color: white; border-right-color: rgba(20,184,166,0.5); }
+    .nav-item.active { background: rgba(20,184,166,0.12); color: white; border-right-color: var(--accent); font-weight: 600; }
+    .nav-item.active::before { content: ''; position: absolute; right: 0; top: 50%; transform: translateY(-50%); width: 3px; height: 60%; background: var(--accent); border-radius: 0 4px 4px 0; }
+    .nav-item i, .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; opacity: 0.85; }
+    .nav-item .badge { margin-right: auto; background: var(--danger); color: white; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
+    .nav-item .badge.teal { background: var(--accent); }
+    .nav-item .badge.gold { background: var(--gold); }
+
+    /* Main */
+    .main { flex: 1; margin-right: var(--sidebar-w); min-width: 0; display: flex; flex-direction: column; }
+    .topbar {
+      height: var(--topbar-h);
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 0 24px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      box-shadow: var(--shadow-sm);
+    }
+    .menu-toggle { display: none; background: transparent; border: none; color: var(--text); cursor: pointer; padding: 8px; border-radius: 8px; }
+    .menu-toggle:hover { background: var(--bg); }
+    .topbar-title { font-size: 18px; font-weight: 700; color: var(--text); flex-shrink: 0; }
+    .topbar-actions { display: flex; align-items: center; gap: 8px; margin-right: auto; }
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      transition: all 0.2s;
+    }
+    .icon-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .icon-btn i, .icon-btn svg { width: 18px; height: 18px; }
+    .icon-btn .dot { position: absolute; top: 8px; left: 8px; width: 8px; height: 8px; background: var(--danger); border-radius: 50%; border: 2px solid var(--card); }
+    .user-menu {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 5px 12px 5px 5px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.2s;
+      border: 1px solid var(--border);
+      background: var(--card);
+    }
+    .user-menu:hover { background: var(--bg); }
+    .user-avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 700;
+      font-size: 14px;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .user-info { display: flex; flex-direction: column; line-height: 1.2; }
+    .user-info .name { font-size: 13px; font-weight: 700; color: var(--text); }
+    .user-info .role { font-size: 11px; color: var(--text-muted); }
+    .dropdown { position: absolute; top: calc(100% + 8px); left: 0; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: var(--shadow-lg); min-width: 200px; padding: 6px; opacity: 0; visibility: hidden; transform: translateY(-8px); transition: all 0.2s; z-index: 100; }
+    .dropdown.show { opacity: 1; visibility: visible; transform: translateY(0); }
+    .dropdown-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; color: var(--text); font-size: 13px; font-weight: 500; cursor: pointer; transition: background 0.15s; text-decoration: none; }
+    .dropdown-item:hover { background: var(--bg); }
+    .dropdown-item.danger { color: var(--danger); }
+    .dropdown-item.danger:hover { background: rgba(239,68,68,0.08); }
+    .dropdown-item i { width: 16px; height: 16px; }
+    .dropdown-divider { height: 1px; background: var(--border); margin: 6px 0; }
+
+    /* Content */
+    .content { padding: 24px; flex: 1; }
+    .page-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .page-head h1 { font-size: 24px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+    .page-head p { font-size: 13px; color: var(--text-muted); }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: var(--radius-sm);
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn i { width: 16px; height: 16px; }
+    .btn-primary { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; }
+    .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(20,184,166,0.35); }
+    .btn-outline { background: var(--card); color: var(--text); border: 1px solid var(--border); }
+    .btn-outline:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+    .btn-success { background: var(--success); color: white; }
+    .btn-success:hover:not(:disabled) { background: #047857; }
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-danger:hover:not(:disabled) { background: #b91c1c; }
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+    /* Card */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+    .card-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .card-header h3 { font-size: 15px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px; }
+    .card-header h3 i { width: 18px; height: 18px; color: var(--accent); }
+    .card-body { padding: 18px; }
+
+    /* Form */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
+    .form-group { display: flex; flex-direction: column; }
+    .form-group.full { grid-column: 1 / -1; }
+    .form-group label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .form-group label .req { color: var(--danger); }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      padding: 10px 14px;
+      font-family: inherit;
+      font-size: 14px;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      outline: none;
+      transition: all 0.2s;
+      width: 100%;
+    }
+    .form-group textarea { resize: vertical; min-height: 70px; }
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      border-color: var(--accent);
+      background: var(--card);
+      box-shadow: 0 0 0 3px rgba(20,184,166,0.1);
+    }
+    .form-group input:disabled,
+    .form-group select:disabled { opacity: 0.65; cursor: not-allowed; }
+        /* Notice */
+    .notice {
+      border: 1px solid rgba(245,158,11,0.3);
+      background: rgba(245,158,11,0.08);
+      color: #b45309;
+      padding: 12px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      line-height: 1.7;
+    }
+    .notice i { width: 18px; height: 18px; flex-shrink: 0; margin-top: 2px; }
+    [data-theme="dark"] .notice { color: #fbbf24; }
+
+    .error-box {
+      display: none;
+      border: 1px solid rgba(239,68,68,0.3);
+      background: rgba(239,68,68,0.08);
+      color: var(--danger);
+      padding: 14px 16px;
+      border-radius: var(--radius-sm);
+      margin-bottom: 16px;
+      font-size: 13px;
+      line-height: 1.7;
+    }
+    .error-box.show { display: block; }
+
+    /* Party Info */
+    .party-info {
+      background: linear-gradient(135deg, rgba(20,184,166,0.08), rgba(11,44,77,0.06));
+      border: 1.5px solid rgba(20,184,166,0.25);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      margin-top: 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .party-info i { width: 20px; height: 20px; color: var(--accent); flex-shrink: 0; }
+    .party-info-text { flex: 1; min-width: 200px; font-size: 13px; line-height: 1.6; }
+    .party-info-text strong { color: var(--text); }
+
+    /* Table */
+    .table-wrap { overflow-x: auto; }
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      min-width: 800px;
+    }
+    table.data-table thead { background: var(--bg); border-bottom: 1px solid var(--border); }
+    table.data-table th {
+      text-align: right;
+      padding: 12px 14px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+    table.data-table tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
+    table.data-table tbody tr:last-child { border-bottom: none; }
+    table.data-table tbody tr:hover { background: var(--bg); }
+    table.data-table td { padding: 12px 14px; color: var(--text); vertical-align: middle; }
+
+    .product-name-cell { font-weight: 700; color: var(--text); font-size: 13px; }
+    .product-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+    .qty-input {
+      width: 90px;
+      padding: 8px 10px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      text-align: center;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      outline: none;
+      transition: all 0.2s;
+    }
+    .qty-input:focus { border-color: var(--accent); background: var(--card); box-shadow: 0 0 0 3px rgba(20,184,166,0.1); }
+    .qty-input:disabled { opacity: 0.5; cursor: not-allowed; }
+    .qty-input.valid { border-color: var(--success); background: rgba(16,185,129,0.04); }
+
+    .badge-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      border-radius: 20px;
+      white-space: nowrap;
+    }
+    .badge-tag.green  { background: rgba(16,185,129,0.12); color: var(--success); }
+    .badge-tag.red    { background: rgba(239,68,68,0.12); color: var(--danger); }
+    .badge-tag.gold   { background: rgba(245,158,11,0.12); color: var(--warning); }
+    .badge-tag.gray   { background: rgba(148,163,184,0.15); color: var(--text-muted); }
+    .badge-tag.blue   { background: rgba(59,130,246,0.12); color: var(--info); }
+    .badge-tag.purple { background: rgba(139,92,246,0.12); color: var(--purple); }
+
+    .empty-row td { padding: 50px 20px; text-align: center; color: var(--text-muted); }
+    .empty-row i { width: 42px; height: 42px; opacity: 0.4; margin-bottom: 10px; }
+    .empty-row p { font-size: 13px; font-weight: 500; }
+
+    /* Summary */
+    .summary-box {
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      color: white;
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+    .summary-box .label {
+      font-size: 13px;
+      opacity: 0.85;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .summary-box .value {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+    .summary-box .count {
+      font-size: 12px;
+      opacity: 0.75;
+      margin-top: 4px;
+    }
+
+    /* History */
+    .history-link {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 700;
+    }
+    .history-link:hover { text-decoration: underline; }
+
+    /* Layout */
+    .layout-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.4fr) minmax(340px, 1fr);
+      gap: 16px;
+      align-items: start;
+    }
+
+    /* Stats Cards */
+    .stats-mini-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .stat-mini-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.2s;
+    }
+    .stat-mini-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: var(--shadow); }
+    .stat-mini-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .stat-mini-icon i { width: 20px; height: 20px; color: white; }
+    .stat-mini-icon.blue   { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+    .stat-mini-icon.teal   { background: linear-gradient(135deg, #14B8A6, #0d9488); }
+    .stat-mini-icon.gold   { background: linear-gradient(135deg, #F59E0B, #d97706); }
+    .stat-mini-icon.green  { background: linear-gradient(135deg, #10b981, #047857); }
+    .stat-mini-icon.red    { background: linear-gradient(135deg, #ef4444, #b91c1c); }
+    .stat-mini-icon.purple { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
+    .stat-mini-body { flex: 1; min-width: 0; }
+    .stat-mini-body .label { font-size: 11px; color: var(--text-muted); font-weight: 600; margin-bottom: 2px; }
+    .stat-mini-body .value { font-size: 18px; font-weight: 800; color: var(--text); line-height: 1; }
+    .stat-mini-body .sub { font-size: 10px; color: var(--text-muted); margin-top: 3px; }
+
+    /* Overlay */
+    .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; opacity: 0; transition: opacity 0.3s; }
+    .overlay.show { display: block; opacity: 1; }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .sidebar { transform: translateX(100%); }
+      .sidebar.open { transform: translateX(0); }
+      .main { margin-right: 0; }
+      .menu-toggle { display: flex; }
+      .user-info { display: none; }
+      .layout-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 640px) {
+      .content { padding: 16px; }
+      .topbar { padding: 0 14px; gap: 10px; }
+      .topbar-title { font-size: 15px; }
+      .page-head { flex-direction: column; align-items: stretch; }
+      .page-head h1 { font-size: 20px; }
+      .form-grid { grid-template-columns: 1fr; }
+      .summary-box { flex-direction: column; align-items: stretch; text-align: center; }
+      .summary-box .value { font-size: 24px; }
     }
   </style>
 </head>
 <body>
-  <main class="shell">
-    <header>
-      <div class="heading">
-        <div class="heading-icon"><i data-lucide="undo-2"></i></div>
-        <div><h1>إدارة المرتجعات</h1><div class="subtitle">مرتجع مبيعات من العميل أو مرتجع مشتريات إلى المورد مع تحديث المخزون والحسابات</div></div>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <img src="logo.png" alt="رفاد" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=fallback>R</span>';">
       </div>
-      <div class="toolbar">
-        <a class="button" href="dashboard.html"><i data-lucide="layout-dashboard"></i><span>الرئيسية</span></a>
-        <button id="refreshBtn" type="button"><i data-lucide="refresh-cw"></i><span>تحديث</span></button>
+      <div class="sidebar-brand">
+        <h2>رفاد</h2>
+        <p>نظام إدارة الأدوية</p>
+      </div>
+    </div>
+    <nav class="sidebar-nav" id="sidebarNav"></nav>
+  </aside>
+
+  <div class="overlay" id="overlay"></div>
+
+  <!-- Main -->
+  <div class="main">
+
+    <header class="topbar">
+      <button class="menu-toggle" id="menuToggle"><i data-lucide="menu"></i></button>
+      <div class="topbar-title">إدارة المرتجعات</div>
+      <div class="topbar-actions">
+        <button class="icon-btn" id="themeToggle" title="الوضع الليلي/النهاري">
+          <i data-lucide="moon" id="themeIcon"></i>
+        </button>
+        <button class="icon-btn" id="notifBtn" title="الإشعارات" style="position:relative;">
+          <i data-lucide="bell"></i>
+          <span class="dot" id="notifDot" style="display:none;"></span>
+        </button>
+        <div style="position:relative;">
+          <div class="user-menu" id="userMenu">
+            <div class="user-avatar" id="userAvatar">م</div>
+            <div class="user-info">
+              <span class="name" id="userName">—</span>
+              <span class="role" id="userRole">—</span>
+            </div>
+            <i data-lucide="chevron-down" style="width:14px;height:14px;opacity:0.5;"></i>
+          </div>
+          <div class="dropdown" id="userDropdown">
+            <a href="company-settings.html" class="dropdown-item"><i data-lucide="settings"></i> الإعدادات</a>
+            <a href="employees.html" class="dropdown-item"><i data-lucide="user-cog"></i> الملف الشخصي</a>
+            <div class="dropdown-divider"></div>
+            <div class="dropdown-item danger" id="logoutBtn"><i data-lucide="log-out"></i> تسجيل الخروج</div>
+          </div>
+        </div>
       </div>
     </header>
-    <div class="error" id="errorBox" role="alert"></div>
-    <div class="notice">يجب تسجيل المرتجع على فاتورته الأصلية. لا يمكن تجاوز الكمية المباعة/المستلمة سابقاً، ومرتجع المورد لا يتجاوز الكمية المتبقية في التشغيلة. يعكس النظام قيمة المرتجع في رصيد العميل أو المورد؛ رد النقدية فعلياً يحتاج سند صرف/قبض من نظام الحسابات.</div>
 
-    <div class="layout">
-      <section class="card">
-        <div class="card-head"><h2><i data-lucide="file-plus-2"></i> تسجيل مرتجع جديد</h2><span class="pill">حفظ آمن موحد</span></div>
-        <div class="card-body">
-          <div class="form-grid">
-            <div class="field">
-              <label for="returnType">نوع المرتجع</label>
-              <select id="returnType">
-                <option value="sales">مرتجع مبيعات من عميل</option>
-                <option value="purchase">مرتجع مشتريات إلى مورد</option>
-              </select>
-            </div>
-            <div class="field">
-              <label for="sourceSelect" id="sourceLabel">فاتورة البيع الأصلية</label>
-              <select id="sourceSelect"><option value="">اختر الفاتورة</option></select>
-            </div>
-            <div class="field">
-              <label for="returnDate">تاريخ المرتجع</label>
-              <input id="returnDate" type="date">
-            </div>
-            <div class="field">
-              <label for="reason">سبب المرتجع</label>
-              <select id="reason">
-                <option value="تالف">تالف</option>
-                <option value="قرب انتهاء الصلاحية">قرب انتهاء الصلاحية</option>
-                <option value="خطأ في الصنف أو الكمية">خطأ في الصنف أو الكمية</option>
-                <option value="رفض العميل / المورد">رفض العميل / المورد</option>
-                <option value="أخرى">أخرى</option>
-              </select>
-            </div>
-            <div class="field full"><label for="notes">ملاحظات</label><textarea id="notes" maxlength="500" placeholder="تفاصيل إضافية (اختياري)"></textarea></div>
-          </div>
-          <div class="party" id="partyLine" hidden></div>
+    <main class="content">
+
+      <!-- Page Head -->
+      <div class="page-head">
+        <div>
+          <h1>إدارة المرتجعات</h1>
+          <p>مرتجع مبيعات من العميل أو مرتجع مشتريات إلى المورد مع تحديث المخزون والحسابات</p>
         </div>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>الصنف / التشغيلة</th><th>الموجود بالمستند</th><th>مرتجع سابق</th><th>المتاح للإرجاع</th><th>سعر الوحدة</th><th>كمية المرتجع</th></tr></thead>
-            <tbody id="sourceItems"><tr><td colspan="6" class="empty">اختر نوع المرتجع والفاتورة لعرض الأصناف القابلة للإرجاع.</td></tr></tbody>
-          </table>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn btn-outline" id="refreshBtn">
+            <i data-lucide="refresh-cw"></i> تحديث
+          </button>
+          <button class="btn btn-outline" id="exportBtn">
+            <i data-lucide="download"></i> تصدير
+          </button>
+          <a class="btn btn-outline" href="dashboard.html">
+            <i data-lucide="layout-dashboard"></i> الرئيسية
+          </a>
         </div>
-        <div class="card-body">
-          <div class="summary"><span>إجمالي قيمة المرتجع</span><strong id="returnTotal">0.00</strong></div>
-          <div class="actions" style="margin-top:12px;justify-content:flex-end">
-            <button type="button" id="clearBtn">مسح الاختيار</button>
-            <button type="button" class="primary" id="saveBtn"><i data-lucide="save"></i> حفظ المرتجع</button>
+      </div>
+
+      <!-- Error Box -->
+      <div class="error-box" id="errorBox" role="alert"></div>
+
+      <!-- Notice -->
+      <div class="notice">
+        <i data-lucide="info"></i>
+        <div>
+          <strong>تنبيه:</strong> يجب تسجيل المرتجع على فاتورته الأصلية. لا يمكن تجاوز الكمية المباعة/المستلمة سابقاً، 
+          ومرتجع المورد لا يتجاوز الكمية المتبقية في التشغيلة. يعكس النظام قيمة المرتجع في رصيد العميل أو المورد؛ 
+          رد النقدية فعلياً يحتاج سند صرف/قبض من نظام الحسابات.
+        </div>
+      </div>
+
+      <!-- Mini Stats -->
+      <div class="stats-mini-grid">
+        <div class="stat-mini-card">
+          <div class="stat-mini-icon blue"><i data-lucide="undo-2"></i></div>
+          <div class="stat-mini-body">
+            <div class="label">إجمالي المرتجعات</div>
+            <div class="value" id="statTotal">—</div>
+            <div class="sub" id="statTotalSub">—</div>
           </div>
         </div>
-      </section>
-
-      <section class="card">
-        <div class="card-head"><h2><i data-lucide="history"></i> آخر المرتجعات</h2></div>
-        <div class="table-wrap">
-          <table class="history-table">
-            <thead><tr><th>رقم المرتجع</th><th>النوع</th><th>الطرف</th><th>المستند الأصلي</th><th>التاريخ</th><th>الإجمالي</th></tr></thead>
-            <tbody id="historyRows"><tr><td colspan="6" class="empty">جارٍ التحميل...</td></tr></tbody>
-          </table>
+        <div class="stat-mini-card">
+          <div class="stat-mini-icon green"><i data-lucide="shopping-cart"></i></div>
+          <div class="stat-mini-body">
+            <div class="label">مرتجع مبيعات</div>
+            <div class="value" id="statSales">—</div>
+            <div class="sub" id="statSalesSub">—</div>
+          </div>
         </div>
-      </section>
-    </div>
-  </main>
+        <div class="stat-mini-card">
+          <div class="stat-mini-icon gold"><i data-lucide="truck"></i></div>
+          <div class="stat-mini-body">
+            <div class="label">مرتجع مشتريات</div>
+            <div class="value" id="statPurchases">—</div>
+            <div class="sub" id="statPurchasesSub">—</div>
+          </div>
+        </div>
+        <div class="stat-mini-card">
+          <div class="stat-mini-icon red"><i data-lucide="banknote"></i></div>
+          <div class="stat-mini-body">
+            <div class="label">إجمالي القيمة</div>
+            <div class="value" id="statValue">—</div>
+            <div class="sub" id="statValueSub">—</div>
+          </div>
+        </div>
+        <div class="stat-mini-card">
+          <div class="stat-mini-icon purple"><i data-lucide="calendar"></i></div>
+          <div class="stat-mini-body">
+            <div class="label">هذا الشهر</div>
+            <div class="value" id="statMonth">—</div>
+            <div class="sub" id="statMonthSub">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Layout Grid -->
+      <div class="layout-grid">
+
+        <!-- Left: New Return Form -->
+        <div>
+          <div class="card">
+            <div class="card-header">
+              <h3><i data-lucide="file-plus-2"></i> تسجيل مرتجع جديد</h3>
+              <span class="badge-tag green"><i data-lucide="shield-check" style="width:10px;height:10px;"></i> حفظ آمن</span>
+            </div>
+            <div class="card-body">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label>نوع المرتجع <span class="req">*</span></label>
+                  <select id="returnType">
+                    <option value="sales">مرتجع مبيعات من عميل</option>
+                    <option value="purchase">مرتجع مشتريات إلى مورد</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label id="sourceLabel">فاتورة البيع الأصلية <span class="req">*</span></label>
+                  <select id="sourceSelect"><option value="">اختر الفاتورة</option></select>
+                </div>
+                <div class="form-group">
+                  <label>تاريخ المرتجع</label>
+                  <input id="returnDate" type="date">
+                </div>
+                <div class="form-group">
+                  <label>سبب المرتجع <span class="req">*</span></label>
+                  <select id="reason">
+                    <option value="تالف">تالف</option>
+                    <option value="قرب انتهاء الصلاحية">قرب انتهاء الصلاحية</option>
+                    <option value="خطأ في الصنف أو الكمية">خطأ في الصنف أو الكمية</option>
+                    <option value="رفض العميل / المورد">رفض العميل / المورد</option>
+                    <option value="أخرى">أخرى</option>
+                  </select>
+                </div>
+                <div class="form-group full">
+                  <label>ملاحظات</label>
+                  <textarea id="notes" maxlength="500" placeholder="تفاصيل إضافية (اختياري)"></textarea>
+                </div>
+              </div>
+              <div class="party-info" id="partyLine" style="display:none;">
+                <i data-lucide="user-check"></i>
+                <div class="party-info-text" id="partyLineText"></div>
+              </div>
+            </div>
+
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>الصنف / التشغيلة</th>
+                    <th>الموجود</th>
+                    <th>مرتجع سابق</th>
+                    <th>المتاح للإرجاع</th>
+                    <th>سعر الوحدة</th>
+                    <th>كمية المرتجع</th>
+                  </tr>
+                </thead>
+                <tbody id="sourceItems">
+                  <tr class="empty-row">
+                    <td colspan="6">
+                      <i data-lucide="package-search"></i>
+                      <p>اختر نوع المرتجع والفاتورة لعرض الأصناف القابلة للإرجاع.</p>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="card-body" style="border-top:1px solid var(--border);">
+              <div class="summary-box">
+                <div>
+                  <div class="label">إجمالي قيمة المرتجع</div>
+                  <div class="value" id="returnTotal">0.00</div>
+                  <div class="count" id="returnCount">0 صنف</div>
+                </div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                  <button type="button" class="btn btn-outline" id="clearBtn">
+                    <i data-lucide="x"></i> مسح الاختيار
+                  </button>
+                  <button type="button" class="btn btn-success" id="saveBtn">
+                    <i data-lucide="save"></i> حفظ المرتجع
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: History -->
+        <div>
+          <div class="card">
+            <div class="card-header">
+              <h3><i data-lucide="history"></i> آخر المرتجعات</h3>
+              <span class="badge-tag blue" id="historyCount">—</span>
+            </div>
+            <div class="table-wrap">
+              <table class="data-table" style="min-width:0;">
+                <thead>
+                  <tr>
+                    <th>رقم المرتجع</th>
+                    <th>النوع</th>
+                    <th>الطرف</th>
+                    <th>المستند</th>
+                    <th>الإجمالي</th>
+                  </tr>
+                </thead>
+                <tbody id="historyRows">
+                  <tr class="empty-row">
+                    <td colspan="5">
+                      <i data-lucide="history"></i>
+                      <p>جارٍ التحميل...</p>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </main>
+  </div>
+
   <script src="refad-core.js"></script>
   <script src="refad-auth.js"></script>
-  <script>
+    <script>
     (function () {
       'use strict';
+
+      // ============================================================
+      // 1) Guard
+      // ============================================================
       const session = Refad.Auth.guardPage();
       if (!session) return;
+
       const canSalesReturn = Refad.Session.has('sales.view');
       const canPurchaseReturn = Refad.Session.has('purchases.receive');
+
       if (!canSalesReturn && !canPurchaseReturn) {
         Refad.toast.error('ليس لديك صلاحية تسجيل المرتجعات');
         window.location.replace('dashboard.html');
         return;
       }
+
+      // ============================================================
+      // 2) Sidebar MENU
+      // ============================================================
+      const MENU = [
+        { section: 'الرئيسية', items: [
+          { label: 'لوحة التحكم', icon: 'layout-dashboard', href: 'dashboard.html' },
+          { label: 'الشات', icon: 'message-circle', href: 'chat.html', permission: 'chat.use' },
+          { label: 'الإشعارات', icon: 'bell', href: 'notifications.html', permission: 'notifications.view' }
+        ]},
+        { section: 'العمليات', items: [
+          { label: 'الأصناف', icon: 'package', href: 'products.html', permission: 'products.view' },
+          { label: 'المخزون', icon: 'warehouse', href: 'inventory.html', permission: 'inventory.view' },
+          { label: 'طلبات الشراء', icon: 'clipboard-list', href: 'purchase-requests.html', permission: 'purchases.view' },
+          { label: 'الاستلامات', icon: 'package-check', href: 'receipts.html', permission: 'purchases.receive' },
+          { label: 'طلبات البيع', icon: 'shopping-cart', href: 'sales-orders.html', permission: 'sales.view' },
+          { label: 'نقطة البيع', icon: 'scan-barcode', href: 'pos.html', permission: 'sales.pos', badge: 'POS', badgeClass: 'teal' },
+          { label: 'الفواتير', icon: 'receipt', href: 'invoices.html', permission: 'sales.view' },
+          { label: 'المرتجعات', icon: 'undo-2', href: 'returns.html' }
+        ]},
+        { section: 'الأطراف', items: [
+          { label: 'الموردين', icon: 'truck', href: 'suppliers.html', permission: 'suppliers.view' },
+          { label: 'العملاء', icon: 'users', href: 'customers.html', permission: 'customers.view' }
+        ]},
+        { section: 'المخزون', items: [
+          { label: 'الجرد', icon: 'clipboard-check', href: 'stocktake.html', permission: 'inventory.stocktake' },
+          { label: 'التسويات', icon: 'sliders-horizontal', href: 'adjustments.html', permission: 'inventory.adjust' }
+        ]},
+        { section: 'الموارد البشرية', items: [
+          { label: 'الموظفين', icon: 'user-cog', href: 'employees.html', permission: 'employees.view' },
+          { label: 'الصلاحيات', icon: 'shield-check', href: 'permissions.html', permission: 'permissions.manage' },
+          { label: 'الحضور', icon: 'calendar-check', href: 'attendance.html', permission: 'attendance.view' },
+          { label: 'الرواتب', icon: 'wallet', href: 'payroll.html', permission: 'payroll.view' }
+        ]},
+        { section: 'المالية', items: [
+          { label: 'الحسابات', icon: 'landmark', href: 'accounts.html', permission: 'company.owner' },
+          { label: 'المصاريف', icon: 'banknote', href: 'expenses.html', permission: 'expenses.view' },
+          { label: 'التقارير', icon: 'bar-chart-3', href: 'reports.html', permission: 'reports.view' }
+        ]},
+        { section: 'النظام', items: [
+          { label: 'إعدادات الشركة', icon: 'settings', href: 'company-settings.html', permission: 'settings.view' },
+          { label: 'شاشة الأدمن', icon: 'shield', href: 'admin.html', permission: 'admin.full', badge: 'Admin', badgeClass: 'gold' }
+        ]}
+      ];
+
+      function buildSidebar() {
+        const nav = document.getElementById('sidebarNav');
+        const currentPage = 'returns.html';
+        const frag = document.createDocumentFragment();
+        MENU.forEach(group => {
+          const allowed = group.items.filter(it => !it.permission || Refad.Session.has(it.permission));
+          if (!allowed.length) return;
+          frag.appendChild(Refad.el('div', { class: 'nav-section' }, group.section));
+          allowed.forEach(item => {
+            const a = Refad.el('a', {
+              href: item.href,
+              class: 'nav-item' + (item.href === currentPage ? ' active' : '')
+            });
+            a.innerHTML = `<i data-lucide="${item.icon}"></i><span>${Refad.escapeHtml(item.label)}</span>${item.badge ? `<span class="badge ${item.badgeClass || ''}">${item.badge}</span>` : ''}`;
+            frag.appendChild(a);
+          });
+        });
+        nav.innerHTML = '';
+        nav.appendChild(frag);
+        if (window.lucide) lucide.createIcons();
+      }
+
+      // ============================================================
+      // 3) UI helpers
+      // ============================================================
+      function fillUser() {
+        const av = document.getElementById('userAvatar');
+        const initial = (session.full_name || '؟').trim().charAt(0);
+        if (session.avatar_url) av.innerHTML = `<img src="${Refad.escapeHtml(session.avatar_url)}" alt="">`;
+        else av.textContent = initial;
+        document.getElementById('userName').textContent = session.full_name;
+        document.getElementById('userRole').textContent = Refad.Session.has('company.owner') ? 'صاحب الشركة' : 'موظف';
+      }
+
+      function setupTheme() {
+        const btn = document.getElementById('themeToggle');
+        const icon = document.getElementById('themeIcon');
+        const refresh = () => {
+          const isDark = Refad.theme.get() === 'dark';
+          icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+          if (window.lucide) lucide.createIcons();
+        };
+        refresh();
+        btn.addEventListener('click', () => { Refad.theme.toggle(); refresh(); });
+      }
+
+      function setupSidebarMobile() {
+        const sb = document.getElementById('sidebar');
+        const ov = document.getElementById('overlay');
+        document.getElementById('menuToggle').addEventListener('click', () => {
+          sb.classList.add('open'); ov.classList.add('show');
+        });
+        ov.addEventListener('click', () => {
+          sb.classList.remove('open'); ov.classList.remove('show');
+        });
+      }
+
+      function setupUserMenu() {
+        const m = document.getElementById('userMenu');
+        const d = document.getElementById('userDropdown');
+        m.addEventListener('click', e => { e.stopPropagation(); d.classList.toggle('show'); });
+        document.addEventListener('click', () => d.classList.remove('show'));
+        d.addEventListener('click', e => e.stopPropagation());
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+          if (await Refad.alert.confirm('تسجيل الخروج', 'هل تريد الخروج؟', 'خروج')) {
+            await Refad.Auth.logout();
+          }
+        });
+      }
+
+      function setupNotifBtn() {
+        document.getElementById('notifBtn').addEventListener('click', () => {
+          window.location.href = 'notifications.html';
+        });
+      }
+
+      // ============================================================
+      // 4) State
+      // ============================================================
       const state = {
-        invoices: [], receipts: [], customers: [], suppliers: [],
-        sourceRows: [], sourceBatches: [], returnedByItem: new Map()
+        invoices: [],
+        receipts: [],
+        customers: [],
+        suppliers: [],
+        sourceRows: [],
+        sourceBatches: [],
+        returnedByItem: new Map(),
+        historyData: []
       };
+
       const $ = id => document.getElementById(id);
       const today = Refad.date.today();
+
+      // ============================================================
+      // 5) Init defaults
+      // ============================================================
       $('returnDate').value = today;
-      if (!canSalesReturn) $('returnType').value = 'purchase';
+
+      if (!canSalesReturn) {
+        $('returnType').value = 'purchase';
+        $('returnType').innerHTML = '<option value="purchase">مرتجع مشتريات إلى مورد</option>';
+      }
       if (!canPurchaseReturn) {
         $('returnType').innerHTML = '<option value="sales">مرتجع مبيعات من عميل</option>';
       }
 
+      // ============================================================
+      // 6) Error display
+      // ============================================================
       function showError(error) {
         const failure = error && typeof error === 'object' ? error : { message: String(error) };
         console.error('[Returns] Operation failed:', JSON.stringify({
@@ -186,19 +980,31 @@
         const detail = [failure.message, failure.details, failure.hint].filter(Boolean).join(' — ') || 'خطأ غير معروف';
         const setupMissing = ['PGRST202', '42P01', '42883'].includes(failure.code) ||
           /inventory_returns|inventory_return_items|process_inventory_return|schema cache/i.test(detail);
+
         $('errorBox').textContent = setupMissing
-          ? `ميزة المرتجعات غير مفعّلة بالكامل في قاعدة البيانات. شغّل ملف returns-setup.sql في Supabase SQL Editor بعد المخطط الأساسي، ثم سجّل الخروج والدخول. التفاصيل: ${detail}`
+          ? `ميزة المرتجعات غير مفعّلة بالكامل في قاعدة البيانات. شغّل ملف returns-setup.sql في Supabase SQL Editor. التفاصيل: ${detail}`
           : `تعذّر إكمال العملية: ${detail}`;
-        $('errorBox').style.display = 'block';
+        $('errorBox').classList.add('show');
         return detail;
       }
+
+      function hideError() {
+        $('errorBox').classList.remove('show');
+      }
+
       function money(value) { return Refad.format.money(value); }
+
+      // ============================================================
+      // 7) Helpers
+      // ============================================================
       function currentType() { return $('returnType').value; }
+
       function selectedSource() {
         const id = $('sourceSelect').value;
         const source = currentType() === 'sales' ? state.invoices : state.receipts;
         return source.find(row => String(row.id) === String(id)) || null;
       }
+
       function partyFor(type, source) {
         if (!source) return '';
         const id = type === 'sales' ? source.customer_id : source.supplier_id;
@@ -208,53 +1014,104 @@
         const list = type === 'sales' ? state.customers : state.suppliers;
         return list.find(row => String(row.id) === String(id))?.name || '—';
       }
+
       function sourceNumber(type, source) {
         return type === 'sales' ? source.invoice_number : (source.invoice_number || source.receipt_number);
       }
+
+      // ============================================================
+      // 8) Populate sources dropdown
+      // ============================================================
       function populateSources() {
         const type = currentType();
         const select = $('sourceSelect');
-        $('sourceLabel').textContent = type === 'sales' ? 'فاتورة البيع الأصلية' : 'فاتورة الاستلام الأصلية';
+        $('sourceLabel').innerHTML = type === 'sales'
+          ? 'فاتورة البيع الأصلية <span class="req">*</span>'
+          : 'فاتورة الاستلام الأصلية <span class="req">*</span>';
+
         const source = type === 'sales' ? state.invoices : state.receipts;
         select.innerHTML = `<option value="">اختر ${type === 'sales' ? 'فاتورة البيع' : 'فاتورة الاستلام'}</option>` +
           source.map(row => {
             const partner = partyFor(type, row);
             const date = type === 'sales' ? row.invoice_date : row.receipt_date;
-            return `<option value="${row.id}">${Refad.escapeHtml(sourceNumber(type, row) || '—')} • ${Refad.escapeHtml(partner)} • ${Refad.format.date(date)} • ${money(row.grand_total ?? row.total_amount)}</option>`;
+            const total = row.grand_total ?? row.total_amount;
+            return `<option value="${row.id}">${Refad.escapeHtml(sourceNumber(type, row) || '—')} • ${Refad.escapeHtml(partner)} • ${Refad.format.date(date)} • ${money(total)}</option>`;
           }).join('');
-        $('sourceItems').innerHTML = '<tr><td colspan="6" class="empty">اختر المستند الأصلي لعرض الأصناف القابلة للإرجاع.</td></tr>';
-        $('partyLine').hidden = true;
+
+        $('sourceItems').innerHTML = `
+          <tr class="empty-row">
+            <td colspan="6">
+              <i data-lucide="package-search"></i>
+              <p>اختر المستند الأصلي لعرض الأصناف القابلة للإرجاع.</p>
+            </td>
+          </tr>`;
+        $('partyLine').style.display = 'none';
         state.sourceRows = [];
         state.sourceBatches = [];
         state.returnedByItem.clear();
         updateTotal();
+
+        if (window.lucide) lucide.createIcons();
       }
+
+      // ============================================================
+      // 9) Load documents (two-step, no embedding)
+      // ============================================================
       async function loadDocuments() {
-        const [invoices, receipts, customers, suppliers] = await Promise.all([
-          canSalesReturn ? Refad.db.select('sales_invoices', {
-            columns: 'id, invoice_number, invoice_date, grand_total, status, invoice_type, customer_id, supplier_id',
-            eq: { company_id: session.company_id, invoice_type: 'sale' },
-            neq: { status: 'cancelled' },
-            order: { column: 'id', ascending: false },
-            limit: 2000
-          }) : [],
-          canPurchaseReturn ? Refad.db.select('receipts', {
-            columns: 'id, receipt_number, invoice_number, receipt_date, total_amount, status, supplier_id',
-            eq: { company_id: session.company_id },
-            neq: { status: 'cancelled' },
-            order: { column: 'id', ascending: false },
-            limit: 2000
-          }) : [],
-          canSalesReturn ? Refad.db.select('customers', {
-            columns: 'id, name', eq: { company_id: session.company_id }
-          }) : [],
-          (canSalesReturn || canPurchaseReturn) ? Refad.db.select('suppliers', {
-            columns: 'id, name', eq: { company_id: session.company_id }
-          }) : []
-        ]);
-        Object.assign(state, { invoices, receipts, customers, suppliers });
-        populateSources();
+        try {
+          // 1) الفواتير
+          let invoices = [];
+          if (canSalesReturn) {
+            invoices = await Refad.db.select('sales_invoices', {
+              columns: 'id, invoice_number, invoice_date, grand_total, status, invoice_type, customer_id, supplier_id',
+              eq: { company_id: session.company_id, invoice_type: 'sale' },
+              neq: { status: 'cancelled' },
+              order: { column: 'id', ascending: false },
+              limit: 500
+            });
+          }
+
+          // 2) الاستلامات
+          let receipts = [];
+          if (canPurchaseReturn) {
+            receipts = await Refad.db.select('receipts', {
+              columns: 'id, receipt_number, invoice_number, receipt_date, total_amount, status, supplier_id',
+              eq: { company_id: session.company_id },
+              neq: { status: 'cancelled' },
+              order: { column: 'id', ascending: false },
+              limit: 500
+            });
+          }
+
+          // 3) العملاء
+          let customers = [];
+          if (canSalesReturn) {
+            customers = await Refad.db.select('customers', {
+              columns: 'id, name',
+              eq: { company_id: session.company_id }
+            }).catch(() => []);
+          }
+
+          // 4) الموردين
+          let suppliers = [];
+          if (canSalesReturn || canPurchaseReturn) {
+            suppliers = await Refad.db.select('suppliers', {
+              columns: 'id, name',
+              eq: { company_id: session.company_id }
+            }).catch(() => []);
+          }
+
+          Object.assign(state, { invoices, receipts, customers, suppliers });
+          populateSources();
+        } catch (e) {
+          console.error('[Returns] loadDocuments failed:', e);
+          showError(e);
+        }
       }
+
+      // ============================================================
+      // 10) Open linked source (from URL params)
+      // ============================================================
       async function openLinkedSource() {
         const requestedType = Refad.getParam('type');
         const salesInvoiceId = Refad.getParam('invoice_id');
@@ -262,105 +1119,157 @@
         const type = requestedType === 'purchase' || purchaseReceiptId ? 'purchase' : 'sales';
         const sourceId = type === 'sales' ? salesInvoiceId : purchaseReceiptId;
         if (!sourceId) return;
+
         if ((type === 'sales' && !canSalesReturn) || (type === 'purchase' && !canPurchaseReturn)) {
           Refad.toast.error('ليس لديك صلاحية تسجيل هذا النوع من المرتجعات');
           return;
         }
+
         $('returnType').value = type;
         populateSources();
+
         const availableSources = type === 'sales' ? state.invoices : state.receipts;
         if (!availableSources.some(row => String(row.id) === String(sourceId))) {
-          Refad.toast.warning('المستند المرتبط غير متاح أو لا توجد لديك صلاحية عرضه');
+          Refad.toast.warning('المستند المرتبط غير متاح');
           return;
         }
+
         $('sourceSelect').value = String(sourceId);
         await loadSourceItems();
       }
-      async function loadHistory() {
-        const rows = await Refad.db.select('inventory_returns', {
-          columns: 'id, return_number, return_type, reference_invoice_id, reference_receipt_id, customer_id, supplier_id, return_date, total_amount, reason',
-          eq: { company_id: session.company_id },
-          order: { column: 'id', ascending: false },
-          limit: 100
-        });
-        const visibleRows = rows.filter(row =>
-          row.return_type === 'sales' ? canSalesReturn : canPurchaseReturn
-        );
-        $('historyRows').innerHTML = visibleRows.length ? visibleRows.map(row => {
-          const type = row.return_type === 'sales' ? 'sales' : 'purchase';
-          const sourceId = type === 'sales' ? row.reference_invoice_id : row.reference_receipt_id;
-          const sourceRows = type === 'sales' ? state.invoices : state.receipts;
-          const source = sourceRows.find(item => String(item.id) === String(sourceId));
-          const sourceHref = type === 'sales'
-            ? `invoices.html?id=${sourceId}`
-            : `receipt-form.html?id=${sourceId}`;
-          const partnerList = type === 'sales'
-            ? (row.supplier_id ? state.suppliers : state.customers)
-            : state.suppliers;
-          const partnerId = type === 'sales' && row.supplier_id ? row.supplier_id
-            : (type === 'sales' ? row.customer_id : row.supplier_id);
-          const partner = partnerList.find(item => String(item.id) === String(partnerId))?.name || '—';
-          return `<tr>
-            <td><strong>${Refad.escapeHtml(row.return_number)}</strong></td>
-            <td><span class="pill">${type === 'sales' ? 'مرتجع مبيعات' : 'مرتجع مشتريات'}</span></td>
-            <td>${Refad.escapeHtml(partner)}</td>
-            <td><a class="history-link" href="${sourceHref}">${Refad.escapeHtml(source ? sourceNumber(type, source) : 'فتح المستند')}</a></td>
-            <td>${Refad.format.date(row.return_date)}</td><td><strong>${money(row.total_amount)}</strong></td>
-          </tr>`;
-        }).join('') : '<tr><td colspan="6" class="empty">لا توجد مرتجعات مسجلة حتى الآن.</td></tr>';
-      }
+
+      // ============================================================
+      // 11) Load source items
+      // ============================================================
       async function loadSourceItems() {
         const type = currentType();
         const source = selectedSource();
+
         state.sourceRows = [];
         state.sourceBatches = [];
         state.returnedByItem.clear();
+
         if (!source) {
-          $('partyLine').hidden = true;
-          $('sourceItems').innerHTML = '<tr><td colspan="6" class="empty">اختر المستند الأصلي لعرض الأصناف القابلة للإرجاع.</td></tr>';
+          $('partyLine').style.display = 'none';
+          $('sourceItems').innerHTML = `
+            <tr class="empty-row">
+              <td colspan="6">
+                <i data-lucide="package-search"></i>
+                <p>اختر المستند الأصلي لعرض الأصناف القابلة للإرجاع.</p>
+              </td>
+            </tr>`;
           updateTotal();
+          if (window.lucide) lucide.createIcons();
           return;
         }
-        $('partyLine').textContent = `الطرف: ${partyFor(type, source)} • المستند الأصلي: ${sourceNumber(type, source)}`;
-        $('partyLine').hidden = false;
-        const sourceTable = type === 'sales' ? 'sales_invoice_items' : 'receipt_items';
-        const referenceColumn = type === 'sales' ? 'invoice_id' : 'receipt_id';
-        const [items, returnHeaders] = await Promise.all([
-          Refad.db.select(sourceTable, {
-            columns: `id, product_id, ${type === 'sales' ? 'batch_id' : 'batch_number'}, quantity, unit_price, total, products(name)`,
+
+        // Party info
+        $('partyLineText').innerHTML = `
+          <strong>الطرف:</strong> ${Refad.escapeHtml(partyFor(type, source))} 
+          • <strong>المستند:</strong> ${Refad.escapeHtml(sourceNumber(type, source))}
+          • <strong>التاريخ:</strong> ${Refad.format.date(type === 'sales' ? source.invoice_date : source.receipt_date)}
+        `;
+        $('partyLine').style.display = 'flex';
+
+        // Loading state
+        $('sourceItems').innerHTML = `
+          <tr class="empty-row">
+            <td colspan="6">
+              <i data-lucide="loader" style="animation:spin 1s linear infinite;"></i>
+              <p>جارٍ تحميل الأصناف...</p>
+            </td>
+          </tr>`;
+        if (window.lucide) lucide.createIcons();
+
+        try {
+          // 1) الأصناف
+          const sourceTable = type === 'sales' ? 'sales_invoice_items' : 'receipt_items';
+          const referenceColumn = type === 'sales' ? 'invoice_id' : 'receipt_id';
+
+          let items = await Refad.db.select(sourceTable, {
+            columns: type === 'sales'
+              ? 'id, product_id, batch_id, quantity, unit_price, total'
+              : 'id, product_id, batch_number, quantity, unit_price, total',
             eq: { [referenceColumn]: source.id },
             order: { column: 'id', ascending: true }
-          }),
-          Refad.db.select('inventory_returns', {
+          });
+
+          // 2) جلب أسماء المنتجات منفصلة
+          const productIds = [...new Set(items.map(i => i.product_id).filter(Boolean))];
+          let products = [];
+          if (productIds.length) {
+            products = await Refad.db.select('products', {
+              columns: 'id, name, form, unit',
+              in: { id: productIds }
+            }).catch(() => []);
+          }
+          const productMap = new Map(products.map(p => [String(p.id), p]));
+
+          items = items.map(it => ({
+            ...it,
+            products: productMap.get(String(it.product_id)) || null
+          }));
+
+          // 3) التشغيلات
+          let batches = [];
+          if (type === 'sales') {
+            const batchIds = items.map(item => item.batch_id).filter(Boolean);
+            if (batchIds.length) {
+              batches = await Refad.db.select('batches', {
+                columns: 'id, product_id, batch_number, quantity_left',
+                in: { id: batchIds }
+              }).catch(() => []);
+            }
+          } else {
+            batches = await Refad.db.select('batches', {
+              columns: 'id, product_id, batch_number, quantity_left',
+              eq: { company_id: session.company_id, receipt_id: source.id },
+              order: { column: 'id', ascending: true }
+            }).catch(() => []);
+          }
+
+          state.sourceRows = items;
+          state.sourceBatches = batches;
+
+          // 4) المرتجعات السابقة
+          const returnHeaders = await Refad.db.select('inventory_returns', {
             columns: 'id',
             eq: {
               company_id: session.company_id,
               return_type: type,
               [type === 'sales' ? 'reference_invoice_id' : 'reference_receipt_id']: source.id
             }
-          })
-        ]);
-        const batchIds = type === 'sales' ? items.map(item => item.batch_id).filter(Boolean) : null;
-        const batches = type === 'sales' && !batchIds.length ? [] : await Refad.db.select('batches', {
-          columns: 'id, product_id, batch_number, quantity_left',
-          eq: { company_id: session.company_id, ...(type === 'purchase' ? { receipt_id: source.id } : {}) },
-          ...(batchIds ? { in: { id: batchIds } } : {}),
-          order: { column: 'id', ascending: true }
-        });
-        state.sourceRows = items;
-        state.sourceBatches = batches;
-        if (returnHeaders.length) {
-          const returned = await Refad.db.select('inventory_return_items', {
-            columns: 'source_item_id, quantity, batch_id',
-            in: { return_id: returnHeaders.map(row => row.id) }
-          });
-          returned.forEach(row => {
-            const key = String(row.source_item_id);
-            state.returnedByItem.set(key, (state.returnedByItem.get(key) || 0) + (Number(row.quantity) || 0));
-          });
+          }).catch(() => []);
+
+          if (returnHeaders.length) {
+            const returned = await Refad.db.select('inventory_return_items', {
+              columns: 'source_item_id, quantity',
+              in: { return_id: returnHeaders.map(row => row.id) }
+            }).catch(() => []);
+
+            returned.forEach(row => {
+              const key = String(row.source_item_id);
+              state.returnedByItem.set(key, (state.returnedByItem.get(key) || 0) + (Number(row.quantity) || 0));
+            });
+          }
+
+          renderSourceItems();
+        } catch (e) {
+          console.error('[Returns] loadSourceItems failed:', e);
+          $('sourceItems').innerHTML = `
+            <tr class="empty-row">
+              <td colspan="6">
+                <i data-lucide="alert-triangle"></i>
+                <p>تعذّر تحميل الأصناف: ${Refad.escapeHtml(e.message || '')}</p>
+              </td>
+            </tr>`;
+          if (window.lucide) lucide.createIcons();
         }
-        renderSourceItems();
       }
+
+      // ============================================================
+      // 12) Get batch for item
+      // ============================================================
       function itemBatch(item) {
         if (currentType() === 'sales') {
           return state.sourceBatches.find(batch => String(batch.id) === String(item.batch_id)) || null;
@@ -370,49 +1279,221 @@
           String(batch.batch_number || '') === String(item.batch_number || '')
         ) || null;
       }
+
+      // ============================================================
+      // 13) Render source items
+      // ============================================================
       function renderSourceItems() {
         if (!state.sourceRows.length) {
-          $('sourceItems').innerHTML = '<tr><td colspan="6" class="empty">لا توجد أصناف في المستند الأصلي.</td></tr>';
+          $('sourceItems').innerHTML = `
+            <tr class="empty-row">
+              <td colspan="6">
+                <i data-lucide="package-x"></i>
+                <p>لا توجد أصناف في المستند الأصلي.</p>
+              </td>
+            </tr>`;
+          if (window.lucide) lucide.createIcons();
+          updateTotal();
           return;
         }
+
         $('sourceItems').innerHTML = state.sourceRows.map(item => {
           const returned = state.returnedByItem.get(String(item.id)) || 0;
           const available = Math.max(0, Number(item.quantity || 0) - returned);
           const batch = itemBatch(item);
+
           const batchDescription = batch
-            ? `تشغيلة ${batch.batch_number || '—'} • متبقي ${Refad.format.number(batch.quantity_left)}`
-            : 'لا توجد تشغيلة مرتبطة — لا يمكن إرجاع هذا الصنف بأمان';
-          const safeAvailable = !batch ? 0
-            : currentType() === 'purchase'
-              ? Math.min(available, Number(batch.quantity_left) || 0)
-              : available;
+            ? `تشغيلة: ${Refad.escapeHtml(batch.batch_number || '—')} • متبقي بالمخزون: ${Refad.format.number(batch.quantity_left)}`
+            : '<span style="color:var(--warning);">⚠ لا توجد تشغيلة مرتبطة</span>';
+
+          const safeAvailable = !batch
+            ? 0
+            : (currentType() === 'purchase'
+                ? Math.min(available, Number(batch.quantity_left) || 0)
+                : available);
+
           const unitPrice = Number(item.total) > 0 && Number(item.quantity) > 0
             ? Number(item.total) / Number(item.quantity)
             : Number(item.unit_price) || 0;
-          return `<tr data-item-id="${item.id}" data-max="${safeAvailable}" data-price="${unitPrice}" data-batch-id="${batch?.id || ''}">
-            <td><div class="product-name">${Refad.escapeHtml(item.products?.name || 'صنف')}</div><div class="sub">${Refad.escapeHtml(batchDescription)}</div></td>
-            <td>${Refad.format.number(item.quantity)}</td>
-            <td>${Refad.format.number(returned)}</td>
-            <td><strong>${Refad.format.number(safeAvailable)}</strong></td>
-            <td>${money(unitPrice)}</td>
-            <td><input class="qty-input return-qty" type="number" min="0" max="${safeAvailable}" step="1" value="0" ${safeAvailable <= 0 ? 'disabled' : ''} aria-label="كمية المرتجع"></td>
-          </tr>`;
+
+          return `
+            <tr data-item-id="${item.id}" data-max="${safeAvailable}" data-price="${unitPrice}" data-batch-id="${batch?.id || ''}">
+              <td>
+                <div class="product-name-cell">${Refad.escapeHtml(item.products?.name || 'صنف')}</div>
+                <div class="product-sub">${batchDescription}</div>
+              </td>
+              <td>${Refad.format.number(item.quantity)}</td>
+              <td>${Refad.format.number(returned)}</td>
+              <td><strong style="color:${safeAvailable > 0 ? 'var(--success)' : 'var(--text-muted)'}">${Refad.format.number(safeAvailable)}</strong></td>
+              <td>${money(unitPrice)}</td>
+              <td>
+                <input class="qty-input return-qty" type="number" min="0" max="${safeAvailable}" step="1" value="0"
+                  ${safeAvailable <= 0 ? 'disabled' : ''}
+                  aria-label="كمية المرتجع">
+              </td>
+            </tr>
+          `;
         }).join('');
-        document.querySelectorAll('.return-qty').forEach(input => input.addEventListener('input', updateTotal));
+
+        document.querySelectorAll('.return-qty').forEach(input => {
+          input.addEventListener('input', (e) => {
+            const row = e.target.closest('tr');
+            const qty = Math.max(0, Number(e.target.value) || 0);
+            const max = Number(row.dataset.max) || 0;
+            if (qty > 0 && qty <= max) {
+              e.target.classList.add('valid');
+            } else {
+              e.target.classList.remove('valid');
+            }
+            updateTotal();
+          });
+        });
+
+        if (window.lucide) lucide.createIcons();
         updateTotal();
       }
+
+      // ============================================================
+      // 14) Update total
+      // ============================================================
       function updateTotal() {
         let total = 0;
+        let count = 0;
+
         document.querySelectorAll('#sourceItems tr[data-item-id]').forEach(row => {
-          const qty = Math.max(0, Number(row.querySelector('.return-qty')?.value) || 0);
-          const max = Number(row.dataset.max) || 0;
           const input = row.querySelector('.return-qty');
+          if (!input) return;
+          const qty = Math.max(0, Number(input.value) || 0);
+          const max = Number(row.dataset.max) || 0;
+
           if (qty > max) input.setCustomValidity(`الحد المتاح ${max}`);
           else input.setCustomValidity('');
-          total += Math.min(qty, max) * (Number(row.dataset.price) || 0);
+
+          const validQty = Math.min(qty, max);
+          if (validQty > 0) {
+            total += validQty * (Number(row.dataset.price) || 0);
+            count++;
+          }
         });
+
         $('returnTotal').textContent = money(total);
+        $('returnCount').textContent = `${count} صنف`;
       }
+
+      // ============================================================
+      // 15) Render history
+      // ============================================================
+      async function loadHistory() {
+        try {
+          const rows = await Refad.db.select('inventory_returns', {
+            columns: 'id, return_number, return_type, reference_invoice_id, reference_receipt_id, customer_id, supplier_id, return_date, total_amount, reason',
+            eq: { company_id: session.company_id },
+            order: { column: 'id', ascending: false },
+            limit: 100
+          });
+
+          const visibleRows = rows.filter(row =>
+            row.return_type === 'sales' ? canSalesReturn : canPurchaseReturn
+          );
+
+          state.historyData = visibleRows;
+          $('historyCount').textContent = `${visibleRows.length} مرتجع`;
+
+          if (!visibleRows.length) {
+            $('historyRows').innerHTML = `
+              <tr class="empty-row">
+                <td colspan="5">
+                  <i data-lucide="history"></i>
+                  <p>لا توجد مرتجعات مسجلة بعد</p>
+                </td>
+              </tr>`;
+            if (window.lucide) lucide.createIcons();
+            renderHistoryStats();
+            return;
+          }
+
+          $('historyRows').innerHTML = visibleRows.map(row => {
+            const type = row.return_type === 'sales' ? 'sales' : 'purchase';
+            const sourceId = type === 'sales' ? row.reference_invoice_id : row.reference_receipt_id;
+            const sourceRows = type === 'sales' ? state.invoices : state.receipts;
+            const source = sourceRows.find(item => String(item.id) === String(sourceId));
+            const sourceHref = type === 'sales'
+              ? `invoices.html?id=${sourceId}`
+              : `receipt-form.html?id=${sourceId}`;
+
+            const partnerList = type === 'sales'
+              ? (row.supplier_id ? state.suppliers : state.customers)
+              : state.suppliers;
+            const partnerId = type === 'sales' && row.supplier_id ? row.supplier_id
+              : (type === 'sales' ? row.customer_id : row.supplier_id);
+            const partner = partnerList.find(item => String(item.id) === String(partnerId))?.name || '—';
+
+            const typeBadge = type === 'sales'
+              ? '<span class="badge-tag green"><i data-lucide="shopping-cart" style="width:10px;height:10px;"></i> مبيعات</span>'
+              : '<span class="badge-tag gold"><i data-lucide="truck" style="width:10px;height:10px;"></i> مشتريات</span>';
+
+            return `
+              <tr>
+                <td><strong style="font-family:monospace;">${Refad.escapeHtml(row.return_number)}</strong></td>
+                <td>${typeBadge}</td>
+                <td>${Refad.escapeHtml(partner)}</td>
+                <td>
+                  <a class="history-link" href="${sourceHref}">
+                    ${Refad.escapeHtml(source ? sourceNumber(type, source) : 'فتح')}
+                  </a>
+                </td>
+                <td><strong>${money(row.total_amount)}</strong></td>
+              </tr>
+            `;
+          }).join('');
+
+          if (window.lucide) lucide.createIcons();
+          renderHistoryStats();
+        } catch (e) {
+          console.error('[Returns] loadHistory failed:', e);
+          $('historyRows').innerHTML = `
+            <tr class="empty-row">
+              <td colspan="5">
+                <i data-lucide="alert-triangle"></i>
+                <p>تعذّر تحميل المرتجعات</p>
+              </td>
+            </tr>`;
+          if (window.lucide) lucide.createIcons();
+        }
+      }
+
+      // ============================================================
+      // 16) Render stats
+      // ============================================================
+      function renderHistoryStats() {
+        const rows = state.historyData || [];
+        const totalCount = rows.length;
+        const salesCount = rows.filter(r => r.return_type === 'sales').length;
+        const purchasesCount = rows.filter(r => r.return_type === 'purchase').length;
+        const totalValue = rows.reduce((s, r) => s + (Number(r.total_amount) || 0), 0);
+
+        const monthStart = Refad.date.startOfMonth();
+        const monthCount = rows.filter(r => r.return_date >= monthStart).length;
+
+        $('statTotal').textContent = Refad.format.number(totalCount);
+        $('statTotalSub').textContent = `إجمالي السجل`;
+
+        $('statSales').textContent = Refad.format.number(salesCount);
+        $('statSalesSub').textContent = totalCount ? Math.round((salesCount / totalCount) * 100) + '%' : '—';
+
+        $('statPurchases').textContent = Refad.format.number(purchasesCount);
+        $('statPurchasesSub').textContent = totalCount ? Math.round((purchasesCount / totalCount) * 100) + '%' : '—';
+
+        $('statValue').textContent = money(totalValue);
+        $('statValueSub').textContent = totalCount ? `متوسط: ${money(totalValue / totalCount)}` : '—';
+
+        $('statMonth').textContent = Refad.format.number(monthCount);
+        $('statMonthSub').textContent = `هذا الشهر`;
+      }
+
+      // ============================================================
+      // 17) Save return
+      // ============================================================
       async function saveReturn() {
         const source = selectedSource();
         if (!source) {
@@ -423,15 +1504,24 @@
           Refad.toast.warning('سبب المرتجع مطلوب');
           return;
         }
+
         const items = [];
         let invalid = false;
+
         document.querySelectorAll('#sourceItems tr[data-item-id]').forEach(row => {
           const input = row.querySelector('.return-qty');
+          if (!input) return;
           const quantity = Math.floor(Number(input.value) || 0);
           const max = Number(row.dataset.max) || 0;
           if (quantity > max) invalid = true;
-          if (quantity > 0) items.push({ source_item_id: Number(row.dataset.itemId), quantity });
+          if (quantity > 0) {
+            items.push({
+              source_item_id: Number(row.dataset.itemId),
+              quantity
+            });
+          }
         });
+
         if (invalid) {
           Refad.toast.warning('كمية مرتجعة تتجاوز الكمية المتاحة');
           return;
@@ -440,8 +1530,11 @@
           Refad.toast.warning('أدخل كمية مرتجعة لصنف واحد على الأقل');
           return;
         }
+
         const button = $('saveBtn');
         button.disabled = true;
+        hideError();
+
         try {
           const { data, error } = await Refad.sb.rpc('process_inventory_return', {
             p_company_id: session.company_id,
@@ -453,49 +1546,166 @@
             p_user_id: session.user_id,
             p_items: items
           });
+
           if (error) throw error;
-          $('errorBox').style.display = 'none';
+
           Refad.toast.success(`تم تسجيل المرتجع ${data.return_number} بإجمالي ${money(data.total_amount)}`);
+          await Refad.logActivity('create_return', 'inventory_returns',
+            `مرتجع ${currentType() === 'sales' ? 'مبيعات' : 'مشتريات'}: ${data.return_number}`,
+            data.return_id);
+
+          // Reset form
           $('notes').value = '';
           await Promise.all([loadHistory(), loadSourceItems()]);
         } catch (error) {
-          Refad.toast.error(`لم يتم حفظ المرتجع: ${showError(error)}`);
+          Refad.toast.error(`لم يتم حفظ المرتجع`);
+          showError(error);
         } finally {
           button.disabled = false;
         }
       }
-      async function init() {
+            // ============================================================
+      // 18) Export to Excel
+      // ============================================================
+      function exportHistory() {
+        if (!state.historyData.length) {
+          Refad.toast.warning('لا توجد بيانات للتصدير');
+          return;
+        }
+        if (typeof XLSX === 'undefined') {
+          Refad.toast.error('مكتبة Excel غير محمّلة');
+          return;
+        }
+
+        const rows = state.historyData.map(r => {
+          const type = r.return_type === 'sales' ? 'sales' : 'purchase';
+          const sourceId = type === 'sales' ? r.reference_invoice_id : r.reference_receipt_id;
+          const sourceRows = type === 'sales' ? state.invoices : state.receipts;
+          const source = sourceRows.find(item => String(item.id) === String(sourceId));
+
+          const partnerList = type === 'sales'
+            ? (r.supplier_id ? state.suppliers : state.customers)
+            : state.suppliers;
+          const partnerId = type === 'sales' && r.supplier_id ? r.supplier_id
+            : (type === 'sales' ? r.customer_id : r.supplier_id);
+          const partner = partnerList.find(item => String(item.id) === String(partnerId))?.name || '—';
+
+          return {
+            'رقم المرتجع': r.return_number,
+            'النوع': type === 'sales' ? 'مرتجع مبيعات' : 'مرتجع مشتريات',
+            'الطرف': partner,
+            'المستند الأصلي': source ? sourceNumber(type, source) : '—',
+            'تاريخ المرتجع': r.return_date,
+            'السبب': r.reason || '—',
+            'الإجمالي': Number(r.total_amount) || 0
+          };
+        });
+
+        const ws = XLSX.utils.json_to_sheet(rows);
+        ws['!cols'] = [
+          { wch: 18 }, { wch: 18 }, { wch: 25 }, { wch: 18 },
+          { wch: 14 }, { wch: 25 }, { wch: 15 }
+        ];
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Returns');
+        XLSX.writeFile(wb, `returns-${Refad.date.today()}.xlsx`);
+        Refad.toast.success(`تم تصدير ${rows.length} مرتجع`);
+      }
+
+      // ============================================================
+      // 19) Clear form
+      // ============================================================
+      function clearForm() {
+        $('sourceSelect').value = '';
+        $('notes').value = '';
+        $('returnDate').value = today;
+        $('reason').value = 'تالف';
+        populateSources();
+        hideError();
+        Refad.toast.info('تم مسح الاختيار');
+      }
+
+      // ============================================================
+      // 20) Refresh all
+      // ============================================================
+      async function refreshAll() {
+        const btn = $('refreshBtn');
+        btn.disabled = true;
+
         try {
           await loadDocuments();
-          await openLinkedSource();
           await loadHistory();
-        } catch (error) {
-          showError(error);
+          Refad.toast.success('تم تحديث البيانات');
+        } catch (e) {
+          showError(e);
+        } finally {
+          btn.disabled = false;
         }
+      }
+
+      // ============================================================
+      // 21) Bind events
+      // ============================================================
+      function bindEvents() {
         $('returnType').addEventListener('change', populateSources);
         $('sourceSelect').addEventListener('change', () => loadSourceItems().catch(showError));
         $('saveBtn').addEventListener('click', saveReturn);
-        $('clearBtn').addEventListener('click', () => {
-          $('sourceSelect').value = '';
-          $('notes').value = '';
-          populateSources();
-        });
-        $('refreshBtn').addEventListener('click', async () => {
-          $('refreshBtn').disabled = true;
-          try {
-            await loadDocuments();
-            await loadHistory();
-            Refad.toast.success('تم تحديث البيانات');
-          } catch (error) {
-            showError(error);
-          } finally {
-            $('refreshBtn').disabled = false;
+        $('clearBtn').addEventListener('click', clearForm);
+        $('refreshBtn').addEventListener('click', refreshAll);
+        $('exportBtn').addEventListener('click', exportHistory);
+
+        // Keyboard shortcut: Ctrl+S → Save
+        document.addEventListener('keydown', e => {
+          if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+            e.preventDefault();
+            if (!$('saveBtn').disabled) $('saveBtn').click();
           }
         });
-        if (window.lucide) lucide.createIcons();
       }
-      init();
+
+      // ============================================================
+      // 22) Init
+      // ============================================================
+      async function init() {
+        try {
+          buildSidebar();
+          fillUser();
+          setupTheme();
+          setupSidebarMobile();
+          setupUserMenu();
+          setupNotifBtn();
+
+          await loadDocuments();
+          await openLinkedSource();
+          await loadHistory();
+
+          bindEvents();
+        } catch (error) {
+          console.error('[Returns] Init failed:', error);
+          showError(error);
+        } finally {
+          if (window.lucide) lucide.createIcons();
+        }
+
+        Refad.registerServiceWorker();
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+
+      // Spinner animation
+      const spinnerStyle = document.createElement('style');
+      spinnerStyle.textContent = '@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }';
+      document.head.appendChild(spinnerStyle);
+
+      console.log('%c[Refad] Returns page ready', 'color:#14B8A6;font-weight:bold');
+
     })();
   </script>
+
 </body>
 </html>
+
