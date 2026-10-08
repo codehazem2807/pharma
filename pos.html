@@ -405,6 +405,8 @@
     .product-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: var(--shadow); }
     .product-card:active { transform: scale(0.98); }
     .product-card.out-of-stock { opacity: 0.55; cursor: not-allowed; filter: grayscale(0.6); }
+    .product-card.in-order { border-color: var(--success); border-width: 2px; }
+    .product-card.not-in-order { opacity: 0.45; filter: grayscale(0.7); cursor: not-allowed; }
     .product-card .p-name { font-weight: 700; font-size: 13px; color: var(--text); margin-bottom: 4px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 34px; }
     .product-card .p-sub { font-size: 10px; color: var(--text-muted); margin-bottom: 8px; }
     .product-card .p-footer { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-top: auto; }
@@ -416,6 +418,88 @@
     .product-card .expiry-tag { position: absolute; top: 6px; left: 6px; font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 8px; background: rgba(239,68,68,0.15); color: var(--danger); }
     .product-card .cart-badge { position: absolute; top: 6px; right: 6px; background: var(--accent); color: white; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 10px; min-width: 22px; text-align: center; }
     .product-card .order-badge { position: absolute; top: 6px; left: 6px; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 10px; color: white; }
+
+    /* ============ Order Items Bar ============ */
+    .order-items-bar {
+      display: none;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      flex-shrink: 0;
+      max-height: 150px;
+      overflow-y: auto;
+      box-shadow: var(--shadow-sm);
+    }
+    .order-items-bar.show { display: block; }
+    .order-items-bar::-webkit-scrollbar { width: 6px; height: 6px; }
+    .order-items-bar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+
+    .order-items-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+    .order-items-header h4 {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .order-items-header h4 i { width: 14px; height: 14px; color: var(--purple); }
+    .order-items-header .stats {
+      display: flex;
+      gap: 10px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .order-items-header .stat {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .order-items-header .stat.done { color: var(--success); }
+    .order-items-header .stat.pending { color: var(--warning); }
+    .order-items-header .stat.missing { color: var(--danger); }
+
+    .order-items-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .order-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1.5px solid transparent;
+      white-space: nowrap;
+      max-width: 220px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .order-chip.pending { background: rgba(148,163,184,0.12); color: var(--text-muted); border-color: var(--border); }
+    .order-chip.pending:hover { background: var(--info); color: white; border-color: var(--info); }
+    .order-chip.partial { background: rgba(245,158,11,0.15); color: var(--warning); border-color: rgba(245,158,11,0.3); }
+    .order-chip.partial:hover { background: var(--warning); color: white; }
+    .order-chip.complete { background: rgba(16,185,129,0.12); color: var(--success); border-color: rgba(16,185,129,0.3); }
+    .order-chip.complete:hover { background: var(--success); color: white; }
+    .order-chip.over { background: rgba(139,92,246,0.12); color: var(--purple); border-color: rgba(139,92,246,0.3); }
+    .order-chip.over:hover { background: var(--purple); color: white; }
+    .order-chip .chip-name { max-width: 140px; overflow: hidden; text-overflow: ellipsis; }
+    .order-chip .chip-count { font-size: 10px; font-family: 'Courier New', monospace; font-weight: 800; }
 
     /* ============ Cart Panel ============ */
     .cart-panel {
@@ -468,6 +552,62 @@
     .cart-item.from-scan { border-color: var(--accent); background: linear-gradient(135deg, rgba(20,184,166,0.04), transparent); }
     .cart-item.from-scan::before { content: ''; position: absolute; top: -1.5px; right: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--accent), var(--success)); border-radius: 12px 12px 0 0; }
 
+    /* ✅ Purchase Info Card */
+    .purchase-info-card {
+      background: linear-gradient(135deg, rgba(139,92,246,0.06), rgba(139,92,246,0.02));
+      border: 1px solid rgba(139,92,246,0.2);
+      border-radius: 8px;
+      padding: 8px 10px;
+      margin: 8px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .purchase-info-title {
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--purple);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 2px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .purchase-info-title i { width: 12px; height: 12px; }
+    .purchase-info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+      gap: 6px;
+      font-size: 11px;
+    }
+    .purchase-info-item {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+    .purchase-info-item .lbl { color: var(--text-muted); font-weight: 600; font-size: 9.5px; }
+    .purchase-info-item .val { font-weight: 800; color: var(--text); font-size: 12px; }
+    .purchase-info-item .val.purple { color: var(--purple); }
+    .purchase-info-item .val.success { color: var(--success); }
+    .purchase-info-item .val.danger { color: var(--danger); }
+    .purchase-info-item .val.gold { color: var(--gold); }
+
+    /* ✅ Price Warning */
+    .price-warning {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      margin: 6px 0;
+    }
+    .price-warning.danger { background: rgba(239,68,68,0.12); color: var(--danger); border-right: 3px solid var(--danger); }
+    .price-warning.warning { background: rgba(245,158,11,0.12); color: var(--gold); border-right: 3px solid var(--gold); }
+    .price-warning i { width: 14px; height: 14px; flex-shrink: 0; margin-top: 1px; }
+
     .cart-item .ci-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
     .cart-item .ci-name { font-size: 14px; font-weight: 700; color: var(--text); line-height: 1.35; flex: 1; }
     .cart-item .ci-remove { width: 32px; height: 32px; border: none; background: rgba(239,68,68,0.08); color: var(--danger); border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
@@ -482,6 +622,7 @@
     .cart-item .ci-badge.expiry-danger { background: rgba(239,68,68,0.12); color: var(--danger); }
     .cart-item .ci-badge.margin { background: rgba(139,92,246,0.12); color: var(--purple); }
     .cart-item .ci-badge.scan { background: linear-gradient(135deg, var(--accent), var(--accent-dark)); color: white; }
+    .cart-item .ci-badge.purchase-disc { background: rgba(139,92,246,0.15); color: var(--purple); }
 
     .cart-item .ci-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
     .cart-item .ci-field { display: flex; flex-direction: column; gap: 4px; }
@@ -506,6 +647,8 @@
     .smart-discount-btn { display: inline-flex; align-items: center; gap: 4px; padding: 7px 10px; font-family: inherit; font-size: 11px; font-weight: 700; border-radius: 6px; border: 1px solid var(--purple); background: rgba(139,92,246,0.08); color: var(--purple); cursor: pointer; white-space: nowrap; min-height: 32px; }
     .smart-discount-btn:hover { background: var(--purple); color: white; }
     .smart-discount-btn i { width: 12px; height: 12px; }
+    .smart-discount-btn.purchase { border-color: var(--gold); color: var(--gold); background: rgba(245,158,11,0.08); }
+    .smart-discount-btn.purchase:hover { background: var(--gold); color: white; }
 
     .cart-item .ci-total { display: flex; justify-content: space-between; align-items: center; padding-top: 10px; border-top: 1.5px dashed var(--border); font-size: 13px; flex-wrap: wrap; gap: 6px; }
     .cart-item .ci-total .label { color: var(--text-muted); font-weight: 600; font-size: 12px; }
@@ -554,6 +697,8 @@
     .stat-row .val.success { color: var(--success); }
     .stat-row .val.gold { color: var(--gold); }
     .stat-row .val.accent { color: var(--accent); }
+    .stat-row .val.purple { color: var(--purple); }
+    .stat-row .val.danger { color: var(--danger); }
 
     .holds-list { display: flex; flex-direction: column; gap: 6px; max-height: 200px; overflow-y: auto; }
     .hold-item { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; }
@@ -632,9 +777,11 @@
     .scan-product-row .val.success { color: var(--success); }
     .scan-product-row .val.danger { color: var(--danger); }
     .scan-product-row .val.gold { color: var(--gold); }
+    .scan-product-row .val.purple { color: var(--purple); }
     .scan-warning { display: flex; align-items: flex-start; gap: 6px; padding: 8px 10px; border-radius: 6px; font-size: 11px; margin-top: 6px; }
     .scan-warning.warn { background: rgba(245,158,11,0.12); color: var(--gold); border-right: 3px solid var(--gold); }
     .scan-warning.danger { background: rgba(239,68,68,0.12); color: var(--danger); border-right: 3px solid var(--danger); }
+    .scan-warning.info { background: rgba(59,130,246,0.12); color: var(--info); border-right: 3px solid var(--info); }
     .scan-warning i { width: 14px; height: 14px; flex-shrink: 0; margin-top: 1px; }
     .scan-stack { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px; max-height: 220px; overflow-y: auto; }
     .scan-stack-item { display: flex; align-items: center; gap: 8px; padding: 8px; border-bottom: 1px solid var(--border); font-size: 12px; }
@@ -666,6 +813,7 @@
     .sales-order-item .so-info { flex: 1; min-width: 0; }
     .sales-order-item .so-num { font-size: 14px; font-weight: 800; color: var(--text); }
     .sales-order-item .so-meta { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+    .sales-order-item .so-extra { font-size: 10px; color: var(--purple); font-weight: 700; margin-top: 3px; }
 
     /* ============ Mobile FABs ============ */
     .mobile-cart-fab {
@@ -787,6 +935,7 @@
       .scan-info-panel { border-right: none; border-top: 1px solid var(--border); max-height: 400px; }
       .success-actions { flex-direction: column; }
       .success-actions .btn { width: 100%; }
+      .purchase-info-grid { grid-template-columns: repeat(2, 1fr); }
     }
     @media (max-width: 480px) {
       .mode-tab span { display: none; }
@@ -797,14 +946,14 @@
       .product-card .p-price { font-size: 13px; }
       .pos-search input { font-size: 13px; padding: 11px 42px 11px 60px; min-height: 44px; }
       .cart-item .ci-grid { grid-template-columns: 1fr; gap: 6px; }
+      .purchase-info-grid { grid-template-columns: 1fr; }
     }
     @media (hover: none) and (pointer: coarse) {
       .pos-search .hint { display: none; }
       .pos-search input { padding-left: 20px; }
     }
   </style>
-</head>
-<body>
+</head><body>
 
   <!-- Sidebar -->
   <aside class="sidebar" id="sidebar">
@@ -841,7 +990,7 @@
         </button>
       </div>
 
-      <!-- ⭐ زر تحميل طلب بيع - ظاهر دائماً في Topbar -->
+      <!-- زر تحميل طلب بيع - ظاهر دائماً في Topbar -->
       <button class="topbar-load-order-btn" id="topbarLoadOrderBtn" title="تحميل طلب بيع">
         <i data-lucide="upload"></i>
         <span>تحميل طلب</span>
@@ -876,6 +1025,32 @@
             <i data-lucide="camera"></i>
           </button>
         </div>
+
+        <!-- ✅ Order Items Bar (NEW) -->
+        <div class="order-items-bar" id="orderItemsBar">
+          <div class="order-items-header">
+            <h4>
+              <i data-lucide="clipboard-list"></i>
+              أصناف الطلب المطلوبة
+            </h4>
+            <div class="stats">
+              <div class="stat done">
+                <i data-lucide="check-circle" style="width:12px;height:12px;"></i>
+                <span id="orderStatDone">0</span>
+              </div>
+              <div class="stat pending">
+                <i data-lucide="clock" style="width:12px;height:12px;"></i>
+                <span id="orderStatPending">0</span>
+              </div>
+              <div class="stat missing">
+                <i data-lucide="alert-circle" style="width:12px;height:12px;"></i>
+                <span id="orderStatMissing">0</span>
+              </div>
+            </div>
+          </div>
+          <div class="order-items-chips" id="orderItemsChips"></div>
+        </div>
+
         <div class="category-bar" id="categoryBar"></div>
         <div class="products-grid-wrap">
           <div class="products-grid" id="productsGrid"></div>
@@ -977,6 +1152,30 @@
           <div id="loadedOrderInfo" style="margin-top:10px;display:none;"></div>
         </div>
 
+        <!-- ✅ Order Purchase Discounts Card (NEW) -->
+        <div class="summary-card" id="orderDiscountsCard" style="display:none;">
+          <h4 class="purple"><i data-lucide="percent"></i> خصومات طلب الشراء</h4>
+          <div class="stat-row">
+            <span class="lbl">عدد الأصناف بخصم</span>
+            <span class="val purple" id="orderDiscountedCount">0</span>
+          </div>
+          <div class="stat-row">
+            <span class="lbl">متوسط الخصم</span>
+            <span class="val purple" id="orderAvgDiscount">0%</span>
+          </div>
+          <div class="stat-row">
+            <span class="lbl">إجمالي التوفير المتوقع</span>
+            <span class="val success" id="orderTotalSavings">0.00</span>
+          </div>
+          <div class="stat-row">
+            <span class="lbl">هامش الربح المتوقع</span>
+            <span class="val success" id="orderExpectedMargin">0.00</span>
+          </div>
+          <button class="btn btn-outline btn-sm" id="applyAllPurchaseDiscountsBtn" style="width:100%;margin-top:8px;padding:10px;font-size:12px;">
+            <i data-lucide="sparkles"></i> تطبيق كل الخصومات
+          </button>
+        </div>
+
         <div class="summary-card">
           <h4><i data-lucide="activity"></i> إحصائيات الجلسة</h4>
           <div class="stat-row">
@@ -1028,7 +1227,7 @@
     <span class="fab-badge" id="mobileCartBadge" style="display:none;">0</span>
   </button>
 
-  <!-- ⭐ Mobile Load Order FAB - يظهر فقط في وضع الفحص -->
+  <!-- Mobile Load Order FAB -->
   <button class="mobile-load-order-fab" id="mobileLoadOrderFab" style="display:none;" title="تحميل طلب بيع">
     <i data-lucide="clipboard-list"></i>
   </button>
@@ -1264,6 +1463,15 @@
         orderItemsMap: {},
         orderScanStack: [],
 
+        // ✅ خصومات طلب الشراء لكل صنف
+        purchaseDiscountsByProduct: {},
+        orderDiscountsStats: {
+          discountedCount: 0,
+          avgDiscount: 0,
+          totalSavings: 0,
+          expectedMargin: 0
+        },
+
         sessionStats: { invoices: 0, sales: 0, profit: 0 },
         holds: [],
 
@@ -1271,8 +1479,8 @@
         mobileCartOpen: false
       };
 
-      const HOLDS_KEY = 'refad_pos_holds_v7';
-      const SESSION_KEY = 'refad_pos_session_v7';
+      const HOLDS_KEY = 'refad_pos_holds_v8';
+      const SESSION_KEY = 'refad_pos_session_v8';
 
       // ============================================================
       // 3) Sound Engine
@@ -1483,7 +1691,6 @@
         const topbarBtn = document.getElementById('topbarLoadOrderBtn');
 
         if (fab) {
-          // إظهار FAB فقط في وضع الفحص
           if (state.mode === 'order' && !state.loadedOrder) {
             fab.style.display = 'flex';
           } else {
@@ -1496,7 +1703,6 @@
         }
 
         if (topbarBtn) {
-          // إبراز الزر لو في وضع الفحص
           if (state.mode === 'order') {
             topbarBtn.style.background = state.loadedOrder 
               ? 'linear-gradient(135deg, var(--success), #047857)' 
@@ -1539,6 +1745,7 @@
         state.loadedOrder = null;
         state.orderItemsMap = {};
         state.orderScanStack = [];
+        state.orderDiscountsStats = { discountedCount: 0, avgDiscount: 0, totalSavings: 0, expectedMargin: 0 };
 
         document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
         document.querySelector(`.mode-tab[data-mode="${newMode}"]`)?.classList.add('active');
@@ -1551,6 +1758,8 @@
         const checkoutText = document.getElementById('checkoutText');
         const mobileCheckoutText = document.getElementById('mobileCheckoutText');
         const loadedOrderInfo = document.getElementById('loadedOrderInfo');
+        const orderItemsBar = document.getElementById('orderItemsBar');
+        const orderDiscountsCard = document.getElementById('orderDiscountsCard');
 
         if (newMode === 'order') {
           if (scanProgressBar) scanProgressBar.classList.add('show');
@@ -1569,10 +1778,13 @@
           if (checkoutText) checkoutText.textContent = 'دفع (F4)';
           if (mobileCheckoutText) mobileCheckoutText.textContent = 'دفع';
           if (loadedOrderInfo) loadedOrderInfo.style.display = 'none';
+          if (orderItemsBar) orderItemsBar.classList.remove('show');
+          if (orderDiscountsCard) orderDiscountsCard.style.display = 'none';
         }
 
         renderCart();
         renderProductsGrid();
+        renderOrderItemsChips();
         updateScanProgress();
         updateLoadOrderFabVisibility();
 
@@ -1750,16 +1962,34 @@
           );
         }
 
-        list.sort((a, b) => {
-          if (a.total_stock <= 0 && b.total_stock > 0) return 1;
-          if (a.total_stock > 0 && b.total_stock <= 0) return -1;
-          if (a.nearest_expiry && b.nearest_expiry) {
-            return new Date(a.nearest_expiry) - new Date(b.nearest_expiry);
-          }
-          if (a.nearest_expiry) return -1;
-          if (b.nearest_expiry) return 1;
-          return 0;
-        });
+        // ✅ في وضع الطلب: عرض أصناف الطلب أولاً
+        if (state.mode === 'order' && state.loadedOrder) {
+          const orderProductIds = new Set(Object.keys(state.orderItemsMap).map(id => parseInt(id, 10)));
+          list.sort((a, b) => {
+            const aInOrder = orderProductIds.has(a.id);
+            const bInOrder = orderProductIds.has(b.id);
+            if (aInOrder && !bInOrder) return -1;
+            if (!aInOrder && bInOrder) return 1;
+            // ترتيب الطلب حسب الأقرب للاكتمال
+            if (aInOrder && bInOrder) {
+              const aOI = state.orderItemsMap[String(a.id)];
+              const bOI = state.orderItemsMap[String(b.id)];
+              return (bOI?.scanned_qty || 0) - (aOI?.scanned_qty || 0);
+            }
+            return 0;
+          });
+        } else {
+          list.sort((a, b) => {
+            if (a.total_stock <= 0 && b.total_stock > 0) return 1;
+            if (a.total_stock > 0 && b.total_stock <= 0) return -1;
+            if (a.nearest_expiry && b.nearest_expiry) {
+              return new Date(a.nearest_expiry) - new Date(b.nearest_expiry);
+            }
+            if (a.nearest_expiry) return -1;
+            if (b.nearest_expiry) return 1;
+            return 0;
+          });
+        }
 
         if (!list.length) {
           grid.innerHTML = `
@@ -1793,14 +2023,20 @@
           const cartBadge = inCart > 0 ? `<div class="cart-badge">${inCart}</div>` : '';
 
           let orderBadge = '';
-          if (state.mode === 'order' && state.orderItemsMap[String(p.id)]) {
+          let orderClass = '';
+          if (state.mode === 'order' && state.loadedOrder) {
             const oi = state.orderItemsMap[String(p.id)];
-            const bg = oi.matched ? 'var(--success)' : (oi.scanned_qty > 0 ? 'var(--gold)' : 'var(--info)');
-            orderBadge = `<div class="order-badge" style="background:${bg};">${oi.scanned_qty}/${oi.requested_qty}</div>`;
+            if (oi) {
+              orderClass = ' in-order';
+              const bg = oi.matched ? 'var(--success)' : (oi.scanned_qty > 0 ? 'var(--gold)' : 'var(--info)');
+              orderBadge = `<div class="order-badge" style="background:${bg};">${oi.scanned_qty}/${oi.requested_qty}</div>`;
+            } else {
+              orderClass = ' not-in-order';
+            }
           }
 
           return `
-            <div class="product-card ${noStock ? 'out-of-stock' : ''}" data-id="${p.id}">
+            <div class="product-card ${noStock ? 'out-of-stock' : ''}${orderClass}" data-id="${p.id}">
               ${cartBadge}
               ${orderBadge}
               ${expiryTag}
@@ -1816,7 +2052,7 @@
 
         if (window.lucide) lucide.createIcons();
 
-        grid.querySelectorAll('.product-card:not(.out-of-stock)').forEach(card => {
+        grid.querySelectorAll('.product-card:not(.out-of-stock):not(.not-in-order)').forEach(card => {
           card.addEventListener('click', () => {
             const pid = parseInt(card.dataset.id, 10);
             if (state.mode === 'order') {
@@ -1868,7 +2104,9 @@
           return;
         }
 
-        const purchaseDisc = batch.purchase_discount || state.purchaseDiscountMap[p.id] || 0;
+        // ✅ استخدم خصم طلب الشراء إن وُجد، وإلا استخدم purchase_discount من الدفعة
+        const purchaseDiscFromOrder = state.purchaseDiscountsByProduct[p.id];
+        const purchaseDisc = purchaseDiscFromOrder || batch.purchase_discount || state.purchaseDiscountMap[p.id] || 0;
 
         state.cart.push({
           product_id: p.id,
@@ -1882,7 +2120,8 @@
           cost_price: batch.cost_price || 0,
           sale_discount: 0,
           purchase_discount: purchaseDisc,
-          from_scan: false
+          from_scan: false,
+          purchase_from_order: !!purchaseDiscFromOrder
         });
 
         state.selectedCartIndex = state.cart.length - 1;
@@ -1942,7 +2181,10 @@
           return;
         }
 
-        const purchaseDisc = batch.purchase_discount || state.purchaseDiscountMap[p.id] || 0;
+        // ✅ استخدم خصم طلب الشراء إن وُجد
+        const purchaseDiscFromOrder = state.purchaseDiscountsByProduct[p.id];
+        const purchaseDisc = purchaseDiscFromOrder || batch.purchase_discount || state.purchaseDiscountMap[p.id] || 0;
+
         const existing = state.cart.find(it => it.batch_id === batch.id);
 
         if (existing) {
@@ -1964,10 +2206,11 @@
             quantity: 1,
             sale_price: batch.sale_price || p.default_price || 0,
             cost_price: batch.cost_price || 0,
-            sale_discount: 0,
+            sale_discount: oi.sale_discount || 0,  // ✅ من الطلب
             purchase_discount: purchaseDisc,
             from_scan: true,
-            order_item_id: oi.order_item?.id
+            order_item_id: oi.order_item?.id,
+            purchase_from_order: !!purchaseDiscFromOrder
           });
         }
 
@@ -1979,6 +2222,7 @@
         state.selectedCartIndex = state.cart.length - 1;
         renderCart();
         renderProductsGrid();
+        renderOrderItemsChips();
         updateScanProgress();
 
         if (oi.matched && oi.scanned_qty === oi.requested_qty) {
@@ -2036,6 +2280,18 @@
         return (saleNetUnit - costNetUnit) * qty;
       }
 
+      // ✅ هل السعر الحالي أقل من سعر الشراء؟
+      function isSellingBelowCost(item) {
+        const salePrice = Number(item.sale_price) || 0;
+        const saleDiscount = Number(item.sale_discount) || 0;
+        const purchaseDiscount = Number(item.purchase_discount) || 0;
+        
+        const netSalePrice = salePrice * (1 - saleDiscount / 100);
+        const netCostPrice = (Number(item.cost_price) || 0) * (1 - purchaseDiscount / 100);
+        
+        return netSalePrice < netCostPrice;
+      }
+
       // ============================================================
       // 17) Render Cart
       // ============================================================
@@ -2069,6 +2325,7 @@
           const profitCls = profit >= 0 ? 'positive' : 'negative';
           const smart = calcSmartDiscount(it);
           const isSelected = state.selectedCartIndex === i;
+          const belowCost = isSellingBelowCost(it);
 
           const days = Refad.format.daysLeft(it.batch_expiry);
           let expiryBadge = '';
@@ -2085,6 +2342,14 @@
           const scanBadge = it.from_scan
             ? `<span class="ci-badge scan"><i data-lucide="scan-line" style="width:10px;height:10px;"></i> ممسوح</span>`
             : '';
+
+          // ✅ Badge خصم طلب الشراء
+          const purchaseDiscBadge = (it.purchase_from_order && it.purchase_discount > 0)
+            ? `<span class="ci-badge purchase-disc"><i data-lucide="percent" style="width:10px;height:10px;"></i> خصم شراء ${Refad.format.number(it.purchase_discount, 1)}%</span>`
+            : (it.purchase_discount > 0
+                ? `<span class="ci-badge purchase-disc"><i data-lucide="percent" style="width:10px;height:10px;"></i> خصم ${Refad.format.number(it.purchase_discount, 1)}%</span>`
+                : ''
+              );
 
           let orderBadge = '';
           if (state.mode === 'order') {
@@ -2110,7 +2375,47 @@
                 ${marginBadge}
                 ${scanBadge}
                 ${orderBadge}
+                ${purchaseDiscBadge}
               </div>
+
+              <!-- ✅ Purchase Info Card -->
+              <div class="purchase-info-card">
+                <div class="purchase-info-title">
+                  <i data-lucide="truck"></i>
+                  معلومات الشراء
+                </div>
+                <div class="purchase-info-grid">
+                  <div class="purchase-info-item">
+                    <span class="lbl">سعر الشراء</span>
+                    <span class="val">${Refad.format.money(it.cost_price)}</span>
+                  </div>
+                  <div class="purchase-info-item">
+                    <span class="lbl">خصم الشراء</span>
+                    <span class="val purple">${Refad.format.number(it.purchase_discount, 1)}%</span>
+                  </div>
+                  <div class="purchase-info-item">
+                    <span class="lbl">التكلفة الصافية</span>
+                    <span class="val">${Refad.format.money(it.cost_price * (1 - it.purchase_discount / 100))}</span>
+                  </div>
+                  <div class="purchase-info-item">
+                    <span class="lbl">هامش الربح</span>
+                    <span class="val ${smart.margin_pct >= 15 ? 'success' : smart.margin_pct > 0 ? 'gold' : 'danger'}">${smart.margin_pct}%</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ✅ Price Warning -->
+              ${belowCost ? `
+                <div class="price-warning danger">
+                  <i data-lucide="alert-octagon"></i>
+                  <span>⚠️ البيع بخسارة! السعر أقل من التكلفة</span>
+                </div>
+              ` : (smart.margin_pct < 10 && smart.margin_pct > 0 ? `
+                <div class="price-warning warning">
+                  <i data-lucide="alert-triangle"></i>
+                  <span>هامش ربح منخفض (${smart.margin_pct}%)</span>
+                </div>
+              ` : '')}
 
               <div class="ci-grid">
                 <div class="ci-field">
@@ -2132,11 +2437,11 @@
               </div>
 
               <div class="discount-row">
-                <span class="discount-label">خصم</span>
+                <span class="discount-label">خصم البيع</span>
                 <input type="number" min="0" max="100" step="0.1" value="${it.sale_discount}" data-idx="${i}" data-field="sale_discount" class="discount-input" inputmode="decimal">
                 <span class="discount-label">%</span>
                 ${smart.suggested > 0
-                  ? `<button type="button" class="smart-discount-btn" data-apply-smart="${i}" title="خصم ذكي">
+                  ? `<button type="button" class="smart-discount-btn" data-apply-smart="${i}" title="خصم ذكي (آمن)">
                        <i data-lucide="sparkles"></i> ${smart.suggested}%
                      </button>`
                   : ''
@@ -2144,6 +2449,12 @@
                 ${smart.max_safe > 0 && smart.max_safe !== smart.suggested
                   ? `<button type="button" class="smart-discount-btn" data-apply-max="${i}" title="أقصى خصم آمن" style="border-color:var(--gold);color:var(--gold);background:rgba(245,158,11,0.08);">
                        <i data-lucide="shield-check"></i> ${smart.max_safe}%
+                     </button>`
+                  : ''
+                }
+                ${it.purchase_discount > 0
+                  ? `<button type="button" class="smart-discount-btn purchase" data-apply-purchase="${i}" title="تطبيق خصم الشراء كخصم بيع">
+                       <i data-lucide="copy"></i> نسخ خصم الشراء ${Refad.format.number(it.purchase_discount, 1)}%
                      </button>`
                   : ''
                 }
@@ -2182,6 +2493,7 @@
               it.quantity--;
               updateOrderScannedQty(it.product_id);
               renderCart();
+              renderOrderItemsChips();
             }
           });
         });
@@ -2195,6 +2507,7 @@
               it.quantity++;
               updateOrderScannedQty(it.product_id);
               renderCart();
+              renderOrderItemsChips();
             } else {
               Refad.toast.warning('وصلت للحد الأقصى');
               SoundEngine.warning();
@@ -2252,6 +2565,7 @@
               it.quantity = v;
               updateOrderScannedQty(it.product_id);
               renderCart();
+              renderOrderItemsChips();
             }
           });
 
@@ -2286,6 +2600,19 @@
           });
         });
 
+        // ✅ نسخ خصم الشراء كخصم بيع
+        container.querySelectorAll('[data-apply-purchase]').forEach(btn => {
+          btn.addEventListener('click', e => {
+            e.stopPropagation();
+            const idx = parseInt(btn.dataset.applyPurchase, 10);
+            const it = state.cart[idx];
+            if (!it) return;
+            it.sale_discount = it.purchase_discount;
+            renderCart();
+            Refad.toast.success(`تم نسخ خصم الشراء: ${Refad.format.number(it.purchase_discount, 1)}%`);
+          });
+        });
+
         container.querySelectorAll('[data-remove]').forEach(btn => {
           btn.addEventListener('click', e => {
             e.stopPropagation();
@@ -2298,6 +2625,7 @@
             }
             renderCart();
             renderProductsGrid();
+            renderOrderItemsChips();
           });
         });
       }
@@ -2316,7 +2644,74 @@
       }
 
       // ============================================================
-      // 18) Scan Progress
+      // 18) ✅ Render Order Items Chips (NEW)
+      // ============================================================
+      function renderOrderItemsChips() {
+        const bar = document.getElementById('orderItemsBar');
+        const chipsContainer = document.getElementById('orderItemsChips');
+        if (!bar || !chipsContainer) return;
+
+        if (state.mode !== 'order' || !state.loadedOrder) {
+          bar.classList.remove('show');
+          return;
+        }
+
+        bar.classList.add('show');
+
+        const items = Object.entries(state.orderItemsMap).map(([pid, oi]) => ({
+          product_id: parseInt(pid, 10),
+          ...oi
+        }));
+
+        // ترتيب: غير الممسوحة أولاً، ثم الناقصة، ثم المكتملة
+        items.sort((a, b) => {
+          const order = { pending: 0, partial: 1, over: 2, complete: 3 };
+          const getStatus = (oi) => {
+            if (oi.scanned_qty === 0) return 'pending';
+            if (oi.scanned_qty < oi.requested_qty) return 'partial';
+            if (oi.scanned_qty > oi.requested_qty) return 'over';
+            return 'complete';
+          };
+          return order[getStatus(a)] - order[getStatus(b)];
+        });
+
+        // إحصائيات
+        const done = items.filter(i => i.scanned_qty >= i.requested_qty).length;
+        const pending = items.filter(i => i.scanned_qty === 0).length;
+        const missing = items.filter(i => i.scanned_qty > 0 && i.scanned_qty < i.requested_qty).length;
+
+        document.getElementById('orderStatDone').textContent = done;
+        document.getElementById('orderStatPending').textContent = pending;
+        document.getElementById('orderStatMissing').textContent = missing;
+
+        chipsContainer.innerHTML = items.map(oi => {
+          let cls = 'pending';
+          if (oi.scanned_qty === 0) cls = 'pending';
+          else if (oi.scanned_qty < oi.requested_qty) cls = 'partial';
+          else if (oi.scanned_qty > oi.requested_qty) cls = 'over';
+          else cls = 'complete';
+
+          const p = state.allProducts.find(x => x.id === oi.product_id);
+          const name = p?.name || oi.product_name || '—';
+
+          return `
+            <div class="order-chip ${cls}" data-order-product-id="${oi.product_id}" title="${Refad.escapeHtml(name)} - اضغط للإضافة">
+              <span class="chip-name">${Refad.escapeHtml(name)}</span>
+              <span class="chip-count">${oi.scanned_qty}/${oi.requested_qty}</span>
+            </div>
+          `;
+        }).join('');
+
+        chipsContainer.querySelectorAll('.order-chip').forEach(chip => {
+          chip.addEventListener('click', () => {
+            const pid = parseInt(chip.dataset.orderProductId, 10);
+            if (pid) addProductInOrderMode(pid);
+          });
+        });
+      }
+
+      // ============================================================
+      // 19) Scan Progress
       // ============================================================
       function updateScanProgress() {
         if (state.mode !== 'order' || !state.loadedOrder) {
@@ -2340,10 +2735,13 @@
         set('mobileScanProgressText', `${scanned} / ${total}`);
         setW('mobileScanProgressFill', pct + '%');
         set('mobileScanOrderNumber', state.loadedOrder.order_number || '—');
+
+        // ✅ تحديث شريط الأصناف
+        renderOrderItemsChips();
       }
 
       // ============================================================
-      // 19) Update Totals
+      // 20) Update Totals
       // ============================================================
       function updateTotals() {
         const items = state.cart.length;
@@ -2378,10 +2776,66 @@
           fab.textContent = items;
           fab.style.display = items > 0 ? 'flex' : 'none';
         }
+
+        // ✅ تحديث إحصائيات خصومات الطلب
+        updateOrderDiscountsStats();
       }
 
       // ============================================================
-      // 20) Load Sales Orders
+      // 21) ✅ Update Order Discounts Stats (NEW)
+      // ============================================================
+      function updateOrderDiscountsStats() {
+        const card = document.getElementById('orderDiscountsCard');
+        if (!card) return;
+
+        if (state.mode !== 'order' || !state.loadedOrder) {
+          card.style.display = 'none';
+          return;
+        }
+
+        const items = Object.values(state.orderItemsMap);
+        const discountedItems = items.filter(oi => state.purchaseDiscountsByProduct[oi.product_id] > 0);
+
+        if (!discountedItems.length) {
+          card.style.display = 'none';
+          return;
+        }
+
+        const avgDiscount = discountedItems.reduce((s, oi) =>
+          s + (state.purchaseDiscountsByProduct[oi.product_id] || 0), 0) / discountedItems.length;
+
+        // احسب التوفير المتوقع = (الكمية × سعر الشراء × الخصم)
+        let totalSavings = 0;
+        let expectedMargin = 0;
+
+        discountedItems.forEach(oi => {
+          const p = state.allProducts.find(x => x.id === oi.product_id);
+          if (!p) return;
+          const batches = state.batchesByProduct[p.id] || [];
+          const firstBatch = batches[0];
+          if (!firstBatch) return;
+
+          const costPrice = firstBatch.cost_price || 0;
+          const salePrice = firstBatch.sale_price || p.default_price || 0;
+          const disc = state.purchaseDiscountsByProduct[oi.product_id] || 0;
+
+          const savingsPerUnit = costPrice * (disc / 100);
+          totalSavings += savingsPerUnit * oi.requested_qty;
+
+          const netCost = costPrice * (1 - disc / 100);
+          expectedMargin += (salePrice - netCost) * oi.requested_qty;
+        });
+
+        document.getElementById('orderDiscountedCount').textContent = discountedItems.length;
+        document.getElementById('orderAvgDiscount').textContent = Refad.format.number(avgDiscount, 1) + '%';
+        document.getElementById('orderTotalSavings').textContent = Refad.format.money(totalSavings);
+        document.getElementById('orderExpectedMargin').textContent = Refad.format.money(expectedMargin);
+
+        card.style.display = 'block';
+      }
+
+      // ============================================================
+      // 22) Load Sales Orders
       // ============================================================
       function openOrderPicker() {
         const modal = document.getElementById('orderPickerModal');
@@ -2448,6 +2902,9 @@
         }
       }
 
+      // ============================================================
+      // 23) ✅ Load Sales Order (with Purchase Discounts)
+      // ============================================================
       async function loadSalesOrder(orderId) {
         try {
           const order = await Refad.db.selectOne('sales_orders', {
@@ -2471,8 +2928,66 @@
           state.loadedOrder = order;
           state.orderItemsMap = {};
           state.orderScanStack = [];
+          state.purchaseDiscountsByProduct = {};
+
+          // ✅ جلب خصومات الشراء لكل صنف من الطلب
+          const productIds = items.map(it => it.product_id).filter(Boolean);
+
+          let purchaseDiscountRows = [];
+          try {
+            // نحاول نجلب من product_discounts
+            purchaseDiscountRows = await Refad.db.select('product_discounts', {
+              columns: 'product_id, last_purchase_discount, max_purchase_discount',
+              in: { product_id: productIds }
+            }).catch(() => []);
+          } catch (e) {
+            console.warn('Failed to load purchase discounts:', e);
+          }
+
+          // ✅ جلب الدفعات للحصول على cost_price و purchase_discount
+          let batchRows = [];
+          try {
+            batchRows = await Refad.db.select('batches', {
+              columns: 'product_id, cost_price, sale_price, purchase_discount, quantity_left',
+              eq: { company_id: session.company_id },
+              in: { product_id: productIds },
+              gt: { quantity_left: 0 },
+              order: { column: 'expiry_date', ascending: true }
+            }).catch(() => []);
+          } catch (e) {
+            console.warn('Failed to load batches:', e);
+          }
+
+          // بنّاء map للدفعات
+          const batchByProduct = {};
+          batchRows.forEach(b => {
+            if (!batchByProduct[b.product_id]) batchByProduct[b.product_id] = [];
+            batchByProduct[b.product_id].push(b);
+          });
+
+          // بنّاء map للخصومات
+          const discByProduct = {};
+          purchaseDiscountRows.forEach(d => {
+            discByProduct[d.product_id] = {
+              last: Number(d.last_purchase_discount) || 0,
+              max: Number(d.max_purchase_discount) || 0
+            };
+          });
 
           items.forEach(it => {
+            const product = state.allProducts.find(p => p.id === it.product_id) || it.products;
+            const batch = (batchByProduct[it.product_id] || [])[0];
+
+            // ✅ تحديد خصم الشراء: من الدفعة أولاً، ثم من product_discounts
+            let purchaseDiscount = 0;
+            if (batch?.purchase_discount) {
+              purchaseDiscount = Number(batch.purchase_discount) || 0;
+            } else if (discByProduct[it.product_id]?.last) {
+              purchaseDiscount = discByProduct[it.product_id].last;
+            }
+
+            state.purchaseDiscountsByProduct[it.product_id] = purchaseDiscount;
+
             state.orderItemsMap[String(it.product_id)] = {
               requested_qty: Number(it.quantity) || 0,
               scanned_qty: 0,
@@ -2480,10 +2995,15 @@
               unit_price: Number(it.unit_price) || 0,
               discount: Number(it.discount) || 0,
               sale_discount: Number(it.sale_discount) || 0,
+              purchase_discount: purchaseDiscount,
+              cost_price: batch?.cost_price || 0,
               order_item: it,
-              product_name: it.products?.name || '—'
+              product_name: product?.name || it.products?.name || '—'
             };
           });
+
+          // ✅ تحديث خصومات الشراء في state.purchaseDiscountMap
+          Object.assign(state.purchaseDiscountMap, state.purchaseDiscountsByProduct);
 
           if (order.customer_id) {
             const sel = document.getElementById('customerSelect');
@@ -2495,6 +3015,11 @@
           const info = document.getElementById('loadedOrderInfo');
           if (info) {
             info.style.display = 'block';
+            const discountCount = Object.values(state.purchaseDiscountsByProduct).filter(d => d > 0).length;
+            const avgDiscount = discountCount > 0 
+              ? Object.values(state.purchaseDiscountsByProduct).filter(d => d > 0).reduce((s, d) => s + d, 0) / discountCount 
+              : 0;
+
             info.innerHTML = `
               <div style="background:rgba(20,184,166,0.08);border-radius:8px;padding:10px;">
                 <div style="font-weight:800;color:var(--accent);margin-bottom:4px;">${Refad.escapeHtml(order.order_number)}</div>
@@ -2502,6 +3027,7 @@
                   ${order.customers?.name ? `👤 ${Refad.escapeHtml(order.customers.name)}<br>` : ''}
                   📅 ${Refad.format.date(order.created_at)}<br>
                   📦 ${items.length} صنف • ${Refad.format.money(order.total_amount || 0)}
+                  ${discountCount > 0 ? `<br>🎁 ${discountCount} صنف بخصم شراء (متوسط ${Refad.format.number(avgDiscount, 1)}%)` : ''}
                 </div>
               </div>
             `;
@@ -2510,6 +3036,8 @@
           document.getElementById('orderPickerModal')?.classList.remove('show');
           updateScanProgress();
           renderProductsGrid();
+          renderOrderItemsChips();
+          updateOrderDiscountsStats();
           updateLoadOrderFabVisibility();
 
           // التبديل تلقائياً لوضع الفحص
@@ -2517,7 +3045,17 @@
             applyMode('order');
           }
 
-          Refad.toast.success(`تم تحميل الطلب: ${order.order_number}`);
+          // ✅ Toast فيه معلومات الخصومات
+          const discountCount = Object.values(state.purchaseDiscountsByProduct).filter(d => d > 0).length;
+          if (discountCount > 0) {
+            const avgDisc = Object.values(state.purchaseDiscountsByProduct).filter(d => d > 0).reduce((s, d) => s + d, 0) / discountCount;
+            Refad.toast.success(
+              `تم تحميل الطلب: ${order.order_number}`,
+              `${discountCount} صنف بخصم شراء - متوسط ${Refad.format.number(avgDisc, 1)}%`
+            );
+          } else {
+            Refad.toast.success(`تم تحميل الطلب: ${order.order_number}`);
+          }
           SoundEngine.success();
 
           setTimeout(() => document.getElementById('searchInput')?.focus(), 200);
@@ -2529,7 +3067,35 @@
       }
 
       // ============================================================
-      // 21) Checkout
+      // 24) ✅ Apply All Purchase Discounts (NEW)
+      // ============================================================
+      function applyAllPurchaseDiscounts() {
+        if (state.mode !== 'order' || !state.loadedOrder) {
+          Refad.toast.warning('حمّل طلب بيع أولاً');
+          return;
+        }
+
+        let appliedCount = 0;
+        state.cart.forEach(item => {
+          const purchaseDisc = state.purchaseDiscountsByProduct[item.product_id];
+          if (purchaseDisc && purchaseDisc > 0 && item.sale_discount !== purchaseDisc) {
+            item.sale_discount = purchaseDisc;
+            appliedCount++;
+          }
+        });
+
+        if (appliedCount === 0) {
+          Refad.toast.info('لا توجد خصومات شراء لتطبيقها');
+          return;
+        }
+
+        renderCart();
+        Refad.toast.success(`تم تطبيق خصم الشراء على ${appliedCount} صنف`);
+        SoundEngine.success();
+      }
+
+      // ============================================================
+      // 25) Checkout
       // ============================================================
       async function checkout() {
         if (!state.cart.length) {
@@ -2656,7 +3222,7 @@
       }
 
       // ============================================================
-      // 22) Convert Order to Invoice
+      // 26) Convert Order to Invoice
       // ============================================================
       async function convertOrderToInvoice() {
         if (!state.loadedOrder) {
@@ -2786,12 +3352,17 @@
           state.loadedOrder = null;
           state.orderItemsMap = {};
           state.orderScanStack = [];
+          state.purchaseDiscountsByProduct = {};
 
           const info = document.getElementById('loadedOrderInfo');
           if (info) info.style.display = 'none';
 
+          document.getElementById('orderDiscountsCard').style.display = 'none';
+
           updateScanProgress();
           renderCart();
+          renderProductsGrid();
+          renderOrderItemsChips();
           updateLoadOrderFabVisibility();
           await loadProductsAndBatches();
           renderProductsGrid();
@@ -2809,7 +3380,7 @@
       }
 
       // ============================================================
-      // 23) Process Sale Items
+      // 27) Process Sale Items
       // ============================================================
       async function processSaleItems(invoiceId, invoiceNumber, lowStockCrossings) {
         for (const it of state.cart) {
@@ -2822,6 +3393,7 @@
             discount: it.sale_discount,
             sale_discount: it.sale_discount,
             cost_price: it.cost_price,
+            purchase_discount: it.purchase_discount, // ✅ نسجّل خصم الشراء
             profit: calcLineProfit(it),
             total: calcLineTotal(it)
           });
@@ -2884,7 +3456,7 @@
       }
 
       // ============================================================
-      // 24) Success Modal
+      // 28) Success Modal
       // ============================================================
       function showSuccessModal(invoiceNumber, total) {
         const numEl = document.getElementById('successInvoiceNum');
@@ -2897,7 +3469,7 @@
       }
 
       // ============================================================
-      // 25) Print
+      // 29) Print
       // ============================================================
       function printLastInvoice() {
         const inv = state.lastInvoice;
@@ -2930,7 +3502,7 @@
       }
 
       // ============================================================
-      // 26) Session Stats
+      // 30) Session Stats
       // ============================================================
       function saveSessionStats() {
         try { localStorage.setItem(SESSION_KEY, JSON.stringify(state.sessionStats)); } catch (e) {}
@@ -2953,7 +3525,7 @@
       }
 
       // ============================================================
-      // 27) Holds
+      // 31) Holds
       // ============================================================
       function loadHolds() {
         try {
@@ -3079,7 +3651,7 @@
       }
 
       // ============================================================
-      // 28) Clear Cart
+      // 32) Clear Cart
       // ============================================================
       function clearCart() {
         if (!state.cart.length) return;
@@ -3093,6 +3665,7 @@
                 oi.matched = false;
               });
               updateScanProgress();
+              renderOrderItemsChips();
             }
             renderCart();
             renderProductsGrid();
@@ -3102,7 +3675,7 @@
       }
 
       // ============================================================
-      // 29) Search
+      // 33) Search
       // ============================================================
       function setupSearch() {
         const input = document.getElementById('searchInput');
@@ -3149,7 +3722,7 @@
               SoundEngine.error();
               input.select();
             } else {
-              const first = document.querySelector('.product-card:not(.out-of-stock)');
+              const first = document.querySelector('.product-card:not(.out-of-stock):not(.not-in-order)');
               if (first) {
                 const pid = parseInt(first.dataset.id, 10);
                 if (state.mode === 'order') {
@@ -3166,7 +3739,7 @@
       }
 
       // ============================================================
-      // 30) Camera Scanner
+      // 34) Camera Scanner
       // ============================================================
       async function handleScannedBarcode(code) {
         const trimmed = String(code || '').trim().toUpperCase();
@@ -3248,6 +3821,15 @@
           const cls = oi.matched ? 'success' : (oi.scanned_qty > oi.requested_qty ? 'gold' : '');
           html += `<div class="scan-product-row" style="margin-top:6px;padding-top:6px;border-top:1px dashed var(--border);"><span class="lbl">المطلوب:</span><span class="val">${oi.requested_qty}</span></div>`;
           html += `<div class="scan-product-row"><span class="lbl">الممسوح:</span><span class="val ${cls}">${oi.scanned_qty}</span></div>`;
+        }
+
+        // ✅ معلومات خصم الشراء
+        const purchaseDisc = state.purchaseDiscountsByProduct[p.id];
+        if (purchaseDisc && purchaseDisc > 0) {
+          html += `<div class="scan-product-row" style="margin-top:6px;padding-top:6px;border-top:1px dashed var(--border);">
+            <span class="lbl">🎁 خصم الشراء:</span>
+            <span class="val purple">${Refad.format.number(purchaseDisc, 1)}%</span>
+          </div>`;
         }
 
         if (info.warning) {
@@ -3362,7 +3944,7 @@
       }
 
       // ============================================================
-      // 31) Shortcuts
+      // 35) Shortcuts
       // ============================================================
       function setupShortcuts() {
         document.addEventListener('keydown', e => {
@@ -3393,7 +3975,7 @@
       }
 
       // ============================================================
-      // 32) Help Modal
+      // 36) Help Modal
       // ============================================================
       function setupHelpModal() {
         const helpBtn = document.getElementById('helpBtn');
@@ -3409,18 +3991,15 @@
       }
 
       // ============================================================
-      // 33) Order Picker
+      // 37) Order Picker
       // ============================================================
       function setupOrderPicker() {
-        // زر من Summary Sidebar (Desktop)
         const loadBtn = document.getElementById('loadOrderBtn');
         if (loadBtn) loadBtn.addEventListener('click', openOrderPicker);
 
-        // زر من Topbar (Mobile + Desktop)
         const topbarBtn = document.getElementById('topbarLoadOrderBtn');
         if (topbarBtn) topbarBtn.addEventListener('click', openOrderPicker);
 
-        // FAB ثاني من Mobile
         const mobileFab = document.getElementById('mobileLoadOrderFab');
         if (mobileFab) mobileFab.addEventListener('click', openOrderPicker);
 
@@ -3446,7 +4025,7 @@
       }
 
       // ============================================================
-      // 34) Bind Events
+      // 38) Bind Events
       // ============================================================
       function bindEvents() {
         setupTheme();
@@ -3471,6 +4050,9 @@
           document.getElementById('searchInput')?.focus();
         });
 
+        // ✅ زر تطبيق كل الخصومات
+        document.getElementById('applyAllPurchaseDiscountsBtn')?.addEventListener('click', applyAllPurchaseDiscounts);
+
         document.getElementById('customerSelect')?.addEventListener('change', (e) => {
           const mobileSel = document.getElementById('mobileCustomerSelect');
           if (mobileSel) mobileSel.value = e.target.value;
@@ -3478,7 +4060,7 @@
       }
 
       // ============================================================
-      // 35) Company
+      // 39) Company
       // ============================================================
       async function loadCompany() {
         try {
@@ -3494,7 +4076,7 @@
       }
 
       // ============================================================
-      // 36) Init
+      // 40) Init
       // ============================================================
       async function init() {
         state.isMobile = window.innerWidth <= 1024;
@@ -3523,12 +4105,19 @@
         setTimeout(() => document.getElementById('searchInput')?.focus(), 300);
         Refad.registerServiceWorker();
 
-        console.log('%c[Refad] POS v7 ready', 'color:#14B8A6;font-weight:bold;font-size:14px');
-        console.log('  ✅ زر "تحميل طلب" في Topbar (يعمل على الموبايل والديسكتوب)');
+        console.log('%c[Refad] POS v8 ready', 'color:#14B8A6;font-weight:bold;font-size:14px');
+        console.log('  ✅ زر "تحميل طلب" في Topbar');
         console.log('  ✅ FAB ثاني لتحميل الطلب على الموبايل');
         console.log('  ✅ Mobile Cart Sheet');
         console.log('  ✅ Sound Engine');
         console.log('  ✅ Order Scan Mode + FEFO');
+        console.log('  🆕 جلب خصومات طلب الشراء تلقائياً');
+        console.log('  🆕 بطاقة معلومات الشراء لكل صنف');
+        console.log('  🆕 تحذير البيع بخسارة');
+        console.log('  🆕 شريط أصناف الطلب المطلوبة');
+        console.log('  🆕 إحصائيات خصومات الطلب');
+        console.log('  🆕 زر "تطبيق كل الخصومات"');
+        console.log('  🆕 زر "نسخ خصم الشراء كخصم بيع"');
       }
 
       if (document.readyState === 'loading') {
