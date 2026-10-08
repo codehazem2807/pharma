@@ -1,14 +1,15 @@
 /* ============================================================
    Refad ERP - Print Helper
-   Version: 2.0.0
+   Version: 2.1.0
    Dependencies: jsPDF + jspdf-autotable (اختياري)
    Features:
      - 3 page sizes: A4 / A5 / 80mm
      - Multi-copy printing (1-3 copies per page)
-     - Invoice with discount column
+     - Invoice with discount column (A4/A5/80mm)
      - QR code + barcode
      - Arabic + English dual dates
      - Amount in Arabic words
+     - "نظام رفاد - 01063060576" footer signature
    ============================================================ */
 
 (function (global) {
@@ -135,7 +136,7 @@
   // Print Module
   // ============================================================
   const Print = {
-    version: '2.0.0',
+    version: '2.1.0',
 
     // --------------------------------------------------------
     // Generic HTML Print
@@ -285,7 +286,7 @@
     },
 
     // --------------------------------------------------------
-    // Invoice Print - Enhanced Version
+    // Invoice Print - Enhanced Version (with 80mm discount)
     // --------------------------------------------------------
     invoice(invoice, opts) {
       opts = opts || {};
@@ -330,6 +331,9 @@
       const footer = invoice.footer || invoiceSettings.invoice_footer || '';
       const terms = invoice.terms || invoiceSettings.invoice_terms || '';
       const invoiceType = invoice.invoice_type === 'return' ? 'مرتجع بيع' : 'فاتورة بيع';
+
+      // ⭐ التوقيع الموحّد
+      const SIGNATURE = 'نظام رفاد 01063060576';
 
       // توليد الباركود
       const barcodeSVG = invoiceNum ? generateBarcodeSVG(invoiceNum, {
@@ -436,14 +440,15 @@
           const name = it.name || product.name || '—';
           const unit = product.unit || '';
 
+          // ⭐ 80mm receipt: بيحسب الخصم كمان
           if (isReceipt) {
-            // 80mm receipt format
+            const hasDiscount = discount > 0;
             return `
               <tr>
                 <td class="center">${i + 1}</td>
                 <td>
                   ${Refad.escapeHtml(name)}
-                  ${discount ? `<br><small style="color:#F59E0B;">خصم ${Refad.format.number(discount, 1)}%</small>` : ''}
+                  ${hasDiscount ? `<br><small style="color:#F59E0B;font-size:8px;">خصم ${Refad.format.number(discount, 1)}% = ${Refad.format.money(discountAmount)}</small>` : ''}
                 </td>
                 <td class="center">${Refad.format.number(quantity)}</td>
                 <td class="left">${Refad.format.money(price)}</td>
@@ -482,7 +487,7 @@
           </table>
         `;
 
-        // 4. Totals
+        // 4. Totals — ⭐ بيظهر الخصم دايماً لو موجود (حتى في 80mm)
         const totalsHtml = `
           <div class="invoice-totals">
             <div class="totals-row">
@@ -555,14 +560,16 @@
           </div>
         ` : '';
 
-        // 9. Footer
+        // 9. Footer — ⭐ التوقيع الموحّد
+        const footerText = footer || `شكراً لتعاملكم معنا • ${company.name || ''}`;
         const footerHtml = `
           <div class="invoice-footer">
-            ${Refad.escapeHtml(footer || `شكراً لتعاملكم معنا • ${company.name || ''}`)}
+            ${Refad.escapeHtml(footerText)}
+            <div class="refad-signature">${Refad.escapeHtml(SIGNATURE)}</div>
           </div>
         `;
 
-        // 10. Copy Label (للنسخ المتعددة)
+        // 10. Copy Label
         const copyLabelHtml = copyLabel ? `
           <div class="copy-label">${Refad.escapeHtml(copyLabel)}</div>
         ` : '';
@@ -615,7 +622,6 @@
                .copy-label { background: #0B2C4D; color: white; padding: 3px 12px; border-radius: 14px; font-size: 11px; font-weight: 700; display: inline-block; margin-bottom: 8px; }`
         }
 
-        /* ===== نسخة الفاتورة ===== */
         .invoice-copy { background: white; }
 
         /* ===== Header ===== */
@@ -763,6 +769,15 @@
           color: #94a3b8;
         }
 
+        /* ⭐ التوقيع الموحّد - خط صغير خالص */
+        .refad-signature {
+          margin-top: 4px;
+          font-size: ${isReceipt ? '7px' : '9px'};
+          color: #94a3b8;
+          letter-spacing: 0.3px;
+          opacity: 0.85;
+        }
+
         /* ===== Copy Label ===== */
         .copy-label {
           background: linear-gradient(135deg, #0B2C4D, #14B8A6);
@@ -782,6 +797,7 @@
           .invoice-copy:not(:last-child) { page-break-after: always; }
         }
 
+        /* ⭐ في 80mm: نخفي بس التوقيعات والـ amount words، لكن نسيّب الخصم ظاهر */
         ${isReceipt ? `
           .invoice-signatures, .amount-words, .invoice-terms { display: none; }
           .invoice-totals { width: 100%; }
