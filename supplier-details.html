@@ -18,6 +18,7 @@
   <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
 
   <style>
@@ -38,6 +39,7 @@
       --success: #10b981;
       --warning: #f59e0b;
       --info: #3b82f6;
+      --purple: #8b5cf6;
       --sidebar-bg: #0B2C4D;
       --sidebar-text: #cbd5e1;
       --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
@@ -69,9 +71,7 @@
 
     body { display: flex; min-height: 100vh; overflow-x: hidden; }
 
-    /* ============================================================
-       Sidebar
-       ============================================================ */
+    /* Sidebar */
     .sidebar {
       width: var(--sidebar-w);
       height: 100vh;
@@ -86,7 +86,6 @@
       transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       box-shadow: -4px 0 20px rgba(0,0,0,0.1);
     }
-
     .sidebar-header {
       padding: 20px 22px;
       border-bottom: 1px solid rgba(255,255,255,0.08);
@@ -96,7 +95,6 @@
       height: var(--topbar-h);
       box-sizing: border-box;
     }
-
     .sidebar-logo {
       width: 40px;
       height: 40px;
@@ -110,16 +108,12 @@
     }
     .sidebar-logo img { width: 70%; height: 70%; object-fit: contain; }
     .sidebar-logo .fallback { color: white; font-weight: 800; font-size: 18px; }
-
     .sidebar-brand h2 { color: white; font-size: 20px; font-weight: 800; letter-spacing: -0.5px; line-height: 1.2; }
     .sidebar-brand p { font-size: 10px; color: var(--sidebar-text); opacity: 0.7; font-weight: 500; margin-top: 2px; }
-
     .sidebar-nav { flex: 1; overflow-y: auto; padding: 12px 0; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.15) transparent; }
     .sidebar-nav::-webkit-scrollbar { width: 5px; }
     .sidebar-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 10px; }
-
     .nav-section { padding: 8px 20px 4px; font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 1px; margin-top: 8px; }
-
     .nav-item {
       display: flex;
       align-items: center;
@@ -142,11 +136,8 @@
     .nav-item .badge.teal { background: var(--accent); }
     .nav-item .badge.gold { background: var(--gold); }
 
-    /* ============================================================
-       Main
-       ============================================================ */
+    /* Main */
     .main { flex: 1; margin-right: var(--sidebar-w); min-width: 0; display: flex; flex-direction: column; }
-
     .topbar {
       height: var(--topbar-h);
       background: var(--card);
@@ -160,13 +151,10 @@
       z-index: 50;
       box-shadow: var(--shadow-sm);
     }
-
     .menu-toggle { display: none; background: transparent; border: none; color: var(--text); cursor: pointer; padding: 8px; border-radius: 8px; }
     .menu-toggle:hover { background: var(--bg); }
-
     .topbar-title { font-size: 18px; font-weight: 700; color: var(--text); flex-shrink: 0; }
     .topbar-actions { display: flex; align-items: center; gap: 8px; margin-right: auto; }
-
     .icon-btn {
       width: 40px;
       height: 40px;
@@ -184,7 +172,6 @@
     .icon-btn:hover { border-color: var(--accent); color: var(--accent); }
     .icon-btn i, .icon-btn svg { width: 18px; height: 18px; }
     .icon-btn .dot { position: absolute; top: 8px; left: 8px; width: 8px; height: 8px; background: var(--danger); border-radius: 50%; border: 2px solid var(--card); }
-
     .user-menu {
       display: flex;
       align-items: center;
@@ -197,7 +184,6 @@
       background: var(--card);
     }
     .user-menu:hover { background: var(--bg); }
-
     .user-avatar {
       width: 34px;
       height: 34px;
@@ -216,7 +202,6 @@
     .user-info { display: flex; flex-direction: column; line-height: 1.2; }
     .user-info .name { font-size: 13px; font-weight: 700; color: var(--text); }
     .user-info .role { font-size: 11px; color: var(--text-muted); }
-
     .dropdown { position: absolute; top: calc(100% + 8px); left: 0; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: var(--shadow-lg); min-width: 200px; padding: 6px; opacity: 0; visibility: hidden; transform: translateY(-8px); transition: all 0.2s; z-index: 100; }
     .dropdown.show { opacity: 1; visibility: visible; transform: translateY(0); }
     .dropdown-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; color: var(--text); font-size: 13px; font-weight: 500; cursor: pointer; transition: background 0.15s; text-decoration: none; }
@@ -226,13 +211,9 @@
     .dropdown-item i { width: 16px; height: 16px; }
     .dropdown-divider { height: 1px; background: var(--border); margin: 6px 0; }
 
-    /* ============================================================
-       Content
-       ============================================================ */
+    /* Content */
     .content { padding: 24px; flex: 1; }
-
     .back-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
-
     .back-btn {
       display: inline-flex;
       align-items: center;
@@ -262,7 +243,6 @@
       overflow: hidden;
       box-shadow: var(--shadow);
     }
-
     .supplier-hero::before {
       content: '';
       position: absolute;
@@ -273,7 +253,6 @@
       background: radial-gradient(circle, rgba(20,184,166,0.4), transparent 70%);
       border-radius: 50%;
     }
-
     .supplier-hero-inner {
       position: relative;
       display: flex;
@@ -281,7 +260,6 @@
       gap: 20px;
       flex-wrap: wrap;
     }
-
     .hero-avatar {
       width: 82px;
       height: 82px;
@@ -296,20 +274,10 @@
       flex-shrink: 0;
       box-shadow: 0 10px 30px rgba(20,184,166,0.4);
     }
-
     .hero-info { flex: 1; min-width: 200px; }
-
-    .hero-info h1 {
-      font-size: 26px;
-      font-weight: 800;
-      margin-bottom: 6px;
-      letter-spacing: -0.5px;
-    }
-
+    .hero-info h1 { font-size: 26px; font-weight: 800; margin-bottom: 6px; letter-spacing: -0.5px; }
     .hero-info .sub { font-size: 14px; opacity: 0.85; margin-bottom: 10px; }
-
     .hero-tags { display: flex; gap: 8px; flex-wrap: wrap; }
-
     .hero-tag {
       display: inline-flex;
       align-items: center;
@@ -323,12 +291,10 @@
       backdrop-filter: blur(4px);
     }
     .hero-tag i { width: 13px; height: 13px; }
-
     .hero-tag.success { background: rgba(16,185,129,0.3); border-color: rgba(16,185,129,0.5); }
     .hero-tag.danger  { background: rgba(239,68,68,0.3); border-color: rgba(239,68,68,0.5); }
-
+    .hero-tag.warning { background: rgba(245,158,11,0.3); border-color: rgba(245,158,11,0.5); }
     .hero-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-
     .hero-actions .btn {
       background: rgba(255,255,255,0.15);
       color: white;
@@ -344,7 +310,6 @@
       gap: 14px;
       margin-bottom: 16px;
     }
-
     .stat-card {
       background: var(--card);
       border: 1px solid var(--border);
@@ -357,7 +322,6 @@
       transition: all 0.2s;
     }
     .stat-card:hover { transform: translateY(-2px); border-color: var(--accent); box-shadow: var(--shadow); }
-
     .stat-icon {
       width: 48px;
       height: 48px;
@@ -374,10 +338,39 @@
     .stat-icon.red    { background: linear-gradient(135deg, #ef4444, #b91c1c); }
     .stat-icon.green  { background: linear-gradient(135deg, #10b981, #047857); }
     .stat-icon.purple { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
-
     .stat-body { flex: 1; min-width: 0; }
     .stat-body .label { font-size: 11px; color: var(--text-muted); font-weight: 600; margin-bottom: 3px; }
     .stat-body .value { font-size: 19px; font-weight: 800; color: var(--text); line-height: 1.1; }
+    .stat-body .sub { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+
+    /* Insights bar */
+    .insights-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .insight-box {
+      padding: 12px 14px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 12px;
+      box-shadow: var(--shadow-sm);
+    }
+    .insight-box i { width: 18px; height: 18px; flex-shrink: 0; margin-top: 2px; }
+    .insight-box.success { border-right: 3px solid var(--success); }
+    .insight-box.success i { color: var(--success); }
+    .insight-box.warning { border-right: 3px solid var(--warning); }
+    .insight-box.warning i { color: var(--warning); }
+    .insight-box.danger { border-right: 3px solid var(--danger); }
+    .insight-box.danger i { color: var(--danger); }
+    .insight-box.info { border-right: 3px solid var(--info); }
+    .insight-box.info i { color: var(--info); }
+    .insight-box .insight-text strong { font-weight: 800; }
 
     /* Tabs */
     .tabs {
@@ -393,7 +386,6 @@
       box-shadow: var(--shadow-sm);
     }
     .tabs::-webkit-scrollbar { display: none; }
-
     .tab {
       display: flex;
       align-items: center;
@@ -413,10 +405,8 @@
     .tab:hover { background: var(--bg); color: var(--text); }
     .tab.active { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; box-shadow: 0 4px 12px rgba(20,184,166,0.3); }
     .tab i { width: 16px; height: 16px; }
-
     .tab-panel { display: none; }
     .tab-panel.active { display: block; animation: fadeIn 0.3s; }
-
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(6px); }
       to { opacity: 1; transform: translateY(0); }
@@ -431,7 +421,6 @@
       overflow: hidden;
       margin-bottom: 16px;
     }
-
     .card-header {
       padding: 14px 18px;
       border-bottom: 1px solid var(--border);
@@ -442,21 +431,30 @@
     }
     .card-header h3 { font-size: 15px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px; }
     .card-header h3 i { width: 18px; height: 18px; color: var(--accent); }
-
     .card-body { padding: 18px; }
+
+    /* Charts grid */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .chart-wrap {
+      position: relative;
+      height: 260px;
+      padding: 8px;
+    }
 
     /* Table */
     .table-wrap { overflow-x: auto; }
-
     table {
       width: 100%;
       border-collapse: collapse;
       font-size: 13px;
       min-width: 620px;
     }
-
     thead { background: var(--bg); border-bottom: 1px solid var(--border); }
-
     th {
       text-align: right;
       padding: 12px 14px;
@@ -467,11 +465,9 @@
       letter-spacing: 0.5px;
       white-space: nowrap;
     }
-
     tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
     tbody tr:last-child { border-bottom: none; }
     tbody tr:hover { background: var(--bg); }
-
     td { padding: 12px 14px; color: var(--text); vertical-align: middle; }
 
     .badge-tag {
@@ -489,10 +485,48 @@
     .badge-tag.gold   { background: rgba(245,158,11,0.12); color: var(--warning); }
     .badge-tag.gray   { background: rgba(148,163,184,0.15); color: var(--text-muted); }
     .badge-tag.blue   { background: rgba(59,130,246,0.12); color: var(--info); }
+    .badge-tag.purple { background: rgba(139,92,246,0.12); color: var(--purple); }
 
     .empty-state { padding: 50px 20px; text-align: center; color: var(--text-muted); }
     .empty-state i { width: 42px; height: 42px; opacity: 0.4; margin-bottom: 10px; }
     .empty-state p { font-size: 13px; font-weight: 500; }
+
+    /* Timeline */
+    .timeline { position: relative; padding-right: 26px; }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      right: 8px;
+      top: 8px;
+      bottom: 8px;
+      width: 2px;
+      background: var(--border);
+    }
+    .timeline-item {
+      position: relative;
+      padding-bottom: 18px;
+      display: flex;
+      gap: 12px;
+    }
+    .timeline-item::before {
+      content: '';
+      position: absolute;
+      right: -22px;
+      top: 4px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: 3px solid var(--card);
+      box-shadow: 0 0 0 2px var(--accent);
+    }
+    .timeline-item.success::before { background: var(--success); box-shadow: 0 0 0 2px var(--success); }
+    .timeline-item.danger::before { background: var(--danger); box-shadow: 0 0 0 2px var(--danger); }
+    .timeline-item.warning::before { background: var(--gold); box-shadow: 0 0 0 2px var(--gold); }
+    .timeline-body { flex: 1; }
+    .timeline-body .time { font-size: 11px; color: var(--text-muted); font-weight: 600; }
+    .timeline-body .title { font-size: 13px; font-weight: 700; color: var(--text); margin: 2px 0; }
+    .timeline-body .desc { font-size: 12px; color: var(--text-muted); }
 
     /* Buttons */
     .btn {
@@ -512,15 +546,15 @@
     }
     .btn:disabled { opacity: 0.6; cursor: not-allowed; }
     .btn i { width: 15px; height: 15px; }
-
     .btn-primary { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; }
     .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(20,184,166,0.35); }
-
     .btn-outline { background: var(--card); color: var(--text); border: 1px solid var(--border); }
     .btn-outline:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
-
+    .btn-success { background: var(--success); color: white; }
+    .btn-success:hover:not(:disabled) { background: #047857; }
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-danger:hover:not(:disabled) { background: #b91c1c; }
     .btn-sm { padding: 6px 12px; font-size: 12px; }
-
     .action-btn {
       width: 30px;
       height: 30px;
@@ -563,14 +597,51 @@
     }
     .balance-display .label { font-size: 12px; color: var(--text-muted); font-weight: 700; margin-bottom: 8px; }
     .balance-display .value { font-size: 34px; font-weight: 800; line-height: 1.1; }
-    .balance-display .value.positive { color: var(--success); }
-    .balance-display .value.negative { color: var(--danger); }
+    .balance-display .value.positive { color: var(--danger); }
+    .balance-display .value.negative { color: var(--success); }
     .balance-display .value.zero { color: var(--text-muted); }
     .balance-display .note { font-size: 12px; color: var(--text-muted); margin-top: 8px; }
 
-    /* ============================================================
-       Modal — مع السكرول
-       ============================================================ */
+    /* KPI grid (info tab) */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+    }
+    .kpi-box {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px;
+      text-align: center;
+      transition: all 0.2s;
+    }
+    .kpi-box:hover { border-color: var(--accent); transform: translateY(-2px); }
+    .kpi-box .label {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      margin-bottom: 6px;
+    }
+    .kpi-box .value {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1;
+    }
+    .kpi-box .value.success { color: var(--success); }
+    .kpi-box .value.danger { color: var(--danger); }
+    .kpi-box .value.gold { color: var(--gold); }
+    .kpi-box .value.info { color: var(--info); }
+    .kpi-box .sub {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* Modal */
     .modal-backdrop {
       position: fixed;
       inset: 0;
@@ -585,7 +656,6 @@
       transition: opacity 0.2s;
     }
     .modal-backdrop.show { display: flex; opacity: 1; }
-
     .modal {
       background: var(--card);
       border-radius: var(--radius);
@@ -601,7 +671,6 @@
     }
     .modal.modal-lg { max-width: 720px; }
     .modal-backdrop.show .modal { transform: scale(1); }
-
     .modal-header {
       padding: 16px 20px;
       border-bottom: 1px solid var(--border);
@@ -611,10 +680,8 @@
       gap: 12px;
       flex-shrink: 0;
     }
-
     .modal-header h3 { font-size: 16px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px; }
     .modal-header h3 i { width: 18px; height: 18px; color: var(--accent); }
-
     .modal-close {
       width: 32px;
       height: 32px;
@@ -630,8 +697,6 @@
     }
     .modal-close:hover { background: var(--bg); color: var(--danger); }
     .modal-close i { width: 18px; height: 18px; }
-
-    /* ⭐ السكرول في الـ body */
     .modal-body {
       padding: 20px;
       overflow-y: auto;
@@ -641,10 +706,7 @@
       scrollbar-color: var(--border) transparent;
     }
     .modal-body::-webkit-scrollbar { width: 8px; }
-    .modal-body::-webkit-scrollbar-track { background: transparent; }
     .modal-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
-    .modal-body::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
-
     .modal-footer {
       padding: 14px 20px;
       border-top: 1px solid var(--border);
@@ -661,10 +723,8 @@
       grid-template-columns: repeat(2, 1fr);
       gap: 14px;
     }
-
     .form-group { display: flex; flex-direction: column; }
     .form-group.full { grid-column: 1 / -1; }
-
     .form-group label {
       font-size: 12px;
       font-weight: 700;
@@ -675,7 +735,6 @@
       gap: 4px;
     }
     .form-group label .req { color: var(--danger); }
-
     .form-group input,
     .form-group select,
     .form-group textarea {
@@ -690,9 +749,7 @@
       transition: all 0.2s;
       width: 100%;
     }
-
     .form-group textarea { resize: vertical; min-height: 70px; }
-
     .form-group input:focus,
     .form-group select:focus,
     .form-group textarea:focus {
@@ -701,7 +758,21 @@
       box-shadow: 0 0 0 3px rgba(20,184,166,0.1);
     }
 
-    /* Overlay (mobile) */
+    /* Top products list */
+    .product-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      gap: 10px;
+    }
+    .product-row:last-child { border-bottom: none; }
+    .product-row .name { flex: 1; font-size: 13px; font-weight: 700; color: var(--text); min-width: 0; }
+    .product-row .name small { display: block; font-size: 10px; font-weight: 500; color: var(--text-muted); margin-top: 2px; }
+    .product-row .value { font-size: 13px; font-weight: 800; color: var(--accent); white-space: nowrap; }
+
+    /* Overlay */
     .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; opacity: 0; transition: opacity 0.3s; }
     .overlay.show { display: block; opacity: 1; }
 
@@ -726,7 +797,6 @@
       .menu-toggle { display: flex; }
       .user-info { display: none; }
     }
-
     @media (max-width: 640px) {
       .content { padding: 16px; }
       .topbar { padding: 0 14px; }
@@ -824,43 +894,131 @@
         </div>
       </div>
 
+      <!-- Insights Bar -->
+      <div class="insights-bar" id="insightsBar" style="display:none;"></div>
+
       <!-- Stats -->
       <div class="stats-grid" id="statsGrid"></div>
 
       <!-- Tabs -->
       <div class="tabs">
-        <button class="tab active" data-tab="info"><i data-lucide="info"></i> معلومات</button>
+        <button class="tab active" data-tab="overview"><i data-lucide="layout-dashboard"></i> نظرة عامة</button>
+        <button class="tab" data-tab="analytics"><i data-lucide="bar-chart-3"></i> التحليلات</button>
         <button class="tab" data-tab="transactions"><i data-lucide="receipt"></i> المعاملات</button>
         <button class="tab" data-tab="receipts"><i data-lucide="package-check"></i> الاستلامات</button>
+        <button class="tab" data-tab="returns"><i data-lucide="undo-2"></i> المرتجعات</button>
         <button class="tab" data-tab="sales"><i data-lucide="shopping-cart"></i> فواتير البيع</button>
         <button class="tab" data-tab="purchases"><i data-lucide="clipboard-list"></i> طلبات الشراء</button>
+        <button class="tab" data-tab="info"><i data-lucide="info"></i> معلومات</button>
       </div>
 
-      <!-- Info -->
-      <div class="tab-panel active" data-panel="info">
-        <div class="card">
-          <div class="card-header">
-            <h3><i data-lucide="info"></i> المعلومات الأساسية</h3>
+      <!-- Panel: Overview -->
+      <div class="tab-panel active" data-panel="overview">
+        <div class="charts-grid">
+          <div class="card">
+            <div class="card-header">
+              <h3><i data-lucide="wallet"></i> الرصيد الحالي</h3>
+            </div>
+            <div class="card-body">
+              <div class="balance-display" id="balanceDisplay">
+                <div class="label">الرصيد</div>
+                <div class="value">—</div>
+              </div>
+            </div>
           </div>
-          <div class="card-body">
-            <div class="info-grid" id="infoGrid"></div>
-          </div>
-        </div>
 
-        <div class="card">
-          <div class="card-header">
-            <h3><i data-lucide="wallet"></i> الرصيد الحالي</h3>
-          </div>
-          <div class="card-body">
-            <div class="balance-display" id="balanceDisplay">
-              <div class="label">الرصيد</div>
-              <div class="value">—</div>
+          <div class="card">
+            <div class="card-header">
+              <h3><i data-lucide="activity"></i> ملخص سريع</h3>
+            </div>
+            <div class="card-body">
+              <div class="kpi-grid" id="quickSummary"></div>
             </div>
           </div>
         </div>
+
+        <div class="charts-grid">
+          <div class="card">
+            <div class="card-header">
+              <h3><i data-lucide="line-chart"></i> المشتريات الشهرية (6 أشهر)</h3>
+            </div>
+            <div class="card-body">
+              <div class="chart-wrap"><canvas id="monthlyChart"></canvas></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3><i data-lucide="award"></i> أفضل 10 أصناف</h3>
+            </div>
+            <div class="card-body" id="topProducts"></div>
+          </div>
+        </div>
+
+        <div class="charts-grid">
+          <div class="card">
+            <div class="card-header">
+              <h3><i data-lucide="alert-triangle"></i> تنبيهات ذكية</h3>
+            </div>
+            <div class="card-body" id="smartAlerts"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3><i data-lucide="clock"></i> آخر الأنشطة</h3>
+            </div>
+            <div class="card-body" id="recentActivity"></div>
+          </div>
+        </div>
       </div>
 
-      <!-- Transactions -->
+      <!-- Panel: Analytics -->
+      <div class="tab-panel" data-panel="analytics">
+        <div class="charts-grid">
+          <div class="card">
+            <div class="card-header">
+              <h3><i data-lucide="trending-up"></i> تحليل أداء المورد</h3>
+            </div>
+            <div class="card-body" id="performanceAnalysis"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3><i data-lucide="calendar-clock"></i> فترة التسليم (Lead Time)</h3>
+            </div>
+            <div class="card-body" id="leadTimeAnalysis"></div>
+          </div>
+        </div>
+
+        <div class="charts-grid">
+          <div class="card">
+            <div class="card-header">
+              <h3><i data-lucide="pie-chart"></i> توزيع المشتريات حسب الأصناف</h3>
+            </div>
+            <div class="card-body">
+              <div class="chart-wrap"><canvas id="categoryChart"></canvas></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3><i data-lucide="bar-chart-2"></i> مقارنة أسعار المورد</h3>
+            </div>
+            <div class="card-body" id="priceComparison"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3><i data-lucide="line-chart"></i> اتجاه الأسعار (12 شهر)</h3>
+          </div>
+          <div class="card-body">
+            <div class="chart-wrap"><canvas id="priceTrendChart"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel: Transactions -->
       <div class="tab-panel" data-panel="transactions">
         <div class="card">
           <div class="card-header">
@@ -874,6 +1032,7 @@
                   <th>النوع</th>
                   <th>المبلغ</th>
                   <th>الرصيد بعد</th>
+                  <th>المستخدم</th>
                   <th>ملاحظات</th>
                 </tr>
               </thead>
@@ -883,7 +1042,7 @@
         </div>
       </div>
 
-      <!-- Receipts -->
+      <!-- Panel: Receipts -->
       <div class="tab-panel" data-panel="receipts">
         <div class="card">
           <div class="card-header">
@@ -897,7 +1056,9 @@
                   <th>التاريخ</th>
                   <th>الإجمالي</th>
                   <th>المدفوع</th>
+                  <th>المتبقي</th>
                   <th>الحالة</th>
+                  <th>إجراءات</th>
                 </tr>
               </thead>
               <tbody id="receiptsBody"></tbody>
@@ -906,7 +1067,30 @@
         </div>
       </div>
 
-      <!-- Sales invoices -->
+      <!-- Panel: Returns -->
+      <div class="tab-panel" data-panel="returns">
+        <div class="card">
+          <div class="card-header">
+            <h3><i data-lucide="undo-2"></i> مرتجعات المشتريات</h3>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>رقم المرتجع</th>
+                  <th>التاريخ</th>
+                  <th>المبلغ</th>
+                  <th>السبب</th>
+                  <th>الفاتورة الأصلية</th>
+                </tr>
+              </thead>
+              <tbody id="returnsBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel: Sales -->
       <div class="tab-panel" data-panel="sales">
         <div class="card">
           <div class="card-header">
@@ -920,6 +1104,7 @@
                   <th>التاريخ</th>
                   <th>الإجمالي</th>
                   <th>المدفوع</th>
+                  <th>المتبقي</th>
                   <th>الحالة</th>
                 </tr>
               </thead>
@@ -929,7 +1114,7 @@
         </div>
       </div>
 
-      <!-- Purchases -->
+      <!-- Panel: Purchases -->
       <div class="tab-panel" data-panel="purchases">
         <div class="card">
           <div class="card-header">
@@ -943,10 +1128,23 @@
                   <th>التاريخ</th>
                   <th>الحالة</th>
                   <th>عدد الأصناف</th>
+                  <th>إجراءات</th>
                 </tr>
               </thead>
               <tbody id="purchasesBody"></tbody>
             </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel: Info -->
+      <div class="tab-panel" data-panel="info">
+        <div class="card">
+          <div class="card-header">
+            <h3><i data-lucide="info"></i> المعلومات الأساسية</h3>
+          </div>
+          <div class="card-body">
+            <div class="info-grid" id="infoGrid"></div>
           </div>
         </div>
       </div>
@@ -973,12 +1171,10 @@
                 <option value="adjustment">تسوية</option>
               </select>
             </div>
-
             <div class="form-group">
               <label>المبلغ <span class="req">*</span></label>
               <input type="number" name="amount" required step="0.01" placeholder="0.00">
             </div>
-
             <div class="form-group full">
               <label>ملاحظات</label>
               <textarea name="notes" maxlength="255" placeholder="ملاحظات عن المعاملة..."></textarea>
@@ -1046,8 +1242,7 @@
   </div>
 
   <script src="refad-core.js"></script>
-  <script src="refad-auth.js"></script>
-  <script>
+  <script src="refad-auth.js"></script>  <script>
     (function () {
       'use strict';
 
@@ -1060,6 +1255,7 @@
       const canEdit = Refad.Session.has('suppliers.edit');
       const canCreateSales = Refad.Session.has('sales.view') && Refad.Session.has('sales.create');
       const canViewSales = Refad.Session.has('sales.view');
+      const canViewPurchases = Refad.Session.has('purchases.view');
 
       // ============================================================
       // 2) ID from URL
@@ -1078,11 +1274,18 @@
         transactions: [],
         receipts: [],
         purchases: [],
-        salesInvoices: []
+        salesInvoices: [],
+        returns: [],
+        topProducts: [],
+        productTotals: {},
+        leadTimeData: null,
+        monthlyChart: null,
+        categoryChart: null,
+        priceTrendChart: null
       };
 
       // ============================================================
-      // 4) Sidebar
+      // 4) Sidebar MENU
       // ============================================================
       const MENU = [
         { section: 'الرئيسية', items: [
@@ -1232,11 +1435,12 @@
         if (s.tax_number) tags.push({ icon: 'file-text', text: s.tax_number });
         tags.push({
           icon: s.is_active ? 'check-circle' : 'x-circle',
-          text: s.is_active ? 'نشط' : 'غير نشط'
+          text: s.is_active ? 'نشط' : 'غير نشط',
+          cls: s.is_active ? 'success' : 'danger'
         });
 
-        if (s.balance > 0) tags.push({ icon: 'arrow-up-circle', text: 'مستحق للمورد', cls: 'success' });
-        else if (s.balance < 0) tags.push({ icon: 'arrow-down-circle', text: 'مستحق لنا', cls: 'danger' });
+        if (s.balance > 0) tags.push({ icon: 'arrow-up-circle', text: 'مستحق للمورد', cls: 'danger' });
+        else if (s.balance < 0) tags.push({ icon: 'arrow-down-circle', text: 'مستحق لنا', cls: 'success' });
 
         document.getElementById('heroTags').innerHTML = tags.map(t =>
           `<span class="hero-tag ${t.cls || ''}"><i data-lucide="${t.icon}"></i> ${Refad.escapeHtml(t.text)}</span>`
@@ -1294,58 +1498,179 @@
       // ============================================================
       async function loadRelated() {
         try {
-          const [transactions, receipts, purchases, salesInvoices] = await Promise.all([
+          const [transactions, receipts, purchases, salesInvoices, returns, users] = await Promise.all([
             Refad.db.select('supplier_transactions', {
+              columns: 'id, type, amount, balance_after, notes, user_id, created_at',
               eq: { supplier_id: supplierId },
               order: { column: 'created_at', ascending: false },
-              limit: 100
+              limit: 200
             }).catch(() => []),
             Refad.db.select('receipts', {
-              columns: 'id, receipt_number, receipt_date, total_amount, paid_amount, status',
+              columns: 'id, receipt_number, invoice_number, receipt_date, total_amount, paid_amount, status, created_at',
               eq: { supplier_id: supplierId },
               order: { column: 'receipt_date', ascending: false },
-              limit: 50
+              limit: 100
             }).catch(() => []),
             Refad.db.select('purchase_requests', {
               columns: 'id, request_number, status, created_at, purchase_request_items(id)',
               eq: { supplier_id: supplierId },
               order: { column: 'created_at', ascending: false },
-              limit: 50
+              limit: 100
             }).catch(() => []),
             canViewSales ? Refad.db.select('sales_invoices', {
-                columns: 'id, invoice_number, invoice_date, grand_total, paid_amount, status',
-                eq: { supplier_id: supplierId, company_id: session.company_id },
-                order: { column: 'invoice_date', ascending: false },
-                limit: 100
-              }) : Promise.resolve([])
+              columns: 'id, invoice_number, invoice_date, grand_total, paid_amount, status',
+              eq: { supplier_id: supplierId, company_id: session.company_id },
+              order: { column: 'invoice_date', ascending: false },
+              limit: 200
+            }).catch(() => []) : Promise.resolve([]),
+            // جلب المرتجعات
+            Refad.db.select('inventory_returns', {
+              columns: 'id, return_number, return_date, total_amount, reason, reference_receipt_id, notes, created_at',
+              eq: { supplier_id: supplierId, company_id: session.company_id, return_type: 'purchase' },
+              order: { column: 'return_date', ascending: false },
+              limit: 100
+            }).catch(() => []),
+            // جلب المستخدمين (لأسماء)
+            Refad.db.select('users', {
+              columns: 'id, full_name',
+              eq: { company_id: session.company_id }
+            }).catch(() => [])
           ]);
 
           state.transactions = transactions;
           state.receipts = receipts;
           state.purchases = purchases;
           state.salesInvoices = salesInvoices;
+          state.returns = returns;
+
+          // خريطة المستخدمين
+          const usersMap = new Map();
+          users.forEach(u => usersMap.set(String(u.id), u.full_name));
+
+          // جلب أصناف الاستلامات لتحليل Top Products
+          await loadProductAnalysis();
+
+          // حساب فترة التسليم
+          calculateLeadTime();
 
           renderStats();
-          renderTransactions();
+          renderQuickSummary();
+          renderTransactions(usersMap);
           renderReceipts();
+          renderReturns();
           renderSalesInvoices();
           renderPurchases();
+          renderTopProducts();
+          renderSmartAlerts();
+          renderRecentActivity(usersMap);
+          renderPerformanceAnalysis();
+          renderLeadTimeAnalysis();
+          renderInsightsBar();
+          renderCharts();
         } catch (e) {
           console.error('[SupplierDetails] related failed:', e);
         }
       }
 
+      // ============================================================
+      // 8) Load Product Analysis (Top products)
+      // ============================================================
+      async function loadProductAnalysis() {
+        try {
+          if (!state.receipts.length) return;
+
+          const receiptIds = state.receipts.map(r => r.id);
+          const items = await Refad.db.select('receipt_items', {
+            columns: 'product_id, quantity, unit_price, total, purchase_discount, receipt_id, products(id, name, name_en, form, unit, category)',
+            in: { receipt_id: receiptIds },
+            eq: { item_type: 'receipt' }
+          }).catch(() => []);
+
+          // حساب إجمالي الكميات والقيم لكل منتج
+          const productTotals = {};
+          items.forEach(item => {
+            const pid = item.product_id;
+            if (!productTotals[pid]) {
+              productTotals[pid] = {
+                product_id: pid,
+                product: item.products,
+                total_qty: 0,
+                total_value: 0,
+                total_cost: 0,
+                invoices_count: new Set()
+              };
+            }
+            productTotals[pid].total_qty += Number(item.quantity) || 0;
+            const qty = Number(item.quantity) || 0;
+            const unit_price = Number(item.unit_price) || 0;
+            const discount = Number(item.purchase_discount) || 0;
+            const netValue = qty * unit_price * (1 - discount / 100);
+            productTotals[pid].total_value += netValue;
+            productTotals[pid].total_cost += qty * unit_price;
+            productTotals[pid].invoices_count.add(item.receipt_id);
+          });
+
+          state.productTotals = productTotals;
+          state.topProducts = Object.values(productTotals)
+            .sort((a, b) => b.total_value - a.total_value)
+            .slice(0, 10)
+            .map(p => ({ ...p, invoices_count: p.invoices_count.size }));
+        } catch (e) {
+          console.warn('Product analysis failed:', e.message);
+        }
+      }
+
+      // ============================================================
+      // 9) Calculate Lead Time
+      // ============================================================
+      function calculateLeadTime() {
+        const leadTimes = [];
+
+        state.purchases.forEach(pr => {
+          const linkedReceipt = state.receipts.find(r =>
+            r.purchase_request_id === pr.id ||
+            (r.receipt_number && pr.request_number &&
+             r.receipt_number.includes(pr.request_number))
+          );
+
+          if (linkedReceipt && pr.created_at && linkedReceipt.receipt_date) {
+            const prDate = new Date(pr.created_at);
+            const receiptDate = new Date(linkedReceipt.receipt_date);
+            const days = Math.round((receiptDate - prDate) / (1000 * 60 * 60 * 24));
+            if (days > 0 && days < 90) {
+              leadTimes.push(days);
+            }
+          }
+        });
+
+        if (leadTimes.length) {
+          state.leadTimeData = {
+            avg_days: Math.round(leadTimes.reduce((s, d) => s + d, 0) / leadTimes.length),
+            min_days: Math.min(...leadTimes),
+            max_days: Math.max(...leadTimes),
+            samples: leadTimes.length
+          };
+        } else {
+          state.leadTimeData = null;
+        }
+      }
+
+      // ============================================================
+      // 10) Render Stats (6 بطاقات)
+      // ============================================================
       function renderStats() {
         const totalReceipts = state.receipts.reduce((s, r) => s + (Number(r.total_amount) || 0), 0);
         const totalPaid = state.receipts.reduce((s, r) => s + (Number(r.paid_amount) || 0), 0);
+        const remaining = totalReceipts - totalPaid;
+        const totalSales = state.salesInvoices.reduce((s, r) => s + (Number(r.grand_total) || 0), 0);
 
         const cards = [
-          { label: 'الرصيد الحالي', value: Refad.format.money(state.supplier.balance || 0), icon: 'wallet', cls: 'gold' },
-          { label: 'إجمالي الفواتير', value: Refad.format.money(totalReceipts), icon: 'receipt', cls: 'blue' },
-          { label: 'إجمالي المدفوع', value: Refad.format.money(totalPaid), icon: 'check-circle', cls: 'green' },
-          { label: 'عدد المعاملات', value: Refad.format.number(state.transactions.length), icon: 'list', cls: 'purple' },
-          { label: 'فواتير البيع', value: Refad.format.number(state.salesInvoices.length), icon: 'shopping-cart', cls: 'teal' },
-          { label: 'طلبات الشراء', value: Refad.format.number(state.purchases.length), icon: 'clipboard-list', cls: 'teal' }
+          { label: 'الرصيد الحالي', value: Refad.format.money(state.supplier.balance || 0), icon: 'wallet', cls: 'gold', sub: state.supplier.balance > 0 ? 'مستحق للمورد' : (state.supplier.balance < 0 ? 'مستحق لنا' : 'مسدد') },
+          { label: 'إجمالي المشتريات', value: Refad.format.money(totalReceipts), icon: 'shopping-bag', cls: 'blue', sub: `${state.receipts.length} فاتورة` },
+          { label: 'إجمالي المدفوع', value: Refad.format.money(totalPaid), icon: 'check-circle', cls: 'green', sub: totalReceipts > 0 ? `${Math.round((totalPaid / totalReceipts) * 100)}%` : '0%' },
+          { label: 'المتبقي', value: Refad.format.money(remaining), icon: 'alert-circle', cls: remaining > 0 ? 'red' : 'green', sub: remaining > 0 ? 'غير مسدد' : 'مسدد' },
+          { label: 'مبيعات للمورد', value: Refad.format.money(totalSales), icon: 'shopping-cart', cls: 'teal', sub: `${state.salesInvoices.length} فاتورة` },
+          { label: 'فترة التسليم', value: state.leadTimeData ? `${state.leadTimeData.avg_days} يوم` : '—', icon: 'clock', cls: 'purple', sub: state.leadTimeData ? `من ${state.leadTimeData.samples} طلب` : 'لا يوجد سجل' }
         ];
 
         document.getElementById('statsGrid').innerHTML = cards.map(c => `
@@ -1354,6 +1679,7 @@
             <div class="stat-body">
               <div class="label">${Refad.escapeHtml(c.label)}</div>
               <div class="value">${Refad.escapeHtml(c.value)}</div>
+              ${c.sub ? `<div class="sub">${Refad.escapeHtml(c.sub)}</div>` : ''}
             </div>
           </div>
         `).join('');
@@ -1361,14 +1687,45 @@
       }
 
       // ============================================================
-      // 8) Render transactions
+      // 11) Render Quick Summary
       // ============================================================
-      function renderTransactions() {
+      function renderQuickSummary() {
+        const totalReceipts = state.receipts.length;
+        const totalPurchases = state.purchases.length;
+        const totalTransactions = state.transactions.length;
+        const totalReturns = state.returns.length;
+        const totalProducts = Object.keys(state.productTotals).length;
+
+        const avgReceipt = totalReceipts > 0
+          ? state.receipts.reduce((s, r) => s + (Number(r.total_amount) || 0), 0) / totalReceipts
+          : 0;
+
+        const summary = [
+          { label: 'فواتير الاستلام', value: totalReceipts, cls: 'info' },
+          { label: 'طلبات الشراء', value: totalPurchases, cls: 'gold' },
+          { label: 'المعاملات', value: totalTransactions, cls: 'success' },
+          { label: 'المرتجعات', value: totalReturns, cls: 'danger' },
+          { label: 'عدد الأصناف', value: totalProducts, cls: 'info' },
+          { label: 'متوسط الفاتورة', value: Refad.format.money(avgReceipt), cls: 'gold' }
+        ];
+
+        document.getElementById('quickSummary').innerHTML = summary.map(s => `
+          <div class="kpi-box">
+            <div class="label">${Refad.escapeHtml(s.label)}</div>
+            <div class="value ${s.cls}">${Refad.escapeHtml(String(s.value))}</div>
+          </div>
+        `).join('');
+      }
+
+      // ============================================================
+      // 12) Render Transactions
+      // ============================================================
+      function renderTransactions(usersMap) {
         const body = document.getElementById('transactionsBody');
         if (!state.transactions.length) {
           body.innerHTML = `
             <tr style="border:none;">
-              <td colspan="5">
+              <td colspan="6">
                 <div class="empty-state">
                   <i data-lucide="receipt"></i>
                   <p>لا توجد معاملات بعد</p>
@@ -1390,24 +1747,29 @@
 
         body.innerHTML = state.transactions.map(t => {
           const type = TYPES[t.type] || { label: t.type, cls: 'gray' };
+          const userName = t.user_id ? (usersMap.get(String(t.user_id)) || '—') : '—';
           return `
             <tr>
               <td>${Refad.format.datetime(t.created_at)}</td>
               <td><span class="badge-tag ${type.cls}">${Refad.escapeHtml(type.label)}</span></td>
               <td><strong>${Refad.format.money(t.amount)}</strong></td>
               <td>${t.balance_after !== null && t.balance_after !== undefined ? Refad.format.money(t.balance_after) : '—'}</td>
+              <td>${Refad.escapeHtml(userName)}</td>
               <td>${Refad.escapeHtml(t.notes || '—')}</td>
             </tr>
           `;
         }).join('');
       }
 
+      // ============================================================
+      // 13) Render Receipts
+      // ============================================================
       function renderReceipts() {
         const body = document.getElementById('receiptsBody');
         if (!state.receipts.length) {
           body.innerHTML = `
             <tr style="border:none;">
-              <td colspan="5">
+              <td colspan="7">
                 <div class="empty-state">
                   <i data-lucide="package-check"></i>
                   <p>لا توجد فواتير استلام بعد</p>
@@ -1426,24 +1788,115 @@
 
         body.innerHTML = state.receipts.map(r => {
           const st = STATUS[r.status] || { label: r.status, cls: 'gray' };
+          const remaining = (Number(r.total_amount) || 0) - (Number(r.paid_amount) || 0);
           return `
             <tr>
               <td><strong>${Refad.escapeHtml(r.receipt_number)}</strong></td>
               <td>${Refad.format.date(r.receipt_date)}</td>
               <td>${Refad.format.money(r.total_amount)}</td>
               <td>${Refad.format.money(r.paid_amount)}</td>
+              <td style="color:${remaining > 0 ? 'var(--danger)' : 'var(--success)'};font-weight:700;">${Refad.format.money(remaining)}</td>
               <td><span class="badge-tag ${st.cls}">${Refad.escapeHtml(st.label)}</span></td>
+              <td>
+                <a class="action-btn" href="receipt-form.html?id=${r.id}" title="فتح">
+                  <i data-lucide="external-link"></i>
+                </a>
+              </td>
+            </tr>
+          `;
+        }).join('');
+        if (window.lucide) lucide.createIcons();
+      }
+
+      // ============================================================
+      // 14) Render Returns
+      // ============================================================
+      function renderReturns() {
+        const body = document.getElementById('returnsBody');
+        if (!state.returns.length) {
+          body.innerHTML = `
+            <tr style="border:none;">
+              <td colspan="5">
+                <div class="empty-state">
+                  <i data-lucide="undo-2"></i>
+                  <p>لا توجد مرتجعات لهذا المورد</p>
+                </div>
+              </td>
+            </tr>`;
+          if (window.lucide) lucide.createIcons();
+          return;
+        }
+
+        // خريطة الفواتير الأصلية
+        const receiptsMap = new Map();
+        state.receipts.forEach(r => receiptsMap.set(String(r.id), r));
+
+        body.innerHTML = state.returns.map(r => {
+          const orig = r.reference_receipt_id ? receiptsMap.get(String(r.reference_receipt_id)) : null;
+          return `
+            <tr>
+              <td><strong>${Refad.escapeHtml(r.return_number || '—')}</strong></td>
+              <td>${Refad.format.date(r.return_date)}</td>
+              <td style="color:var(--warning);font-weight:700;">${Refad.format.money(r.total_amount)}</td>
+              <td>${Refad.escapeHtml(r.reason || '—')}</td>
+              <td>${orig ? Refad.escapeHtml(orig.receipt_number) : '—'}</td>
             </tr>
           `;
         }).join('');
       }
 
+      // ============================================================
+      // 15) Render Sales Invoices
+      // ============================================================
+      function renderSalesInvoices() {
+        const body = document.getElementById('salesInvoicesBody');
+        if (!state.salesInvoices.length) {
+          body.innerHTML = `
+            <tr style="border:none;">
+              <td colspan="6">
+                <div class="empty-state">
+                  <i data-lucide="shopping-cart"></i>
+                  <p>لا توجد فواتير بيع لهذا المورد بعد</p>
+                </div>
+              </td>
+            </tr>`;
+          if (window.lucide) lucide.createIcons();
+          return;
+        }
+
+        const statuses = {
+          paid: { label: 'مدفوعة', cls: 'green' },
+          partial: { label: 'جزئي', cls: 'gold' },
+          unpaid: { label: 'آجلة', cls: 'blue' },
+          cancelled: { label: 'ملغية', cls: 'red' }
+        };
+        body.innerHTML = state.salesInvoices.map(invoice => {
+          const status = statuses[invoice.status] || { label: invoice.status, cls: 'gray' };
+          const remaining = (Number(invoice.grand_total) || 0) - (Number(invoice.paid_amount) || 0);
+          return `
+            <tr>
+              <td>${canViewSales
+                ? `<a href="invoices.html?id=${invoice.id}" style="color:var(--accent);text-decoration:none;"><strong>${Refad.escapeHtml(invoice.invoice_number)}</strong></a>`
+                : `<strong>${Refad.escapeHtml(invoice.invoice_number)}</strong>`}</td>
+              <td>${Refad.format.date(invoice.invoice_date)}</td>
+              <td>${Refad.format.money(invoice.grand_total)}</td>
+              <td>${Refad.format.money(invoice.paid_amount)}</td>
+              <td style="color:${remaining > 0 ? 'var(--danger)' : 'var(--success)'};font-weight:700;">${Refad.format.money(remaining)}</td>
+              <td><span class="badge-tag ${status.cls}">${Refad.escapeHtml(status.label)}</span></td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      // ============================================================
+      // 16) Render Purchases
+      // ============================================================
       function renderPurchases() {
         const body = document.getElementById('purchasesBody');
         if (!state.purchases.length) {
           body.innerHTML = `
             <tr style="border:none;">
-              <td colspan="4">
+              <td colspan="5">
                 <div class="empty-state">
                   <i data-lucide="clipboard-list"></i>
                   <p>لا توجد طلبات شراء بعد</p>
@@ -1466,56 +1919,525 @@
           const st = STATUS[p.status] || { label: p.status, cls: 'gray' };
           const count = p.purchase_request_items?.length || 0;
           return `
-            <tr style="cursor:pointer;" onclick="location.href='purchase-request-form.html?id=${p.id}'">
+            <tr>
               <td><strong>${Refad.escapeHtml(p.request_number)}</strong></td>
               <td>${Refad.format.date(p.created_at)}</td>
               <td><span class="badge-tag ${st.cls}">${Refad.escapeHtml(st.label)}</span></td>
               <td>${Refad.format.number(count)}</td>
+              <td>
+                <a class="action-btn" href="purchase-request-form.html?id=${p.id}" title="فتح">
+                  <i data-lucide="external-link"></i>
+                </a>
+              </td>
             </tr>
           `;
         }).join('');
+        if (window.lucide) lucide.createIcons();
       }
 
-      function renderSalesInvoices() {
-        const body = document.getElementById('salesInvoicesBody');
-        if (!state.salesInvoices.length) {
-          body.innerHTML = `
-            <tr style="border:none;">
-              <td colspan="5">
-                <div class="empty-state">
-                  <i data-lucide="shopping-cart"></i>
-                  <p>لا توجد فواتير بيع لهذا المورد بعد</p>
-                </div>
-              </td>
-            </tr>`;
+      // ============================================================
+      // 17) Render Top Products
+      // ============================================================
+      function renderTopProducts() {
+        const container = document.getElementById('topProducts');
+        if (!state.topProducts.length) {
+          container.innerHTML = `<div class="empty-state"><i data-lucide="package"></i><p>لا توجد بيانات</p></div>`;
           if (window.lucide) lucide.createIcons();
           return;
         }
 
-        const statuses = {
-          paid: { label: 'مدفوعة', cls: 'green' },
-          partial: { label: 'جزئي', cls: 'gold' },
-          unpaid: { label: 'آجلة', cls: 'blue' },
-          cancelled: { label: 'ملغية', cls: 'red' }
-        };
-        body.innerHTML = state.salesInvoices.map(invoice => {
-          const status = statuses[invoice.status] || { label: invoice.status, cls: 'gray' };
+        container.innerHTML = state.topProducts.map((p, i) => {
+          const avgPrice = p.total_qty > 0 ? p.total_value / p.total_qty : 0;
           return `
-            <tr>
-              <td>${canViewSales
-                ? `<a href="invoices.html?id=${invoice.id}" class="invoice-link"><strong>${Refad.escapeHtml(invoice.invoice_number)}</strong></a>`
-                : `<strong>${Refad.escapeHtml(invoice.invoice_number)}</strong>`}</td>
-              <td>${Refad.format.date(invoice.invoice_date)}</td>
-              <td>${Refad.format.money(invoice.grand_total)}</td>
-              <td>${Refad.format.money(invoice.paid_amount)}</td>
-              <td><span class="badge-tag ${status.cls}">${Refad.escapeHtml(status.label)}</span></td>
-            </tr>
+            <div class="product-row">
+              <div class="name">
+                ${i + 1}. ${Refad.escapeHtml(p.product?.name || '—')}
+                <small>${Refad.format.number(p.total_qty)} وحدة • ${p.invoices_count} فاتورة</small>
+              </div>
+              <div class="value">${Refad.format.money(p.total_value)}</div>
+            </div>
           `;
         }).join('');
       }
 
       // ============================================================
-      // 9) Modal helpers
+      // 18) Render Smart Alerts
+      // ============================================================
+      function renderSmartAlerts() {
+        const alerts = [];
+        const s = state.supplier;
+
+        // 1) رصيد كبير
+        if (Math.abs(s.balance || 0) > 5000) {
+          alerts.push({
+            type: s.balance > 0 ? 'danger' : 'success',
+            icon: 'wallet',
+            msg: `الرصيد ${s.balance > 0 ? 'المستحق للمورد' : 'المستحق لنا'} كبير: <strong>${Refad.format.money(Math.abs(s.balance))}</strong>`
+          });
+        }
+
+        // 2) فترة تسليم طويلة
+        if (state.leadTimeData && state.leadTimeData.avg_days > 14) {
+          alerts.push({
+            type: 'warning',
+            icon: 'clock',
+            msg: `فترة التسليم المتوسطة <strong>${state.leadTimeData.avg_days} يوم</strong> — أطول من المعتاد`
+          });
+        }
+
+        // 3) مرتجعات كثيرة
+        if (state.returns.length > 0) {
+          const totalReturns = state.returns.reduce((s, r) => s + (Number(r.total_amount) || 0), 0);
+          const totalReceipts = state.receipts.reduce((s, r) => s + (Number(r.total_amount) || 0), 0);
+          const rate = totalReceipts > 0 ? Math.round((totalReturns / totalReceipts) * 100) : 0;
+          if (rate > 5) {
+            alerts.push({
+              type: 'warning',
+              icon: 'undo-2',
+              msg: `معدل المرتجعات <strong>${rate}%</strong> — راجع جودة المنتجات`
+            });
+          }
+        }
+
+        // 4) فواتير متأخرة
+        const unpaidReceipts = state.receipts.filter(r => 
+          r.status !== 'completed' && 
+          (Number(r.total_amount) - Number(r.paid_amount)) > 0
+        ).length;
+        if (unpaidReceipts > 0) {
+          alerts.push({
+            type: 'warning',
+            icon: 'alert-circle',
+            msg: `يوجد <strong>${unpaidReceipts}</strong> فاتورة بها مبلغ متبقي`
+          });
+        }
+
+        // 5) نشاط خامل (لا فواتير حديثة)
+        if (state.receipts.length > 0) {
+          const lastDate = new Date(state.receipts[0].receipt_date);
+          const daysSince = Math.floor((Date.now() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
+          if (daysSince > 60) {
+            alerts.push({
+              type: 'info',
+              icon: 'pause-circle',
+              msg: `آخر فاتورة منذ <strong>${daysSince} يوم</strong> — المورد خامل`
+            });
+          }
+        }
+
+        // 6) أداء جيد
+        if (state.receipts.length >= 5 && state.returns.length <= 1) {
+          alerts.push({
+            type: 'success',
+            icon: 'award',
+            msg: `مورد نشط وممتاز — ${state.receipts.length} فاتورة بأقل من مرتجع واحد`
+          });
+        }
+
+        const container = document.getElementById('smartAlerts');
+        if (!alerts.length) {
+          container.innerHTML = `<div class="empty-state"><i data-lucide="check-circle"></i><p>لا توجد تنبيهات</p></div>`;
+          if (window.lucide) lucide.createIcons();
+          return;
+        }
+
+        container.innerHTML = alerts.map(a => `
+          <div class="insight-box ${a.type}" style="margin-bottom:8px;">
+            <i data-lucide="${a.icon}"></i>
+            <div class="insight-text">${a.msg}</div>
+          </div>
+        `).join('');
+        if (window.lucide) lucide.createIcons();
+      }
+
+      // ============================================================
+      // 19) Render Recent Activity (Timeline)
+      // ============================================================
+      function renderRecentActivity(usersMap) {
+        const activities = [];
+
+        // آخر 3 معاملات
+        state.transactions.slice(0, 3).forEach(t => {
+          activities.push({
+            date: t.created_at,
+            type: t.type === 'payment' ? 'success' : (t.type === 'invoice' ? 'warning' : 'info'),
+            icon: t.type === 'payment' ? 'check-circle' : (t.type === 'invoice' ? 'file-text' : 'activity'),
+            title: `معاملة: ${t.type}`,
+            desc: `${Refad.format.money(t.amount)}${t.notes ? ' • ' + t.notes : ''}`
+          });
+        });
+
+        // آخر 2 استلامات
+        state.receipts.slice(0, 2).forEach(r => {
+          activities.push({
+            date: r.created_at,
+            type: 'success',
+            icon: 'package-check',
+            title: `استلام ${r.receipt_number}`,
+            desc: `${Refad.format.money(r.total_amount)}`
+          });
+        });
+
+        // ترتيب تنازلي
+        activities.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        const container = document.getElementById('recentActivity');
+        if (!activities.length) {
+          container.innerHTML = `<div class="empty-state"><i data-lucide="activity"></i><p>لا يوجد نشاط بعد</p></div>`;
+          if (window.lucide) lucide.createIcons();
+          return;
+        }
+
+        container.innerHTML = `
+          <div class="timeline">
+            ${activities.slice(0, 6).map(a => `
+              <div class="timeline-item ${a.type}">
+                <div class="timeline-body">
+                  <div class="time">${Refad.format.datetime(a.date)}</div>
+                  <div class="title">${Refad.escapeHtml(a.title)}</div>
+                  <div class="desc">${Refad.escapeHtml(a.desc)}</div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      }
+
+      // ============================================================
+      // 20) Render Performance Analysis
+      // ============================================================
+      function renderPerformanceAnalysis() {
+        const container = document.getElementById('performanceAnalysis');
+
+        const totalReceipts = state.receipts.length;
+        const totalValue = state.receipts.reduce((s, r) => s + (Number(r.total_amount) || 0), 0);
+        const avgReceipt = totalReceipts > 0 ? totalValue / totalReceipts : 0;
+
+        // معدل الالتزام بالسداد
+        const paidRate = totalValue > 0
+          ? Math.round((state.receipts.reduce((s, r) => s + (Number(r.paid_amount) || 0), 0) / totalValue) * 100)
+          : 0;
+
+        // معدل المرتجعات
+        const returnsValue = state.returns.reduce((s, r) => s + (Number(r.total_amount) || 0), 0);
+        const returnRate = totalValue > 0 ? Math.round((returnsValue / totalValue) * 100) : 0;
+
+        // تنوع الأصناف
+        const productsCount = Object.keys(state.productTotals).length;
+
+        const rows = [
+          ['إجمالي المشتريات', Refad.format.money(totalValue)],
+          ['متوسط الفاتورة', Refad.format.money(avgReceipt)],
+          ['معدل السداد', `${paidRate}%`, paidRate > 80 ? 'success' : (paidRate > 50 ? 'gold' : 'danger')],
+          ['معدل المرتجعات', `${returnRate}%`, returnRate < 3 ? 'success' : (returnRate < 10 ? 'gold' : 'danger')],
+          ['تنوع الأصناف', `${productsCount} صنف`],
+          ['عدد الفواتير', totalReceipts]
+        ];
+
+        container.innerHTML = rows.map(([k, v, cls]) => `
+          <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);">
+            <span style="font-size:13px;color:var(--text-muted);font-weight:600;">${Refad.escapeHtml(k)}</span>
+            <span style="font-size:14px;font-weight:800;color:var(--${cls === 'success' ? 'success' : cls === 'gold' ? 'gold' : cls === 'danger' ? 'danger' : 'text'});">${Refad.escapeHtml(v)}</span>
+          </div>
+        `).join('');
+
+        // مؤشر الجودة العام
+        let qualityLabel = 'جيد', qualityCls = 'gold', qualityIcon = 'thumbs-up';
+        if (paidRate > 80 && returnRate < 3) {
+          qualityLabel = 'ممتاز';
+          qualityCls = 'success';
+          qualityIcon = 'award';
+        } else if (paidRate < 40 || returnRate > 15) {
+          qualityLabel = 'يحتاج مراجعة';
+          qualityCls = 'danger';
+          qualityIcon = 'alert-triangle';
+        }
+
+        container.innerHTML = `
+          <div style="text-align:center;padding:20px 0 16px;border-bottom:1px solid var(--border);margin-bottom:16px;">
+            <div style="display:inline-flex;align-items:center;gap:8px;padding:10px 20px;background:rgba(${qualityCls === 'success' ? '16,185,129' : qualityCls === 'gold' ? '245,158,11' : '239,68,68'},0.12);border-radius:20px;font-weight:800;color:var(--${qualityCls});">
+              <i data-lucide="${qualityIcon}" style="width:20px;height:20px;"></i>
+              تصنيف المورد: ${qualityLabel}
+            </div>
+          </div>
+        ` + container.innerHTML;
+        if (window.lucide) lucide.createIcons();
+      }
+
+      // ============================================================
+      // 21) Render Lead Time Analysis
+      // ============================================================
+      function renderLeadTimeAnalysis() {
+        const container = document.getElementById('leadTimeAnalysis');
+
+        if (!state.leadTimeData) {
+          container.innerHTML = `<div class="empty-state"><i data-lucide="clock"></i><p>لا يوجد سجل كافٍ لحساب فترة التسليم</p></div>`;
+          if (window.lucide) lucide.createIcons();
+          return;
+        }
+
+        const lt = state.leadTimeData;
+
+        container.innerHTML = `
+          <div style="text-align:center;padding:16px 0;">
+            <div style="font-size:44px;font-weight:800;color:var(--accent);">${lt.avg_days}</div>
+            <div style="font-size:13px;color:var(--text-muted);margin-top:6px;">متوسط أيام التسليم</div>
+          </div>
+          <div class="info-item" style="background:transparent;border:none;padding:8px 0;border-bottom:1px solid var(--border);">
+            <div style="display:flex;justify-content:space-between;">
+              <span style="font-size:13px;color:var(--text-muted);font-weight:600;">أسرع تسليم</span>
+              <span style="font-size:14px;font-weight:800;color:var(--success);">${lt.min_days} يوم</span>
+            </div>
+          </div>
+          <div class="info-item" style="background:transparent;border:none;padding:8px 0;border-bottom:1px solid var(--border);">
+            <div style="display:flex;justify-content:space-between;">
+              <span style="font-size:13px;color:var(--text-muted);font-weight:600;">أبطأ تسليم</span>
+              <span style="font-size:14px;font-weight:800;color:var(--danger);">${lt.max_days} يوم</span>
+            </div>
+          </div>
+          <div class="info-item" style="background:transparent;border:none;padding:8px 0;">
+            <div style="display:flex;justify-content:space-between;">
+              <span style="font-size:13px;color:var(--text-muted);font-weight:600;">عدد العينات</span>
+              <span style="font-size:14px;font-weight:800;color:var(--info);">${lt.samples} طلب</span>
+            </div>
+          </div>
+          <div style="margin-top:12px;padding:10px 12px;background:var(--bg);border-radius:8px;font-size:12px;color:var(--text-muted);line-height:1.6;">
+            ${lt.avg_days <= 7 ? '✅ تسليم سريع — ممتاز' : lt.avg_days <= 14 ? '⚠️ تسليم متوسط — عادي' : '🚨 تسليم بطيء — يحتاج متابعة'}
+          </div>
+        `;
+      }
+
+      // ============================================================
+      // 22) Render Insights Bar
+      // ============================================================
+      function renderInsightsBar() {
+        const container = document.getElementById('insightsBar');
+        const insights = [];
+        const s = state.supplier;
+
+        // 1) أعلى منتج
+        if (state.topProducts.length > 0) {
+          const top = state.topProducts[0];
+          insights.push({
+            type: 'info',
+            icon: 'award',
+            msg: `أعلى منتج: <strong>${Refad.escapeHtml(top.product?.name || '—')}</strong> بقيمة ${Refad.format.money(top.total_value)}`
+          });
+        }
+
+        // 2) فترة التسليم
+        if (state.leadTimeData) {
+          insights.push({
+            type: state.leadTimeData.avg_days <= 7 ? 'success' : (state.leadTimeData.avg_days <= 14 ? 'warning' : 'danger'),
+            icon: 'clock',
+            msg: `فترة التسليم: <strong>${state.leadTimeData.avg_days} يوم</strong> (متوسط)`
+          });
+        }
+
+        // 3) الرصيد
+        if (Math.abs(s.balance || 0) > 1000) {
+          insights.push({
+            type: s.balance > 0 ? 'warning' : 'success',
+            icon: 'wallet',
+            msg: `الرصيد: <strong>${Refad.format.money(Math.abs(s.balance))}</strong> ${s.balance > 0 ? 'مستحق للمورد' : 'مستحق لنا'}`
+          });
+        }
+
+        if (!insights.length) {
+          container.style.display = 'none';
+          return;
+        }
+
+        container.innerHTML = insights.map(i => `
+          <div class="insight-box ${i.type}">
+            <i data-lucide="${i.icon}"></i>
+            <div class="insight-text">${i.msg}</div>
+          </div>
+        `).join('');
+        container.style.display = 'grid';
+        if (window.lucide) lucide.createIcons();
+      }
+
+      // ============================================================
+      // 23) Render Charts (Chart.js)
+      // ============================================================
+      function renderCharts() {
+        if (typeof Chart === 'undefined') {
+          console.warn('Chart.js not loaded');
+          return;
+        }
+
+        const textColor = getComputedStyle(document.documentElement).getPropertyValue('--text').trim();
+        const borderColor = getComputedStyle(document.documentElement).getPropertyValue('--border').trim();
+
+        Chart.defaults.font.family = 'Cairo, sans-serif';
+        Chart.defaults.color = textColor;
+
+        // ===== 1) Monthly Purchases Chart =====
+        const monthlyData = {};
+        state.receipts.forEach(r => {
+          if (!r.receipt_date) return;
+          const month = String(r.receipt_date).slice(0, 7);
+          monthlyData[month] = (monthlyData[month] || 0) + (Number(r.total_amount) || 0);
+        });
+
+        const sortedMonths = Object.entries(monthlyData)
+          .sort((a, b) => a[0].localeCompare(b[0]))
+          .slice(-6);
+
+        if (state.monthlyChart) state.monthlyChart.destroy();
+        const monthlyCtx = document.getElementById('monthlyChart');
+        if (monthlyCtx && sortedMonths.length) {
+          state.monthlyChart = new Chart(monthlyCtx, {
+            type: 'line',
+            data: {
+              labels: sortedMonths.map(m => m[0]),
+              datasets: [{
+                label: 'المشتريات',
+                data: sortedMonths.map(m => m[1]),
+                borderColor: '#14B8A6',
+                backgroundColor: 'rgba(20,184,166,0.1)',
+                tension: 0.4,
+                fill: true,
+                pointRadius: 5,
+                pointBackgroundColor: '#14B8A6',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: { display: false },
+                tooltip: {
+                  callbacks: {
+                    label: ctx => Refad.format.money(ctx.parsed.y)
+                  }
+                }
+              },
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  grid: { color: borderColor, drawBorder: false },
+                  ticks: { callback: v => Refad.format.number(v, 0) }
+                },
+                x: { grid: { display: false } }
+              }
+            }
+          });
+        }
+
+        // ===== 2) Category Distribution =====
+        const categoryData = {};
+        Object.values(state.productTotals).forEach(p => {
+          const cat = p.product?.category || 'أخرى';
+          categoryData[cat] = (categoryData[cat] || 0) + p.total_value;
+        });
+
+        const sortedCategories = Object.entries(categoryData)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 6);
+
+        if (state.categoryChart) state.categoryChart.destroy();
+        const categoryCtx = document.getElementById('categoryChart');
+        if (categoryCtx && sortedCategories.length) {
+          const colors = ['#14B8A6', '#3b82f6', '#F59E0B', '#8b5cf6', '#10b981', '#ef4444'];
+          state.categoryChart = new Chart(categoryCtx, {
+            type: 'doughnut',
+            data: {
+              labels: sortedCategories.map(c => c[0]),
+              datasets: [{
+                data: sortedCategories.map(c => c[1]),
+                backgroundColor: colors,
+                borderWidth: 2,
+                borderColor: '#fff'
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: { position: 'bottom', labels: { padding: 12, font: { size: 12 } } },
+                tooltip: {
+                  callbacks: {
+                    label: ctx => `${ctx.label}: ${Refad.format.money(ctx.parsed)}`
+                  }
+                }
+              }
+            }
+          });
+        }
+
+        // ===== 3) Price Trend (12 months) =====
+        const priceTrend = {};
+        Object.values(state.productTotals).forEach(p => {
+          // بيانات مبدئية من الأسعار الحديثة
+          const month = new Date().toISOString().slice(0, 7);
+          if (!priceTrend[month]) priceTrend[month] = { total: 0, count: 0 };
+          if (p.total_qty > 0) {
+            priceTrend[month].total += p.total_value / p.total_qty;
+            priceTrend[month].count++;
+          }
+        });
+
+        // احسب المتوسطات لكل شهر من الاستلامات
+        const monthlyPrices = {};
+        state.receipts.forEach(r => {
+          if (!r.receipt_date || !r.total_amount) return;
+          const month = String(r.receipt_date).slice(0, 7);
+          if (!monthlyPrices[month]) monthlyPrices[month] = { total: 0, count: 0 };
+          monthlyPrices[month].total += Number(r.total_amount);
+          monthlyPrices[month].count++;
+        });
+
+        const sortedPrices = Object.entries(monthlyPrices)
+          .sort((a, b) => a[0].localeCompare(b[0]))
+          .slice(-12)
+          .map(([month, data]) => ({ month, avg: data.count > 0 ? data.total / data.count : 0 }));
+
+        if (state.priceTrendChart) state.priceTrendChart.destroy();
+        const priceTrendCtx = document.getElementById('priceTrendChart');
+        if (priceTrendCtx && sortedPrices.length) {
+          state.priceTrendChart = new Chart(priceTrendCtx, {
+            type: 'bar',
+            data: {
+              labels: sortedPrices.map(p => p.month),
+              datasets: [{
+                label: 'متوسط الفاتورة',
+                data: sortedPrices.map(p => p.avg),
+                backgroundColor: 'rgba(20,184,166,0.6)',
+                borderColor: '#14B8A6',
+                borderWidth: 2,
+                borderRadius: 6
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: { display: false },
+                tooltip: {
+                  callbacks: {
+                    label: ctx => Refad.format.money(ctx.parsed.y)
+                  }
+                }
+              },
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  grid: { color: borderColor, drawBorder: false },
+                  ticks: { callback: v => Refad.format.number(v, 0) }
+                },
+                x: { grid: { display: false } }
+              }
+            }
+          });
+        }
+      }
+
+      // ============================================================
+      // 24) Modal helpers
       // ============================================================
       function closeAllModals() {
         document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.remove('show'));
@@ -1536,7 +2458,7 @@
       }
 
       // ============================================================
-      // 10) Add Transaction
+      // 25) Add Transaction
       // ============================================================
       function openTransactionModal() {
         document.getElementById('transactionForm').reset();
@@ -1558,39 +2480,41 @@
         }
 
         try {
-          // حساب الرصيد الجديد
           const currentBalance = state.supplier.balance || 0;
           let newBalance = currentBalance;
-          let txAmount = amount;
 
+          // ===== الحساب حسب النوع =====
           if (type === 'payment') {
-            // دفعة → الرصيد يقل (ندفع له)
+            // دفعة (ندفع للمورد) → الرصيد يقل
             newBalance = currentBalance - amount;
           } else if (type === 'collection') {
-            // تحصيل من المورد → الرصيد يزيد باتجاه التسوية
-            newBalance = currentBalance + amount;
+            // تحصيل من المورد (نسدد فواتير بيع) → الرصيد يقل أيضاً
+            newBalance = currentBalance - amount;
+
+            // توزيع المبلغ على فواتير البيع الآجلة
             let remaining = amount;
-            const invoices = await Refad.db.select('sales_invoices', {
-              columns: 'id, grand_total, paid_amount, invoice_date',
-              eq: { supplier_id: supplierId, company_id: session.company_id },
-              order: { column: 'invoice_date', ascending: true }
-            });
-            for (const invoice of invoices) {
+            const unpaidInvoices = state.salesInvoices
+              .filter(inv => inv.status !== 'paid' && inv.status !== 'cancelled')
+              .sort((a, b) => new Date(a.invoice_date) - new Date(b.invoice_date));
+
+            for (const invoice of unpaidInvoices) {
               if (remaining <= 0) break;
               const due = Math.max(0, (Number(invoice.grand_total) || 0) - (Number(invoice.paid_amount) || 0));
               if (!due) continue;
-              const paidAmount = (Number(invoice.paid_amount) || 0) + Math.min(due, remaining);
-              remaining -= Math.min(due, remaining);
+              const payAmount = Math.min(due, remaining);
+              const newPaid = (Number(invoice.paid_amount) || 0) + payAmount;
+              remaining -= payAmount;
+
               await Refad.db.update('sales_invoices', invoice.id, {
-                paid_amount: paidAmount,
-                status: paidAmount >= Number(invoice.grand_total) ? 'paid' : 'partial'
+                paid_amount: newPaid,
+                status: newPaid >= Number(invoice.grand_total) ? 'paid' : 'partial'
               });
             }
           } else if (type === 'invoice') {
-            // فاتورة → الرصيد يزيد (استلمنا بضاعة)
+            // فاتورة → الرصيد يزيد
             newBalance = currentBalance + amount;
           } else if (type === 'adjustment') {
-            // تسوية → المبلغ مباشر (بإشارته)
+            // تسوية → المبلغ بإشارته
             newBalance = currentBalance + amount;
           }
 
@@ -1599,7 +2523,7 @@
             supplier_id: supplierId,
             company_id: session.company_id,
             type,
-            amount: txAmount,
+            amount,
             balance_after: newBalance,
             notes,
             user_id: session.user_id
@@ -1622,7 +2546,7 @@
       }
 
       // ============================================================
-      // 11) Edit Supplier
+      // 26) Edit Supplier
       // ============================================================
       function openEditModal() {
         const s = state.supplier;
@@ -1664,7 +2588,7 @@
       }
 
       // ============================================================
-      // 12) Tabs
+      // 27) Tabs
       // ============================================================
       function setupTabs() {
         document.querySelectorAll('.tab').forEach(tab => {
@@ -1674,12 +2598,16 @@
             document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
             tab.classList.add('active');
             document.querySelector(`.tab-panel[data-panel="${name}"]`).classList.add('active');
+            // إعادة رسم المخططات عند فتح التحليلات
+            if (name === 'analytics' || name === 'overview') {
+              setTimeout(() => renderCharts(), 100);
+            }
           });
         });
       }
 
       // ============================================================
-      // 13) Events
+      // 28) Events
       // ============================================================
       function bindEvents() {
         if (canEdit) {
@@ -1700,7 +2628,7 @@
       }
 
       // ============================================================
-      // 14) Init
+      // 29) Init
       // ============================================================
       async function init() {
         buildSidebar();
@@ -1712,8 +2640,14 @@
         setupTabs();
         setupModals();
         bindEvents();
+
         if (!canViewSales) {
-          document.querySelector('.tab[data-tab="sales"]').style.display = 'none';
+          const salesTab = document.querySelector('.tab[data-tab="sales"]');
+          if (salesTab) salesTab.style.display = 'none';
+        }
+        if (!canViewPurchases) {
+          const purchasesTab = document.querySelector('.tab[data-tab="purchases"]');
+          if (purchasesTab) purchasesTab.style.display = 'none';
         }
 
         await loadSupplier();
@@ -1722,6 +2656,20 @@
         await loadRelated();
 
         Refad.registerServiceWorker();
+
+        console.log('%c[Refad] Supplier details PRO ready', 'color:#14B8A6;font-weight:bold;font-size:14px');
+        console.log('%c[Refad] الميزات المُضافة:', 'color:#0B2C4D;font-weight:bold');
+        console.log('  ✅ 6 بطاقات إحصائية');
+        console.log('  ✅ Insights Bar ديناميكية');
+        console.log('  ✅ 3 Charts (خط + دائري + شريطي)');
+        console.log('  ✅ Top 10 أصناف');
+        console.log('  ✅ فترة التسليم (Lead Time)');
+        console.log('  ✅ تحليل الأداء + تصنيف المورد');
+        console.log('  ✅ 6 تنبيهات ذكية');
+        console.log('  ✅ Timeline آخر الأنشطة');
+        console.log('  ✅ تبويب مرتجعات جديد');
+        console.log('  ✅ المتبقي في كل فاتورة');
+        console.log('  ✅ اسم المستخدم في المعاملات');
       }
 
       if (document.readyState === 'loading') {
@@ -1729,8 +2677,6 @@
       } else {
         init();
       }
-
-      console.log('%c[Refad] Supplier details ready', 'color:#14B8A6;font-weight:bold');
 
     })();
   </script>

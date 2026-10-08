@@ -357,7 +357,8 @@
     .smart-stat-body .label { font-size: 10px; color: var(--text-muted); font-weight: 700; margin-bottom: 2px; text-transform: uppercase; }
     .smart-stat-body .value { font-size: 17px; font-weight: 800; color: var(--text); line-height: 1; }
     .smart-stat-body .sub { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
-        /* Supplier Profile Card */
+
+    /* Supplier Profile Card */
     .supplier-profile-card {
       background: linear-gradient(135deg, var(--primary), var(--primary-light));
       color: white;
@@ -426,6 +427,54 @@
     .supplier-stat .val.warning { color: #fcd34d; }
     .supplier-stat .val.danger { color: #fca5a5; }
 
+    /* Smart Insights Card */
+    .smart-insights-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 16px;
+      box-shadow: var(--shadow-sm);
+      display: none;
+    }
+    .smart-insights-card.show { display: block; }
+    .smart-insights-header {
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      font-size: 14px;
+    }
+    .smart-insights-header i { width: 18px; height: 18px; color: var(--accent); }
+    .smart-insights-body {
+      padding: 14px 18px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 10px;
+    }
+    .insight-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 10px 12px;
+      background: var(--bg);
+      border-radius: 8px;
+      border-right: 3px solid var(--accent);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+    .insight-item.warning { border-right-color: var(--warning); }
+    .insight-item.danger { border-right-color: var(--danger); }
+    .insight-item.success { border-right-color: var(--success); }
+    .insight-item.info { border-right-color: var(--info); }
+    .insight-item i { width: 16px; height: 16px; flex-shrink: 0; margin-top: 2px; }
+    .insight-item.warning i { color: var(--warning); }
+    .insight-item.danger i { color: var(--danger); }
+    .insight-item.success i { color: var(--success); }
+    .insight-item.info i { color: var(--info); }
+    .insight-item strong { font-weight: 700; }
+
     /* Quick Actions Bar */
     .quick-actions-bar {
       display: flex;
@@ -469,7 +518,7 @@
       width: 100%;
       border-collapse: collapse;
       font-size: 13px;
-      min-width: 1400px;
+      min-width: 1500px;
     }
     table.items-table thead { background: var(--bg); border-bottom: 1px solid var(--border); }
     table.items-table th {
@@ -486,6 +535,7 @@
     table.items-table tbody tr:hover { background: var(--bg); }
     table.items-table tbody tr.critical-row { background: rgba(239,68,68,0.04) !important; }
     table.items-table tbody tr.urgent-row { background: rgba(245,158,11,0.04) !important; }
+    table.items-table tbody tr.dead-stock-row { background: rgba(148,163,184,0.04) !important; }
     table.items-table td { padding: 10px; color: var(--text); vertical-align: middle; }
 
     table.items-table input.qty-input,
@@ -556,6 +606,8 @@
     .item-info-chip.urgent { background: rgba(245,158,11,0.15); color: var(--warning); }
     .item-info-chip.soon { background: rgba(59,130,246,0.12); color: var(--info); }
     .item-info-chip.ok { background: rgba(16,185,129,0.12); color: var(--success); }
+    .item-info-chip.seasonal { background: rgba(139,92,246,0.15); color: var(--purple); }
+    .item-info-chip.dead-stock { background: rgba(148,163,184,0.15); color: var(--text-muted); }
     .item-info-chip.highlight { background: rgba(139,92,246,0.12); color: #8b5cf6; }
 
     /* Stock detail */
@@ -579,7 +631,10 @@
       font-size: 13px;
       font-weight: 800;
       color: var(--accent);
+      cursor: pointer;
+      transition: all 0.2s;
     }
+    .suggested-qty-box .main-qty:hover { background: var(--accent); color: white; transform: scale(1.05); }
     .suggested-qty-box .hint { font-size: 10px; color: var(--text-muted); }
 
     .empty-row td { padding: 50px 20px; text-align: center; color: var(--text-muted); }
@@ -981,6 +1036,31 @@
             <div class="sub">مضاف حالياً</div>
           </div>
         </div>
+        <div class="smart-stat">
+          <div class="smart-stat-icon purple"><i data-lucide="history"></i></div>
+          <div class="smart-stat-body">
+            <div class="label">طلبات معلقة</div>
+            <div class="value" id="statPending">0</div>
+            <div class="sub">لم تُستلم بعد</div>
+          </div>
+        </div>
+        <div class="smart-stat">
+          <div class="smart-stat-icon green"><i data-lucide="award"></i></div>
+          <div class="smart-stat-body">
+            <div class="label">أصناف A (عالية القيمة)</div>
+            <div class="value" id="statAbcA">0</div>
+            <div class="sub">متابعة دقيقة</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Smart Insights Card -->
+      <div class="smart-insights-card" id="smartInsightsCard">
+        <div class="smart-insights-header">
+          <i data-lucide="sparkles"></i>
+          توصيات ذكية
+        </div>
+        <div class="smart-insights-body" id="smartInsightsBody"></div>
       </div>
 
       <!-- Supplier Profile Card -->
@@ -1051,6 +1131,12 @@
           <button type="button" class="quick-action-btn" id="addAllProductsBtn">
             <i data-lucide="package-plus"></i> إضافة كل المقترح
           </button>
+          <button type="button" class="quick-action-btn" id="addSeasonalBtn">
+            <i data-lucide="calendar"></i> إضافة الموسمية
+          </button>
+          <button type="button" class="quick-action-btn" id="addAbcABtn">
+            <i data-lucide="award"></i> إضافة أصناف A فقط
+          </button>
           <button type="button" class="quick-action-btn" id="applyBestDiscountsBtn">
             <i data-lucide="sparkles"></i> تطبيق أفضل الخصومات
           </button>
@@ -1068,13 +1154,17 @@
               <tr>
                 <th style="width:40px;">#</th>
                 <th>الصنف</th>
+                <th>ABC</th>
                 <th>الحالة</th>
+                <th>الموسم</th>
                 <th>المخزون الحالي</th>
-                <th>معدل البيع (90 يوم)</th>
+                <th>معلق</th>
+                <th>معدل البيع (صافي)</th>
                 <th>أيام التغطية</th>
-                <th>آخر خصم شراء</th>
-                <th>أعلى خصم شراء</th>
+                <th>آخر خصم</th>
+                <th>أعلى خصم</th>
                 <th>أفضل سعر سابق</th>
+                <th>فترة التسليم</th>
                 <th>الكمية المقترحة</th>
                 <th>الكمية المطلوبة</th>
                 <th>الخصم المطلوب %</th>
@@ -1084,7 +1174,7 @@
             </thead>
             <tbody id="itemsBody">
               <tr class="empty-row">
-                <td colspan="14">
+                <td colspan="18">
                   <i data-lucide="package-open"></i>
                   <p>لم تضف أي أصناف بعد. ابدأ بالبحث أعلاه أو استخدم الأزرار السريعة.</p>
                 </td>
@@ -1198,8 +1288,7 @@
 
   <script src="refad-core.js"></script>
   <script src="refad-camera-scanner.js"></script>
-  <script src="refad-auth.js"></script>
-    <script>
+  <script src="refad-auth.js"></script>  <script>
     (function () {
       'use strict';
 
@@ -1258,7 +1347,7 @@
       const SMART_PURCHASE_KEY = 'refad_purchase_suggestions';
 
       // ============================================================
-      // 4) State
+      // 4) State (مع كل حقول التحليلات)
       // ============================================================
       const state = {
         suppliers: [],
@@ -1275,7 +1364,27 @@
         status: 'draft',
         isLocked: false,
         urgentItems: [],
-        supplierProfile: null
+        supplierProfile: null,
+
+        // ===== تحليلات متقدمة =====
+        saleRates: {},           // معدل البيع اليومي (خام)
+        saleRatesNet: {},        // معدل البيع الصافي (بدون مرتجعات)
+        abcClassification: {},   // تصنيف ABC لكل صنف
+        seasonalityData: {},     // موسمية الطلب
+        supplierStats: {},       // إحصائيات المورد
+        pendingPOs: {},          // الطلبات المعلقة
+        leadTimeData: {},        // فترة التسليم
+        priceHistory: {},        // تاريخ الأسعار
+        returnsByProduct: {},    // المرتجعات لكل صنف
+
+        // ===== إحصائيات عامة =====
+        stats: {
+          critical: 0,
+          urgent: 0,
+          soon: 0,
+          pendingCount: 0,
+          abcA: 0
+        }
       };
 
       // ============================================================
@@ -1433,7 +1542,6 @@
             p_supplier_id: supplierId,
             p_company_id: session.company_id
           }).catch(async () => {
-            // Fallback: احسب يدوياً
             const supplier = state.suppliers.find(s => s.id === supplierId);
             if (!supplier) return null;
 
@@ -1489,6 +1597,12 @@
             s.address ? `📍 ${s.address}` : ''
           ].filter(Boolean).join(' • ') || '—';
 
+          // إضافة فترة التسليم المتوسطة
+          const leadTime = state.leadTimeData[supplierId];
+          const leadTimeText = leadTime?.avg_days
+            ? `${leadTime.avg_days} يوم`
+            : 'غير معروفة';
+
           const cards = [
             {
               label: 'الرصيد الحالي',
@@ -1516,8 +1630,9 @@
               value: Refad.format.money(stats.avg_receipt || 0)
             },
             {
-              label: 'آخر فاتورة',
-              value: stats.last_receipt_date ? Refad.format.date(stats.last_receipt_date) : '—'
+              label: 'فترة التسليم',
+              value: leadTimeText,
+              sub: leadTime?.samples ? `من ${leadTime.samples} طلب` : 'لا يوجد سجل'
             }
           ];
 
@@ -1537,18 +1652,18 @@
       }
 
       // ============================================================
-      // 9) Load Products + Benchmarks
+      // 9) Load Products + Benchmarks + Analytics
       // ============================================================
       async function loadProducts() {
         try {
           const [products, discounts, barcodes] = await Promise.all([
             Refad.db.select('products', {
-              columns: 'id, name, name_en, form, unit, reorder_level, min_order_qty, default_price, category',
+              columns: 'id, name, name_en, form, unit, reorder_level, min_order_qty, default_price, category, created_at',
               eq: { company_id: session.company_id, is_active: true },
               order: { column: 'name', ascending: true }
             }),
             Refad.db.select('product_discounts', {
-              columns: 'product_id, last_purchase_discount, max_purchase_discount'
+              columns: 'product_id, last_purchase_discount, max_purchase_discount, min_purchase_discount, last_sale_discount, max_sale_discount'
             }).catch(() => []),
             Refad.db.select('product_barcodes', {
               columns: 'barcode, product_id'
@@ -1566,10 +1681,49 @@
           state.allProducts = products.map(p => ({
             ...p,
             last_purchase_discount: discountMap[p.id]?.last_purchase_discount || 0,
-            max_purchase_discount: discountMap[p.id]?.max_purchase_discount || 0
+            max_purchase_discount: discountMap[p.id]?.max_purchase_discount || 0,
+            min_purchase_discount: discountMap[p.id]?.min_purchase_discount || 0,
+            last_sale_discount: discountMap[p.id]?.last_sale_discount || 0,
+            max_sale_discount: discountMap[p.id]?.max_sale_discount || 0
           }));
 
-          // Stock per product
+          // 1) المخزون
+          await loadStock();
+
+          // 2) تصنيف ABC
+          await loadAbcClassification();
+
+          // 3) معدل البيع الصافي
+          await loadRealSaleRates();
+
+          // 4) المواسم
+          await loadSeasonality();
+
+          // 5) Benchmarks الشراء
+          await loadPurchaseBenchmarks(products);
+
+          // 6) الطلبات المعلقة
+          await loadPendingPOs();
+
+          // 7) فترة التسليم
+          await loadLeadTimeData();
+
+          // 8) الأصناف العاجلة
+          await loadUrgentItems();
+
+          // 9) الإحصائيات العامة
+          updateGlobalStats();
+        } catch (e) {
+          console.error('Products load failed:', e);
+          Refad.toast.error('تعذّر تحميل الأصناف');
+        }
+      }
+
+      // ============================================================
+      // 9.1) Stock
+      // ============================================================
+      async function loadStock() {
+        try {
           const stockRows = await Refad.db.select('batches', {
             columns: 'product_id, quantity_left, expiry_date',
             eq: { company_id: session.company_id },
@@ -1583,88 +1737,311 @@
             state.stockByProduct[batch.product_id] =
               (state.stockByProduct[batch.product_id] || 0) + (Number(batch.quantity_left) || 0);
           });
-
-          // Purchase benchmarks (آخر 180 يوم)
-          const purchaseSince = Refad.date.addDays(today, -180);
-          try {
-            const purchases = products.length ? await Refad.db.select('receipt_items', {
-              columns: 'product_id, unit_price, purchase_discount, quantity, receipts!inner(company_id, supplier_id, receipt_date, status, suppliers(id, name))',
-              in: { product_id: products.map(p => p.id) },
-              gte: { 'receipts.receipt_date': purchaseSince },
-              eq: { 'receipts.company_id': session.company_id },
-              neq: { 'receipts.status': 'cancelled' },
-              limit: 10000
-            }).catch(() => []) : [];
-
-            state.purchaseBenchmarks = {};
-            purchases.forEach(row => {
-              const receipt = row.receipts;
-              const supplier = receipt?.suppliers;
-              const unitPrice = Number(row.unit_price);
-              if (!receipt || !supplier || !Number.isFinite(unitPrice) || unitPrice < 0) return;
-
-              const discount = Math.max(0, Math.min(100, Number(row.purchase_discount) || 0));
-              const netPrice = unitPrice * (1 - discount / 100);
-
-              const benchmark = state.purchaseBenchmarks[row.product_id] || { best: null, latest: null };
-              const purchase = {
-                supplierId: receipt.supplier_id,
-                supplierName: supplier.name,
-                netPrice,
-                discount,
-                date: receipt.receipt_date,
-                quantity: Number(row.quantity) || 0
-              };
-
-              if (!benchmark.best || netPrice < benchmark.best.netPrice) benchmark.best = purchase;
-              if (!benchmark.latest || receipt.receipt_date > benchmark.latest.date) benchmark.latest = purchase;
-              state.purchaseBenchmarks[row.product_id] = benchmark;
-            });
-          } catch (historyError) {
-            console.error('[Purchase request] Purchase price history failed:', historyError);
-            state.purchaseBenchmarks = {};
-          }
-
-          // تحميل الأصناف العاجلة
-          await loadUrgentItems();
         } catch (e) {
-          console.error('Products load failed:', e);
-          Refad.toast.error('تعذّر تحميل الأصناف');
+          console.warn('Stock load failed:', e.message);
         }
       }
 
       // ============================================================
-      // 10) Load Urgent Items
+      // 9.2) ABC Classification
+      // ============================================================
+      async function loadAbcClassification() {
+        try {
+          const result = await Refad.db.rpc('get_products_abc_classification', {
+            p_company_id: session.company_id
+          });
+          if (Array.isArray(result)) {
+            result.forEach(r => {
+              state.abcClassification[r.product_id] = {
+                class: r.abc_class,
+                cumulative_pct: Number(r.cumulative_pct) || 0,
+                value: Number(r.inventory_value) || 0
+              };
+            });
+          }
+        } catch (e) {
+          console.warn('ABC classification failed:', e.message);
+        }
+      }
+
+      // ============================================================
+      // 9.3) Real Sale Rates (بدون مرتجعات)
+      // ============================================================
+      async function loadRealSaleRates() {
+        try {
+          const fromDate = Refad.date.addDays(Refad.date.today(), -90);
+
+          // 1) المبيعات
+          const salesRows = await Refad.db.select('sales_invoice_items', {
+            columns: 'product_id, quantity, sales_invoices!inner(invoice_date, company_id, status, invoice_type)',
+            gte: { 'sales_invoices.invoice_date': fromDate },
+            eq: { 'sales_invoices.company_id': session.company_id, 'sales_invoices.invoice_type': 'sale' },
+            neq: { 'sales_invoices.status': 'cancelled' }
+          }).catch(() => []);
+
+          const totalSales = {};
+          salesRows.forEach(r => {
+            totalSales[r.product_id] = (totalSales[r.product_id] || 0) + (Number(r.quantity) || 0);
+          });
+
+          // 2) المرتجعات
+          const returnRows = await Refad.db.select('inventory_return_items', {
+            columns: 'product_id, quantity, inventory_returns!inner(return_date, company_id, return_type, status)',
+            gte: { 'inventory_returns.return_date': fromDate },
+            eq: { 'inventory_returns.company_id': session.company_id, 'inventory_returns.return_type': 'sales' }
+          }).catch(() => []);
+
+          const totalReturns = {};
+          returnRows.forEach(r => {
+            totalReturns[r.product_id] = (totalReturns[r.product_id] || 0) + (Number(r.quantity) || 0);
+          });
+
+          state.saleRates = {};
+          state.saleRatesNet = {};
+          state.returnsByProduct = totalReturns;
+
+          Object.keys(totalSales).forEach(pid => {
+            const sales = totalSales[pid] || 0;
+            const returns = totalReturns[pid] || 0;
+            const net = Math.max(0, sales - returns);
+            state.saleRates[pid] = Math.round((sales / 90) * 100) / 100;
+            state.saleRatesNet[pid] = Math.round((net / 90) * 100) / 100;
+          });
+
+          state.allProducts.forEach(p => {
+            if (!state.saleRates[p.id]) state.saleRates[p.id] = 0;
+            if (!state.saleRatesNet[p.id]) state.saleRatesNet[p.id] = 0;
+          });
+        } catch (e) {
+          console.warn('Real sale rates failed:', e.message);
+        }
+      }
+
+      // ============================================================
+      // 9.4) Seasonality (6 أشهر)
+      // ============================================================
+      async function loadSeasonality() {
+        try {
+          const fromDate = Refad.date.addDays(Refad.date.today(), -180);
+          const rows = await Refad.db.select('sales_invoice_items', {
+            columns: 'product_id, quantity, sales_invoices!inner(invoice_date, company_id, invoice_type)',
+            gte: { 'sales_invoices.invoice_date': fromDate },
+            eq: { 'sales_invoices.company_id': session.company_id, 'sales_invoices.invoice_type': 'sale' },
+            neq: { 'sales_invoices.status': 'cancelled' }
+          }).catch(() => []);
+
+          const productMonthQty = {};
+          rows.forEach(r => {
+            const inv = r.sales_invoices;
+            if (!inv?.invoice_date) return;
+            const month = String(inv.invoice_date).slice(0, 7);
+            const key = `${r.product_id}__${month}`;
+            productMonthQty[key] = (productMonthQty[key] || 0) + (Number(r.quantity) || 0);
+          });
+
+          state.seasonalityData = {};
+          const monthsByProduct = {};
+
+          Object.entries(productMonthQty).forEach(([key, qty]) => {
+            const [pid, month] = key.split('__');
+            if (!monthsByProduct[pid]) monthsByProduct[pid] = {};
+            monthsByProduct[pid][month] = qty;
+          });
+
+          Object.entries(monthsByProduct).forEach(([pid, months]) => {
+            const values = Object.values(months);
+            const avg = values.reduce((s, v) => s + v, 0) / values.length;
+            const max = Math.max(...values);
+            const maxMonth = Object.keys(months).find(m => months[m] === max);
+            const ratio = avg > 0 ? max / avg : 1;
+
+            state.seasonalityData[pid] = {
+              avg,
+              max,
+              max_month: maxMonth,
+              peak_ratio: ratio,
+              is_seasonal: ratio > 1.5,
+              monthly_data: months
+            };
+          });
+        } catch (e) {
+          console.warn('Seasonality failed:', e.message);
+        }
+      }
+
+      // ============================================================
+      // 9.5) Purchase Benchmarks (آخر 180 يوم)
+      // ============================================================
+      async function loadPurchaseBenchmarks(products) {
+        try {
+          const today = Refad.date.today();
+          const purchaseSince = Refad.date.addDays(today, -180);
+
+          const purchases = products.length ? await Refad.db.select('receipt_items', {
+            columns: 'product_id, unit_price, purchase_discount, quantity, receipts!inner(company_id, supplier_id, receipt_date, status, suppliers(id, name))',
+            in: { product_id: products.map(p => p.id) },
+            gte: { 'receipts.receipt_date': purchaseSince },
+            eq: { 'receipts.company_id': session.company_id },
+            neq: { 'receipts.status': 'cancelled' },
+            limit: 10000
+          }).catch(() => []) : [];
+
+          state.purchaseBenchmarks = {};
+          state.priceHistory = {};
+
+          purchases.forEach(row => {
+            const receipt = row.receipts;
+            const supplier = receipt?.suppliers;
+            const unitPrice = Number(row.unit_price);
+            if (!receipt || !supplier || !Number.isFinite(unitPrice) || unitPrice < 0) return;
+
+            const discount = Math.max(0, Math.min(100, Number(row.purchase_discount) || 0));
+            const netPrice = unitPrice * (1 - discount / 100);
+
+            const benchmark = state.purchaseBenchmarks[row.product_id] || { best: null, latest: null };
+            const purchase = {
+              supplierId: receipt.supplier_id,
+              supplierName: supplier.name,
+              netPrice,
+              discount,
+              date: receipt.receipt_date,
+              quantity: Number(row.quantity) || 0
+            };
+
+            if (!benchmark.best || netPrice < benchmark.best.netPrice) benchmark.best = purchase;
+            if (!benchmark.latest || receipt.receipt_date > benchmark.latest.date) benchmark.latest = purchase;
+            state.purchaseBenchmarks[row.product_id] = benchmark;
+
+            if (!state.priceHistory[row.product_id]) state.priceHistory[row.product_id] = [];
+            state.priceHistory[row.product_id].push({ netPrice, date: receipt.receipt_date });
+          });
+
+          Object.keys(state.priceHistory).forEach(pid => {
+            const prices = state.priceHistory[pid].map(p => p.netPrice);
+            if (prices.length) {
+              state.priceHistory[pid] = {
+                avg: prices.reduce((s, p) => s + p, 0) / prices.length,
+                min: Math.min(...prices),
+                max: Math.max(...prices),
+                samples: prices.length
+              };
+            }
+          });
+        } catch (e) {
+          console.error('[Purchase request] Purchase benchmarks failed:', e);
+          state.purchaseBenchmarks = {};
+        }
+      }
+
+      // ============================================================
+      // 9.6) Pending POs
+      // ============================================================
+      async function loadPendingPOs() {
+        try {
+          const rows = await Refad.db.select('purchase_request_items', {
+            columns: 'product_id, requested_qty, received_qty, purchase_requests!inner(id, status, company_id)',
+            eq: { 'purchase_requests.company_id': session.company_id },
+            in: { 'purchase_requests.status': ['draft', 'sent', 'partial'] },
+            limit: 5000
+          }).catch(() => []);
+
+          state.pendingPOs = {};
+          rows.forEach(row => {
+            const remaining = Math.max(0, (Number(row.requested_qty) || 0) - (Number(row.received_qty) || 0));
+            if (remaining > 0) {
+              state.pendingPOs[row.product_id] = (state.pendingPOs[row.product_id] || 0) + remaining;
+            }
+          });
+        } catch (e) {
+          console.warn('Pending POs failed:', e.message);
+        }
+      }
+
+      // ============================================================
+      // 9.7) Lead Time per Supplier
+      // ============================================================
+      async function loadLeadTimeData() {
+        try {
+          const rows = await Refad.db.select('receipts', {
+            columns: 'supplier_id, receipt_date, purchase_requests!inner(created_at)',
+            eq: { company_id: session.company_id },
+            neq: { status: 'cancelled' },
+            limit: 2000
+          }).catch(() => []);
+
+          const supplierLeadTimes = {};
+          rows.forEach(row => {
+            const req = row.purchase_requests;
+            if (!req?.created_at || !row.receipt_date) return;
+
+            const createdDate = new Date(req.created_at);
+            const receiptDate = new Date(row.receipt_date);
+            const days = Math.round((receiptDate - createdDate) / (1000 * 60 * 60 * 24));
+            if (days <= 0 || days > 90) return;
+
+            if (!supplierLeadTimes[row.supplier_id]) supplierLeadTimes[row.supplier_id] = [];
+            supplierLeadTimes[row.supplier_id].push(days);
+          });
+
+          state.leadTimeData = {};
+          Object.entries(supplierLeadTimes).forEach(([sid, days]) => {
+            const avg = days.reduce((s, d) => s + d, 0) / days.length;
+            state.leadTimeData[sid] = {
+              avg_days: Math.round(avg),
+              min_days: Math.min(...days),
+              max_days: Math.max(...days),
+              samples: days.length
+            };
+          });
+        } catch (e) {
+          console.warn('Lead time failed:', e.message);
+        }
+      }
+
+      // ============================================================
+      // 9.8) Urgent Items
       // ============================================================
       async function loadUrgentItems() {
         try {
           const items = await Refad.db.rpc('get_urgent_purchase_items', {
             p_company_id: session.company_id,
             p_limit: 100
-          }).catch(async () => {
-            // Fallback: احسب يدوياً
-            const result = [];
+          }).catch(() => null);
+
+          if (Array.isArray(items) && items.length) {
+            state.urgentItems = items;
+          } else {
+            state.urgentItems = [];
             for (const p of state.allProducts) {
               const stock = state.stockByProduct[p.id] || 0;
               const reorderLevel = Number(p.reorder_level) || 10;
-              if (stock > reorderLevel * 2) continue;
+              const dailyRate = state.saleRatesNet[p.id] || 0;
+              const pending = state.pendingPOs[p.id] || 0;
+              const effectiveStock = stock + pending;
+              const daysRemaining = dailyRate > 0 ? Math.floor(effectiveStock / dailyRate) : null;
 
-              result.push({
-                product_id: p.id,
-                name: p.name,
-                form: p.form,
-                unit: p.unit,
-                current_stock: stock,
-                reorder_level: reorderLevel,
-                daily_rate: 0,
-                days_remaining: null,
-                urgency: stock <= reorderLevel ? 'critical' : 'urgent'
-              });
+              let urgency = 'ok';
+              if (effectiveStock <= reorderLevel) urgency = 'critical';
+              else if (daysRemaining !== null && daysRemaining <= 15) urgency = 'urgent';
+              else if (daysRemaining !== null && daysRemaining <= 30) urgency = 'soon';
+
+              if (urgency !== 'ok') {
+                state.urgentItems.push({
+                  product_id: p.id,
+                  name: p.name,
+                  form: p.form,
+                  unit: p.unit,
+                  current_stock: stock,
+                  pending_stock: pending,
+                  reorder_level: reorderLevel,
+                  daily_rate: dailyRate,
+                  days_remaining: daysRemaining,
+                  urgency
+                });
+              }
             }
-            return result;
-          });
+          }
 
-          state.urgentItems = Array.isArray(items) ? items : [];
           renderUrgentStats();
         } catch (e) {
           console.error('Urgent items failed:', e);
@@ -1672,10 +2049,17 @@
         }
       }
 
+      // ============================================================
+      // 10) Urgent Stats
+      // ============================================================
       function renderUrgentStats() {
         const critical = state.urgentItems.filter(i => i.urgency === 'critical').length;
         const urgent = state.urgentItems.filter(i => i.urgency === 'urgent').length;
         const soon = state.urgentItems.filter(i => i.urgency === 'soon').length;
+
+        state.stats.critical = critical;
+        state.stats.urgent = urgent;
+        state.stats.soon = soon;
 
         document.getElementById('statCritical').textContent = Refad.format.number(critical);
         document.getElementById('statUrgent').textContent = Refad.format.number(urgent);
@@ -1689,7 +2073,242 @@
       }
 
       // ============================================================
-      // 11) Sale Rates (90 days)
+      // 11) Global Stats
+      // ============================================================
+      function updateGlobalStats() {
+        // عدد الطلبات المعلقة
+        const pendingCount = Object.keys(state.pendingPOs).length;
+        state.stats.pendingCount = pendingCount;
+        document.getElementById('statPending').textContent = Refad.format.number(pendingCount);
+
+        // عدد أصناف A
+        const abcACount = Object.values(state.abcClassification).filter(x => x.class === 'A').length;
+        state.stats.abcA = abcACount;
+        document.getElementById('statAbcA').textContent = Refad.format.number(abcACount);
+
+        // عرض Insight الذكية
+        renderSmartInsights();
+      }
+
+      // ============================================================
+      // 12) Smart Insights (توصيات ذكية)
+      // ============================================================
+      function renderSmartInsights() {
+        const insights = [];
+
+        // 1) أصناف عاجلة لم تُضف بعد
+        const urgentNotAdded = state.urgentItems.filter(u =>
+          (u.urgency === 'critical' || u.urgency === 'urgent') &&
+          !state.items.some(it => it.product_id === u.product_id)
+        );
+        if (urgentNotAdded.length > 0) {
+          insights.push({
+            type: 'danger',
+            icon: 'alert-octagon',
+            msg: `يوجد <strong>${urgentNotAdded.length}</strong> صنف عاجل لم يُضف للطلب. اضغط "إضافة الأصناف العاجلة".`
+          });
+        }
+
+        // 2) أصناف موسمية
+        const seasonalCount = state.allProducts.filter(p => state.seasonalityData[p.id]?.is_seasonal).length;
+        if (seasonalCount > 0) {
+          insights.push({
+            type: 'info',
+            icon: 'calendar',
+            msg: `يوجد <strong>${seasonalCount}</strong> صنف موسمي. قد تحتاج كميات أكبر قبل الموسم.`
+          });
+        }
+
+        // 3) ارتفاع أسعار
+        let priceRiseCount = 0;
+        Object.entries(state.purchaseBenchmarks).forEach(([pid, b]) => {
+          const hist = state.priceHistory[pid];
+          if (b.latest && hist?.avg && b.latest.netPrice > hist.avg * 1.1) {
+            priceRiseCount++;
+          }
+        });
+        if (priceRiseCount > 0) {
+          insights.push({
+            type: 'warning',
+            icon: 'trending-up',
+            msg: `ارتفاع أسعار في <strong>${priceRiseCount}</strong> صنف مقارنة بالمتوسط. راجع التسعير.`
+          });
+        }
+
+        // 4) أصناف A وبدون مخزون
+        const abcANoStock = state.allProducts.filter(p =>
+          state.abcClassification[p.id]?.class === 'A' &&
+          (state.stockByProduct[p.id] || 0) < (p.reorder_level || 10)
+        ).length;
+        if (abcANoStock > 0) {
+          insights.push({
+            type: 'danger',
+            icon: 'award',
+            msg: `يوجد <strong>${abcANoStock}</strong> صنف من فئة A بمخزون منخفض. أولوية قصوى!`
+          });
+        }
+
+        // 5) أصناف راكدة (Dead Stock)
+        const deadStock = state.allProducts.filter(p => {
+          const rate = state.saleRatesNet[p.id] || 0;
+          const stock = state.stockByProduct[p.id] || 0;
+          return stock > 0 && rate === 0;
+        }).length;
+        if (deadStock > 0) {
+          insights.push({
+            type: 'warning',
+            icon: 'package-x',
+            msg: `يوجد <strong>${deadStock}</strong> صنف راكد (مخزون بدون مبيعات). تجنّب طلبه.`
+          });
+        }
+
+        // 6) طلبات معلقة
+        if (state.stats.pendingCount > 0) {
+          insights.push({
+            type: 'info',
+            icon: 'clock',
+            msg: `يوجد <strong>${state.stats.pendingCount}</strong> صنف في طلبات معلقة. تأكد من عدم التكرار.`
+          });
+        }
+
+        // 7) خصومات متاحة لم تُطبّق
+        const unappliedDiscounts = state.items.filter(it =>
+          it.suggested_discount > 0 && it.requested_discount < it.suggested_discount
+        ).length;
+        if (unappliedDiscounts > 0) {
+          insights.push({
+            type: 'success',
+            icon: 'sparkles',
+            msg: `يمكنك تطبيق خصومات أعلى على <strong>${unappliedDiscounts}</strong> صنف. اضغط "تطبيق أفضل الخصومات".`
+          });
+        }
+
+        // عرض البطاقة
+        const card = document.getElementById('smartInsightsCard');
+        const body = document.getElementById('smartInsightsBody');
+
+        if (!insights.length) {
+          card.classList.remove('show');
+          return;
+        }
+
+        body.innerHTML = insights.map(i => `
+          <div class="insight-item ${i.type}">
+            <i data-lucide="${i.icon}"></i>
+            <div>${i.msg}</div>
+          </div>
+        `).join('');
+
+        card.classList.add('show');
+        if (window.lucide) lucide.createIcons();
+      }
+
+      // ============================================================
+      // 13) Suggested Purchase Qty (EOQ + Safety + Seasonality)
+      // ============================================================
+      function suggestedPurchaseQty(product, dailyRate = null, supplierId = null) {
+        const pid = product.id;
+        const rate = dailyRate !== null ? dailyRate : (state.saleRatesNet[pid] || 0);
+        const currentStock = Number(state.stockByProduct[pid]) || 0;
+        const pending = Number(state.pendingPOs[pid]) || 0;
+        const reorderLevel = Number(product.reorder_level) || 0;
+
+        // فترة التسليم
+        const leadTime = supplierId && state.leadTimeData[supplierId]?.avg_days
+          ? state.leadTimeData[supplierId].avg_days
+          : 7;
+
+        // احتياطي الأمان (50% من فترة التسليم)
+        const safetyStock = Math.ceil(rate * leadTime * 0.5);
+
+        // الموسمية
+        const seasonality = state.seasonalityData[pid];
+        const seasonalMultiplier = seasonality?.is_seasonal
+          ? Math.min(seasonality.peak_ratio, 2)
+          : 1;
+
+        // المخزون المستهدف = تغطية 30 يوم × موسمية + أمان
+        const targetStock = Math.ceil((rate * 30 * seasonalMultiplier) + safetyStock);
+
+        // الكمية المطلوبة
+        const effectiveStock = currentStock + pending;
+        const needed = Math.max(0, targetStock - effectiveStock);
+
+        // EOQ مبسط
+        const annualDemand = rate * 365;
+        const eoq = annualDemand > 0 ? Math.round(Math.sqrt(annualDemand) * 2) : 0;
+
+        // اختيار الأكبر
+        let suggested = Math.max(needed, eoq > 0 && needed > 0 ? Math.min(eoq, needed * 2) : 0);
+        suggested = Math.min(suggested, 99999);
+        suggested = Math.max(suggested, Number(product.min_order_qty) || 1);
+
+        // إذا لا يوجد احتياج، أرجع 0
+        if (needed <= 0 && eoq === 0) suggested = 0;
+
+        return suggested;
+      }
+
+      // ============================================================
+      // 14) Suggested Purchase Discount
+      // ============================================================
+      function suggestedPurchaseDiscount(product) {
+        const pid = product.id;
+        const benchmark = state.purchaseBenchmarks[pid];
+        const priceHist = state.priceHistory[pid];
+
+        let suggested = Math.max(
+          0,
+          Number(product.max_purchase_discount) || Number(product.last_purchase_discount) || 0
+        );
+
+        if (benchmark?.latest && priceHist?.avg) {
+          const lastPrice = benchmark.latest.netPrice;
+          if (lastPrice > priceHist.avg * 1.05) {
+            suggested = Math.min(100, suggested + 5);
+          }
+        }
+
+        return suggested;
+      }
+
+      // ============================================================
+      // 15) Helpers
+      // ============================================================
+      function getProductABC(productId) {
+        return state.abcClassification[productId]?.class || 'C';
+      }
+
+      function getUrgency(productId) {
+        const stock = state.stockByProduct[productId] || 0;
+        const pending = state.pendingPOs[productId] || 0;
+        const rate = state.saleRatesNet[productId] || 0;
+        const effective = stock + pending;
+
+        const product = state.allProducts.find(p => p.id === productId);
+        const reorderLevel = Number(product?.reorder_level) || 10;
+
+        if (effective <= reorderLevel) return 'critical';
+        if (rate > 0) {
+          const daysRemaining = Math.floor(effective / rate);
+          if (daysRemaining <= 15) return 'urgent';
+          if (daysRemaining <= 30) return 'soon';
+        }
+        return 'ok';
+      }
+
+      function isDeadStock(productId) {
+        const rate = state.saleRatesNet[productId] || 0;
+        const stock = state.stockByProduct[productId] || 0;
+        return stock > 0 && rate === 0;
+      }
+
+      function getSeasonality(productId) {
+        return state.seasonalityData[productId] || null;
+      }
+
+      // ============================================================
+      // 16) Sale Rates (helper)
       // ============================================================
       async function calcSaleRates(productIds) {
         if (!productIds.length) return {};
@@ -1710,7 +2329,7 @@
 
           const rates = {};
           Object.keys(totals).forEach(pid => {
-            rates[pid] = Math.round((totals[pid] / 90) * 10) / 10;
+            rates[pid] = Math.round((totals[pid] / 90) * 100) / 100;
           });
           return rates;
         } catch (e) {
@@ -1720,25 +2339,7 @@
       }
 
       // ============================================================
-      // 12) Suggested Quantity & Discount
-      // ============================================================
-      function suggestedPurchaseQty(product, dailyRate) {
-        const currentStock = Number(state.stockByProduct[product.id]) || 0;
-        const reorderLevel = Number(product.reorder_level) || 0;
-        const targetStock = Math.max(reorderLevel, Math.ceil((Number(dailyRate) || 0) * 30));
-        const needed = Math.max(0, targetStock - currentStock);
-        return needed > 0 ? Math.min(99999, Math.max(Number(product.min_order_qty) || 1, needed)) : 0;
-      }
-
-      function suggestedPurchaseDiscount(product) {
-        return Math.max(
-          0,
-          Math.min(100, Number(product.max_purchase_discount) || Number(product.last_purchase_discount) || 0)
-        );
-      }
-
-      // ============================================================
-      // 13) Add Product
+      // 17) Add Product
       // ============================================================
       async function addProductById(pid) {
         if (state.isLocked) {
@@ -1752,22 +2353,26 @@
         const p = state.allProducts.find(x => x.id === pid);
         if (!p) return;
 
-        const rates = await calcSaleRates([pid]);
+        // استخدم المعدل المحسوب مسبقاً
+        const rate = state.saleRatesNet[pid] || 0;
+        const supplierId = parseInt(document.getElementById('supplierSelect').value, 10) || null;
+        const suggestedQty = suggestedPurchaseQty(p, rate, supplierId);
 
         state.items.push({
           product_id: p.id,
           product: p,
-          requested_qty: Math.max(1, suggestedPurchaseQty(p, rates[pid] || 0) || 1),
-          suggested_qty: suggestedPurchaseQty(p, rates[pid] || 0),
+          requested_qty: Math.max(1, suggestedQty || 1),
+          suggested_qty: suggestedQty,
           last_discount: p.last_purchase_discount || 0,
           max_discount: p.max_purchase_discount || 0,
           suggested_discount: suggestedPurchaseDiscount(p),
           purchase_benchmark: state.purchaseBenchmarks[p.id] || null,
           requested_discount: 0,
-          sale_rate: rates[pid] || 0
+          sale_rate: rate
         });
 
         renderItems();
+        updateGlobalStats();
       }
 
       async function addProductByBarcode(code) {
@@ -1780,6 +2385,7 @@
         if (existing) {
           existing.requested_qty = (Number(existing.requested_qty) || 0) + 1;
           renderItems();
+          updateGlobalStats();
         } else {
           await addProductById(productId);
         }
@@ -1787,1268 +2393,1534 @@
       }
 
       // ============================================================
-      // 14) Render Items
+      // Placeholder Functions (سيتم تعريفها في الجزء 3)
       // ============================================================
-      function renderItems() {
-        const tbody = document.getElementById('itemsBody');
-        if (!state.items.length) {
-          tbody.innerHTML = `
-            <tr class="empty-row">
-              <td colspan="14">
-                <i data-lucide="package-open"></i>
-                <p>لم تضف أي أصناف بعد. ابدأ بالبحث أعلاه أو استخدم الأزرار السريعة.</p>
-              </td>
-            </tr>`;
-          if (window.lucide) lucide.createIcons();
-          updateSummary();
+      let renderItems = () => {};
+      let updateSummary = () => {};
+      let renderSupplierResponseHistory = () => {};
+
+      // تصدير للاستخدام في الجزء 3
+      window.__refadPR = {
+        state,
+        session,
+        canCreate,
+        canEdit,
+        isEdit,
+        requestId,
+        smartMode,
+        SMART_PURCHASE_KEY,
+        MENU,
+        buildSidebar,
+        fillUser,
+        setupTheme,
+        setupSidebarMobile,
+        setupUserMenu,
+        setupNotifBtn,
+        loadSuppliers,
+        loadSupplierProfile,
+        loadProducts,
+        loadStock,
+        loadAbcClassification,
+        loadRealSaleRates,
+        loadSeasonality,
+        loadPurchaseBenchmarks,
+        loadPendingPOs,
+        loadLeadTimeData,
+        loadUrgentItems,
+        renderUrgentStats,
+        updateGlobalStats,
+        renderSmartInsights,
+        suggestedPurchaseQty,
+        suggestedPurchaseDiscount,
+        getProductABC,
+        getUrgency,
+        isDeadStock,
+        getSeasonality,
+        calcSaleRates,
+        addProductById,
+        addProductByBarcode,
+        applyLockedRequestState,
+        setRenderItems: (fn) => { renderItems = fn; },
+        setUpdateSummary: (fn) => { updateSummary = fn; },
+        setRenderSupplierResponseHistory: (fn) => { renderSupplierResponseHistory = fn; },
+        getRenderItems: () => renderItems,
+        getUpdateSummary: () => updateSummary,
+        getRenderSupplierResponseHistory: () => renderSupplierResponseHistory
+      };
+
+      console.log('%c[Refad] Purchase Request - Part 2 loaded', 'color:#14B8A6;font-weight:bold');
+    })();
+  </script>  <script>
+    (function () {
+      'use strict';
+
+      // ============================================================
+      // انتظر تحميل الجزء 2
+      // ============================================================
+      const waitForCore = () => {
+        if (!window.__refadPR) {
+          setTimeout(waitForCore, 50);
           return;
         }
+        initPurchaseForm(window.__refadPR);
+      };
 
-        tbody.innerHTML = state.items.map((it, i) => {
-          const stock = state.stockByProduct[it.product_id] || 0;
-          const reorderLevel = Number(it.product.reorder_level) || 10;
-          const dailyRate = it.sale_rate || 0;
-          const daysRemaining = dailyRate > 0 ? Math.floor(stock / dailyRate) : null;
+      function initPurchaseForm(core) {
+        const {
+          state, session, canCreate, canEdit, isEdit, requestId, smartMode,
+          SMART_PURCHASE_KEY,
+          MENU, buildSidebar, fillUser, setupTheme, setupSidebarMobile,
+          setupUserMenu, setupNotifBtn, loadSuppliers, loadSupplierProfile,
+          loadProducts, loadUrgentItems, renderUrgentStats, updateGlobalStats,
+          renderSmartInsights, suggestedPurchaseQty, suggestedPurchaseDiscount,
+          getProductABC, getUrgency, isDeadStock, getSeasonality,
+          addProductById, addProductByBarcode, applyLockedRequestState,
+          setRenderItems, setUpdateSummary, setRenderSupplierResponseHistory
+        } = core;
 
-          // Urgency
-          let urgencyChip = '<span class="item-info-chip ok"><i data-lucide="check-circle" style="width:10px;height:10px;"></i> كافٍ</span>';
-          let rowClass = '';
-          if (stock <= reorderLevel) {
-            urgencyChip = '<span class="item-info-chip critical"><i data-lucide="alert-octagon" style="width:10px;height:10px;"></i> حرج</span>';
-            rowClass = 'critical-row';
-          } else if (daysRemaining !== null && daysRemaining <= 15) {
-            urgencyChip = '<span class="item-info-chip urgent"><i data-lucide="alert-triangle" style="width:10px;height:10px;"></i> عاجل</span>';
-            rowClass = 'urgent-row';
-          } else if (daysRemaining !== null && daysRemaining <= 30) {
-            urgencyChip = '<span class="item-info-chip soon"><i data-lucide="clock" style="width:10px;height:10px;"></i> قريباً</span>';
-          }
-
-          // Stock display
-          const stockClass = stock <= reorderLevel ? 'danger' : (stock <= reorderLevel * 2 ? 'warn' : 'ok');
-
-          // Suggested qty
-          const suggested = it.suggested_qty > 0
-            ? `<div class="suggested-qty-box">
-                 <button type="button" class="main-qty" data-use-quantity="${i}">
-                   <i data-lucide="wand-2" style="width:12px;height:12px;"></i>
-                   ${Refad.format.number(it.suggested_qty)}
-                 </button>
-                 <div class="hint">تغطية 30 يوم</div>
-               </div>`
-            : '<span style="color:var(--text-muted);font-size:12px;">المخزون كافٍ</span>';
-
-          // Benchmark
-          const benchmarkHtml = it.purchase_benchmark?.best
-            ? `<strong style="font-size:12px;">${Refad.format.money(it.purchase_benchmark.best.netPrice)}</strong>
-               <div class="product-sub">${Refad.escapeHtml(it.purchase_benchmark.best.supplierName)}</div>
-               <button type="button" class="btn btn-outline btn-sm" data-compare-prices="${i}" style="margin-top:4px;padding:2px 8px;font-size:10px;">
-                 <i data-lucide="git-compare" style="width:10px;height:10px;"></i> مقارنة
-               </button>`
-            : '<span style="color:var(--text-muted);font-size:11px;">لا يوجد سجل</span>';
-
-          return `
-            <tr data-idx="${i}" class="${rowClass}">
-              <td style="color:var(--text-muted);font-weight:700;">${i + 1}</td>
-              <td>
-                <div class="product-name-cell">${Refad.escapeHtml(it.product.name)}</div>
-                <div class="product-sub">${Refad.escapeHtml([it.product.form, it.product.unit].filter(Boolean).join(' • ') || '—')}</div>
-              </td>
-              <td>${urgencyChip}</td>
-              <td>
-                <div class="stock-detail">
-                  <div class="main ${stockClass}">${Refad.format.number(stock)}</div>
-                  <div class="hint">حد: ${Refad.format.number(reorderLevel)}</div>
-                </div>
-              </td>
-              <td>
-                ${dailyRate > 0
-                  ? `<span class="rate-chip">${Refad.format.number(dailyRate, 1)} / يوم</span>
-                     <div class="product-sub">${Refad.format.number(dailyRate * 30, 0)} / شهر</div>`
-                  : '<span style="color:var(--text-muted);font-size:12px;">—</span>'
-                }
-              </td>
-              <td>
-                ${daysRemaining !== null
-                  ? `<strong style="color:${daysRemaining <= 15 ? 'var(--danger)' : daysRemaining <= 30 ? 'var(--warning)' : 'var(--success)'};">${daysRemaining} يوم</strong>`
-                  : '<span style="color:var(--text-muted);font-size:12px;">—</span>'
-                }
-              </td>
-              <td><span class="discount-chip">${Refad.format.number(it.last_discount, 1)}%</span></td>
-              <td><span class="discount-chip high">${Refad.format.number(it.max_discount, 1)}%</span></td>
-              <td>${benchmarkHtml}</td>
-              <td>${suggested}</td>
-              <td>
-                <input type="number" class="qty-input" value="${it.requested_qty}" min="1" max="99999" data-idx="${i}">
-              </td>
-              <td>
-                <input type="number" class="discount-request-input" value="${Number(it.requested_discount) || 0}" min="0" max="100" step="0.1" data-idx="${i}">
-                ${it.suggested_discount > 0
-                  ? `<button type="button" class="btn btn-outline btn-sm" data-use-discount="${i}" style="margin-top:4px;padding:2px 8px;font-size:10px;">
-                       <i data-lucide="sparkles" style="width:10px;height:10px;"></i> ${Refad.format.number(it.suggested_discount, 1)}%
-                     </button>`
-                  : ''
-                }
-              </td>
-              <td>
-                ${it.supplier_response_at
-                  ? `<span class="discount-chip high">خصم ${Refad.format.number(it.supplier_discount || 0, 1)}%</span>
-                     <div class="product-sub">${it.supplier_price !== null && it.supplier_price !== undefined ? `سعر ${Refad.format.money(it.supplier_price)} • ` : ''}${Refad.format.datetime(it.supplier_response_at)}</div>`
-                  : '<span style="color:var(--text-muted);font-size:12px;">لم يرد بعد</span>'
-                }
-              </td>
-              <td>
-                <button class="action-btn danger" data-remove="${i}" title="حذف">
-                  <i data-lucide="trash-2"></i>
-                </button>
-              </td>
-            </tr>
-          `;
-        }).join('');
-
-        if (window.lucide) lucide.createIcons();
-
-        // Bind events
-        tbody.querySelectorAll('.qty-input').forEach(inp => {
-          inp.addEventListener('input', e => {
-            const idx = parseInt(e.target.dataset.idx, 10);
-            const v = parseInt(e.target.value, 10) || 1;
-            state.items[idx].requested_qty = Math.max(1, v);
+        // ============================================================
+        // 1) Render Items (18 عمود)
+        // ============================================================
+        function renderItems() {
+          const tbody = document.getElementById('itemsBody');
+          if (!state.items.length) {
+            tbody.innerHTML = `
+              <tr class="empty-row">
+                <td colspan="18">
+                  <i data-lucide="package-open"></i>
+                  <p>لم تضف أي أصناف بعد. ابدأ بالبحث أعلاه أو استخدم الأزرار السريعة.</p>
+                </td>
+              </tr>`;
+            if (window.lucide) lucide.createIcons();
             updateSummary();
-          });
-          inp.addEventListener('change', e => {
-            const idx = parseInt(e.target.dataset.idx, 10);
-            const v = parseInt(e.target.value, 10) || 1;
-            e.target.value = Math.max(1, v);
-            state.items[idx].requested_qty = Math.max(1, v);
-          });
-        });
+            return;
+          }
 
-        tbody.querySelectorAll('.discount-request-input').forEach(inp => {
-          const updateDiscount = () => {
-            const idx = Number(inp.dataset.idx);
-            const value = Number(inp.value);
-            if (!Number.isFinite(value) || value < 0 || value > 100) {
-              inp.setCustomValidity('أدخل خصماً بين 0 و100');
-              return;
+          tbody.innerHTML = state.items.map((it, i) => {
+            const stock = state.stockByProduct[it.product_id] || 0;
+            const pending = state.pendingPOs[it.product_id] || 0;
+            const effectiveStock = stock + pending;
+            const reorderLevel = Number(it.product.reorder_level) || 10;
+            const dailyRate = it.sale_rate || 0;
+            const daysRemaining = dailyRate > 0 ? Math.floor(effectiveStock / dailyRate) : null;
+
+            // ===== ABC =====
+            const abc = getProductABC(it.product_id);
+            const abcChip = `<span class="item-info-chip abc-${abc}">${abc}</span>`;
+
+            // ===== Urgency =====
+            const urgency = getUrgency(it.product_id);
+            let urgencyChip = '<span class="item-info-chip ok"><i data-lucide="check-circle" style="width:10px;height:10px;"></i> كافٍ</span>';
+            let rowClass = '';
+            if (urgency === 'critical') {
+              urgencyChip = '<span class="item-info-chip critical"><i data-lucide="alert-octagon" style="width:10px;height:10px;"></i> حرج</span>';
+              rowClass = 'critical-row';
+            } else if (urgency === 'urgent') {
+              urgencyChip = '<span class="item-info-chip urgent"><i data-lucide="alert-triangle" style="width:10px;height:10px;"></i> عاجل</span>';
+              rowClass = 'urgent-row';
+            } else if (urgency === 'soon') {
+              urgencyChip = '<span class="item-info-chip soon"><i data-lucide="clock" style="width:10px;height:10px;"></i> قريباً</span>';
             }
-            inp.setCustomValidity('');
-            state.items[idx].requested_discount = value;
-          };
-          inp.addEventListener('input', updateDiscount);
-          inp.addEventListener('change', updateDiscount);
-        });
 
-        tbody.querySelectorAll('[data-use-quantity]').forEach(button => {
-          button.addEventListener('click', () => {
-            const idx = Number(button.dataset.useQuantity);
-            const item = state.items[idx];
-            if (!item || item.suggested_qty < 1) return;
-            item.requested_qty = item.suggested_qty;
-            renderItems();
-            Refad.toast.info('تم وضع الكمية المقترحة');
-          });
-        });
+            // ===== Dead Stock =====
+            if (isDeadStock(it.product_id)) {
+              rowClass = 'dead-stock-row';
+            }
 
-        tbody.querySelectorAll('[data-use-discount]').forEach(button => {
-          button.addEventListener('click', () => {
-            const idx = Number(button.dataset.useDiscount);
-            const item = state.items[idx];
-            if (!item) return;
-            item.requested_discount = item.suggested_discount;
-            renderItems();
-            Refad.toast.info('تم وضع أعلى خصم مسجل');
-          });
-        });
+            // ===== Seasonality =====
+            const seasonality = getSeasonality(it.product_id);
+            let seasonalChip = '—';
+            if (seasonality?.is_seasonal) {
+              seasonalChip = `<span class="item-info-chip seasonal"><i data-lucide="trending-up" style="width:10px;height:10px;"></i> ${Refad.escapeHtml(seasonality.max_month || '')}</span>`;
+            }
 
-        tbody.querySelectorAll('[data-compare-prices]').forEach(button => {
-          button.addEventListener('click', () => {
-            const idx = Number(button.dataset.comparePrices);
-            const item = state.items[idx];
-            if (!item) return;
-            openCompareModal(item.product_id);
-          });
-        });
+            // ===== Stock class =====
+            const stockClass = effectiveStock <= reorderLevel ? 'danger' : (effectiveStock <= reorderLevel * 2 ? 'warn' : 'ok');
 
-        tbody.querySelectorAll('[data-remove]').forEach(btn => {
-          btn.addEventListener('click', () => {
-            const idx = parseInt(btn.dataset.remove, 10);
-            state.items.splice(idx, 1);
-            renderItems();
-          });
-        });
+            // ===== Suggested qty =====
+            const suggested = it.suggested_qty > 0
+              ? `<div class="suggested-qty-box">
+                   <button type="button" class="main-qty" data-use-quantity="${i}">
+                     <i data-lucide="wand-2" style="width:12px;height:12px;"></i>
+                     ${Refad.format.number(it.suggested_qty)}
+                   </button>
+                   <div class="hint">تغطية 30 يوم</div>
+                 </div>`
+              : '<span style="color:var(--text-muted);font-size:12px;">المخزون كافٍ</span>';
 
-        updateSummary();
-      }
+            // ===== Benchmark =====
+            const benchmarkHtml = it.purchase_benchmark?.best
+              ? `<strong style="font-size:12px;">${Refad.format.money(it.purchase_benchmark.best.netPrice)}</strong>
+                 <div class="product-sub">${Refad.escapeHtml(it.purchase_benchmark.best.supplierName)}</div>
+                 <button type="button" class="btn btn-outline btn-sm" data-compare-prices="${i}" style="margin-top:4px;padding:2px 8px;font-size:10px;">
+                   <i data-lucide="git-compare" style="width:10px;height:10px;"></i> مقارنة
+                 </button>`
+              : '<span style="color:var(--text-muted);font-size:11px;">لا يوجد سجل</span>';
 
-      // ============================================================
-      // 15) Update Summary
-      // ============================================================
-      function updateSummary() {
-        const totalQty = state.items.reduce((s, it) => s + (it.requested_qty || 0), 0);
-        const estimatedValue = state.items.reduce((s, it) => {
-          const cost = it.purchase_benchmark?.best?.netPrice || it.product.default_price || 0;
-          return s + (it.requested_qty || 0) * cost;
-        }, 0);
-        const savings = state.items.reduce((s, it) => {
-          const lastCost = it.last_discount > 0 ? (it.product.default_price || 0) : 0;
-          const suggestedCost = it.purchase_benchmark?.best?.netPrice || 0;
-          return s + Math.max(0, (lastCost - suggestedCost) * (it.requested_qty || 0));
-        }, 0);
+            // ===== Lead Time =====
+            const supplierId = parseInt(document.getElementById('supplierSelect').value, 10);
+            const leadTime = state.leadTimeData[supplierId];
+            const leadTimeHtml = leadTime?.avg_days
+              ? `<strong style="font-size:12px;">${leadTime.avg_days} يوم</strong>
+                 <div class="product-sub">${leadTime.min_days}-${leadTime.max_days}</div>`
+              : '<span style="color:var(--text-muted);font-size:11px;">—</span>';
 
-        document.getElementById('sumItems').textContent = Refad.format.number(state.items.length);
-        document.getElementById('sumQty').textContent = Refad.format.number(totalQty);
-        document.getElementById('sumEstValue').textContent = Refad.format.money(estimatedValue);
-        document.getElementById('sumSavings').textContent = Refad.format.money(savings);
-
-        document.getElementById('statInOrder').textContent = Refad.format.number(state.items.length);
-      }
-
-      // ============================================================
-      // 16) Add Urgent Items
-      // ============================================================
-      async function addUrgentItems() {
-        if (state.isLocked) return;
-
-        const urgent = state.urgentItems.filter(i =>
-          (i.urgency === 'critical' || i.urgency === 'urgent') &&
-          !state.items.some(it => it.product_id === i.product_id)
-        );
-
-        if (!urgent.length) {
-          Refad.toast.info('لا توجد أصناف عاجلة لإضافتها');
-          return;
-        }
-
-        const ok = await Refad.alert.confirm(
-          'إضافة الأصناف العاجلة',
-          `سيتم إضافة ${urgent.length} صنف يحتاج طلب فوري. متابعة؟`,
-          'إضافة'
-        );
-        if (!ok) return;
-
-        const pids = urgent.map(u => u.product_id);
-        const rates = await calcSaleRates(pids);
-
-        urgent.forEach(u => {
-          const p = state.allProducts.find(x => x.id === u.product_id);
-          if (!p) return;
-
-          const rate = rates[p.id] || u.daily_rate || 0;
-          const suggestedQty = suggestedPurchaseQty(p, rate);
-
-          state.items.push({
-            product_id: p.id,
-            product: p,
-            requested_qty: suggestedQty || 1,
-            suggested_qty: suggestedQty,
-            last_discount: p.last_purchase_discount || 0,
-            max_discount: p.max_purchase_discount || 0,
-            suggested_discount: suggestedPurchaseDiscount(p),
-            purchase_benchmark: state.purchaseBenchmarks[p.id] || null,
-            requested_discount: 0,
-            sale_rate: rate
-          });
-        });
-
-        renderItems();
-        Refad.toast.success(`تم إضافة ${urgent.length} صنف عاجل`);
-      }
-
-      // ============================================================
-      // 17) Add All Products
-      // ============================================================
-      async function addAllProducts() {
-        if (!state.allProducts.length) {
-          Refad.toast.warning('لا توجد أصناف');
-          return;
-        }
-
-        const candidates = state.allProducts.filter(p =>
-          !state.items.some(item => item.product_id === p.id)
-        );
-
-        const rates = await calcSaleRates(candidates.map(p => p.id));
-        const suggestions = candidates
-          .map(p => ({
-            product: p,
-            rate: rates[p.id] || 0,
-            quantity: suggestedPurchaseQty(p, rates[p.id] || 0)
-          }))
-          .filter(item => item.quantity > 0);
-
-        if (!suggestions.length) {
-          Refad.toast.info('المخزون الحالي يغطي احتياجاتك');
-          return;
-        }
-
-        const ok = await Refad.alert.confirm(
-          'إضافة كل المقترح',
-          `سيتم إضافة ${suggestions.length} صنف حسب المخزون ومعدل البيع. متابعة؟`,
-          'إضافة'
-        );
-        if (!ok) return;
-
-        suggestions.forEach(({ product, rate, quantity }) => {
-          state.items.push({
-            product_id: product.id,
-            product,
-            requested_qty: quantity,
-            suggested_qty: quantity,
-            last_discount: product.last_purchase_discount || 0,
-            max_discount: product.max_purchase_discount || 0,
-            suggested_discount: suggestedPurchaseDiscount(product),
-            purchase_benchmark: state.purchaseBenchmarks[product.id] || null,
-            requested_discount: 0,
-            sale_rate: rate
-          });
-        });
-
-        renderItems();
-        Refad.toast.success(`تم إضافة ${suggestions.length} صنف`);
-      }
-
-      // ============================================================
-      // 18) Apply Best Discounts
-      // ============================================================
-      function applyBestDiscounts() {
-        if (!state.items.length) {
-          Refad.toast.warning('لا توجد أصناف');
-          return;
-        }
-
-        let count = 0;
-        state.items.forEach(item => {
-          if (item.suggested_discount > 0) {
-            item.requested_discount = item.suggested_discount;
-            count++;
-          }
-        });
-
-        if (!count) {
-          Refad.toast.info('لا يوجد سجل خصومات سابق');
-          return;
-        }
-
-        renderItems();
-        Refad.toast.success(`تم تطبيق أفضل خصم على ${count} صنف`);
-      }
-
-      // ============================================================
-      // 19) Optimize Quantities
-      // ============================================================
-      function optimizeQuantities() {
-        if (!state.items.length) {
-          Refad.toast.warning('لا توجد أصناف');
-          return;
-        }
-
-        let count = 0;
-        state.items.forEach(item => {
-          if (item.suggested_qty > 0) {
-            item.requested_qty = item.suggested_qty;
-            count++;
-          }
-        });
-
-        renderItems();
-        Refad.toast.success(`تم تحسين الكميات لـ ${count} صنف`);
-      }
-
-      // ============================================================
-      // 20) Price Comparison Modal
-      // ============================================================
-      async function openCompareModal(productId) {
-        const product = state.allProducts.find(p => p.id === productId);
-        if (!product) return;
-
-        const modal = document.getElementById('compareModal');
-        const body = document.getElementById('compareModalBody');
-
-        body.innerHTML = `
-          <div style="text-align:center;padding:40px;">
-            <i data-lucide="loader" style="width:32px;height:32px;animation:spin 1s linear infinite;color:var(--accent);"></i>
-            <p style="margin-top:12px;color:var(--text-muted);">جارٍ تحميل مقارنة الأسعار...</p>
-          </div>
-        `;
-        modal.classList.add('show');
-        if (window.lucide) lucide.createIcons();
-
-        try {
-          const comparisons = await Refad.db.rpc('compare_product_prices', {
-            p_product_id: productId,
-            p_company_id: session.company_id,
-            p_days: 365
-          }).catch(() => []);
-
-          if (!comparisons || !comparisons.length) {
-            body.innerHTML = `
-              <div style="text-align:center;padding:40px;">
-                <i data-lucide="package-x" style="width:42px;height:42px;opacity:0.4;margin-bottom:10px;"></i>
-                <p style="color:var(--text-muted);">لا يوجد سجل شراء لهذا الصنف في آخر سنة</p>
-              </div>
+            return `
+              <tr data-idx="${i}" class="${rowClass}">
+                <td style="color:var(--text-muted);font-weight:700;">${i + 1}</td>
+                <td>
+                  <div class="product-name-cell">${Refad.escapeHtml(it.product.name)}</div>
+                  <div class="product-sub">${Refad.escapeHtml([it.product.form, it.product.unit].filter(Boolean).join(' • ') || '—')}</div>
+                </td>
+                <td>${abcChip}</td>
+                <td>${urgencyChip}</td>
+                <td>${seasonalChip}</td>
+                <td>
+                  <div class="stock-detail">
+                    <div class="main ${stockClass}">${Refad.format.number(stock)}</div>
+                    <div class="hint">حد: ${Refad.format.number(reorderLevel)}</div>
+                  </div>
+                </td>
+                <td>
+                  ${pending > 0
+                    ? `<span class="item-info-chip highlight">${Refad.format.number(pending)}</span>`
+                    : '<span style="color:var(--text-muted);font-size:12px;">—</span>'
+                  }
+                </td>
+                <td>
+                  ${dailyRate > 0
+                    ? `<span class="rate-chip">${Refad.format.number(dailyRate, 1)} / يوم</span>
+                       <div class="product-sub">${Refad.format.number(dailyRate * 30, 0)} / شهر</div>`
+                    : '<span style="color:var(--text-muted);font-size:12px;">—</span>'
+                  }
+                </td>
+                <td>
+                  ${daysRemaining !== null
+                    ? `<strong style="color:${daysRemaining <= 15 ? 'var(--danger)' : daysRemaining <= 30 ? 'var(--warning)' : 'var(--success)'};">${daysRemaining} يوم</strong>`
+                    : '<span style="color:var(--text-muted);font-size:12px;">—</span>'
+                  }
+                </td>
+                <td><span class="discount-chip">${Refad.format.number(it.last_discount, 1)}%</span></td>
+                <td><span class="discount-chip high">${Refad.format.number(it.max_discount, 1)}%</span></td>
+                <td>${benchmarkHtml}</td>
+                <td>${leadTimeHtml}</td>
+                <td>${suggested}</td>
+                <td>
+                  <input type="number" class="qty-input" value="${it.requested_qty}" min="1" max="99999" data-idx="${i}">
+                </td>
+                <td>
+                  <input type="number" class="discount-request-input" value="${Number(it.requested_discount) || 0}" min="0" max="100" step="0.1" data-idx="${i}">
+                  ${it.suggested_discount > 0
+                    ? `<button type="button" class="btn btn-outline btn-sm" data-use-discount="${i}" style="margin-top:4px;padding:2px 8px;font-size:10px;">
+                         <i data-lucide="sparkles" style="width:10px;height:10px;"></i> ${Refad.format.number(it.suggested_discount, 1)}%
+                       </button>`
+                    : ''
+                  }
+                </td>
+                <td>
+                  ${it.supplier_response_at
+                    ? `<span class="discount-chip high">خصم ${Refad.format.number(it.supplier_discount || 0, 1)}%</span>
+                       <div class="product-sub">${it.supplier_price !== null && it.supplier_price !== undefined ? `سعر ${Refad.format.money(it.supplier_price)} • ` : ''}${Refad.format.datetime(it.supplier_response_at)}</div>`
+                    : '<span style="color:var(--text-muted);font-size:12px;">لم يرد بعد</span>'
+                  }
+                </td>
+                <td>
+                  <button class="action-btn danger" data-remove="${i}" title="حذف">
+                    <i data-lucide="trash-2"></i>
+                  </button>
+                </td>
+              </tr>
             `;
-            if (window.lucide) lucide.createIcons();
-            return;
-          }
+          }).join('');
 
-          const bestPrice = Math.min(...comparisons.map(c => Number(c.net_price) || 999999));
-
-          body.innerHTML = `
-            <div style="margin-bottom:16px;">
-              <h4 style="font-size:15px;font-weight:700;margin-bottom:6px;">${Refad.escapeHtml(product.name)}</h4>
-              <p style="font-size:12px;color:var(--text-muted);">مقارنة الأسعار من ${comparisons.length} مورد في آخر سنة</p>
-            </div>
-            <table class="comparison-table">
-              <thead>
-                <tr>
-                  <th>المورد</th>
-                  <th>آخر سعر</th>
-                  <th>آخر خصم</th>
-                  <th>أفضل سعر</th>
-                  <th>أعلى خصم</th>
-                  <th>السعر الصافي</th>
-                  <th>الكمية</th>
-                  <th>آخر شراء</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${comparisons.map(c => {
-                  const netPrice = Number(c.net_price) || 0;
-                  const isBest = Math.abs(netPrice - bestPrice) < 0.01;
-                  return `
-                    <tr class="${isBest ? 'best-row' : ''}">
-                      <td>
-                        ${Refad.escapeHtml(c.supplier_name)}
-                        ${isBest ? '<span class="best-badge"><i data-lucide="award" style="width:10px;height:10px;"></i> الأفضل</span>' : ''}
-                      </td>
-                      <td>${c.last_price ? Refad.format.money(c.last_price) : '—'}</td>
-                      <td>${c.last_discount ? Refad.format.number(c.last_discount, 1) + '%' : '—'}</td>
-                      <td>${c.best_price ? Refad.format.money(c.best_price) : '—'}</td>
-                      <td>${c.best_discount ? Refad.format.number(c.best_discount, 1) + '%' : '—'}</td>
-                      <td><strong>${Refad.format.money(netPrice)}</strong></td>
-                      <td>${Refad.format.number(c.total_qty || 0)}</td>
-                      <td>${c.last_date ? Refad.format.date(c.last_date) : '—'}</td>
-                    </tr>
-                  `;
-                }).join('')}
-              </tbody>
-            </table>
-          `;
           if (window.lucide) lucide.createIcons();
-        } catch (e) {
-          console.error('Comparison failed:', e);
-          body.innerHTML = `<p style="text-align:center;color:var(--danger);">تعذّر تحميل المقارنة</p>`;
-        }
-      }
-       // ============================================================
-      // 21) Product Search
-      // ============================================================
-      function setupProductSearch() {
-        const input = document.getElementById('productSearch');
-        const results = document.getElementById('searchResults');
 
-        const handler = Refad.debounce(async v => {
-          if (input.value.trim() !== v.trim()) return;
-          if (!v || v.length < 1) { results.classList.remove('show'); return; }
-
-          const barcodeProductId = state.barcodeMap[v.trim().toUpperCase()];
-          if (barcodeProductId) {
-            await addProductByBarcode(v.trim().toUpperCase());
-            input.value = '';
-            results.classList.remove('show');
-            return;
-          }
-
-          const q = v.toLowerCase();
-          const matches = state.allProducts
-            .filter(p => !state.items.some(it => it.product_id === p.id))
-            .filter(p =>
-              (p.name || '').toLowerCase().includes(q) ||
-              (p.name_en || '').toLowerCase().includes(q) ||
-              (p.form || '').toLowerCase().includes(q)
-            )
-            .slice(0, 20);
-
-          if (!matches.length) {
-            results.innerHTML = `<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:13px;">لا توجد نتائج مطابقة</div>`;
-          } else {
-            results.innerHTML = matches.map(p => `
-              <div class="search-result-item" data-id="${p.id}">
-                <div class="result-avatar">${Refad.escapeHtml((p.name || '؟').charAt(0))}</div>
-                <div class="result-body">
-                  <div class="name">${Refad.escapeHtml(p.name)}</div>
-                  <div class="sub">${Refad.escapeHtml([p.form, p.unit].filter(Boolean).join(' • ') || '—')}</div>
-                </div>
-                <i data-lucide="plus-circle" style="color:var(--accent);width:20px;height:20px;"></i>
-              </div>
-            `).join('');
-            if (window.lucide) lucide.createIcons();
-          }
-
-          results.classList.add('show');
-        }, 200);
-
-        input.addEventListener('input', e => handler(e.target.value));
-        input.addEventListener('focus', () => { if (input.value) results.classList.add('show'); });
-        input.addEventListener('keydown', async event => {
-          if (event.key !== 'Enter') return;
-          event.preventDefault();
-          const code = input.value.trim();
-          if (!code) return;
-
-          const productId = state.barcodeMap[code.toUpperCase()];
-          if (productId) {
-            await addProductByBarcode(code.toUpperCase());
-            input.value = '';
-            results.classList.remove('show');
-          } else if (/^\d{8,14}$/.test(code)) {
-            Refad.toast.warning('الباركود غير مسجل لأي صنف');
-            input.select();
-          } else {
-            const first = results.querySelector('.search-result-item');
-            if (first) {
-              await addProductById(parseInt(first.dataset.id, 10));
-              input.value = '';
-              results.classList.remove('show');
-            }
-          }
-        });
-
-        results.addEventListener('click', async e => {
-          const item = e.target.closest('.search-result-item');
-          if (!item) return;
-          await addProductById(parseInt(item.dataset.id, 10));
-          input.value = '';
-          results.classList.remove('show');
-        });
-
-        document.addEventListener('click', e => {
-          if (!e.target.closest('.product-search-wrap')) results.classList.remove('show');
-        });
-      }
-
-      // ============================================================
-      // 22) Camera Scanner
-      // ============================================================
-      async function stopRequestCameraScan(closeModal) {
-        try {
-          await window.RefadCameraScanner.stop();
-        } catch (error) {
-          console.error('[PurchaseRequests] Camera stop failed:', error);
-        } finally {
-          if (closeModal) document.getElementById('requestScanModal').classList.remove('show');
-        }
-      }
-
-      function setupRequestCameraScanner() {
-        const modal = document.getElementById('requestScanModal');
-        document.getElementById('requestCameraScanBtn').addEventListener('click', async () => {
-          modal.classList.add('show');
-          document.getElementById('requestScanStatus').textContent = 'جارٍ تشغيل الكاميرا...';
-          if (window.lucide) lucide.createIcons();
-          try {
-            await window.RefadCameraScanner.start('requestBarcodeReader', async code => {
-              const normalizedCode = String(code || '').trim().toUpperCase();
-              const exists = Boolean(state.barcodeMap[normalizedCode]);
-              await addProductByBarcode(normalizedCode);
-              document.getElementById('requestScanStatus').textContent = exists
-                ? `تمت قراءة ${code}. وجّه الكاميرا إلى الصنف التالي.`
-                : `الباركود غير مسجل: ${code}`;
+          // ===== Events =====
+          tbody.querySelectorAll('.qty-input').forEach(inp => {
+            inp.addEventListener('input', e => {
+              const idx = parseInt(e.target.dataset.idx, 10);
+              const v = parseInt(e.target.value, 10) || 1;
+              state.items[idx].requested_qty = Math.max(1, v);
+              updateSummary();
             });
-            document.getElementById('requestScanStatus').textContent = 'كل عملية مسح تضيف وحدة إلى كمية الصنف المطلوبة.';
-          } catch (error) {
-            console.error('[PurchaseRequests] Camera start failed:', error);
-            document.getElementById('requestScanStatus').textContent = error.message || 'تعذّر تشغيل الكاميرا';
-            Refad.toast.error(error.message || 'تعذّر تشغيل الكاميرا');
-          }
-        });
-        document.getElementById('stopRequestScanBtn').addEventListener('click', () => stopRequestCameraScan(true));
-        document.getElementById('closeRequestScanBtn').addEventListener('click', () => stopRequestCameraScan(true));
-        modal.addEventListener('click', event => {
-          if (event.target === modal) stopRequestCameraScan(true);
-        });
-        document.addEventListener('keydown', event => {
-          if (event.key === 'Escape' && modal.classList.contains('show')) {
-            stopRequestCameraScan(true);
-          }
-        });
-      }
-
-      // ============================================================
-      // 23) Excel Import
-      // ============================================================
-      function setupExcelImport() {
-        const input = document.getElementById('excelInput');
-        document.getElementById('importBtn').addEventListener('click', () => input.click());
-
-        input.addEventListener('change', async e => {
-          const file = e.target.files[0];
-          if (!file) return;
-          input.value = '';
-
-          try {
-            const data = await file.arrayBuffer();
-            const wb = XLSX.read(data, { type: 'array' });
-            const sheet = wb.Sheets[wb.SheetNames[0]];
-            const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-
-            const imported = [];
-            rows.forEach((row, idx) => {
-              if (idx === 0 && String(row[0] || '').match(/اسم|name/i)) return;
-              const name = String(row[0] || '').trim();
-              const qty = parseInt(row[1], 10) || 1;
-              if (name) imported.push({ name, qty });
+            inp.addEventListener('change', e => {
+              const idx = parseInt(e.target.dataset.idx, 10);
+              const v = parseInt(e.target.value, 10) || 1;
+              e.target.value = Math.max(1, v);
+              state.items[idx].requested_qty = Math.max(1, v);
             });
+          });
 
-            if (!imported.length) {
-              Refad.toast.warning('الملف فارغ أو التنسيق غير صحيح');
-              return;
-            }
-
-            let added = 0, notFound = 0;
-            for (const item of imported) {
-              const p = state.allProducts.find(x =>
-                (x.name || '').trim() === item.name ||
-                (x.name_en || '').trim().toLowerCase() === item.name.toLowerCase()
-              );
-              if (p && !state.items.some(it => it.product_id === p.id)) {
-                const rates = await calcSaleRates([p.id]);
-                state.items.push({
-                  product_id: p.id,
-                  product: p,
-                  requested_qty: item.qty,
-                  suggested_qty: suggestedPurchaseQty(p, rates[p.id] || 0),
-                  last_discount: p.last_purchase_discount || 0,
-                  max_discount: p.max_purchase_discount || 0,
-                  suggested_discount: suggestedPurchaseDiscount(p),
-                  purchase_benchmark: state.purchaseBenchmarks[p.id] || null,
-                  requested_discount: 0,
-                  sale_rate: rates[p.id] || 0
-                });
-                added++;
-              } else if (!p) {
-                notFound++;
+          tbody.querySelectorAll('.discount-request-input').forEach(inp => {
+            const updateDiscount = () => {
+              const idx = Number(inp.dataset.idx);
+              const value = Number(inp.value);
+              if (!Number.isFinite(value) || value < 0 || value > 100) {
+                inp.setCustomValidity('أدخل خصماً بين 0 و100');
+                return;
               }
-            }
-            renderItems();
-            Refad.toast.success(`تم إضافة ${added} صنف. لم يتم العثور على ${notFound}`);
-          } catch (err) {
-            console.error('Excel import failed:', err);
-            Refad.toast.error('فشل قراءة الملف: ' + err.message);
-          }
-        });
-      }
-
-      // ============================================================
-      // 24) Excel Export
-      // ============================================================
-      function exportExcel() {
-        if (!state.items.length) {
-          Refad.toast.warning('لا توجد أصناف للتصدير');
-          return;
-        }
-        const rows = state.items.map((it, i) => ({
-          '#': i + 1,
-          'الصنف': it.product.name,
-          'الشكل': it.product.form || '',
-          'الوحدة': it.product.unit || '',
-          'المخزون الحالي': state.stockByProduct[it.product_id] || 0,
-          'معدل البيع اليومي': it.sale_rate || 0,
-          'آخر خصم شراء': it.last_discount || 0,
-          'أعلى خصم شراء': it.max_discount || 0,
-          'أفضل سعر سابق': it.purchase_benchmark?.best?.netPrice || '',
-          'أفضل مورد': it.purchase_benchmark?.best?.supplierName || '',
-          'الكمية المطلوبة': it.requested_qty || 1,
-          'الخصم المطلوب': it.requested_discount || 0
-        }));
-        const ws = XLSX.utils.json_to_sheet(rows);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'PurchaseRequest');
-        XLSX.writeFile(wb, `purchase-request-${state.requestNumber || 'new'}.xlsx`);
-        Refad.toast.success('تم التصدير');
-      }
-
-      // ============================================================
-      // 25) Save
-      // ============================================================
-      async function save() {
-        if (state.isLocked) {
-          Refad.toast.error('لا يمكن تعديل طلب شراء بعد تحويله إلى فاتورة استلام');
-          return;
-        }
-
-        const invalidDiscount = document.querySelector('.discount-request-input:invalid');
-        if (invalidDiscount) {
-          invalidDiscount.focus();
-          Refad.toast.warning('أدخل الخصم المطلوب بنسبة من 0 إلى 100');
-          return;
-        }
-
-        const supplierId = parseInt(document.getElementById('supplierSelect').value, 10);
-        const notes = document.getElementById('requestNotes').value.trim() || null;
-        const reqDate = document.getElementById('requestDate').value || Refad.date.today();
-
-        if (!supplierId) {
-          Refad.toast.warning('يجب اختيار المورد');
-          document.getElementById('supplierSelect').focus();
-          return;
-        }
-
-        if (!state.items.length) {
-          Refad.toast.warning('يجب إضافة صنف واحد على الأقل');
-          return;
-        }
-
-        const btn = document.getElementById('saveBtn');
-        const originalText = document.getElementById('saveBtnText').textContent;
-        btn.disabled = true;
-        document.getElementById('saveBtnText').textContent = 'جارٍ الحفظ...';
-
-        try {
-          let rid = requestId;
-
-          if (!rid) {
-            const num = await generateRequestNumber();
-            const payload = {
-              company_id: session.company_id,
-              supplier_id: supplierId,
-              request_number: num,
-              status: state.status || 'draft',
-              total_amount: 0,
-              notes,
-              created_by: session.user_id
+              inp.setCustomValidity('');
+              state.items[idx].requested_discount = value;
             };
-            const created = await Refad.db.insert('purchase_requests', payload);
-            rid = created.id;
-            state.requestNumber = num;
-          } else {
-            await Refad.db.update('purchase_requests', rid, {
-              supplier_id: supplierId,
-              notes,
-              status: state.status
+            inp.addEventListener('input', updateDiscount);
+            inp.addEventListener('change', updateDiscount);
+          });
+
+          tbody.querySelectorAll('[data-use-quantity]').forEach(button => {
+            button.addEventListener('click', () => {
+              const idx = Number(button.dataset.useQuantity);
+              const item = state.items[idx];
+              if (!item || item.suggested_qty < 1) return;
+              item.requested_qty = item.suggested_qty;
+              renderItems();
+              Refad.toast.info('تم وضع الكمية المقترحة');
             });
-          }
+          });
 
-          // حذف العناصر القديمة
-          const currentIds = state.items.filter(item => item.id).map(item => item.id);
-          for (const oldId of state.originalItemIds) {
-            if (!currentIds.some(id => String(id) === String(oldId))) {
-              await Refad.db.remove('purchase_request_items', oldId);
-            }
-          }
+          tbody.querySelectorAll('[data-use-discount]').forEach(button => {
+            button.addEventListener('click', () => {
+              const idx = Number(button.dataset.useDiscount);
+              const item = state.items[idx];
+              if (!item) return;
+              item.requested_discount = item.suggested_discount;
+              renderItems();
+              Refad.toast.info('تم وضع أعلى خصم مسجل');
+            });
+          });
 
-          for (const item of state.items) {
-            const payload = {
-              request_id: rid,
-              product_id: item.product_id,
-              requested_qty: item.requested_qty,
-              avg_sale_rate: item.sale_rate || 0,
-              last_discount: item.last_discount || 0,
-              requested_discount: Number(item.requested_discount) || 0
-            };
-            if (item.id) {
-              await Refad.db.update('purchase_request_items', item.id, payload);
-            } else {
-              const createdItem = await Refad.db.insert('purchase_request_items', payload);
-              item.id = createdItem.id;
-            }
-          }
-          state.originalItemIds = state.items.filter(item => item.id).map(item => item.id);
+          tbody.querySelectorAll('[data-compare-prices]').forEach(button => {
+            button.addEventListener('click', () => {
+              const idx = Number(button.dataset.comparePrices);
+              const item = state.items[idx];
+              if (!item) return;
+              openCompareModal(item.product_id);
+            });
+          });
 
-          await Refad.logActivity(
-            requestId ? 'update_purchase_request' : 'create_purchase_request',
-            'purchases',
-            `طلب ${state.requestNumber}`,
-            rid
+          tbody.querySelectorAll('[data-remove]').forEach(btn => {
+            btn.addEventListener('click', () => {
+              const idx = parseInt(btn.dataset.remove, 10);
+              state.items.splice(idx, 1);
+              renderItems();
+              updateGlobalStats();
+            });
+          });
+
+          updateSummary();
+        }
+
+        // ============================================================
+        // 2) Update Summary
+        // ============================================================
+        function updateSummary() {
+          const totalQty = state.items.reduce((s, it) => s + (it.requested_qty || 0), 0);
+          const estimatedValue = state.items.reduce((s, it) => {
+            const cost = it.purchase_benchmark?.best?.netPrice || it.product.default_price || 0;
+            return s + (it.requested_qty || 0) * cost;
+          }, 0);
+          const savings = state.items.reduce((s, it) => {
+            const lastCost = it.purchase_benchmark?.latest?.netPrice || it.product.default_price || 0;
+            const suggestedCost = it.purchase_benchmark?.best?.netPrice || lastCost;
+            const discount = Number(it.requested_discount) || 0;
+            const finalCost = suggestedCost * (1 - discount / 100);
+            return s + Math.max(0, (lastCost - finalCost) * (it.requested_qty || 0));
+          }, 0);
+
+          document.getElementById('sumItems').textContent = Refad.format.number(state.items.length);
+          document.getElementById('sumQty').textContent = Refad.format.number(totalQty);
+          document.getElementById('sumEstValue').textContent = Refad.format.money(estimatedValue);
+          document.getElementById('sumSavings').textContent = Refad.format.money(savings);
+          document.getElementById('statInOrder').textContent = Refad.format.number(state.items.length);
+        }
+
+        // ============================================================
+        // 3) Render Supplier Response History
+        // ============================================================
+        function renderSupplierResponseHistory() {
+          const card = document.getElementById('supplierResponseHistoryCard');
+          const body = document.getElementById('supplierResponseHistoryBody');
+          if (!state.supplierResponses.length) {
+            card.style.display = 'none';
+            return;
+          }
+          const productNames = new Map(state.items.map(item => [String(item.product_id), item.product.name]));
+          body.innerHTML = state.supplierResponses.map(response => `
+            <tr>
+              <td>${Refad.escapeHtml(productNames.get(String(response.product_id)) || 'صنف محذوف')}</td>
+              <td>${response.supplier_price === null || response.supplier_price === undefined ? '—' : Refad.format.money(response.supplier_price)}</td>
+              <td>${response.supplier_discount === null || response.supplier_discount === undefined ? '—' : `${Refad.format.number(response.supplier_discount, 1)}%`}</td>
+              <td>${Refad.format.datetime(response.submitted_at)}</td>
+            </tr>
+          `).join('');
+          card.style.display = 'block';
+          if (window.lucide) lucide.createIcons();
+        }
+
+        // ربط الدوال بالـ core
+        setRenderItems(renderItems);
+        setUpdateSummary(updateSummary);
+        setRenderSupplierResponseHistory(renderSupplierResponseHistory);
+
+        // ============================================================
+        // 4) Add Urgent Items
+        // ============================================================
+        async function addUrgentItems() {
+          if (state.isLocked) return;
+
+          const urgent = state.urgentItems.filter(i =>
+            (i.urgency === 'critical' || i.urgency === 'urgent') &&
+            !state.items.some(it => it.product_id === i.product_id)
           );
 
-          Refad.toast.success('تم حفظ الطلب');
-
-          if (!requestId) {
-            setTimeout(() => {
-              window.location.href = `purchase-request-form.html?id=${rid}`;
-            }, 600);
-          } else {
-            await loadRequest();
-          }
-        } catch (err) {
-          console.error('Save failed:', err);
-          Refad.toast.error('فشل الحفظ: ' + err.message);
-          btn.disabled = false;
-          document.getElementById('saveBtnText').textContent = originalText;
-        }
-      }
-
-      async function generateRequestNumber() {
-        try {
-          const count = await Refad.db.count('purchase_requests', {
-            eq: { company_id: session.company_id }
-          });
-          const year = new Date().getFullYear();
-          return `PR-${year}-${String(count + 1).padStart(5, '0')}`;
-        } catch (e) {
-          return `PR-${Date.now()}`;
-        }
-      }
-
-      // ============================================================
-      // 26) Load Existing Request
-      // ============================================================
-      async function loadRequest() {
-        try {
-          const r = await Refad.db.selectOne('purchase_requests', { eq: { id: requestId } });
-          if (!r || r.company_id !== session.company_id) {
-            Refad.alert.error('غير موجود', 'الطلب غير موجود').then(() => location.href = 'purchase-requests.html');
+          if (!urgent.length) {
+            Refad.toast.info('لا توجد أصناف عاجلة لإضافتها');
             return;
           }
 
-          state.requestNumber = r.request_number;
-          state.shareToken = r.share_token;
-          state.status = r.status;
+          const ok = await Refad.alert.confirm(
+            'إضافة الأصناف العاجلة',
+            `سيتم إضافة ${urgent.length} صنف يحتاج طلب فوري. متابعة؟`,
+            'إضافة'
+          );
+          if (!ok) return;
 
-          document.getElementById('supplierSelect').value = r.supplier_id || '';
-          document.getElementById('requestNumber').value = r.request_number;
-          document.getElementById('requestNotes').value = r.notes || '';
-          if (r.created_at) {
-            document.getElementById('requestDate').value = Refad.format.date(r.created_at, 'YYYY-MM-DD');
-          }
+          const supplierId = parseInt(document.getElementById('supplierSelect').value, 10) || null;
 
-          updateStatusBadge(r.status);
+          urgent.forEach(u => {
+            const p = state.allProducts.find(x => x.id === u.product_id);
+            if (!p) return;
 
-          document.getElementById('shareBtn').style.display = 'inline-flex';
-          document.getElementById('exportBtn').style.display = 'inline-flex';
-          document.getElementById('printBtn').style.display = 'inline-flex';
-          if (r.status === 'draft') {
-            document.getElementById('sendBtn').style.display = 'inline-flex';
-          }
-          document.getElementById('pageTitle').textContent = `طلب ${r.request_number}`;
-          document.getElementById('pageSubtitle').textContent = `تعديل طلب شراء - ${r.status}`;
-          document.getElementById('topbarTitle').textContent = `طلب ${r.request_number}`;
+            const rate = state.saleRatesNet[p.id] || u.daily_rate || 0;
+            const suggestedQty = suggestedPurchaseQty(p, rate, supplierId);
 
-          // تحميل بروفايل المورد
-          if (r.supplier_id) {
-            await loadSupplierProfile(r.supplier_id);
-          }
-
-          // تحميل الأصناف
-          const items = await Refad.db.select('purchase_request_items', {
-            columns: 'id, product_id, requested_qty, last_discount, requested_discount, avg_sale_rate, supplier_price, supplier_discount, supplier_response_at, products(id, name, name_en, form, unit)',
-            eq: { request_id: requestId },
-            order: { column: 'id', ascending: true }
+            state.items.push({
+              product_id: p.id,
+              product: p,
+              requested_qty: suggestedQty || 1,
+              suggested_qty: suggestedQty,
+              last_discount: p.last_purchase_discount || 0,
+              max_discount: p.max_purchase_discount || 0,
+              suggested_discount: suggestedPurchaseDiscount(p),
+              purchase_benchmark: state.purchaseBenchmarks[p.id] || null,
+              requested_discount: 0,
+              sale_rate: rate
+            });
           });
-
-          state.supplierResponses = await Refad.db.select('purchase_request_responses', {
-            columns: 'id, product_id, supplier_price, supplier_discount, submitted_at',
-            eq: { request_id: requestId },
-            order: { column: 'submitted_at', ascending: false },
-            limit: 500
-          }).catch(() => []);
-
-          const discounts = await Refad.db.select('product_discounts', {
-            columns: 'product_id, last_purchase_discount, max_purchase_discount',
-            in: { product_id: items.map(i => i.product_id).filter(Boolean) }
-          }).catch(() => []);
-          const dMap = {};
-          discounts.forEach(d => { dMap[d.product_id] = d; });
-
-          state.originalItemIds = items.map(item => item.id);
-          state.items = items.filter(it => it.products).map(it => ({
-            id: it.id,
-            product_id: it.product_id,
-            product: state.allProducts.find(product => product.id === it.product_id) || it.products,
-            requested_qty: it.requested_qty || 1,
-            suggested_qty: suggestedPurchaseQty(
-              state.allProducts.find(product => product.id === it.product_id) || it.products,
-              it.avg_sale_rate || 0
-            ),
-            last_discount: it.last_discount || 0,
-            requested_discount: it.requested_discount || 0,
-            supplier_price: it.supplier_price,
-            supplier_discount: it.supplier_discount,
-            supplier_response_at: it.supplier_response_at,
-            max_discount: dMap[it.product_id]?.max_purchase_discount || 0,
-            suggested_discount: suggestedPurchaseDiscount({
-              max_purchase_discount: dMap[it.product_id]?.max_purchase_discount,
-              last_purchase_discount: dMap[it.product_id]?.last_purchase_discount
-            }),
-            purchase_benchmark: state.purchaseBenchmarks[it.product_id] || null,
-            sale_rate: it.avg_sale_rate || 0
-          }));
 
           renderItems();
-          renderSupplierResponseHistory();
-
-          const linkedReceipts = await Refad.db.select('receipts', {
-            columns: 'id, receipt_number, invoice_number, status',
-            eq: { company_id: session.company_id, request_id: requestId },
-            neq: { status: 'cancelled' },
-            order: { column: 'id', ascending: false },
-            limit: 1
-          }).catch(() => []);
-
-          const linkedReceipt = linkedReceipts[0] || null;
-          state.isLocked = r.status === 'received' || Boolean(linkedReceipt);
-          if (state.isLocked) applyLockedRequestState(linkedReceipt);
-        } catch (e) {
-          console.error('Load request failed:', e);
-          Refad.toast.error('تعذّر تحميل الطلب: ' + e.message);
-        }
-      }
-
-      function renderSupplierResponseHistory() {
-        const card = document.getElementById('supplierResponseHistoryCard');
-        const body = document.getElementById('supplierResponseHistoryBody');
-        if (!state.supplierResponses.length) {
-          card.style.display = 'none';
-          return;
-        }
-        const productNames = new Map(state.items.map(item => [String(item.product_id), item.product.name]));
-        body.innerHTML = state.supplierResponses.map(response => `
-          <tr>
-            <td>${Refad.escapeHtml(productNames.get(String(response.product_id)) || 'صنف محذوف')}</td>
-            <td>${response.supplier_price === null || response.supplier_price === undefined ? '—' : Refad.format.money(response.supplier_price)}</td>
-            <td>${response.supplier_discount === null || response.supplier_discount === undefined ? '—' : `${Refad.format.number(response.supplier_discount, 1)}%`}</td>
-            <td>${Refad.format.datetime(response.submitted_at)}</td>
-          </tr>
-        `).join('');
-        card.style.display = 'block';
-        if (window.lucide) lucide.createIcons();
-      }
-
-      function updateStatusBadge(status) {
-        const el = document.getElementById('statusBadge');
-        const text = document.getElementById('statusText');
-        const labels = {
-          draft: 'مسودة', sent: 'مُرسل', partial: 'جزئي', received: 'مستلم', cancelled: 'ملغي'
-        };
-        el.className = 'status-badge ' + status;
-        text.textContent = labels[status] || status;
-        el.style.display = 'inline-flex';
-      }
-
-      // ============================================================
-      // 27) Smart Suggestions (from sessionStorage)
-      // ============================================================
-      async function applySmartSuggestions() {
-        let payload;
-        try {
-          const stored = sessionStorage.getItem(SMART_PURCHASE_KEY);
-          if (!stored) throw new Error('لا توجد توصيات محفوظة');
-          payload = JSON.parse(stored);
-        } catch (error) {
-          console.error('[Purchase request] Smart suggestions failed:', error);
-          Refad.toast.error(error.message || 'تعذّر قراءة توصيات الشراء');
-          return;
+          updateGlobalStats();
+          Refad.toast.success(`تم إضافة ${urgent.length} صنف عاجل`);
         }
 
-        if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
-          sessionStorage.removeItem(SMART_PURCHASE_KEY);
-          Refad.toast.error('بيانات توصيات الشراء غير صالحة');
-          return;
-        }
-
-        const age = Date.now() - Number(payload.createdAt);
-        if (Number(payload.companyId) !== Number(session.company_id) ||
-            !Number.isFinite(age) || age < 0 || age > 30 * 60 * 1000) {
-          sessionStorage.removeItem(SMART_PURCHASE_KEY);
-          Refad.toast.error('انتهت صلاحية التوصيات');
-          return;
-        }
-
-        const productsById = new Map(state.allProducts.map(product => [String(product.id), product]));
-        const items = (Array.isArray(payload.items) ? payload.items : [])
-          .map(item => ({
-            product: productsById.get(String(item.product_id)),
-            quantity: Number(item.quantity),
-            dailyRate: Number(item.daily_rate)
-          }))
-          .filter(item => item.product && Number.isInteger(item.quantity) && item.quantity > 0);
-
-        if (!items.length) {
-          sessionStorage.removeItem(SMART_PURCHASE_KEY);
-          Refad.toast.warning('لا توجد أصناف صالحة');
-          return;
-        }
-
-        items.forEach(({ product, quantity, dailyRate }) => {
-          if (state.items.some(existing => existing.product_id === product.id)) return;
-          state.items.push({
-            product_id: product.id,
-            product,
-            requested_qty: quantity,
-            suggested_qty: suggestedPurchaseQty(product, dailyRate),
-            last_discount: product.last_purchase_discount || 0,
-            max_discount: product.max_purchase_discount || 0,
-            suggested_discount: suggestedPurchaseDiscount(product),
-            purchase_benchmark: state.purchaseBenchmarks[product.id] || null,
-            requested_discount: 0,
-            sale_rate: dailyRate
-          });
-        });
-        sessionStorage.removeItem(SMART_PURCHASE_KEY);
-        renderItems();
-        Refad.toast.success('تم تجهيز الطلب بالكميات المقترحة');
-      }
-
-      // ============================================================
-      // 28) Send Request
-      // ============================================================
-      async function sendRequest() {
-        if (state.isLocked) return Refad.toast.warning('لا يمكن تغيير حالة طلب محول');
-        if (!requestId) return Refad.toast.warning('احفظ الطلب أولاً');
-
-        const ok = await Refad.alert.confirm('إرسال الطلب', 'سيتم تغيير حالة الطلب إلى "مُرسل". متابعة؟', 'إرسال');
-        if (!ok) return;
-
-        try {
-          await Refad.db.update('purchase_requests', requestId, { status: 'sent' });
-          state.status = 'sent';
-          updateStatusBadge('sent');
-          document.getElementById('sendBtn').style.display = 'none';
-
-          try {
-            await Refad.notifyCompany(
-              session.company_id,
-              'تم إرسال طلب شراء',
-              `تم إرسال طلب الشراء ${state.requestNumber}`,
-              'purchase',
-              requestId,
-              session.user_id
-            );
-          } catch (notificationError) {
-            console.error('[PurchaseRequests] Notification failed:', notificationError);
-          }
-
-          Refad.toast.success('تم إرسال الطلب');
-        } catch (e) {
-          Refad.toast.error('فشل: ' + e.message);
-        }
-      }
-
-      // ============================================================
-      // 29) Share Modal
-      // ============================================================
-      async function openShareModal() {
-        if (!requestId) return Refad.toast.warning('احفظ الطلب أولاً');
-
-        let token = state.shareToken;
-        if (!token) {
-          token = Refad.randomToken(48);
-          try {
-            await Refad.db.update('purchase_requests', requestId, { share_token: token });
-            state.shareToken = token;
-            await Refad.db.insert('share_links', {
-              company_id: session.company_id,
-              token,
-              resource_type: 'purchase_request',
-              resource_id: requestId,
-              created_by: session.user_id,
-              expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
-            });
-          } catch (e) {
-            Refad.toast.error('تعذّر توليد الرابط');
+        // ============================================================
+        // 5) Add All Suggested
+        // ============================================================
+        async function addAllProducts() {
+          if (!state.allProducts.length) {
+            Refad.toast.warning('لا توجد أصناف');
             return;
           }
+
+          const supplierId = parseInt(document.getElementById('supplierSelect').value, 10) || null;
+          const candidates = state.allProducts.filter(p =>
+            !state.items.some(item => item.product_id === p.id)
+          );
+
+          const suggestions = candidates
+            .map(p => ({
+              product: p,
+              rate: state.saleRatesNet[p.id] || 0,
+              quantity: suggestedPurchaseQty(p, state.saleRatesNet[p.id] || 0, supplierId)
+            }))
+            .filter(item => item.quantity > 0);
+
+          if (!suggestions.length) {
+            Refad.toast.info('المخزون الحالي يغطي احتياجاتك');
+            return;
+          }
+
+          const ok = await Refad.alert.confirm(
+            'إضافة كل المقترح',
+            `سيتم إضافة ${suggestions.length} صنف حسب المخزون ومعدل البيع. متابعة؟`,
+            'إضافة'
+          );
+          if (!ok) return;
+
+          suggestions.forEach(({ product, rate, quantity }) => {
+            state.items.push({
+              product_id: product.id,
+              product,
+              requested_qty: quantity,
+              suggested_qty: quantity,
+              last_discount: product.last_purchase_discount || 0,
+              max_discount: product.max_purchase_discount || 0,
+              suggested_discount: suggestedPurchaseDiscount(product),
+              purchase_benchmark: state.purchaseBenchmarks[product.id] || null,
+              requested_discount: 0,
+              sale_rate: rate
+            });
+          });
+
+          renderItems();
+          updateGlobalStats();
+          Refad.toast.success(`تم إضافة ${suggestions.length} صنف`);
         }
 
-        const url = `${location.origin}${location.pathname.replace('purchase-request-form.html', '')}shared-request.html?token=${token}`;
-        document.getElementById('shareLinkInput').value = url;
-        document.getElementById('shareModal').classList.add('show');
-        if (window.lucide) lucide.createIcons();
-      }
+        // ============================================================
+        // 6) Add Seasonal
+        // ============================================================
+        async function addSeasonalItems() {
+          if (state.isLocked) return;
 
-      function setupShareModal() {
-        document.getElementById('copyLinkBtn').addEventListener('click', async () => {
-          const input = document.getElementById('shareLinkInput');
+          const seasonal = state.allProducts.filter(p =>
+            state.seasonalityData[p.id]?.is_seasonal &&
+            !state.items.some(it => it.product_id === p.id)
+          );
+
+          if (!seasonal.length) {
+            Refad.toast.info('لا توجد أصناف موسمية');
+            return;
+          }
+
+          const ok = await Refad.alert.confirm(
+            'إضافة الأصناف الموسمية',
+            `سيتم إضافة ${seasonal.length} صنف موسمي بكميات أكبر. متابعة؟`,
+            'إضافة'
+          );
+          if (!ok) return;
+
+          const supplierId = parseInt(document.getElementById('supplierSelect').value, 10) || null;
+
+          seasonal.forEach(p => {
+            const rate = state.saleRatesNet[p.id] || 0;
+            const suggestedQty = suggestedPurchaseQty(p, rate, supplierId);
+
+            state.items.push({
+              product_id: p.id,
+              product: p,
+              requested_qty: suggestedQty || 1,
+              suggested_qty: suggestedQty,
+              last_discount: p.last_purchase_discount || 0,
+              max_discount: p.max_purchase_discount || 0,
+              suggested_discount: suggestedPurchaseDiscount(p),
+              purchase_benchmark: state.purchaseBenchmarks[p.id] || null,
+              requested_discount: 0,
+              sale_rate: rate
+            });
+          });
+
+          renderItems();
+          updateGlobalStats();
+          Refad.toast.success(`تم إضافة ${seasonal.length} صنف موسمي`);
+        }
+
+        // ============================================================
+        // 7) Add ABC A Items
+        // ============================================================
+        async function addAbcAItems() {
+          if (state.isLocked) return;
+
+          const abcA = state.allProducts.filter(p =>
+            state.abcClassification[p.id]?.class === 'A' &&
+            !state.items.some(it => it.product_id === p.id)
+          );
+
+          if (!abcA.length) {
+            Refad.toast.info('لا توجد أصناف من فئة A');
+            return;
+          }
+
+          const ok = await Refad.alert.confirm(
+            'إضافة أصناف A',
+            `سيتم إضافة ${abcA.length} صنف من فئة A (عالية القيمة). متابعة؟`,
+            'إضافة'
+          );
+          if (!ok) return;
+
+          const supplierId = parseInt(document.getElementById('supplierSelect').value, 10) || null;
+
+          abcA.forEach(p => {
+            const rate = state.saleRatesNet[p.id] || 0;
+            const suggestedQty = suggestedPurchaseQty(p, rate, supplierId);
+
+            state.items.push({
+              product_id: p.id,
+              product: p,
+              requested_qty: suggestedQty || 1,
+              suggested_qty: suggestedQty,
+              last_discount: p.last_purchase_discount || 0,
+              max_discount: p.max_purchase_discount || 0,
+              suggested_discount: suggestedPurchaseDiscount(p),
+              purchase_benchmark: state.purchaseBenchmarks[p.id] || null,
+              requested_discount: 0,
+              sale_rate: rate
+            });
+          });
+
+          renderItems();
+          updateGlobalStats();
+          Refad.toast.success(`تم إضافة ${abcA.length} صنف من فئة A`);
+        }
+
+        // ============================================================
+        // 8) Apply Best Discounts
+        // ============================================================
+        function applyBestDiscounts() {
+          if (!state.items.length) {
+            Refad.toast.warning('لا توجد أصناف');
+            return;
+          }
+
+          let count = 0;
+          state.items.forEach(item => {
+            if (item.suggested_discount > 0) {
+              item.requested_discount = item.suggested_discount;
+              count++;
+            }
+          });
+
+          if (!count) {
+            Refad.toast.info('لا يوجد سجل خصومات سابق');
+            return;
+          }
+
+          renderItems();
+          Refad.toast.success(`تم تطبيق أفضل خصم على ${count} صنف`);
+        }
+
+        // ============================================================
+        // 9) Optimize Quantities
+        // ============================================================
+        function optimizeQuantities() {
+          if (!state.items.length) {
+            Refad.toast.warning('لا توجد أصناف');
+            return;
+          }
+
+          let count = 0;
+          state.items.forEach(item => {
+            if (item.suggested_qty > 0) {
+              item.requested_qty = item.suggested_qty;
+              count++;
+            }
+          });
+
+          renderItems();
+          Refad.toast.success(`تم تحسين الكميات لـ ${count} صنف`);
+        }
+
+        // ============================================================
+        // 10) Price Comparison Modal
+        // ============================================================
+        async function openCompareModal(productId) {
+          const product = state.allProducts.find(p => p.id === productId);
+          if (!product) return;
+
+          const modal = document.getElementById('compareModal');
+          const body = document.getElementById('compareModalBody');
+
+          body.innerHTML = `
+            <div style="text-align:center;padding:40px;">
+              <i data-lucide="loader" style="width:32px;height:32px;animation:spin 1s linear infinite;color:var(--accent);"></i>
+              <p style="margin-top:12px;color:var(--text-muted);">جارٍ تحميل مقارنة الأسعار...</p>
+            </div>
+          `;
+          modal.classList.add('show');
+          if (window.lucide) lucide.createIcons();
+
           try {
-            await navigator.clipboard.writeText(input.value);
-            Refad.toast.success('تم نسخ الرابط');
+            const comparisons = await Refad.db.rpc('compare_product_prices', {
+              p_product_id: productId,
+              p_company_id: session.company_id,
+              p_days: 365
+            }).catch(() => []);
+
+            if (!comparisons || !comparisons.length) {
+              body.innerHTML = `
+                <div style="text-align:center;padding:40px;">
+                  <i data-lucide="package-x" style="width:42px;height:42px;opacity:0.4;margin-bottom:10px;"></i>
+                  <p style="color:var(--text-muted);">لا يوجد سجل شراء لهذا الصنف في آخر سنة</p>
+                </div>
+              `;
+              if (window.lucide) lucide.createIcons();
+              return;
+            }
+
+            const bestPrice = Math.min(...comparisons.map(c => Number(c.net_price) || 999999));
+
+            body.innerHTML = `
+              <div style="margin-bottom:16px;">
+                <h4 style="font-size:15px;font-weight:700;margin-bottom:6px;">${Refad.escapeHtml(product.name)}</h4>
+                <p style="font-size:12px;color:var(--text-muted);">مقارنة الأسعار من ${comparisons.length} مورد في آخر سنة</p>
+              </div>
+              <table class="comparison-table">
+                <thead>
+                  <tr>
+                    <th>المورد</th>
+                    <th>آخر سعر</th>
+                    <th>آخر خصم</th>
+                    <th>أفضل سعر</th>
+                    <th>أعلى خصم</th>
+                    <th>السعر الصافي</th>
+                    <th>الكمية</th>
+                    <th>آخر شراء</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${comparisons.map(c => {
+                    const netPrice = Number(c.net_price) || 0;
+                    const isBest = Math.abs(netPrice - bestPrice) < 0.01;
+                    return `
+                      <tr class="${isBest ? 'best-row' : ''}">
+                        <td>
+                          ${Refad.escapeHtml(c.supplier_name)}
+                          ${isBest ? '<span class="best-badge"><i data-lucide="award" style="width:10px;height:10px;"></i> الأفضل</span>' : ''}
+                        </td>
+                        <td>${c.last_price ? Refad.format.money(c.last_price) : '—'}</td>
+                        <td>${c.last_discount ? Refad.format.number(c.last_discount, 1) + '%' : '—'}</td>
+                        <td>${c.best_price ? Refad.format.money(c.best_price) : '—'}</td>
+                        <td>${c.best_discount ? Refad.format.number(c.best_discount, 1) + '%' : '—'}</td>
+                        <td><strong>${Refad.format.money(netPrice)}</strong></td>
+                        <td>${Refad.format.number(c.total_qty || 0)}</td>
+                        <td>${c.last_date ? Refad.format.date(c.last_date) : '—'}</td>
+                      </tr>
+                    `;
+                  }).join('')}
+                </tbody>
+              </table>
+            `;
+            if (window.lucide) lucide.createIcons();
           } catch (e) {
-            input.select();
-            document.execCommand('copy');
-            Refad.toast.success('تم النسخ');
+            console.error('Comparison failed:', e);
+            body.innerHTML = `<p style="text-align:center;color:var(--danger);">تعذّر تحميل المقارنة</p>`;
           }
-        });
+        }
 
-        document.getElementById('whatsappBtn').addEventListener('click', () => {
-          const url = document.getElementById('shareLinkInput').value;
-          const text = `طلب شراء ${state.requestNumber}\n${url}`;
-          window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
-        });
+        // ============================================================
+        // 11) Product Search
+        // ============================================================
+        function setupProductSearch() {
+          const input = document.getElementById('productSearch');
+          const results = document.getElementById('searchResults');
 
-        document.getElementById('openLinkBtn').addEventListener('click', () => {
-          window.open(document.getElementById('shareLinkInput').value, '_blank');
-        });
+          const handler = Refad.debounce(async v => {
+            if (input.value.trim() !== v.trim()) return;
+            if (!v || v.length < 1) { results.classList.remove('show'); return; }
 
-        // Close buttons
-        document.querySelectorAll('[data-close]').forEach(b => {
-          b.addEventListener('click', () => {
-            document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.remove('show'));
+            const barcodeProductId = state.barcodeMap[v.trim().toUpperCase()];
+            if (barcodeProductId) {
+              await addProductByBarcode(v.trim().toUpperCase());
+              input.value = '';
+              results.classList.remove('show');
+              return;
+            }
+
+            const q = v.toLowerCase();
+            const matches = state.allProducts
+              .filter(p => !state.items.some(it => it.product_id === p.id))
+              .filter(p =>
+                (p.name || '').toLowerCase().includes(q) ||
+                (p.name_en || '').toLowerCase().includes(q) ||
+                (p.form || '').toLowerCase().includes(q)
+              )
+              .slice(0, 20);
+
+            if (!matches.length) {
+              results.innerHTML = `<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:13px;">لا توجد نتائج مطابقة</div>`;
+            } else {
+              results.innerHTML = matches.map(p => {
+                const abc = getProductABC(p.id);
+                const urgency = getUrgency(p.id);
+                return `
+                  <div class="search-result-item" data-id="${p.id}">
+                    <div class="result-avatar">${Refad.escapeHtml((p.name || '؟').charAt(0))}</div>
+                    <div class="result-body">
+                      <div class="name">${Refad.escapeHtml(p.name)}</div>
+                      <div class="sub">
+                        ${Refad.escapeHtml([p.form, p.unit].filter(Boolean).join(' • ') || '—')}
+                        <span class="item-info-chip abc-${abc}" style="margin-right:4px;">${abc}</span>
+                      </div>
+                    </div>
+                    <i data-lucide="plus-circle" style="color:var(--accent);width:20px;height:20px;"></i>
+                  </div>
+                `;
+              }).join('');
+              if (window.lucide) lucide.createIcons();
+            }
+
+            results.classList.add('show');
+          }, 200);
+
+          input.addEventListener('input', e => handler(e.target.value));
+          input.addEventListener('focus', () => { if (input.value) results.classList.add('show'); });
+          input.addEventListener('keydown', async event => {
+            if (event.key !== 'Enter') return;
+            event.preventDefault();
+            const code = input.value.trim();
+            if (!code) return;
+
+            const productId = state.barcodeMap[code.toUpperCase()];
+            if (productId) {
+              await addProductByBarcode(code.toUpperCase());
+              input.value = '';
+              results.classList.remove('show');
+            } else if (/^\d{8,14}$/.test(code)) {
+              Refad.toast.warning('الباركود غير مسجل لأي صنف');
+              input.select();
+            } else {
+              const first = results.querySelector('.search-result-item');
+              if (first) {
+                await addProductById(parseInt(first.dataset.id, 10));
+                input.value = '';
+                results.classList.remove('show');
+              }
+            }
           });
-        });
 
-        document.addEventListener('keydown', e => {
-          if (e.key === 'Escape') {
-            document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.remove('show'));
+          results.addEventListener('click', async e => {
+            const item = e.target.closest('.search-result-item');
+            if (!item) return;
+            await addProductById(parseInt(item.dataset.id, 10));
+            input.value = '';
+            results.classList.remove('show');
+          });
+
+          document.addEventListener('click', e => {
+            if (!e.target.closest('.product-search-wrap')) results.classList.remove('show');
+          });
+        }
+
+        // ============================================================
+        // 12) Camera Scanner
+        // ============================================================
+        async function stopRequestCameraScan(closeModal) {
+          try {
+            await window.RefadCameraScanner.stop();
+          } catch (error) {
+            console.error('[PurchaseRequests] Camera stop failed:', error);
+          } finally {
+            if (closeModal) document.getElementById('requestScanModal').classList.remove('show');
           }
-        });
+        }
 
-        document.querySelectorAll('.modal-backdrop').forEach(m => {
-          m.addEventListener('click', e => {
-            if (e.target === m) m.classList.remove('show');
+        function setupRequestCameraScanner() {
+          const modal = document.getElementById('requestScanModal');
+          document.getElementById('requestCameraScanBtn').addEventListener('click', async () => {
+            modal.classList.add('show');
+            document.getElementById('requestScanStatus').textContent = 'جارٍ تشغيل الكاميرا...';
+            if (window.lucide) lucide.createIcons();
+            try {
+              await window.RefadCameraScanner.start('requestBarcodeReader', async code => {
+                const normalizedCode = String(code || '').trim().toUpperCase();
+                const exists = Boolean(state.barcodeMap[normalizedCode]);
+                await addProductByBarcode(normalizedCode);
+                document.getElementById('requestScanStatus').textContent = exists
+                  ? `تمت قراءة ${code}. وجّه الكاميرا إلى الصنف التالي.`
+                  : `الباركود غير مسجل: ${code}`;
+              });
+              document.getElementById('requestScanStatus').textContent = 'كل عملية مسح تضيف وحدة إلى كمية الصنف المطلوبة.';
+            } catch (error) {
+              console.error('[PurchaseRequests] Camera start failed:', error);
+              document.getElementById('requestScanStatus').textContent = error.message || 'تعذّر تشغيل الكاميرا';
+              Refad.toast.error(error.message || 'تعذّر تشغيل الكاميرا');
+            }
           });
-        });
-      }
+          document.getElementById('stopRequestScanBtn').addEventListener('click', () => stopRequestCameraScan(true));
+          document.getElementById('closeRequestScanBtn').addEventListener('click', () => stopRequestCameraScan(true));
+          modal.addEventListener('click', event => {
+            if (event.target === modal) stopRequestCameraScan(true);
+          });
+          document.addEventListener('keydown', event => {
+            if (event.key === 'Escape' && modal.classList.contains('show')) {
+              stopRequestCameraScan(true);
+            }
+          });
+        }
 
-      // ============================================================
-      // 30) Print
-      // ============================================================
-      function printRequest() {
-        if (!state.items.length) return Refad.toast.warning('لا يوجد محتوى للطباعة');
+        // ============================================================
+        // 13) Excel Import
+        // ============================================================
+        function setupExcelImport() {
+          const input = document.getElementById('excelInput');
+          document.getElementById('importBtn').addEventListener('click', () => input.click());
 
-        const supplier = state.suppliers.find(s => s.id === parseInt(document.getElementById('supplierSelect').value, 10));
-        const w = window.open('', '_blank');
-        w.document.write(`
-          <!DOCTYPE html>
-          <html dir="rtl"><head><meta charset="UTF-8">
-          <title>طلب ${state.requestNumber}</title>
-          <style>
-            body { font-family: Cairo, Arial; padding: 30px; color: #0f172a; }
-            h1 { color: #0B2C4D; margin-bottom: 4px; font-size: 22px; }
-            .sub { color: #64748b; font-size: 13px; margin-bottom: 20px; }
-            .info { display: flex; gap: 30px; margin-bottom: 20px; flex-wrap: wrap; }
-            .info div { font-size: 13px; }
-            .info strong { color: #0B2C4D; }
-            table { width: 100%; border-collapse: collapse; font-size: 12px; }
-            th, td { border: 1px solid #cbd5e1; padding: 8px; text-align: right; }
-            th { background: #F1F5F9; font-weight: 700; }
-            .footer { margin-top: 30px; text-align: center; font-size: 11px; color: #94a3b8; }
-          </style></head><body>
-          <h1>طلب شراء رقم: ${Refad.escapeHtml(state.requestNumber || '')}</h1>
-          <div class="sub">التاريخ: ${Refad.format.date(new Date())}</div>
-          <div class="info">
-            <div><strong>المورد:</strong> ${Refad.escapeHtml(supplier?.name || '—')}</div>
-            <div><strong>الهاتف:</strong> ${Refad.escapeHtml(supplier?.phone || '—')}</div>
-          </div>
-          <table>
-            <thead><tr>
-              <th>#</th><th>الصنف</th><th>الشكل</th><th>الكمية</th><th>خصم مطلوب</th>
-            </tr></thead>
-            <tbody>
-              ${state.items.map((it, i) => `
-                <tr>
-                  <td>${i + 1}</td>
-                  <td>${Refad.escapeHtml(it.product.name)}</td>
-                  <td>${Refad.escapeHtml(it.product.form || '—')}</td>
-                  <td>${it.requested_qty}</td>
-                  <td>${Refad.format.number(it.requested_discount || 0, 1)}%</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-          <div class="footer">تم إنشاء الطلب من نظام رفاد</div>
-          <script>window.onload = () => setTimeout(() => window.print(), 300);<\/script>
-          </body></html>
-        `);
-        w.document.close();
-      }
+          input.addEventListener('change', async e => {
+            const file = e.target.files[0];
+            if (!file) return;
+            input.value = '';
 
-      // ============================================================
-      // 31) Events
-      // ============================================================
-      function bindEvents() {
-        document.getElementById('saveBtn').addEventListener('click', save);
-        document.getElementById('addUrgentBtn').addEventListener('click', addUrgentItems);
-        document.getElementById('addAllProductsBtn').addEventListener('click', addAllProducts);
-        document.getElementById('applyBestDiscountsBtn').addEventListener('click', applyBestDiscounts);
-        document.getElementById('optimizeQtyBtn').addEventListener('click', optimizeQuantities);
-        document.getElementById('clearItemsBtn').addEventListener('click', async () => {
-          if (!state.items.length) return;
-          if (await Refad.alert.confirm('مسح الكل', 'هل تريد مسح كل الأصناف؟', 'مسح')) {
-            state.items = [];
+            try {
+              const data = await file.arrayBuffer();
+              const wb = XLSX.read(data, { type: 'array' });
+              const sheet = wb.Sheets[wb.SheetNames[0]];
+              const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+              const imported = [];
+              rows.forEach((row, idx) => {
+                if (idx === 0 && String(row[0] || '').match(/اسم|name/i)) return;
+                const name = String(row[0] || '').trim();
+                const qty = parseInt(row[1], 10) || 1;
+                if (name) imported.push({ name, qty });
+              });
+
+              if (!imported.length) {
+                Refad.toast.warning('الملف فارغ أو التنسيق غير صحيح');
+                return;
+              }
+
+              let added = 0, notFound = 0;
+              for (const item of imported) {
+                const p = state.allProducts.find(x =>
+                  (x.name || '').trim() === item.name ||
+                  (x.name_en || '').trim().toLowerCase() === item.name.toLowerCase()
+                );
+                if (p && !state.items.some(it => it.product_id === p.id)) {
+                  const rate = state.saleRatesNet[p.id] || 0;
+                  state.items.push({
+                    product_id: p.id,
+                    product: p,
+                    requested_qty: item.qty,
+                    suggested_qty: suggestedPurchaseQty(p, rate),
+                    last_discount: p.last_purchase_discount || 0,
+                    max_discount: p.max_purchase_discount || 0,
+                    suggested_discount: suggestedPurchaseDiscount(p),
+                    purchase_benchmark: state.purchaseBenchmarks[p.id] || null,
+                    requested_discount: 0,
+                    sale_rate: rate
+                  });
+                  added++;
+                } else if (!p) {
+                  notFound++;
+                }
+              }
+              renderItems();
+              updateGlobalStats();
+              Refad.toast.success(`تم إضافة ${added} صنف. لم يتم العثور على ${notFound}`);
+            } catch (err) {
+              console.error('Excel import failed:', err);
+              Refad.toast.error('فشل قراءة الملف: ' + err.message);
+            }
+          });
+        }
+
+        // ============================================================
+        // 14) Excel Export
+        // ============================================================
+        function exportExcel() {
+          if (!state.items.length) {
+            Refad.toast.warning('لا توجد أصناف للتصدير');
+            return;
+          }
+          const rows = state.items.map((it, i) => ({
+            '#': i + 1,
+            'الصنف': it.product.name,
+            'الشكل': it.product.form || '',
+            'الوحدة': it.product.unit || '',
+            'ABC': getProductABC(it.product_id),
+            'المخزون الحالي': state.stockByProduct[it.product_id] || 0,
+            'المعلق': state.pendingPOs[it.product_id] || 0,
+            'معدل البيع اليومي': it.sale_rate || 0,
+            'آخر خصم شراء': it.last_discount || 0,
+            'أعلى خصم شراء': it.max_discount || 0,
+            'أفضل سعر سابق': it.purchase_benchmark?.best?.netPrice || '',
+            'أفضل مورد': it.purchase_benchmark?.best?.supplierName || '',
+            'الكمية المطلوبة': it.requested_qty || 1,
+            'الخصم المطلوب': it.requested_discount || 0
+          }));
+          const ws = XLSX.utils.json_to_sheet(rows);
+          const wb = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(wb, ws, 'PurchaseRequest');
+          XLSX.writeFile(wb, `purchase-request-${state.requestNumber || 'new'}.xlsx`);
+          Refad.toast.success('تم التصدير');
+        }
+
+        // ============================================================
+        // 15) Save
+        // ============================================================
+        async function save() {
+          if (state.isLocked) {
+            Refad.toast.error('لا يمكن تعديل طلب شراء بعد تحويله إلى فاتورة استلام');
+            return;
+          }
+
+          const invalidDiscount = document.querySelector('.discount-request-input:invalid');
+          if (invalidDiscount) {
+            invalidDiscount.focus();
+            Refad.toast.warning('أدخل الخصم المطلوب بنسبة من 0 إلى 100');
+            return;
+          }
+
+          const supplierId = parseInt(document.getElementById('supplierSelect').value, 10);
+          const notes = document.getElementById('requestNotes').value.trim() || null;
+
+          if (!supplierId) {
+            Refad.toast.warning('يجب اختيار المورد');
+            document.getElementById('supplierSelect').focus();
+            return;
+          }
+
+          if (!state.items.length) {
+            Refad.toast.warning('يجب إضافة صنف واحد على الأقل');
+            return;
+          }
+
+          const btn = document.getElementById('saveBtn');
+          const originalText = document.getElementById('saveBtnText').textContent;
+          btn.disabled = true;
+          document.getElementById('saveBtnText').textContent = 'جارٍ الحفظ...';
+
+          try {
+            let rid = requestId;
+
+            if (!rid) {
+              const num = await generateRequestNumber();
+              const payload = {
+                company_id: session.company_id,
+                supplier_id: supplierId,
+                request_number: num,
+                status: state.status || 'draft',
+                total_amount: 0,
+                notes,
+                created_by: session.user_id
+              };
+              const created = await Refad.db.insert('purchase_requests', payload);
+              rid = created.id;
+              state.requestNumber = num;
+            } else {
+              await Refad.db.update('purchase_requests', rid, {
+                supplier_id: supplierId,
+                notes,
+                status: state.status
+              });
+            }
+
+            // حذف العناصر القديمة
+            const currentIds = state.items.filter(item => item.id).map(item => item.id);
+            for (const oldId of state.originalItemIds) {
+              if (!currentIds.some(id => String(id) === String(oldId))) {
+                await Refad.db.remove('purchase_request_items', oldId);
+              }
+            }
+
+            for (const item of state.items) {
+              const payload = {
+                request_id: rid,
+                product_id: item.product_id,
+                requested_qty: item.requested_qty,
+                avg_sale_rate: item.sale_rate || 0,
+                last_discount: item.last_discount || 0,
+                requested_discount: Number(item.requested_discount) || 0
+              };
+              if (item.id) {
+                await Refad.db.update('purchase_request_items', item.id, payload);
+              } else {
+                const createdItem = await Refad.db.insert('purchase_request_items', payload);
+                item.id = createdItem.id;
+              }
+            }
+            state.originalItemIds = state.items.filter(item => item.id).map(item => item.id);
+
+            await Refad.logActivity(
+              requestId ? 'update_purchase_request' : 'create_purchase_request',
+              'purchases',
+              `طلب ${state.requestNumber}`,
+              rid
+            );
+
+            Refad.toast.success('تم حفظ الطلب');
+
+            if (!requestId) {
+              setTimeout(() => {
+                window.location.href = `purchase-request-form.html?id=${rid}`;
+              }, 600);
+            } else {
+              await loadRequest();
+            }
+          } catch (err) {
+            console.error('Save failed:', err);
+            Refad.toast.error('فشل الحفظ: ' + err.message);
+            btn.disabled = false;
+            document.getElementById('saveBtnText').textContent = originalText;
+          }
+        }
+
+        async function generateRequestNumber() {
+          try {
+            const count = await Refad.db.count('purchase_requests', {
+              eq: { company_id: session.company_id }
+            });
+            const year = new Date().getFullYear();
+            return `PR-${year}-${String(count + 1).padStart(5, '0')}`;
+          } catch (e) {
+            return `PR-${Date.now()}`;
+          }
+        }
+
+        // ============================================================
+        // 16) Load Existing Request
+        // ============================================================
+        async function loadRequest() {
+          try {
+            const r = await Refad.db.selectOne('purchase_requests', { eq: { id: requestId } });
+            if (!r || r.company_id !== session.company_id) {
+              Refad.alert.error('غير موجود', 'الطلب غير موجود').then(() => location.href = 'purchase-requests.html');
+              return;
+            }
+
+            state.requestNumber = r.request_number;
+            state.shareToken = r.share_token;
+            state.status = r.status;
+
+            document.getElementById('supplierSelect').value = r.supplier_id || '';
+            document.getElementById('requestNumber').value = r.request_number;
+            document.getElementById('requestNotes').value = r.notes || '';
+            if (r.created_at) {
+              document.getElementById('requestDate').value = Refad.format.date(r.created_at, 'YYYY-MM-DD');
+            }
+
+            updateStatusBadge(r.status);
+
+            document.getElementById('shareBtn').style.display = 'inline-flex';
+            document.getElementById('exportBtn').style.display = 'inline-flex';
+            document.getElementById('printBtn').style.display = 'inline-flex';
+            if (r.status === 'draft') {
+              document.getElementById('sendBtn').style.display = 'inline-flex';
+            }
+            document.getElementById('pageTitle').textContent = `طلب ${r.request_number}`;
+            document.getElementById('pageSubtitle').textContent = `تعديل طلب شراء - ${r.status}`;
+            document.getElementById('topbarTitle').textContent = `طلب ${r.request_number}`;
+
+            if (r.supplier_id) {
+              await loadSupplierProfile(r.supplier_id);
+            }
+
+            const items = await Refad.db.select('purchase_request_items', {
+              columns: 'id, product_id, requested_qty, last_discount, requested_discount, avg_sale_rate, supplier_price, supplier_discount, supplier_response_at, products(id, name, name_en, form, unit)',
+              eq: { request_id: requestId },
+              order: { column: 'id', ascending: true }
+            });
+
+            state.supplierResponses = await Refad.db.select('purchase_request_responses', {
+              columns: 'id, product_id, supplier_price, supplier_discount, submitted_at',
+              eq: { request_id: requestId },
+              order: { column: 'submitted_at', ascending: false },
+              limit: 500
+            }).catch(() => []);
+
+            const discounts = await Refad.db.select('product_discounts', {
+              columns: 'product_id, last_purchase_discount, max_purchase_discount',
+              in: { product_id: items.map(i => i.product_id).filter(Boolean) }
+            }).catch(() => []);
+            const dMap = {};
+            discounts.forEach(d => { dMap[d.product_id] = d; });
+
+            state.originalItemIds = items.map(item => item.id);
+            state.items = items.filter(it => it.products).map(it => {
+              const product = state.allProducts.find(p => p.id === it.product_id) || it.products;
+              const rate = state.saleRatesNet[it.product_id] || it.avg_sale_rate || 0;
+              return {
+                id: it.id,
+                product_id: it.product_id,
+                product,
+                requested_qty: it.requested_qty || 1,
+                suggested_qty: suggestedPurchaseQty(product, rate),
+                last_discount: it.last_discount || 0,
+                requested_discount: it.requested_discount || 0,
+                supplier_price: it.supplier_price,
+                supplier_discount: it.supplier_discount,
+                supplier_response_at: it.supplier_response_at,
+                max_discount: dMap[it.product_id]?.max_purchase_discount || 0,
+                suggested_discount: suggestedPurchaseDiscount({
+                  max_purchase_discount: dMap[it.product_id]?.max_purchase_discount,
+                  last_purchase_discount: dMap[it.product_id]?.last_purchase_discount
+                }),
+                purchase_benchmark: state.purchaseBenchmarks[it.product_id] || null,
+                sale_rate: rate
+              };
+            });
+
             renderItems();
+            renderSupplierResponseHistory();
+            updateGlobalStats();
+
+            const linkedReceipts = await Refad.db.select('receipts', {
+              columns: 'id, receipt_number, invoice_number, status',
+              eq: { company_id: session.company_id, request_id: requestId },
+              neq: { status: 'cancelled' },
+              order: { column: 'id', ascending: false },
+              limit: 1
+            }).catch(() => []);
+
+            const linkedReceipt = linkedReceipts[0] || null;
+            state.isLocked = r.status === 'received' || Boolean(linkedReceipt);
+            if (state.isLocked) applyLockedRequestState(linkedReceipt);
+          } catch (e) {
+            console.error('Load request failed:', e);
+            Refad.toast.error('تعذّر تحميل الطلب: ' + e.message);
           }
-        });
-        document.getElementById('exportBtn').addEventListener('click', exportExcel);
-        document.getElementById('shareBtn').addEventListener('click', openShareModal);
-        document.getElementById('printBtn').addEventListener('click', printRequest);
-        document.getElementById('sendBtn').addEventListener('click', sendRequest);
-
-        // Supplier change
-        document.getElementById('supplierSelect').addEventListener('change', e => {
-          const sid = parseInt(e.target.value, 10);
-          if (sid) loadSupplierProfile(sid);
-          else document.getElementById('supplierProfile').classList.remove('show');
-        });
-
-        // Default date
-        if (!document.getElementById('requestDate').value) {
-          document.getElementById('requestDate').value = Refad.date.today();
         }
 
-        // Ctrl+S
-        document.addEventListener('keydown', e => {
-          if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-            e.preventDefault();
-            save();
+        function updateStatusBadge(status) {
+          const el = document.getElementById('statusBadge');
+          const text = document.getElementById('statusText');
+          const labels = {
+            draft: 'مسودة', sent: 'مُرسل', partial: 'جزئي', received: 'مستلم', cancelled: 'ملغي'
+          };
+          el.className = 'status-badge ' + status;
+          text.textContent = labels[status] || status;
+          el.style.display = 'inline-flex';
+        }
+
+        // ============================================================
+        // 17) Smart Suggestions
+        // ============================================================
+        async function applySmartSuggestions() {
+          let payload;
+          try {
+            const stored = sessionStorage.getItem(SMART_PURCHASE_KEY);
+            if (!stored) throw new Error('لا توجد توصيات محفوظة');
+            payload = JSON.parse(stored);
+          } catch (error) {
+            console.error('[Purchase request] Smart suggestions failed:', error);
+            Refad.toast.error(error.message || 'تعذّر قراءة توصيات الشراء');
+            return;
           }
-        });
 
-        // Permissions
-        if (!canCreate && !requestId) {
-          document.getElementById('saveBtn').disabled = true;
-          document.getElementById('saveBtn').title = 'ليس لديك صلاحية';
+          if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+            sessionStorage.removeItem(SMART_PURCHASE_KEY);
+            Refad.toast.error('بيانات توصيات الشراء غير صالحة');
+            return;
+          }
+
+          const age = Date.now() - Number(payload.createdAt);
+          if (Number(payload.companyId) !== Number(session.company_id) ||
+              !Number.isFinite(age) || age < 0 || age > 30 * 60 * 1000) {
+            sessionStorage.removeItem(SMART_PURCHASE_KEY);
+            Refad.toast.error('انتهت صلاحية التوصيات');
+            return;
+          }
+
+          const productsById = new Map(state.allProducts.map(product => [String(product.id), product]));
+          const items = (Array.isArray(payload.items) ? payload.items : [])
+            .map(item => ({
+              product: productsById.get(String(item.product_id)),
+              quantity: Number(item.quantity),
+              dailyRate: Number(item.daily_rate)
+            }))
+            .filter(item => item.product && Number.isInteger(item.quantity) && item.quantity > 0);
+
+          if (!items.length) {
+            sessionStorage.removeItem(SMART_PURCHASE_KEY);
+            Refad.toast.warning('لا توجد أصناف صالحة');
+            return;
+          }
+
+          items.forEach(({ product, quantity, dailyRate }) => {
+            if (state.items.some(existing => existing.product_id === product.id)) return;
+            state.items.push({
+              product_id: product.id,
+              product,
+              requested_qty: quantity,
+              suggested_qty: suggestedPurchaseQty(product, dailyRate),
+              last_discount: product.last_purchase_discount || 0,
+              max_discount: product.max_purchase_discount || 0,
+              suggested_discount: suggestedPurchaseDiscount(product),
+              purchase_benchmark: state.purchaseBenchmarks[product.id] || null,
+              requested_discount: 0,
+              sale_rate: dailyRate
+            });
+          });
+          sessionStorage.removeItem(SMART_PURCHASE_KEY);
+          renderItems();
+          updateGlobalStats();
+          Refad.toast.success('تم تجهيز الطلب بالكميات المقترحة');
         }
-        if (!canEdit && requestId) {
-          document.getElementById('saveBtn').disabled = true;
-          document.getElementById('saveBtn').title = 'ليس لديك صلاحية';
+
+        // ============================================================
+        // 18) Send Request
+        // ============================================================
+        async function sendRequest() {
+          if (state.isLocked) return Refad.toast.warning('لا يمكن تغيير حالة طلب محول');
+          if (!requestId) return Refad.toast.warning('احفظ الطلب أولاً');
+
+          const ok = await Refad.alert.confirm('إرسال الطلب', 'سيتم تغيير حالة الطلب إلى "مُرسل". متابعة؟', 'إرسال');
+          if (!ok) return;
+
+          try {
+            await Refad.db.update('purchase_requests', requestId, { status: 'sent' });
+            state.status = 'sent';
+            updateStatusBadge('sent');
+            document.getElementById('sendBtn').style.display = 'none';
+
+            try {
+              await Refad.notifyCompany(
+                session.company_id,
+                'تم إرسال طلب شراء',
+                `تم إرسال طلب الشراء ${state.requestNumber}`,
+                'purchase',
+                requestId,
+                session.user_id
+              );
+            } catch (notificationError) {
+              console.error('[PurchaseRequests] Notification failed:', notificationError);
+            }
+
+            Refad.toast.success('تم إرسال الطلب');
+          } catch (e) {
+            Refad.toast.error('فشل: ' + e.message);
+          }
         }
+
+        // ============================================================
+        // 19) Share Modal
+        // ============================================================
+        async function openShareModal() {
+          if (!requestId) return Refad.toast.warning('احفظ الطلب أولاً');
+
+          let token = state.shareToken;
+          if (!token) {
+            token = Refad.randomToken(48);
+            try {
+              await Refad.db.update('purchase_requests', requestId, { share_token: token });
+              state.shareToken = token;
+              await Refad.db.insert('share_links', {
+                company_id: session.company_id,
+                token,
+                resource_type: 'purchase_request',
+                resource_id: requestId,
+                created_by: session.user_id,
+                expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+              });
+            } catch (e) {
+              Refad.toast.error('تعذّر توليد الرابط');
+              return;
+            }
+          }
+
+          const url = `${location.origin}${location.pathname.replace('purchase-request-form.html', '')}shared-request.html?token=${token}`;
+          document.getElementById('shareLinkInput').value = url;
+          document.getElementById('shareModal').classList.add('show');
+          if (window.lucide) lucide.createIcons();
+        }
+
+        function setupShareModal() {
+          document.getElementById('copyLinkBtn').addEventListener('click', async () => {
+            const input = document.getElementById('shareLinkInput');
+            try {
+              await navigator.clipboard.writeText(input.value);
+              Refad.toast.success('تم نسخ الرابط');
+            } catch (e) {
+              input.select();
+              document.execCommand('copy');
+              Refad.toast.success('تم النسخ');
+            }
+          });
+
+          document.getElementById('whatsappBtn').addEventListener('click', () => {
+            const url = document.getElementById('shareLinkInput').value;
+            const text = `طلب شراء ${state.requestNumber}\n${url}`;
+            window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+          });
+
+          document.getElementById('openLinkBtn').addEventListener('click', () => {
+            window.open(document.getElementById('shareLinkInput').value, '_blank');
+          });
+
+          document.querySelectorAll('[data-close]').forEach(b => {
+            b.addEventListener('click', () => {
+              document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.remove('show'));
+            });
+          });
+
+          document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') {
+              document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.remove('show'));
+            }
+          });
+
+          document.querySelectorAll('.modal-backdrop').forEach(m => {
+            m.addEventListener('click', e => {
+              if (e.target === m) m.classList.remove('show');
+            });
+          });
+        }
+
+        // ============================================================
+        // 20) Print
+        // ============================================================
+        function printRequest() {
+          if (!state.items.length) return Refad.toast.warning('لا يوجد محتوى للطباعة');
+
+          const supplier = state.suppliers.find(s => s.id === parseInt(document.getElementById('supplierSelect').value, 10));
+          const w = window.open('', '_blank');
+          w.document.write(`
+            <!DOCTYPE html>
+            <html dir="rtl"><head><meta charset="UTF-8">
+            <title>طلب ${state.requestNumber}</title>
+            <style>
+              body { font-family: Cairo, Arial; padding: 30px; color: #0f172a; }
+              h1 { color: #0B2C4D; margin-bottom: 4px; font-size: 22px; }
+              .sub { color: #64748b; font-size: 13px; margin-bottom: 20px; }
+              .info { display: flex; gap: 30px; margin-bottom: 20px; flex-wrap: wrap; }
+              .info div { font-size: 13px; }
+              .info strong { color: #0B2C4D; }
+              table { width: 100%; border-collapse: collapse; font-size: 12px; }
+              th, td { border: 1px solid #cbd5e1; padding: 8px; text-align: right; }
+              th { background: #F1F5F9; font-weight: 700; }
+              .footer { margin-top: 30px; text-align: center; font-size: 11px; color: #94a3b8; }
+            </style></head><body>
+            <h1>طلب شراء رقم: ${Refad.escapeHtml(state.requestNumber || '')}</h1>
+            <div class="sub">التاريخ: ${Refad.format.date(new Date())}</div>
+            <div class="info">
+              <div><strong>المورد:</strong> ${Refad.escapeHtml(supplier?.name || '—')}</div>
+              <div><strong>الهاتف:</strong> ${Refad.escapeHtml(supplier?.phone || '—')}</div>
+            </div>
+            <table>
+              <thead><tr>
+                <th>#</th><th>الصنف</th><th>الشكل</th><th>الكمية</th><th>خصم مطلوب</th>
+              </tr></thead>
+              <tbody>
+                ${state.items.map((it, i) => `
+                  <tr>
+                    <td>${i + 1}</td>
+                    <td>${Refad.escapeHtml(it.product.name)}</td>
+                    <td>${Refad.escapeHtml(it.product.form || '—')}</td>
+                    <td>${it.requested_qty}</td>
+                    <td>${Refad.format.number(it.requested_discount || 0, 1)}%</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+            <div class="footer">تم إنشاء الطلب من نظام رفاد</div>
+            <script>window.onload = () => setTimeout(() => window.print(), 300);<\/script>
+            </body></html>
+          `);
+          w.document.close();
+        }
+
+        // ============================================================
+        // 21) Events
+        // ============================================================
+        function bindEvents() {
+          document.getElementById('saveBtn').addEventListener('click', save);
+          document.getElementById('addUrgentBtn').addEventListener('click', addUrgentItems);
+          document.getElementById('addAllProductsBtn').addEventListener('click', addAllProducts);
+          document.getElementById('addSeasonalBtn').addEventListener('click', addSeasonalItems);
+          document.getElementById('addAbcABtn').addEventListener('click', addAbcAItems);
+          document.getElementById('applyBestDiscountsBtn').addEventListener('click', applyBestDiscounts);
+          document.getElementById('optimizeQtyBtn').addEventListener('click', optimizeQuantities);
+          document.getElementById('clearItemsBtn').addEventListener('click', async () => {
+            if (!state.items.length) return;
+            if (await Refad.alert.confirm('مسح الكل', 'هل تريد مسح كل الأصناف؟', 'مسح')) {
+              state.items = [];
+              renderItems();
+              updateGlobalStats();
+            }
+          });
+          document.getElementById('exportBtn').addEventListener('click', exportExcel);
+          document.getElementById('shareBtn').addEventListener('click', openShareModal);
+          document.getElementById('printBtn').addEventListener('click', printRequest);
+          document.getElementById('sendBtn').addEventListener('click', sendRequest);
+
+          document.getElementById('supplierSelect').addEventListener('change', e => {
+            const sid = parseInt(e.target.value, 10);
+            if (sid) {
+              loadSupplierProfile(sid);
+              // أعد حساب الكميات المقترحة بفترة التسليم الجديدة
+              state.items.forEach(item => {
+                const product = item.product;
+                const rate = item.sale_rate || 0;
+                item.suggested_qty = suggestedPurchaseQty(product, rate, sid);
+              });
+              renderItems();
+            } else {
+              document.getElementById('supplierProfile').classList.remove('show');
+            }
+          });
+
+          if (!document.getElementById('requestDate').value) {
+            document.getElementById('requestDate').value = Refad.date.today();
+          }
+
+          document.addEventListener('keydown', e => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+              e.preventDefault();
+              save();
+            }
+          });
+
+          if (!canCreate && !requestId) {
+            document.getElementById('saveBtn').disabled = true;
+            document.getElementById('saveBtn').title = 'ليس لديك صلاحية';
+          }
+          if (!canEdit && requestId) {
+            document.getElementById('saveBtn').disabled = true;
+            document.getElementById('saveBtn').title = 'ليس لديك صلاحية';
+          }
+        }
+
+        // ============================================================
+        // 22) Init
+        // ============================================================
+        async function init() {
+          buildSidebar();
+          fillUser();
+          setupTheme();
+          setupSidebarMobile();
+          setupUserMenu();
+          setupNotifBtn();
+          setupProductSearch();
+          setupRequestCameraScanner();
+          setupShareModal();
+          setupExcelImport();
+          bindEvents();
+
+          await loadSuppliers();
+          await loadProducts();
+
+          if (isEdit) {
+            await loadRequest();
+          } else if (smartMode) {
+            await applySmartSuggestions();
+          }
+
+          renderUrgentStats();
+          updateGlobalStats();
+          Refad.registerServiceWorker();
+
+          console.log('%c[Refad] Purchase request form ready (PRO with Analytics)', 'color:#14B8A6;font-weight:bold;font-size:14px');
+          console.log('%c[Refad] الميزات المُضافة:', 'color:#0B2C4D;font-weight:bold');
+          console.log('  ✅ EOQ + Safety Stock + Seasonality');
+          console.log('  ✅ ABC Classification');
+          console.log('  ✅ معدل البيع الصافي (بدون مرتجعات)');
+          console.log('  ✅ كشف المواسم');
+          console.log('  ✅ الطلبات المعلقة');
+          console.log('  ✅ فترة تسليم المورد');
+          console.log('  ✅ مقارنة أسعار الموردين');
+          console.log('  ✅ توصيات ذكية');
+          console.log('  ✅ إضافة عاجلة/موسمية/ABC-A');
+          console.log('  ✅ Dead Stock Detection');
+        }
+
+        // ============================================================
+        // Run
+        // ============================================================
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', init);
+        } else {
+          init();
+        }
+
+        // Spinner style
+        const spinnerStyle = document.createElement('style');
+        spinnerStyle.textContent = '@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }';
+        document.head.appendChild(spinnerStyle);
       }
 
-      // ============================================================
-      // 32) Init
-      // ============================================================
-      async function init() {
-        buildSidebar();
-        fillUser();
-        setupTheme();
-        setupSidebarMobile();
-        setupUserMenu();
-        setupNotifBtn();
-        setupProductSearch();
-        setupRequestCameraScanner();
-        setupShareModal();
-        setupExcelImport();
-        bindEvents();
-
-        await loadSuppliers();
-        await loadProducts();
-
-        if (isEdit) {
-          await loadRequest();
-        } else if (smartMode) {
-          await applySmartSuggestions();
-        }
-
-        renderUrgentStats();
-        Refad.registerServiceWorker();
-      }
-
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
-      } else {
-        init();
-      }
-
-      // Spinner
-      const spinnerStyle = document.createElement('style');
-      spinnerStyle.textContent = '@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }';
-      document.head.appendChild(spinnerStyle);
-
-      console.log('%c[Refad] Purchase request form ready (PRO)', 'color:#14B8A6;font-weight:bold');
-
+      // ابدأ الانتظار
+      waitForCore();
     })();
   </script>
 
 </body>
-</html>     
+</html>
