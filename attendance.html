@@ -18,6 +18,7 @@
   <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
 
   <style>
@@ -38,6 +39,7 @@
       --success: #10b981;
       --warning: #f59e0b;
       --info: #3b82f6;
+      --purple: #8b5cf6;
       --sidebar-bg: #0B2C4D;
       --sidebar-text: #cbd5e1;
       --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
@@ -69,9 +71,7 @@
 
     body { display: flex; min-height: 100vh; overflow-x: hidden; }
 
-    /* ============================================================
-       Sidebar
-       ============================================================ */
+    /* Sidebar */
     .sidebar {
       width: var(--sidebar-w);
       height: 100vh;
@@ -86,7 +86,6 @@
       transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       box-shadow: -4px 0 20px rgba(0,0,0,0.1);
     }
-
     .sidebar-header {
       padding: 20px 22px;
       border-bottom: 1px solid rgba(255,255,255,0.08);
@@ -96,7 +95,6 @@
       height: var(--topbar-h);
       box-sizing: border-box;
     }
-
     .sidebar-logo {
       width: 40px;
       height: 40px;
@@ -110,16 +108,12 @@
     }
     .sidebar-logo img { width: 70%; height: 70%; object-fit: contain; }
     .sidebar-logo .fallback { color: white; font-weight: 800; font-size: 18px; }
-
     .sidebar-brand h2 { color: white; font-size: 20px; font-weight: 800; letter-spacing: -0.5px; line-height: 1.2; }
     .sidebar-brand p { font-size: 10px; color: var(--sidebar-text); opacity: 0.7; font-weight: 500; margin-top: 2px; }
-
-    .sidebar-nav { flex: 1; overflow-y: auto; padding: 12px 0; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.15) transparent; }
+    .sidebar-nav { flex: 1; overflow-y: auto; padding: 12px 0; }
     .sidebar-nav::-webkit-scrollbar { width: 5px; }
     .sidebar-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 10px; }
-
     .nav-section { padding: 8px 20px 4px; font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 1px; margin-top: 8px; }
-
     .nav-item {
       display: flex;
       align-items: center;
@@ -131,20 +125,16 @@
       font-weight: 500;
       border-right: 3px solid transparent;
       transition: all 0.2s;
-      position: relative;
       cursor: pointer;
     }
-    .nav-item:hover { background: rgba(255,255,255,0.05); color: white; border-right-color: rgba(20,184,166,0.5); }
+    .nav-item:hover { background: rgba(255,255,255,0.05); color: white; }
     .nav-item.active { background: rgba(20,184,166,0.12); color: white; border-right-color: var(--accent); font-weight: 600; }
-    .nav-item.active::before { content: ''; position: absolute; right: 0; top: 50%; transform: translateY(-50%); width: 3px; height: 60%; background: var(--accent); border-radius: 0 4px 4px 0; }
     .nav-item i, .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; opacity: 0.85; }
     .nav-item .badge { margin-right: auto; background: var(--danger); color: white; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
     .nav-item .badge.teal { background: var(--accent); }
     .nav-item .badge.gold { background: var(--gold); }
 
-    /* ============================================================
-       Main
-       ============================================================ */
+    /* Main */
     .main { flex: 1; margin-right: var(--sidebar-w); min-width: 0; display: flex; flex-direction: column; }
 
     .topbar {
@@ -160,13 +150,10 @@
       z-index: 50;
       box-shadow: var(--shadow-sm);
     }
-
     .menu-toggle { display: none; background: transparent; border: none; color: var(--text); cursor: pointer; padding: 8px; border-radius: 8px; }
     .menu-toggle:hover { background: var(--bg); }
-
     .topbar-title { font-size: 18px; font-weight: 700; color: var(--text); flex-shrink: 0; }
     .topbar-actions { display: flex; align-items: center; gap: 8px; margin-right: auto; }
-
     .icon-btn {
       width: 40px;
       height: 40px;
@@ -197,7 +184,6 @@
       background: var(--card);
     }
     .user-menu:hover { background: var(--bg); }
-
     .user-avatar {
       width: 34px;
       height: 34px;
@@ -216,7 +202,6 @@
     .user-info { display: flex; flex-direction: column; line-height: 1.2; }
     .user-info .name { font-size: 13px; font-weight: 700; color: var(--text); }
     .user-info .role { font-size: 11px; color: var(--text-muted); }
-
     .dropdown { position: absolute; top: calc(100% + 8px); left: 0; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: var(--shadow-lg); min-width: 200px; padding: 6px; opacity: 0; visibility: hidden; transform: translateY(-8px); transition: all 0.2s; z-index: 100; }
     .dropdown.show { opacity: 1; visibility: visible; transform: translateY(0); }
     .dropdown-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; color: var(--text); font-size: 13px; font-weight: 500; cursor: pointer; transition: background 0.15s; text-decoration: none; }
@@ -226,11 +211,8 @@
     .dropdown-item i { width: 16px; height: 16px; }
     .dropdown-divider { height: 1px; background: var(--border); margin: 6px 0; }
 
-    /* ============================================================
-       Content
-       ============================================================ */
+    /* Content */
     .content { padding: 24px; flex: 1; }
-
     .page-head {
       display: flex;
       align-items: center;
@@ -239,7 +221,6 @@
       margin-bottom: 20px;
       flex-wrap: wrap;
     }
-
     .page-head h1 { font-size: 24px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
     .page-head p { font-size: 13px; color: var(--text-muted); }
 
@@ -260,25 +241,46 @@
     }
     .btn:disabled { opacity: 0.6; cursor: not-allowed; }
     .btn i { width: 16px; height: 16px; }
-
     .btn-primary { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; }
     .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(20,184,166,0.35); }
-
     .btn-outline { background: var(--card); color: var(--text); border: 1px solid var(--border); }
     .btn-outline:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
-
     .btn-success { background: var(--success); color: white; }
     .btn-success:hover:not(:disabled) { background: #047857; }
-
     .btn-danger { background: var(--danger); color: white; }
     .btn-danger:hover:not(:disabled) { background: #b91c1c; }
-
     .btn-warning { background: var(--warning); color: white; }
     .btn-warning:hover:not(:disabled) { background: #d97706; }
-
+    .btn-purple { background: linear-gradient(135deg, #8b5cf6, #6d28d9); color: white; }
+    .btn-purple:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(139,92,246,0.4); }
     .btn-sm { padding: 6px 12px; font-size: 12px; }
 
-    /* Big Check-in button */
+    /* Owner actions */
+    .owner-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding: 12px 16px;
+      background: linear-gradient(135deg, rgba(139,92,246,0.08), rgba(20,184,166,0.05));
+      border: 1.5px solid rgba(139,92,246,0.25);
+      border-radius: var(--radius);
+      margin-bottom: 16px;
+      align-items: center;
+    }
+    .owner-actions .owner-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--purple);
+      padding: 6px 12px;
+      background: rgba(139,92,246,0.12);
+      border-radius: 20px;
+    }
+    .owner-actions .owner-label i { width: 14px; height: 14px; }
+
+    /* Check-in panel */
     .checkin-panel {
       background: linear-gradient(135deg, var(--primary), var(--primary-light));
       border-radius: var(--radius);
@@ -294,7 +296,6 @@
       position: relative;
       overflow: hidden;
     }
-
     .checkin-panel::before {
       content: '';
       position: absolute;
@@ -305,17 +306,7 @@
       background: radial-gradient(circle, rgba(20,184,166,0.4), transparent 70%);
       border-radius: 50%;
     }
-
-    .checkin-info {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      position: relative;
-      z-index: 1;
-      flex: 1;
-      min-width: 200px;
-    }
-
+    .checkin-info { display: flex; align-items: center; gap: 14px; position: relative; z-index: 1; flex: 1; min-width: 200px; }
     .checkin-avatar {
       width: 56px;
       height: 56px;
@@ -331,33 +322,10 @@
       overflow: hidden;
     }
     .checkin-avatar img { width: 100%; height: 100%; object-fit: cover; }
-
-    .checkin-text h2 {
-      font-size: 18px;
-      font-weight: 800;
-      margin-bottom: 4px;
-    }
-    .checkin-text p {
-      font-size: 13px;
-      opacity: 0.85;
-    }
-
-    .checkin-time {
-      font-size: 32px;
-      font-weight: 800;
-      letter-spacing: -1px;
-      position: relative;
-      z-index: 1;
-    }
-
-    .checkin-actions {
-      position: relative;
-      z-index: 1;
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
+    .checkin-text h2 { font-size: 18px; font-weight: 800; margin-bottom: 4px; }
+    .checkin-text p { font-size: 13px; opacity: 0.85; }
+    .checkin-time { font-size: 32px; font-weight: 800; letter-spacing: -1px; position: relative; z-index: 1; }
+    .checkin-actions { position: relative; z-index: 1; display: flex; gap: 8px; flex-wrap: wrap; }
     .btn-checkin, .btn-checkout {
       padding: 12px 24px;
       font-size: 15px;
@@ -384,7 +352,6 @@
       gap: 12px;
       margin-bottom: 20px;
     }
-
     .mini-card {
       background: var(--card);
       border: 1px solid var(--border);
@@ -397,7 +364,6 @@
       box-shadow: var(--shadow-sm);
     }
     .mini-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: var(--shadow); }
-
     .mini-icon {
       width: 42px;
       height: 42px;
@@ -413,7 +379,6 @@
     .mini-icon.gold   { background: linear-gradient(135deg, #F59E0B, #d97706); }
     .mini-icon.blue   { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
     .mini-icon.purple { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
-
     .mini-body { flex: 1; min-width: 0; }
     .mini-body .label { font-size: 11px; color: var(--text-muted); font-weight: 600; margin-bottom: 2px; }
     .mini-body .value { font-size: 18px; font-weight: 800; color: var(--text); line-height: 1; }
@@ -431,7 +396,6 @@
       flex-wrap: wrap;
       box-shadow: var(--shadow-sm);
     }
-
     .search-input { position: relative; flex: 1; min-width: 200px; }
     .search-input input {
       width: 100%;
@@ -447,7 +411,6 @@
     }
     .search-input input:focus { border-color: var(--accent); background: var(--card); box-shadow: 0 0 0 3px rgba(20,184,166,0.1); }
     .search-input i { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--text-muted); pointer-events: none; }
-
     .date-input {
       padding: 10px 14px;
       font-family: inherit;
@@ -461,7 +424,6 @@
       min-width: 160px;
     }
     .date-input:focus { border-color: var(--accent); background: var(--card); }
-
     .select-wrap { position: relative; min-width: 140px; }
     .select-wrap select {
       width: 100%;
@@ -500,18 +462,14 @@
       box-shadow: var(--shadow-sm);
       overflow: hidden;
     }
-
     .table-scroll { overflow-x: auto; }
-
     table {
       width: 100%;
       border-collapse: collapse;
       font-size: 14px;
       min-width: 900px;
     }
-
     thead { background: var(--bg); border-bottom: 1px solid var(--border); }
-
     th {
       text-align: right;
       padding: 14px 16px;
@@ -522,11 +480,9 @@
       letter-spacing: 0.5px;
       white-space: nowrap;
     }
-
     tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
     tbody tr:last-child { border-bottom: none; }
     tbody tr:hover { background: var(--bg); }
-
     td { padding: 12px 16px; color: var(--text); vertical-align: middle; }
 
     .emp-cell { display: flex; align-items: center; gap: 12px; }
@@ -565,19 +521,9 @@
     .badge-tag.blue   { background: rgba(59,130,246,0.12); color: var(--info); }
     .badge-tag.purple { background: rgba(139,92,246,0.12); color: #8b5cf6; }
 
-    .time-cell {
-      font-family: 'Courier New', monospace;
-      font-weight: 700;
-      font-size: 14px;
-    }
+    .time-cell { font-family: 'Courier New', monospace; font-weight: 700; font-size: 14px; }
     .time-cell.empty { color: var(--text-muted); font-weight: 500; }
-
-    .hours-cell {
-      font-weight: 800;
-      color: var(--info);
-      font-size: 15px;
-    }
-
+    .hours-cell { font-weight: 800; color: var(--info); font-size: 15px; }
     .actions-cell { display: flex; gap: 6px; justify-content: flex-end; }
 
     .action-btn {
@@ -595,8 +541,6 @@
     }
     .action-btn:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
     .action-btn.danger:hover { border-color: var(--danger); color: var(--danger); background: rgba(239,68,68,0.06); }
-    .action-btn.success:hover { border-color: var(--success); color: var(--success); background: rgba(16,185,129,0.06); }
-    .action-btn.warning:hover { border-color: var(--warning); color: var(--warning); background: rgba(245,158,11,0.06); }
     .action-btn i { width: 15px; height: 15px; }
 
     .empty-row td { padding: 60px 20px; text-align: center; color: var(--text-muted); }
@@ -629,7 +573,6 @@
       flex-wrap: wrap;
     }
     .pagination .controls { display: flex; gap: 6px; align-items: center; }
-
     .page-btn {
       min-width: 34px;
       height: 34px;
@@ -663,7 +606,6 @@
       transition: opacity 0.2s;
     }
     .modal-backdrop.show { display: flex; opacity: 1; }
-
     .modal {
       background: var(--card);
       border-radius: var(--radius);
@@ -677,8 +619,9 @@
       transition: transform 0.2s;
       overflow: hidden;
     }
+    .modal.modal-lg { max-width: 720px; }
+    .modal.modal-xl { max-width: 1200px; }
     .modal-backdrop.show .modal { transform: scale(1); }
-
     .modal-header {
       padding: 16px 20px;
       border-bottom: 1px solid var(--border);
@@ -690,7 +633,6 @@
     }
     .modal-header h3 { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
     .modal-header h3 i { width: 18px; height: 18px; color: var(--accent); }
-
     .modal-close {
       width: 32px;
       height: 32px;
@@ -706,7 +648,6 @@
     }
     .modal-close:hover { background: var(--bg); color: var(--danger); }
     .modal-close i { width: 18px; height: 18px; }
-
     .modal-body {
       padding: 20px;
       overflow-y: auto;
@@ -717,7 +658,6 @@
     }
     .modal-body::-webkit-scrollbar { width: 8px; }
     .modal-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
-
     .modal-footer {
       padding: 14px 20px;
       border-top: 1px solid var(--border);
@@ -726,6 +666,7 @@
       justify-content: flex-end;
       background: var(--bg);
       flex-shrink: 0;
+      flex-wrap: wrap;
     }
 
     /* Form */
@@ -769,33 +710,167 @@
       box-shadow: 0 0 0 3px rgba(20,184,166,0.1);
     }
 
-    /* Employee info box in modal */
-    .emp-info-box {
+    /* Payroll */
+    .payroll-settings-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 12px;
+      margin-bottom: 18px;
+      padding: 14px;
+      background: var(--bg);
+      border-radius: var(--radius);
+      border: 1px dashed var(--border);
+    }
+    .payroll-settings-grid .form-group label { font-size: 11.5px; }
+
+    .payroll-summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+      padding: 16px;
+      background: linear-gradient(135deg, rgba(139,92,246,0.06), rgba(20,184,166,0.04));
+      border-radius: var(--radius);
+      border: 1px solid rgba(139,92,246,0.15);
+    }
+    .payroll-stat { display: flex; flex-direction: column; gap: 4px; }
+    .payroll-stat .lbl { font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; }
+    .payroll-stat .val { font-size: 20px; font-weight: 800; line-height: 1; }
+    .payroll-stat .val.purple { color: var(--purple); }
+    .payroll-stat .val.success { color: var(--success); }
+    .payroll-stat .val.danger { color: var(--danger); }
+    .payroll-stat .val.gold { color: var(--gold); }
+    .payroll-stat .val.blue { color: var(--info); }
+
+    .emp-payroll-card {
+      background: var(--card);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 12px;
+      transition: all 0.2s;
+    }
+    .emp-payroll-card:hover { border-color: var(--accent); box-shadow: var(--shadow); }
+
+    .emp-payroll-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 14px;
+    }
+    .emp-payroll-info {
       display: flex;
       align-items: center;
       gap: 12px;
-      padding: 12px 14px;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      margin-bottom: 14px;
-    }
-    .emp-info-box .emp-avatar {
-      width: 48px;
-      height: 48px;
-      font-size: 18px;
-    }
-    .emp-info-box .info .name {
-      font-weight: 700;
-      font-size: 14px;
-    }
-    .emp-info-box .info .sub {
-      font-size: 11px;
-      color: var(--text-muted);
-      margin-top: 2px;
+      flex: 1;
+      min-width: 200px;
     }
 
-    /* Overlay (mobile) */
+    .emp-payroll-sections {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 14px;
+    }
+    .payroll-section {
+      padding: 12px;
+      background: var(--bg);
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+    .payroll-section-title {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 10px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .payroll-section-title i { width: 14px; height: 14px; }
+    .payroll-section.earnings .payroll-section-title { color: var(--success); }
+    .payroll-section.deductions .payroll-section-title { color: var(--danger); }
+    .payroll-section.bonuses .payroll-section-title { color: var(--purple); }
+    .payroll-section.attendance .payroll-section-title { color: var(--info); }
+
+    .payroll-line {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+      font-size: 13px;
+    }
+    .payroll-line .lbl { color: var(--text-muted); font-weight: 600; font-size: 12.5px; }
+    .payroll-line .val {
+      font-weight: 800;
+      font-family: 'Courier New', monospace;
+      font-size: 13.5px;
+      direction: ltr;
+    }
+    .payroll-line .val.danger { color: var(--danger); }
+    .payroll-line .val.success { color: var(--success); }
+    .payroll-line .val.purple { color: var(--purple); }
+    .payroll-line .val.blue { color: var(--info); }
+    .payroll-line .val.gold { color: var(--gold); }
+    .payroll-line.total {
+      margin-top: 8px;
+      padding-top: 10px;
+      border-top: 1.5px dashed var(--border);
+    }
+    .payroll-line.total .val { font-size: 16px; }
+
+    .payroll-net {
+      margin-top: 14px;
+      padding: 14px;
+      background: linear-gradient(135deg, rgba(16,185,129,0.08), rgba(16,185,129,0.03));
+      border: 1.5px solid rgba(16,185,129,0.25);
+      border-radius: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .payroll-net .lbl {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--text);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .payroll-net .val {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--success);
+      font-family: 'Courier New', monospace;
+      direction: ltr;
+    }
+
+    /* Settings per employee */
+    .emp-setting-row {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr 1fr 1fr;
+      gap: 10px;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin-bottom: 10px;
+      align-items: center;
+    }
+    @media (max-width: 768px) {
+      .emp-setting-row { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 480px) {
+      .emp-setting-row { grid-template-columns: 1fr; }
+    }
+
+    /* Overlay */
     .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; opacity: 0; transition: opacity 0.3s; }
     .overlay.show { display: block; opacity: 1; }
 
@@ -807,7 +882,6 @@
       .menu-toggle { display: flex; }
       .user-info { display: none; }
     }
-
     @media (max-width: 640px) {
       .content { padding: 16px; }
       .topbar { padding: 0 14px; gap: 10px; }
@@ -821,12 +895,14 @@
       .form-grid { grid-template-columns: 1fr; }
       .modal-footer { flex-direction: column-reverse; }
       .modal-footer .btn { width: 100%; justify-content: center; }
+      .payroll-summary { grid-template-columns: repeat(2, 1fr); }
+      .emp-payroll-sections { grid-template-columns: 1fr; }
+      .payroll-net .val { font-size: 20px; }
     }
   </style>
 </head>
 <body>
 
-  <!-- Sidebar -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
@@ -842,9 +918,7 @@
 
   <div class="overlay" id="overlay"></div>
 
-  <!-- Main -->
   <div class="main">
-
     <header class="topbar">
       <button class="menu-toggle" id="menuToggle"><i data-lucide="menu"></i></button>
       <div class="topbar-title">الحضور والغياب</div>
@@ -892,7 +966,19 @@
         </div>
       </div>
 
-      <!-- Check-in/out panel -->
+      <div class="owner-actions" id="ownerActions" style="display:none;">
+        <span class="owner-label">
+          <i data-lucide="crown"></i>
+          أدوات صاحب الشركة
+        </span>
+        <button class="btn btn-purple" id="calculatePayrollBtn">
+          <i data-lucide="calculator"></i> احتساب الرواتب والجزاءات
+        </button>
+        <button class="btn btn-outline" id="payrollSettingsBtn">
+          <i data-lucide="settings-2"></i> إعدادات الرواتب
+        </button>
+      </div>
+
       <div class="checkin-panel" id="checkinPanel">
         <div class="checkin-info">
           <div class="checkin-avatar" id="checkinAvatar">م</div>
@@ -912,7 +998,6 @@
         </div>
       </div>
 
-      <!-- Mini stats for selected date -->
       <div class="mini-stats">
         <div class="mini-card">
           <div class="mini-icon green"><i data-lucide="user-check"></i></div>
@@ -944,7 +1029,6 @@
         </div>
       </div>
 
-      <!-- Toolbar -->
       <div class="toolbar">
         <input type="date" class="date-input" id="dateInput">
         <div class="search-input">
@@ -962,7 +1046,6 @@
         </div>
       </div>
 
-      <!-- Table -->
       <div class="table-wrap">
         <div class="table-scroll">
           <table>
@@ -995,31 +1078,25 @@
       </div>
       <form id="attendanceForm">
         <div class="modal-body">
-
           <div class="form-grid">
-
             <div class="form-group full">
               <label>الموظف <span class="req">*</span></label>
               <select name="user_id" id="userSelect" required>
                 <option value="">اختر الموظف...</option>
               </select>
             </div>
-
             <div class="form-group full">
               <label>التاريخ <span class="req">*</span></label>
               <input type="date" name="att_date" required>
             </div>
-
             <div class="form-group">
               <label>وقت الحضور</label>
               <input type="time" name="check_in">
             </div>
-
             <div class="form-group">
               <label>وقت الانصراف</label>
               <input type="time" name="check_out">
             </div>
-
             <div class="form-group full">
               <label>الحالة <span class="req">*</span></label>
               <select name="status" id="statusSelect" required>
@@ -1029,15 +1106,12 @@
                 <option value="leave">إجازة</option>
               </select>
             </div>
-
             <div class="form-group full">
               <label>ملاحظات</label>
-              <textarea name="notes" maxlength="255" placeholder="ملاحظات إضافية..."></textarea>
+              <textarea name="notes" maxlength="255" placeholder="ملاحظات إضافية... (اتركه فارغاً لتسجيل الغياب بدون إذن)"></textarea>
             </div>
-
           </div>
         </div>
-
         <div class="modal-footer">
           <button type="button" class="btn btn-outline" data-close>إلغاء</button>
           <button type="submit" class="btn btn-primary" id="saveBtn">
@@ -1045,6 +1119,145 @@
           </button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- Modal: Payroll Calculator -->
+  <div class="modal-backdrop" id="payrollModal">
+    <div class="modal modal-xl">
+      <div class="modal-header">
+        <h3><i data-lucide="calculator"></i> احتساب الرواتب والجزاءات</h3>
+        <button class="modal-close" data-close><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body">
+
+        <div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:10px;display:flex;align-items:center;gap:6px;">
+          <i data-lucide="settings-2" style="width:16px;height:16px;color:var(--purple);"></i>
+          إعدادات الحساب
+        </div>
+        <div class="payroll-settings-grid">
+          <div class="form-group">
+            <label>من تاريخ <span class="req">*</span></label>
+            <input type="date" id="payrollFromDate">
+          </div>
+          <div class="form-group">
+            <label>إلى تاريخ <span class="req">*</span></label>
+            <input type="date" id="payrollToDate">
+          </div>
+          <div class="form-group">
+            <label>ساعات العمل اليومية</label>
+            <input type="number" id="payrollWorkHours" value="8" min="1" max="24" step="0.5">
+          </div>
+          <div class="form-group">
+            <label>رصيد الإجازة الشهرية (أيام)</label>
+            <input type="number" id="payrollLeaveDays" value="4" min="0" max="15">
+          </div>
+          <div class="form-group">
+            <label>جزاء التأخير (% من اليوم)</label>
+            <input type="number" id="payrollLateDeduction" value="25" min="0" max="100" step="5">
+          </div>
+          <div class="form-group">
+            <label>جزاء الغياب (% من اليوم)</label>
+            <input type="number" id="payrollAbsentDeduction" value="100" min="0" max="200" step="5">
+          </div>
+          <div class="form-group">
+            <label>مضاعف الغياب بدون إذن</label>
+            <input type="number" id="payrollUnexcusedMultiplier" value="2" min="1" max="5" step="0.5">
+          </div>
+          <div class="form-group">
+            <label>معامل الوقت الإضافي</label>
+            <input type="number" id="payrollOvertimeMultiplier" value="1.5" min="1" max="3" step="0.1">
+          </div>
+          <div class="form-group">
+            <label>مكافأة الحضور الكامل (ج.م)</label>
+            <input type="number" id="payrollPerfectBonus" value="0" min="0" step="50">
+          </div>
+          <div class="form-group">
+            <label>مكافأة عدم التأخير (ج.م)</label>
+            <input type="number" id="payrollNoLateBonus" value="0" min="0" step="50">
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;">
+          <button class="btn btn-primary btn-sm" id="calculatePayrollRunBtn">
+            <i data-lucide="play"></i> احتساب الآن
+          </button>
+          <button class="btn btn-outline btn-sm" id="payrollQuickMonthBtn">
+            <i data-lucide="calendar"></i> الشهر الحالي
+          </button>
+          <button class="btn btn-outline btn-sm" id="payrollQuickLastMonthBtn">
+            <i data-lucide="calendar-minus"></i> الشهر الماضي
+          </button>
+          <button class="btn btn-outline btn-sm" id="payrollQuickTwoWeeksBtn">
+            <i data-lucide="calendar-days"></i> آخر 14 يوم
+          </button>
+          <div style="flex:1;"></div>
+          <button class="btn btn-success btn-sm" id="savePayrollToDbBtn" disabled>
+            <i data-lucide="save"></i> حفظ في DB
+          </button>
+          <button class="btn btn-success btn-sm" id="exportPayrollBtn" disabled>
+            <i data-lucide="download"></i> تصدير Excel
+          </button>
+        </div>
+
+        <div class="payroll-summary" id="payrollSummary" style="display:none;">
+          <div class="payroll-stat">
+            <span class="lbl">عدد الموظفين</span>
+            <span class="val purple" id="payrollStatCount">0</span>
+          </div>
+          <div class="payroll-stat">
+            <span class="lbl">إجمالي الأساسي</span>
+            <span class="val blue" id="payrollStatBase">0</span>
+          </div>
+          <div class="payroll-stat">
+            <span class="lbl">الراتب المستحق</span>
+            <span class="val gold" id="payrollStatEarned">0</span>
+          </div>
+          <div class="payroll-stat">
+            <span class="lbl">إجمالي الإضافي</span>
+            <span class="val purple" id="payrollStatOvertime">0</span>
+          </div>
+          <div class="payroll-stat">
+            <span class="lbl">إجمالي الجزاءات</span>
+            <span class="val danger" id="payrollStatDeductions">0</span>
+          </div>
+          <div class="payroll-stat">
+            <span class="lbl">إجمالي المكافآت</span>
+            <span class="val success" id="payrollStatBonuses">0</span>
+          </div>
+          <div class="payroll-stat">
+            <span class="lbl">الصافي الإجمالي</span>
+            <span class="val success" id="payrollStatNet">0</span>
+          </div>
+        </div>
+
+        <div id="payrollResults"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" data-close>إغلاق</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Payroll Settings per employee -->
+  <div class="modal-backdrop" id="payrollSettingsModal">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <h3><i data-lucide="settings-2"></i> إعدادات الراتب لكل موظف</h3>
+        <button class="modal-close" data-close><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">
+          الراتب الشهري هو أساس الحساب. سيتم حساب الراتب المستحق نسبياً حسب أيام الحضور الفعلية في الفترة المحددة.
+        </p>
+        <div id="payrollSettingsBody"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" id="savePayrollSettingsBtn">
+          <i data-lucide="save"></i> حفظ الإعدادات
+        </button>
+        <button type="button" class="btn btn-outline" data-close>إلغاء</button>
+      </div>
     </div>
   </div>
 
@@ -1061,6 +1274,10 @@
       if (!session) return;
 
       const canManage = Refad.Session.has('attendance.manage');
+      const isOwner = Refad.Session.has('company.owner') || 
+                     Refad.Session.has('admin.full') ||
+                     session.is_owner === true ||
+                     session.role_is_owner === true;
 
       // ============================================================
       // 2) State
@@ -1069,18 +1286,29 @@
         all: [],
         filtered: [],
         employees: [],
-        todayAttendance: null,       // للـ current user
+        todayAttendance: null,
         page: 1,
         perPage: 15,
         selectedDate: Refad.date.today(),
         search: '',
         filterStatus: '',
         editingId: null,
-        clockTimer: null
+        clockTimer: null,
+        companySettings: {
+          workHoursPerDay: 8,
+          monthlyLeaveDays: 4,
+          lateDeductionPct: 25,
+          absentDeductionPct: 100,
+          unexcusedAbsentMultiplier: 2,
+          overtimeMultiplier: 1.5,
+          perfectAttendanceBonus: 0,
+          noLateBonus: 0
+        },
+        lastPayrollRun: null
       };
 
       // ============================================================
-      // 3) Sidebar
+      // 3) Sidebar MENU
       // ============================================================
       const MENU = [
         { section: 'الرئيسية', items: [
@@ -1152,7 +1380,7 @@
         if (session.avatar_url) av.innerHTML = `<img src="${Refad.escapeHtml(session.avatar_url)}" alt="">`;
         else av.textContent = initial;
         document.getElementById('userName').textContent = session.full_name;
-        document.getElementById('userRole').textContent = Refad.Session.has('company.owner') ? 'صاحب الشركة' : 'موظف';
+        document.getElementById('userRole').textContent = isOwner ? 'صاحب الشركة' : (canManage ? 'مشرف' : 'موظف');
       }
 
       function setupTheme() {
@@ -1212,18 +1440,44 @@
       }
 
       // ============================================================
-      // 6) Load employees (for filter/modal)
+      // 6) Load company settings
+      // ============================================================
+      async function loadCompanySettings() {
+        try {
+          const company = await Refad.db.selectOne('companies', {
+            columns: 'id, name, work_hours_per_day, monthly_leave_days, late_deduction_pct, absent_deduction_pct, unexcused_absent_multiplier, overtime_multiplier, perfect_attendance_bonus, no_late_bonus',
+            eq: { id: session.company_id }
+          }).catch(() => null);
+
+          if (company) {
+            state.companySettings = {
+              workHoursPerDay: Number(company.work_hours_per_day) || 8,
+              monthlyLeaveDays: Number(company.monthly_leave_days) || 4,
+              lateDeductionPct: Number(company.late_deduction_pct) || 25,
+              absentDeductionPct: Number(company.absent_deduction_pct) || 100,
+              unexcusedAbsentMultiplier: Number(company.unexcused_absent_multiplier) || 2,
+              overtimeMultiplier: Number(company.overtime_multiplier) || 1.5,
+              perfectAttendanceBonus: Number(company.perfect_attendance_bonus) || 0,
+              noLateBonus: Number(company.no_late_bonus) || 0
+            };
+          }
+        } catch (e) {
+          console.warn('Load company settings failed:', e.message);
+        }
+      }
+
+      // ============================================================
+      // 7) Load employees
       // ============================================================
       async function loadEmployees() {
         try {
           const rows = await Refad.db.select('users', {
-            columns: 'id, full_name, username, avatar_url, is_active, has_device',
+            columns: 'id, full_name, username, avatar_url, is_active, has_device, salary, hire_date, role_id',
             eq: { company_id: session.company_id, is_active: true },
             order: { column: 'full_name', ascending: true }
           });
           state.employees = rows;
 
-          // Fill user select in modal
           const sel = document.getElementById('userSelect');
           sel.innerHTML = '<option value="">اختر الموظف...</option>';
           rows.forEach(e => {
@@ -1238,7 +1492,7 @@
       }
 
       // ============================================================
-      // 7) Load today's attendance for current user (check-in panel)
+      // 8) Load today's attendance
       // ============================================================
       async function loadMyTodayAttendance() {
         try {
@@ -1258,13 +1512,11 @@
       }
 
       function renderCheckinPanel() {
-        // Avatar
         const av = document.getElementById('checkinAvatar');
         const initial = (session.full_name || '؟').trim().charAt(0);
         if (session.avatar_url) av.innerHTML = `<img src="${Refad.escapeHtml(session.avatar_url)}" alt="">`;
         else av.textContent = initial;
 
-        // Name
         document.getElementById('checkinName').textContent = session.full_name;
 
         const att = state.todayAttendance;
@@ -1273,18 +1525,15 @@
         const statusEl = document.getElementById('checkinStatus');
 
         if (!att || !att.check_in) {
-          // لم يسجل حضور
           statusEl.textContent = 'لم تسجّل حضورك اليوم';
           checkinBtn.disabled = false;
           checkoutBtn.disabled = true;
         } else if (!att.check_out) {
-          // سجل حضور، لم يسجل انصراف
           const checkInTime = Refad.format.time(att.check_in);
           statusEl.innerHTML = `سجلت حضورك الساعة <strong>${checkInTime}</strong>`;
           checkinBtn.disabled = true;
           checkoutBtn.disabled = false;
         } else {
-          // سجل الاثنين
           const checkInTime = Refad.format.time(att.check_in);
           const checkOutTime = Refad.format.time(att.check_out);
           const hours = att.work_hours || 0;
@@ -1295,7 +1544,7 @@
       }
 
       // ============================================================
-      // 8) Check-in
+      // 9) Check-in / Check-out
       // ============================================================
       async function doCheckIn() {
         try {
@@ -1305,7 +1554,6 @@
           const now = new Date();
           const today = Refad.date.today();
           const hour = now.getHours();
-          // نعتبر متأخر لو بعد الساعة 9 صباحاً (9:00)
           const status = (hour >= 9) ? 'late' : 'present';
 
           await Refad.db.insert('attendance', {
@@ -1318,7 +1566,6 @@
           });
 
           await Refad.logActivity('check_in', 'attendance', `تسجيل حضور (${status})`, session.user_id);
-
           Refad.toast.success(status === 'late' ? 'تم تسجيل حضورك (متأخر)' : 'تم تسجيل حضورك');
 
           await loadMyTodayAttendance();
@@ -1332,9 +1579,6 @@
         }
       }
 
-      // ============================================================
-      // 9) Check-out
-      // ============================================================
       async function doCheckOut() {
         try {
           const btn = document.getElementById('checkoutBtn');
@@ -1354,7 +1598,6 @@
           });
 
           await Refad.logActivity('check_out', 'attendance', `تسجيل انصراف (${Refad.format.number(workHours, 2)} س)`, session.user_id);
-
           Refad.toast.success(`تم تسجيل انصرافك — ${Refad.format.number(workHours, 2)} ساعة`);
 
           await loadMyTodayAttendance();
@@ -1369,46 +1612,38 @@
       }
 
       // ============================================================
-      // 10) Load attendance for selected date
+      // 10) Load attendance
       // ============================================================
       async function loadAttendance(silent) {
         if (!silent) renderSkeleton();
         try {
           const date = state.selectedDate;
-
-          // Get all active employees
           const employees = state.employees.filter(e => e.is_active);
 
-          // Get attendance for this date
           const attendance = await Refad.db.select('attendance', {
             columns: 'id, user_id, att_date, check_in, check_out, work_hours, status, notes',
             eq: { company_id: session.company_id, att_date: date }
           }).catch(() => []);
 
-          // Merge: one row per employee
           const attMap = {};
           attendance.forEach(a => { attMap[a.user_id] = a; });
 
           state.all = employees.map(emp => {
             const att = attMap[emp.id];
-            if (att) {
-              return { ...emp, attendance: att };
-            } else {
-              // لم يسجل → غائب (لكن بدون ID في DB)
-              return {
-                ...emp,
-                attendance: {
-                  id: null,
-                  user_id: emp.id,
-                  att_date: date,
-                  check_in: null,
-                  check_out: null,
-                  work_hours: 0,
-                  status: 'absent',
-                  notes: null
-                }
-              };
-            }
+            if (att) return { ...emp, attendance: att };
+            return {
+              ...emp,
+              attendance: {
+                id: null,
+                user_id: emp.id,
+                att_date: date,
+                check_in: null,
+                check_out: null,
+                work_hours: 0,
+                status: 'absent',
+                notes: null
+              }
+            };
           });
 
           applyFilters();
@@ -1487,10 +1722,10 @@
         }
 
         const STATUS = {
-          'present': { label: 'حاضر',    cls: 'green' },
-          'late':    { label: 'متأخر',   cls: 'gold' },
-          'absent':  { label: 'غائب',    cls: 'red' },
-          'leave':   { label: 'إجازة',   cls: 'purple' }
+          'present': { label: 'حاضر', cls: 'green' },
+          'late': { label: 'متأخر', cls: 'gold' },
+          'absent': { label: 'غائب', cls: 'red' },
+          'leave': { label: 'إجازة', cls: 'purple' }
         };
 
         tbody.innerHTML = pag.data.map(emp => {
@@ -1500,7 +1735,6 @@
           const checkIn = att.check_in ? Refad.format.time(att.check_in) : '—';
           const checkOut = att.check_out ? Refad.format.time(att.check_out) : '—';
           const hours = att.work_hours || 0;
-
           const initial = (emp.full_name || '؟').trim().charAt(0);
 
           return `
@@ -1542,7 +1776,6 @@
       function renderPagination(pag) {
         const el = document.getElementById('pagination');
         const { page, pages, total, perPage } = pag;
-
         if (total === 0) { el.innerHTML = ''; return; }
 
         const from = (page - 1) * perPage + 1;
@@ -1587,17 +1820,14 @@
       }
 
       // ============================================================
-      // 12) Manual Add/Edit Modal
+      // 12) Manual Add/Edit
       // ============================================================
       function openModal(userId) {
         const form = document.getElementById('attendanceForm');
         form.reset();
-
-        // Default date = selectedDate
         form.att_date.value = state.selectedDate;
 
         if (userId) {
-          // Existing
           const emp = state.all.find(e => e.id === userId);
           if (!emp) return;
 
@@ -1608,16 +1838,11 @@
 
           form.user_id.value = userId;
           form.user_id.disabled = true;
-
           form.att_date.value = emp.attendance.att_date || state.selectedDate;
           form.status.value = emp.attendance.status || 'present';
 
-          if (emp.attendance.check_in) {
-            form.check_in.value = Refad.format.time(emp.attendance.check_in);
-          }
-          if (emp.attendance.check_out) {
-            form.check_out.value = Refad.format.time(emp.attendance.check_out);
-          }
+          if (emp.attendance.check_in) form.check_in.value = Refad.format.time(emp.attendance.check_in);
+          if (emp.attendance.check_out) form.check_out.value = Refad.format.time(emp.attendance.check_out);
           form.notes.value = emp.attendance.notes || '';
         } else {
           state.editingId = null;
@@ -1633,13 +1858,10 @@
       }
 
       function closeModal() {
-        document.getElementById('attendanceModal').classList.remove('show');
+        document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.remove('show'));
         state.editingId = null;
       }
 
-      // ============================================================
-      // 13) Save manual attendance
-      // ============================================================
       async function saveAttendance(e) {
         e.preventDefault();
         const form = e.target;
@@ -1658,14 +1880,9 @@
           return;
         }
 
-        // Compute ISO datetimes
         let checkIn = null, checkOut = null, workHours = 0;
-        if (checkInStr) {
-          checkIn = new Date(`${date}T${checkInStr}:00`).toISOString();
-        }
-        if (checkOutStr) {
-          checkOut = new Date(`${date}T${checkOutStr}:00`).toISOString();
-        }
+        if (checkInStr) checkIn = new Date(`${date}T${checkInStr}:00`).toISOString();
+        if (checkOutStr) checkOut = new Date(`${date}T${checkOutStr}:00`).toISOString();
         if (checkIn && checkOut) {
           const diff = new Date(checkOut) - new Date(checkIn);
           workHours = Math.max(0, Math.round((diff / (1000 * 60 * 60)) * 100) / 100);
@@ -1676,7 +1893,6 @@
 
         try {
           if (state.editingId) {
-            // Update
             await Refad.db.update('attendance', state.editingId, {
               check_in: checkIn,
               check_out: checkOut,
@@ -1687,13 +1903,11 @@
             await Refad.logActivity('update_attendance', 'attendance', `تعديل حضور موظف`, state.editingId);
             Refad.toast.success('تم التحديث');
           } else {
-            // Check if exists for this user+date
             const existing = await Refad.db.selectOne('attendance', {
               eq: { user_id: userId, att_date: date }
             }).catch(() => null);
 
             if (existing) {
-              // Update
               await Refad.db.update('attendance', existing.id, {
                 check_in: checkIn,
                 check_out: checkOut,
@@ -1703,7 +1917,6 @@
               });
               Refad.toast.success('تم التحديث');
             } else {
-              // Insert
               const created = await Refad.db.insert('attendance', {
                 company_id: session.company_id,
                 user_id: userId,
@@ -1730,9 +1943,6 @@
         }
       }
 
-      // ============================================================
-      // 14) Delete attendance
-      // ============================================================
       async function deleteAttendance(id) {
         const ok = await Refad.alert.confirm('حذف التسجيل', 'هل تريد حذف تسجيل الحضور؟', 'حذف');
         if (!ok) return;
@@ -1749,36 +1959,813 @@
       }
 
       // ============================================================
-      // 15) Events
+      // 13) ✅ PAYROLL - Advanced Relative Calculation
+      // ============================================================
+      async function openPayrollModal() {
+        if (!isOwner) {
+          Refad.toast.error('هذه الميزة متاحة لصاحب الشركة فقط');
+          return;
+        }
+
+        const today = new Date();
+        const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+        const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+        const fmtDate = (d) => {
+          const y = d.getFullYear();
+          const m = String(d.getMonth() + 1).padStart(2, '0');
+          const dd = String(d.getDate()).padStart(2, '0');
+          return `${y}-${m}-${dd}`;
+        };
+
+        document.getElementById('payrollFromDate').value = fmtDate(firstDay);
+        document.getElementById('payrollToDate').value = fmtDate(lastDay);
+
+        const s = state.companySettings;
+        document.getElementById('payrollWorkHours').value = s.workHoursPerDay;
+        document.getElementById('payrollLeaveDays').value = s.monthlyLeaveDays;
+        document.getElementById('payrollLateDeduction').value = s.lateDeductionPct;
+        document.getElementById('payrollAbsentDeduction').value = s.absentDeductionPct;
+        document.getElementById('payrollUnexcusedMultiplier').value = s.unexcusedAbsentMultiplier;
+        document.getElementById('payrollOvertimeMultiplier').value = s.overtimeMultiplier;
+        document.getElementById('payrollPerfectBonus').value = s.perfectAttendanceBonus;
+        document.getElementById('payrollNoLateBonus').value = s.noLateBonus;
+
+        document.getElementById('payrollSummary').style.display = 'none';
+        document.getElementById('payrollResults').innerHTML = '';
+        document.getElementById('exportPayrollBtn').disabled = true;
+        document.getElementById('savePayrollToDbBtn').disabled = true;
+        state.lastPayrollRun = null;
+
+        document.getElementById('payrollModal').classList.add('show');
+        if (window.lucide) lucide.createIcons();
+      }
+
+      async function runPayrollCalculation() {
+        const fromDate = document.getElementById('payrollFromDate').value;
+        const toDate = document.getElementById('payrollToDate').value;
+
+        if (!fromDate || !toDate) {
+          Refad.toast.warning('اختر الفترة الزمنية');
+          return;
+        }
+
+        if (fromDate > toDate) {
+          Refad.toast.warning('تاريخ البداية يجب أن يكون قبل النهاية');
+          return;
+        }
+
+        const btn = document.getElementById('calculatePayrollRunBtn');
+        const originalHTML = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i data-lucide="loader" style="width:14px;height:14px;animation:spin 1s linear infinite;"></i> جارٍ الحساب...';
+        if (window.lucide) lucide.createIcons();
+
+        try {
+          const settings = {
+            workHoursPerDay: parseFloat(document.getElementById('payrollWorkHours').value) || 8,
+            monthlyLeaveDays: parseFloat(document.getElementById('payrollLeaveDays').value) || 4,
+            lateDeductionPct: parseFloat(document.getElementById('payrollLateDeduction').value) || 25,
+            absentDeductionPct: parseFloat(document.getElementById('payrollAbsentDeduction').value) || 100,
+            unexcusedAbsentMultiplier: parseFloat(document.getElementById('payrollUnexcusedMultiplier').value) || 2,
+            overtimeMultiplier: parseFloat(document.getElementById('payrollOvertimeMultiplier').value) || 1.5,
+            perfectAttendanceBonus: parseFloat(document.getElementById('payrollPerfectBonus').value) || 0,
+            noLateBonus: parseFloat(document.getElementById('payrollNoLateBonus').value) || 0
+          };
+
+          // احفظ الإعدادات
+          try {
+            await Refad.db.update('companies', session.company_id, {
+              work_hours_per_day: settings.workHoursPerDay,
+              monthly_leave_days: settings.monthlyLeaveDays,
+              late_deduction_pct: settings.lateDeductionPct,
+              absent_deduction_pct: settings.absentDeductionPct,
+              unexcused_absent_multiplier: settings.unexcusedAbsentMultiplier,
+              overtime_multiplier: settings.overtimeMultiplier,
+              perfect_attendance_bonus: settings.perfectAttendanceBonus,
+              no_late_bonus: settings.noLateBonus
+            });
+            state.companySettings = settings;
+          } catch (e) {
+            console.warn('Save company settings failed:', e.message);
+          }
+
+          // جلب الحضور
+          const attendance = await Refad.db.select('attendance', {
+            columns: 'id, user_id, att_date, check_in, check_out, work_hours, status, notes',
+            eq: { company_id: session.company_id },
+            gte: { att_date: fromDate },
+            lte: { att_date: toDate }
+          }).catch(() => []);
+
+          // جلب المكافآت والخصومات
+          const manualBonuses = await Refad.db.select('bonuses', {
+            columns: 'user_id, amount, reason, bonus_date',
+            eq: { company_id: session.company_id },
+            gte: { bonus_date: fromDate },
+            lte: { bonus_date: toDate }
+          }).catch(() => []);
+
+          const manualDeductions = await Refad.db.select('deductions', {
+            columns: 'user_id, amount, reason, ded_date',
+            eq: { company_id: session.company_id },
+            gte: { ded_date: fromDate },
+            lte: { ded_date: toDate }
+          }).catch(() => []);
+
+          // ═══════════════════════════════════════════════════════
+          // حساب أيام الفترة الفعلية
+          // ═══════════════════════════════════════════════════════
+          const from = new Date(fromDate);
+          const to = new Date(toDate);
+          const totalPeriodDays = Math.round((to - from) / (1000 * 60 * 60 * 24)) + 1;
+
+          // ═══════════════════════════════════════════════════════
+          // تجميع الحضور
+          // ═══════════════════════════════════════════════════════
+          const byUser = {};
+          state.employees.forEach(emp => {
+            byUser[emp.id] = {
+              emp,
+              presentDays: 0,
+              lateDays: 0,
+              absentDays: 0,
+              unexcusedAbsentDays: 0,
+              excusedAbsentDays: 0,
+              leaveDays: 0,
+              totalHours: 0,
+              overtimeHours: 0,
+              shortHours: 0,
+              manualBonus: 0,
+              manualDeduction: 0
+            };
+          });
+
+          attendance.forEach(att => {
+            const u = byUser[att.user_id];
+            if (!u) return;
+            const hours = Number(att.work_hours) || 0;
+
+            if (att.status === 'present') u.presentDays++;
+            else if (att.status === 'late') u.lateDays++;
+            else if (att.status === 'leave') u.leaveDays++;
+            else if (att.status === 'absent') {
+              if (!att.check_in) {
+                u.absentDays++;
+                const hasNote = att.notes && att.notes.trim() !== '';
+                if (hasNote) u.excusedAbsentDays++;
+                else u.unexcusedAbsentDays++;
+              }
+            }
+
+            u.totalHours += hours;
+
+            if (att.check_in && att.check_out && hours > 0) {
+              const diff = hours - settings.workHoursPerDay;
+              if (diff > 0.25) u.overtimeHours += diff;
+              else if (diff < -0.25) u.shortHours += Math.abs(diff);
+            }
+          });
+
+          manualBonuses.forEach(b => {
+            if (byUser[b.user_id]) byUser[b.user_id].manualBonus += Number(b.amount) || 0;
+          });
+
+          manualDeductions.forEach(d => {
+            if (byUser[d.user_id]) byUser[d.user_id].manualDeduction += Number(d.amount) || 0;
+          });
+
+          // ═══════════════════════════════════════════════════════
+          // الحساب لكل موظف
+          // ═══════════════════════════════════════════════════════
+          const results = [];
+          let totals = { count: 0, base: 0, earned: 0, overtime: 0, deductions: 0, bonuses: 0, net: 0 };
+
+          for (const userId of Object.keys(byUser)) {
+            const u = byUser[userId];
+            const monthlySalary = Number(u.emp.salary) || 0;
+
+            // ═══════════════════════════════════════════════════════
+            // ✅ الأجر اليومي = الراتب ÷ 30 (المعيار المصري)
+            // الأجر بالساعة = الأجر اليومي ÷ ساعات العمل
+            // ═══════════════════════════════════════════════════════
+            const dailyWage = monthlySalary / 30;
+            const hourlyWage = dailyWage / settings.workHoursPerDay;
+
+            // ═══════════════════════════════════════════════════════
+            // ✅ الراتب المستحق نسبياً
+            // الأيام المدفوعة = الحضور + التأخير + الإجازة المسموحة + الغياب المُبرر
+            // ═══════════════════════════════════════════════════════
+            const usedLeaveBalance = Math.min(u.leaveDays, settings.monthlyLeaveDays);
+            const extraLeaveDays = Math.max(0, u.leaveDays - settings.monthlyLeaveDays);
+            
+            const paidDays = u.presentDays + u.lateDays + usedLeaveBalance + u.excusedAbsentDays;
+            
+            // الراتب المستحق = الأيام المدفوعة × الأجر اليومي
+            const earnedSalary = Math.round(paidDays * dailyWage * 100) / 100;
+
+            // ═══════════════════════════════════════════════════════
+            // ✅ الجزاءات
+            // ═══════════════════════════════════════════════════════
+            
+            // 1. جزاء التأخير
+            const lateDeduction = (settings.lateDeductionPct / 100) * dailyWage * u.lateDays;
+
+            // 2. جزاء الغياب
+            const absentDeduction = (settings.absentDeductionPct / 100) * dailyWage * u.absentDays;
+
+            // 3. جزاء إضافي للغياب بدون إذن
+            const unexcusedExtraDeduction = (settings.absentDeductionPct / 100) * dailyWage *
+                                             u.unexcusedAbsentDays * (settings.unexcusedAbsentMultiplier - 1);
+
+            // 4. جزاء الإجازة الزائدة
+            const extraLeaveDeduction = (settings.absentDeductionPct / 100) * dailyWage * extraLeaveDays;
+
+            // 5. جزاء نقص الساعات
+            const shortHoursDeduction = u.shortHours * hourlyWage;
+
+            // إجمالي الجزاءات
+            const totalDeductions = lateDeduction + absentDeduction + unexcusedExtraDeduction + 
+                                    extraLeaveDeduction + shortHoursDeduction + u.manualDeduction;
+
+            // ═══════════════════════════════════════════════════════
+            // ✅ الإضافي
+            // ═══════════════════════════════════════════════════════
+            const overtimePay = u.overtimeHours * hourlyWage * settings.overtimeMultiplier;
+
+            // ═══════════════════════════════════════════════════════
+            // ✅ المكافآت
+            // ═══════════════════════════════════════════════════════
+            let perfectAttendanceBonus = 0;
+            let noLateBonus = 0;
+
+            // مكافأة الحضور الكامل: لو حضر >= 90% من الفترة، بدون غياب أو تأخير
+            const workingDaysActual = u.presentDays + u.lateDays;
+            if (u.absentDays === 0 && u.lateDays === 0 && 
+                totalPeriodDays > 0 && workingDaysActual >= totalPeriodDays * 0.9) {
+              perfectAttendanceBonus = settings.perfectAttendanceBonus;
+              noLateBonus = settings.noLateBonus;
+            }
+
+            const totalBonuses = perfectAttendanceBonus + noLateBonus + u.manualBonus;
+
+            // ═══════════════════════════════════════════════════════
+            // ✅ الصافي
+            // ═══════════════════════════════════════════════════════
+            const net = Math.max(0, earnedSalary - totalDeductions + overtimePay + totalBonuses);
+
+            results.push({
+              emp: u.emp,
+              monthlySalary,
+              earnedSalary,
+              dailyWage,
+              hourlyWage,
+              totalPeriodDays,
+              paidDays,
+              presentDays: u.presentDays,
+              lateDays: u.lateDays,
+              absentDays: u.absentDays,
+              unexcusedAbsentDays: u.unexcusedAbsentDays,
+              excusedAbsentDays: u.excusedAbsentDays,
+              leaveDays: u.leaveDays,
+              usedLeaveBalance,
+              extraLeaveDays,
+              totalHours: u.totalHours,
+              overtimeHours: u.overtimeHours,
+              shortHours: u.shortHours,
+              lateDeduction,
+              absenceDeduction: absentDeduction,
+              unexcusedExtraDeduction,
+              extraLeaveDeduction,
+              shortHoursDeduction,
+              manualDeduction: u.manualDeduction,
+              totalDeductions,
+              overtimePay,
+              perfectAttendanceBonus,
+              noLateBonus,
+              manualBonus: u.manualBonus,
+              totalBonuses,
+              net
+            });
+
+            totals.count++;
+            totals.base += monthlySalary;
+            totals.earned += earnedSalary;
+            totals.overtime += overtimePay;
+            totals.deductions += totalDeductions;
+            totals.bonuses += totalBonuses;
+            totals.net += net;
+          }
+
+          state.lastPayrollRun = { fromDate, toDate, settings, results, totals, totalPeriodDays };
+          renderPayrollResults();
+
+          document.getElementById('payrollSummary').style.display = 'grid';
+          document.getElementById('payrollStatCount').textContent = totals.count;
+          document.getElementById('payrollStatBase').textContent = Refad.format.money(totals.base);
+          document.getElementById('payrollStatEarned').textContent = Refad.format.money(totals.earned);
+          document.getElementById('payrollStatOvertime').textContent = Refad.format.money(totals.overtime);
+          document.getElementById('payrollStatDeductions').textContent = Refad.format.money(totals.deductions);
+          document.getElementById('payrollStatBonuses').textContent = Refad.format.money(totals.bonuses);
+          document.getElementById('payrollStatNet').textContent = Refad.format.money(totals.net);
+          document.getElementById('exportPayrollBtn').disabled = false;
+          document.getElementById('savePayrollToDbBtn').disabled = false;
+
+          Refad.toast.success(`تم حساب ${totals.count} موظف — ${totalPeriodDays} يوم`);
+        } catch (err) {
+          console.error('Payroll calculation failed:', err);
+          Refad.toast.error('فشل الحساب: ' + err.message);
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = originalHTML;
+          if (window.lucide) lucide.createIcons();
+        }
+      }
+
+      function renderPayrollResults() {
+        const container = document.getElementById('payrollResults');
+        const run = state.lastPayrollRun;
+        if (!run) { container.innerHTML = ''; return; }
+
+        const { results, fromDate, toDate, totalPeriodDays } = run;
+
+        if (!results.length) {
+          container.innerHTML = `<div class="empty-row" style="text-align:center;padding:40px;"><p>لا توجد بيانات</p></div>`;
+          return;
+        }
+
+        container.innerHTML = `
+          <div style="margin-bottom:14px;padding:12px 16px;background:linear-gradient(135deg,rgba(20,184,166,0.08),rgba(139,92,246,0.06));border-radius:12px;border:1.5px solid rgba(20,184,166,0.2);font-size:13px;text-align:center;">
+            📅 الفترة من <strong>${fromDate}</strong> إلى <strong>${toDate}</strong>
+            — <strong>${totalPeriodDays} يوم</strong>
+            — ${results.length} موظف
+          </div>
+
+          ${results.map(r => {
+            const attendancePct = r.totalPeriodDays > 0 
+              ? Math.round((r.paidDays / r.totalPeriodDays) * 100) 
+              : 0;
+
+            const pctColor = attendancePct >= 90 ? 'var(--success)' : 
+                             attendancePct >= 70 ? 'var(--gold)' : 'var(--danger)';
+
+            const netColor = r.net >= r.earnedSalary ? 'var(--success)' : 'var(--info)';
+
+            return `
+            <div class="emp-payroll-card">
+              <div class="emp-payroll-header">
+                <div class="emp-payroll-info">
+                  <div class="emp-avatar">
+                    ${r.emp.avatar_url ? `<img src="${Refad.escapeHtml(r.emp.avatar_url)}" alt="">` : Refad.escapeHtml((r.emp.full_name || '؟').charAt(0))}
+                  </div>
+                  <div>
+                    <div class="emp-name">${Refad.escapeHtml(r.emp.full_name)}</div>
+                    <div class="emp-sub">${Refad.escapeHtml(r.emp.username)} • راتب: ${Refad.format.money(r.monthlySalary)}</div>
+                  </div>
+                </div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+                  <div style="text-align:center;padding:6px 12px;background:var(--bg);border-radius:10px;">
+                    <div style="font-size:10px;color:var(--text-muted);font-weight:700;">نسبة الحضور</div>
+                    <div style="font-size:18px;font-weight:800;color:${pctColor};">${attendancePct}%</div>
+                  </div>
+                  <div style="text-align:left;">
+                    <div style="font-size:10px;color:var(--text-muted);font-weight:700;text-transform:uppercase;">صافي الراتب</div>
+                    <div style="font-size:22px;font-weight:800;color:${netColor};font-family:'Courier New',monospace;">${Refad.format.money(r.net)}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="emp-payroll-sections">
+
+                <!-- Attendance -->
+                <div class="payroll-section attendance">
+                  <div class="payroll-section-title">
+                    <i data-lucide="calendar-check"></i>
+                    الحضور والغياب (${r.totalPeriodDays} يوم)
+                  </div>
+                  <div class="payroll-line">
+                    <span class="lbl">أيام الحضور</span>
+                    <span class="val success">${r.presentDays}</span>
+                  </div>
+                  <div class="payroll-line">
+                    <span class="lbl">أيام التأخير</span>
+                    <span class="val gold">${r.lateDays}</span>
+                  </div>
+                  <div class="payroll-line">
+                    <span class="lbl">أيام الغياب</span>
+                    <span class="val danger">${r.absentDays}</span>
+                  </div>
+                  ${r.unexcusedAbsentDays > 0 ? `
+                    <div class="payroll-line">
+                      <span class="lbl">↳ منها بدون إذن</span>
+                      <span class="val danger">${r.unexcusedAbsentDays}</span>
+                    </div>
+                  ` : ''}
+                  ${r.excusedAbsentDays > 0 ? `
+                    <div class="payroll-line">
+                      <span class="lbl">↳ منها بإذن</span>
+                      <span class="val blue">${r.excusedAbsentDays}</span>
+                    </div>
+                  ` : ''}
+                  <div class="payroll-line">
+                    <span class="lbl">أيام الإجازة</span>
+                    <span class="val purple">${r.leaveDays} / ${run.settings.monthlyLeaveDays}</span>
+                  </div>
+                  <div class="payroll-line total">
+                    <span class="lbl">الأيام المدفوعة</span>
+                    <span class="val success">${r.paidDays}</span>
+                  </div>
+                </div>
+
+                <!-- Earnings -->
+                <div class="payroll-section earnings">
+                  <div class="payroll-section-title">
+                    <i data-lucide="arrow-up-circle"></i>
+                    الإضافات
+                  </div>
+                  <div class="payroll-line">
+                    <span class="lbl">الراتب الشهري</span>
+                    <span class="val">${Refad.format.money(r.monthlySalary)}</span>
+                  </div>
+                  <div class="payroll-line">
+                    <span class="lbl">الأجر اليومي</span>
+                    <span class="val blue">${Refad.format.money(r.dailyWage)}</span>
+                  </div>
+                  <div class="payroll-line total">
+                    <span class="lbl">الراتب المستحق</span>
+                    <span class="val success">${Refad.format.money(r.earnedSalary)}</span>
+                  </div>
+                  ${r.overtimePay > 0 ? `
+                    <div class="payroll-line">
+                      <span class="lbl">أجر إضافي (${Refad.format.number(r.overtimeHours, 1)} س)</span>
+                      <span class="val success">+${Refad.format.money(r.overtimePay)}</span>
+                    </div>
+                  ` : ''}
+                  ${r.perfectAttendanceBonus > 0 ? `
+                    <div class="payroll-line">
+                      <span class="lbl">🎁 مكافأة حضور كامل</span>
+                      <span class="val success">+${Refad.format.money(r.perfectAttendanceBonus)}</span>
+                    </div>
+                  ` : ''}
+                  ${r.noLateBonus > 0 ? `
+                    <div class="payroll-line">
+                      <span class="lbl">⭐ مكافأة عدم تأخير</span>
+                      <span class="val success">+${Refad.format.money(r.noLateBonus)}</span>
+                    </div>
+                  ` : ''}
+                  ${r.manualBonus > 0 ? `
+                    <div class="payroll-line">
+                      <span class="lbl">مكافأة يدوية</span>
+                      <span class="val purple">+${Refad.format.money(r.manualBonus)}</span>
+                    </div>
+                  ` : ''}
+                </div>
+
+                <!-- Deductions -->
+                <div class="payroll-section deductions">
+                  <div class="payroll-section-title">
+                    <i data-lucide="arrow-down-circle"></i>
+                    الجزاءات
+                  </div>
+                  ${r.lateDeduction > 0 ? `
+                    <div class="payroll-line">
+                      <span class="lbl">جزاء تأخير (${r.lateDays} يوم)</span>
+                      <span class="val danger">-${Refad.format.money(r.lateDeduction)}</span>
+                    </div>
+                  ` : ''}
+                  ${r.absenceDeduction > 0 ? `
+                    <div class="payroll-line">
+                      <span class="lbl">جزاء غياب (${r.absentDays} يوم)</span>
+                      <span class="val danger">-${Refad.format.money(r.absenceDeduction)}</span>
+                    </div>
+                  ` : ''}
+                  ${r.unexcusedExtraDeduction > 0 ? `
+                    <div class="payroll-line">
+                      <span class="lbl">↳ جزاء بدون إذن</span>
+                      <span class="val danger">-${Refad.format.money(r.unexcusedExtraDeduction)}</span>
+                    </div>
+                  ` : ''}
+                  ${r.extraLeaveDeduction > 0 ? `
+                    <div class="payroll-line">
+                      <span class="lbl">↳ إجازة زائدة (${r.extraLeaveDays} يوم)</span>
+                      <span class="val danger">-${Refad.format.money(r.extraLeaveDeduction)}</span>
+                    </div>
+                  ` : ''}
+                  ${r.shortHoursDeduction > 0 ? `
+                    <div class="payroll-line">
+                      <span class="lbl">جزاء نقص ساعات (${Refad.format.number(r.shortHours, 1)} س)</span>
+                      <span class="val danger">-${Refad.format.money(r.shortHoursDeduction)}</span>
+                    </div>
+                  ` : ''}
+                  ${r.manualDeduction > 0 ? `
+                    <div class="payroll-line">
+                      <span class="lbl">خصم يدوي</span>
+                      <span class="val danger">-${Refad.format.money(r.manualDeduction)}</span>
+                    </div>
+                  ` : ''}
+                  ${r.totalDeductions === 0 ? `
+                    <div class="payroll-line" style="justify-content:center;color:var(--success);font-size:12px;">
+                      ✓ لا توجد جزاءات
+                    </div>
+                  ` : ''}
+                  <div class="payroll-line total">
+                    <span class="lbl">إجمالي الجزاءات</span>
+                    <span class="val danger">-${Refad.format.money(r.totalDeductions)}</span>
+                  </div>
+                </div>
+
+              </div>
+
+              <div class="payroll-net">
+                <span class="lbl">
+                  <i data-lucide="wallet" style="width:16px;height:16px;vertical-align:middle;"></i>
+                  صافي الراتب
+                </span>
+                <span class="val">${Refad.format.money(r.net)}</span>
+              </div>
+            </div>
+          `;
+          }).join('')}
+        `;
+
+        if (window.lucide) lucide.createIcons();
+      }
+
+      async function savePayrollToDb() {
+        const run = state.lastPayrollRun;
+        if (!run) {
+          Refad.toast.warning('لا توجد بيانات محسوبة');
+          return;
+        }
+
+        if (!await Refad.alert.confirm('حفظ الرواتب', `سيتم حفظ رواتب ${run.results.length} موظف. متابعة؟`, 'حفظ')) {
+          return;
+        }
+
+        const btn = document.getElementById('savePayrollToDbBtn');
+        const originalHTML = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i data-lucide="loader" style="width:14px;height:14px;animation:spin 1s linear infinite;"></i> جارٍ الحفظ...';
+        if (window.lucide) lucide.createIcons();
+
+        try {
+          const toDateObj = new Date(run.toDate);
+          const month = toDateObj.getMonth() + 1;
+          const year = toDateObj.getFullYear();
+
+          let saved = 0, updated = 0;
+
+          for (const r of run.results) {
+            // ابحث عن سجل موجود لنفس الموظف في نفس الفترة
+            const existing = await Refad.db.selectOne('payroll_records', {
+              eq: { user_id: r.emp.id, period_from: run.fromDate, period_to: run.toDate }
+            }).catch(() => null);
+
+            const payload = {
+              company_id: session.company_id,
+              user_id: r.emp.id,
+              period_from: run.fromDate,
+              period_to: run.toDate,
+              month,
+              year,
+              base_salary: r.monthlySalary,
+              daily_wage: r.dailyWage,
+              hourly_wage: r.hourlyWage,
+              present_days: r.presentDays,
+              late_days: r.lateDays,
+              absent_days: r.absentDays,
+              leave_days: r.leaveDays,
+              unexcused_absent_days: r.unexcusedAbsentDays,
+              total_work_hours: r.totalHours,
+              overtime_hours: r.overtimeHours,
+              short_hours: r.shortHours,
+              late_deduction: r.lateDeduction,
+              absent_deduction: r.absenceDeduction + r.unexcusedExtraDeduction + r.extraLeaveDeduction,
+              unexcused_absent_deduction: r.unexcusedExtraDeduction,
+              short_hours_deduction: r.shortHoursDeduction,
+              manual_deduction: r.manualDeduction,
+              total_deductions: r.totalDeductions,
+              overtime_pay: r.overtimePay,
+              perfect_attendance_bonus: r.perfectAttendanceBonus,
+              no_late_bonus: r.noLateBonus,
+              manual_bonus: r.manualBonus,
+              total_bonuses: r.totalBonuses,
+              net_salary: r.net,
+              status: 'calculated',
+              notes: `محسوب من ${run.fromDate} إلى ${run.toDate} (${r.paidDays}/${r.totalPeriodDays} يوم)`
+            };
+
+            if (existing) {
+              await Refad.db.update('payroll_records', existing.id, payload);
+              updated++;
+            } else {
+              await Refad.db.insert('payroll_records', payload);
+              saved++;
+            }
+          }
+
+          await Refad.logActivity('save_payroll', 'payroll',
+            `حفظ رواتب ${month}/${year}: ${saved} جديد، ${updated} محدّث`, null);
+
+          Refad.toast.success(`تم الحفظ: ${saved} جديد، ${updated} محدّث`);
+        } catch (e) {
+          console.error('Save payroll failed:', e);
+          Refad.toast.error('فشل الحفظ: ' + e.message);
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = originalHTML;
+          if (window.lucide) lucide.createIcons();
+        }
+      }
+
+      function openPayrollSettings() {
+        if (!isOwner) {
+          Refad.toast.error('هذه الميزة متاحة لصاحب الشركة فقط');
+          return;
+        }
+
+        const body = document.getElementById('payrollSettingsBody');
+        body.innerHTML = state.employees.map(emp => `
+          <div class="emp-setting-row">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div class="emp-avatar" style="width:36px;height:36px;font-size:13px;">
+                ${emp.avatar_url ? `<img src="${Refad.escapeHtml(emp.avatar_url)}" alt="">` : Refad.escapeHtml((emp.full_name || '؟').charAt(0))}
+              </div>
+              <div>
+                <div style="font-weight:700;font-size:13px;">${Refad.escapeHtml(emp.full_name)}</div>
+                <div style="font-size:11px;color:var(--text-muted);">${Refad.escapeHtml(emp.username)}</div>
+              </div>
+            </div>
+            <div>
+              <label style="font-size:11px;font-weight:700;display:block;margin-bottom:4px;">الراتب الشهري</label>
+              <input type="number" data-emp-id="${emp.id}" data-field="salary"
+                value="${Number(emp.salary) || 0}" min="0" step="100"
+                style="width:100%;padding:8px 10px;font-family:inherit;font-size:13px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;outline:none;">
+            </div>
+            <div>
+              <label style="font-size:11px;font-weight:700;display:block;margin-bottom:4px;">تاريخ التعيين</label>
+              <input type="date" data-emp-id="${emp.id}" data-field="hire_date"
+                value="${emp.hire_date || ''}"
+                style="width:100%;padding:8px 10px;font-family:inherit;font-size:13px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;outline:none;">
+            </div>
+            <div>
+              <label style="font-size:11px;font-weight:700;display:block;margin-bottom:4px;">استثناء من الرواتب</label>
+              <select data-emp-id="${emp.id}" data-field="ignore_in_payroll"
+                style="width:100%;padding:8px 10px;font-family:inherit;font-size:13px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;outline:none;">
+                <option value="false">لا</option>
+                <option value="true">نعم</option>
+              </select>
+            </div>
+          </div>
+        `).join('');
+
+        document.getElementById('payrollSettingsModal').classList.add('show');
+        if (window.lucide) lucide.createIcons();
+      }
+
+      async function savePayrollSettings() {
+        const inputs = document.querySelectorAll('#payrollSettingsBody input[data-emp-id], #payrollSettingsBody select[data-emp-id]');
+        const btn = document.getElementById('savePayrollSettingsBtn');
+        const originalHTML = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i data-lucide="loader" style="width:14px;height:14px;animation:spin 1s linear infinite;"></i> جارٍ الحفظ...';
+        if (window.lucide) lucide.createIcons();
+
+        try {
+          const byEmp = {};
+          inputs.forEach(inp => {
+            const empId = inp.dataset.empId;
+            if (!byEmp[empId]) byEmp[empId] = {};
+            const field = inp.dataset.field;
+            if (field === 'salary') byEmp[empId].salary = parseFloat(inp.value) || 0;
+            else if (field === 'hire_date') byEmp[empId].hire_date = inp.value || null;
+            else if (field === 'ignore_in_payroll') byEmp[empId].ignore_in_payroll = inp.value === 'true';
+          });
+
+          for (const [empId, data] of Object.entries(byEmp)) {
+            try {
+              await Refad.db.update('users', parseInt(empId, 10), data);
+            } catch (e) {
+              console.warn(`Update user ${empId} failed:`, e.message);
+            }
+          }
+
+          Refad.toast.success('تم الحفظ');
+          await loadEmployees();
+          document.getElementById('payrollSettingsModal').classList.remove('show');
+        } catch (e) {
+          console.error('Save settings failed:', e);
+          Refad.toast.error('فشل الحفظ: ' + e.message);
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = originalHTML;
+          if (window.lucide) lucide.createIcons();
+        }
+      }
+
+      function exportPayrollToExcel() {
+        const run = state.lastPayrollRun;
+        if (!run) {
+          Refad.toast.warning('لا توجد بيانات للتصدير');
+          return;
+        }
+
+        const rows = run.results.map(r => ({
+          'الموظف': r.emp.full_name,
+          'اسم المستخدم': r.emp.username,
+          'الراتب الشهري': r.monthlySalary,
+          'الأجر اليومي': r.dailyWage.toFixed(2),
+          'الأجر بالساعة': r.hourlyWage.toFixed(2),
+          'أيام الفترة': r.totalPeriodDays,
+          'أيام الحضور': r.presentDays,
+          'أيام التأخير': r.lateDays,
+          'أيام الغياب': r.absentDays,
+          'غياب بدون إذن': r.unexcusedAbsentDays,
+          'غياب بإذن': r.excusedAbsentDays,
+          'أيام الإجازة': r.leaveDays,
+          'الأيام المدفوعة': r.paidDays,
+          'الراتب المستحق': r.earnedSalary.toFixed(2),
+          'إجمالي الساعات': r.totalHours,
+          'ساعات إضافي': r.overtimeHours,
+          'ساعات نقص': r.shortHours,
+          'جزاء تأخير': r.lateDeduction.toFixed(2),
+          'جزاء غياب': r.absenceDeduction.toFixed(2),
+          'جزاء بدون إذن': r.unexcusedExtraDeduction.toFixed(2),
+          'جزاء إجازة زائدة': r.extraLeaveDeduction.toFixed(2),
+          'جزاء نقص ساعات': r.shortHoursDeduction.toFixed(2),
+          'خصم يدوي': r.manualDeduction.toFixed(2),
+          'إجمالي الجزاءات': r.totalDeductions.toFixed(2),
+          'أجر إضافي': r.overtimePay.toFixed(2),
+          'مكافأة حضور': r.perfectAttendanceBonus.toFixed(2),
+          'مكافأة عدم تأخير': r.noLateBonus.toFixed(2),
+          'مكافأة يدوية': r.manualBonus.toFixed(2),
+          'إجمالي المكافآت': r.totalBonuses.toFixed(2),
+          'صافي الراتب': r.net.toFixed(2)
+        }));
+
+        const ws = XLSX.utils.json_to_sheet(rows);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Payroll');
+        XLSX.writeFile(wb, `payroll-${run.fromDate}-to-${run.toDate}.xlsx`);
+        Refad.toast.success('تم التصدير');
+      }
+
+      function quickMonthRange(offset = 0) {
+        const today = new Date();
+        const firstDay = new Date(today.getFullYear(), today.getMonth() + offset, 1);
+        const lastDay = new Date(today.getFullYear(), today.getMonth() + offset + 1, 0);
+
+        const fmtDate = (d) => {
+          const y = d.getFullYear();
+          const m = String(d.getMonth() + 1).padStart(2, '0');
+          const dd = String(d.getDate()).padStart(2, '0');
+          return `${y}-${m}-${dd}`;
+        };
+
+        document.getElementById('payrollFromDate').value = fmtDate(firstDay);
+        document.getElementById('payrollToDate').value = fmtDate(lastDay);
+      }
+
+      function quickTwoWeeksRange() {
+        const today = new Date();
+        const twoWeeksAgo = new Date(today);
+        twoWeeksAgo.setDate(today.getDate() - 14);
+
+        const fmtDate = (d) => {
+          const y = d.getFullYear();
+          const m = String(d.getMonth() + 1).padStart(2, '0');
+          const dd = String(d.getDate()).padStart(2, '0');
+          return `${y}-${m}-${dd}`;
+        };
+
+        document.getElementById('payrollFromDate').value = fmtDate(twoWeeksAgo);
+        document.getElementById('payrollToDate').value = fmtDate(today);
+      }
+
+      // ============================================================
+      // 14) Events
       // ============================================================
       function bindEvents() {
-        // Check-in / Check-out
         document.getElementById('checkinBtn').addEventListener('click', doCheckIn);
         document.getElementById('checkoutBtn').addEventListener('click', doCheckOut);
-
-        // Manual Add
         document.getElementById('manualAddBtn').addEventListener('click', () => openModal(null));
 
-        // Date
         document.getElementById('dateInput').addEventListener('change', e => {
           state.selectedDate = e.target.value;
           loadAttendance();
         });
 
-        // Search
         const searchHandler = Refad.debounce(v => {
           state.search = v;
           applyFilters();
         }, 250);
         document.getElementById('searchInput').addEventListener('input', e => searchHandler(e.target.value));
 
-        // Filter status
         document.getElementById('filterStatus').addEventListener('change', e => {
           state.filterStatus = e.target.value;
           applyFilters();
         });
 
-        // Table actions
         document.getElementById('tableBody').addEventListener('click', e => {
           const btn = e.target.closest('[data-action]');
           if (!btn) return;
@@ -1793,21 +2780,20 @@
           }
         });
 
-        // Modal close
         document.querySelectorAll('[data-close]').forEach(b => {
           b.addEventListener('click', closeModal);
         });
-        document.getElementById('attendanceModal').addEventListener('click', e => {
-          if (e.target.id === 'attendanceModal') closeModal();
+        document.querySelectorAll('.modal-backdrop').forEach(m => {
+          m.addEventListener('click', e => {
+            if (e.target === m) closeModal();
+          });
         });
         document.addEventListener('keydown', e => {
           if (e.key === 'Escape') closeModal();
         });
 
-        // Form submit
         document.getElementById('attendanceForm').addEventListener('submit', saveAttendance);
 
-        // Export
         document.getElementById('exportBtn').addEventListener('click', () => {
           if (!state.filtered.length) {
             Refad.toast.warning('لا توجد بيانات للتصدير');
@@ -1830,10 +2816,20 @@
           XLSX.writeFile(wb, `attendance-${state.selectedDate}.xlsx`);
           Refad.toast.success('تم التصدير');
         });
+
+        document.getElementById('calculatePayrollBtn').addEventListener('click', openPayrollModal);
+        document.getElementById('payrollSettingsBtn').addEventListener('click', openPayrollSettings);
+        document.getElementById('calculatePayrollRunBtn').addEventListener('click', runPayrollCalculation);
+        document.getElementById('payrollQuickMonthBtn').addEventListener('click', () => quickMonthRange(0));
+        document.getElementById('payrollQuickLastMonthBtn').addEventListener('click', () => quickMonthRange(-1));
+        document.getElementById('payrollQuickTwoWeeksBtn').addEventListener('click', quickTwoWeeksRange);
+        document.getElementById('exportPayrollBtn').addEventListener('click', exportPayrollToExcel);
+        document.getElementById('savePayrollToDbBtn').addEventListener('click', savePayrollToDb);
+        document.getElementById('savePayrollSettingsBtn').addEventListener('click', savePayrollSettings);
       }
 
       // ============================================================
-      // 16) Init
+      // 15) Init
       // ============================================================
       async function init() {
         buildSidebar();
@@ -1845,14 +2841,20 @@
         startClock();
         bindEvents();
 
-        // Set date input to today
+        if (isOwner) {
+          document.getElementById('ownerActions').style.display = 'flex';
+        }
+
         document.getElementById('dateInput').value = state.selectedDate;
 
+        await loadCompanySettings();
         await loadEmployees();
         await loadMyTodayAttendance();
         await loadAttendance();
 
         Refad.registerServiceWorker();
+
+        console.log('%c[Refad] Attendance + Advanced Payroll ready', 'color:#14B8A6;font-weight:bold');
       }
 
       if (document.readyState === 'loading') {
@@ -1861,12 +2863,12 @@
         init();
       }
 
-      console.log('%c[Refad] Attendance ready', 'color:#14B8A6;font-weight:bold');
+      const spinnerStyle = document.createElement('style');
+      spinnerStyle.textContent = '@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }';
+      document.head.appendChild(spinnerStyle);
 
     })();
   </script>
-
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 </body>
 </html>

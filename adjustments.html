@@ -18,6 +18,7 @@
   <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
 
   <style>
@@ -38,6 +39,7 @@
       --success: #10b981;
       --warning: #f59e0b;
       --info: #3b82f6;
+      --purple: #8b5cf6;
       --sidebar-bg: #0B2C4D;
       --sidebar-text: #cbd5e1;
       --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
@@ -69,9 +71,7 @@
 
     body { display: flex; min-height: 100vh; overflow-x: hidden; }
 
-    /* ============================================================
-       Sidebar
-       ============================================================ */
+    /* ============ Sidebar ============ */
     .sidebar {
       width: var(--sidebar-w);
       height: 100vh;
@@ -86,7 +86,6 @@
       transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       box-shadow: -4px 0 20px rgba(0,0,0,0.1);
     }
-
     .sidebar-header {
       padding: 20px 22px;
       border-bottom: 1px solid rgba(255,255,255,0.08);
@@ -96,7 +95,6 @@
       height: var(--topbar-h);
       box-sizing: border-box;
     }
-
     .sidebar-logo {
       width: 40px;
       height: 40px;
@@ -110,16 +108,12 @@
     }
     .sidebar-logo img { width: 70%; height: 70%; object-fit: contain; }
     .sidebar-logo .fallback { color: white; font-weight: 800; font-size: 18px; }
-
     .sidebar-brand h2 { color: white; font-size: 20px; font-weight: 800; letter-spacing: -0.5px; line-height: 1.2; }
     .sidebar-brand p { font-size: 10px; color: var(--sidebar-text); opacity: 0.7; font-weight: 500; margin-top: 2px; }
-
-    .sidebar-nav { flex: 1; overflow-y: auto; padding: 12px 0; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.15) transparent; }
+    .sidebar-nav { flex: 1; overflow-y: auto; padding: 12px 0; }
     .sidebar-nav::-webkit-scrollbar { width: 5px; }
     .sidebar-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 10px; }
-
     .nav-section { padding: 8px 20px 4px; font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 1px; margin-top: 8px; }
-
     .nav-item {
       display: flex;
       align-items: center;
@@ -131,22 +125,17 @@
       font-weight: 500;
       border-right: 3px solid transparent;
       transition: all 0.2s;
-      position: relative;
       cursor: pointer;
     }
-    .nav-item:hover { background: rgba(255,255,255,0.05); color: white; border-right-color: rgba(20,184,166,0.5); }
+    .nav-item:hover { background: rgba(255,255,255,0.05); color: white; }
     .nav-item.active { background: rgba(20,184,166,0.12); color: white; border-right-color: var(--accent); font-weight: 600; }
-    .nav-item.active::before { content: ''; position: absolute; right: 0; top: 50%; transform: translateY(-50%); width: 3px; height: 60%; background: var(--accent); border-radius: 0 4px 4px 0; }
     .nav-item i, .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; opacity: 0.85; }
     .nav-item .badge { margin-right: auto; background: var(--danger); color: white; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
     .nav-item .badge.teal { background: var(--accent); }
     .nav-item .badge.gold { background: var(--gold); }
 
-    /* ============================================================
-       Main
-       ============================================================ */
+    /* ============ Main ============ */
     .main { flex: 1; margin-right: var(--sidebar-w); min-width: 0; display: flex; flex-direction: column; }
-
     .topbar {
       height: var(--topbar-h);
       background: var(--card);
@@ -160,13 +149,10 @@
       z-index: 50;
       box-shadow: var(--shadow-sm);
     }
-
     .menu-toggle { display: none; background: transparent; border: none; color: var(--text); cursor: pointer; padding: 8px; border-radius: 8px; }
     .menu-toggle:hover { background: var(--bg); }
-
     .topbar-title { font-size: 18px; font-weight: 700; color: var(--text); flex-shrink: 0; }
     .topbar-actions { display: flex; align-items: center; gap: 8px; margin-right: auto; }
-
     .icon-btn {
       width: 40px;
       height: 40px;
@@ -184,7 +170,6 @@
     .icon-btn:hover { border-color: var(--accent); color: var(--accent); }
     .icon-btn i, .icon-btn svg { width: 18px; height: 18px; }
     .icon-btn .dot { position: absolute; top: 8px; left: 8px; width: 8px; height: 8px; background: var(--danger); border-radius: 50%; border: 2px solid var(--card); }
-
     .user-menu {
       display: flex;
       align-items: center;
@@ -197,7 +182,6 @@
       background: var(--card);
     }
     .user-menu:hover { background: var(--bg); }
-
     .user-avatar {
       width: 34px;
       height: 34px;
@@ -216,7 +200,6 @@
     .user-info { display: flex; flex-direction: column; line-height: 1.2; }
     .user-info .name { font-size: 13px; font-weight: 700; color: var(--text); }
     .user-info .role { font-size: 11px; color: var(--text-muted); }
-
     .dropdown { position: absolute; top: calc(100% + 8px); left: 0; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: var(--shadow-lg); min-width: 200px; padding: 6px; opacity: 0; visibility: hidden; transform: translateY(-8px); transition: all 0.2s; z-index: 100; }
     .dropdown.show { opacity: 1; visibility: visible; transform: translateY(0); }
     .dropdown-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; color: var(--text); font-size: 13px; font-weight: 500; cursor: pointer; transition: background 0.15s; text-decoration: none; }
@@ -226,11 +209,8 @@
     .dropdown-item i { width: 16px; height: 16px; }
     .dropdown-divider { height: 1px; background: var(--border); margin: 6px 0; }
 
-    /* ============================================================
-       Content
-       ============================================================ */
+    /* ============ Content ============ */
     .content { padding: 24px; flex: 1; }
-
     .page-head {
       display: flex;
       align-items: center;
@@ -239,7 +219,6 @@
       margin-bottom: 20px;
       flex-wrap: wrap;
     }
-
     .page-head h1 { font-size: 24px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
     .page-head p { font-size: 13px; color: var(--text-muted); }
 
@@ -260,22 +239,16 @@
     }
     .btn:disabled { opacity: 0.6; cursor: not-allowed; }
     .btn i { width: 16px; height: 16px; }
-
     .btn-primary { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; }
     .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(20,184,166,0.35); }
-
     .btn-outline { background: var(--card); color: var(--text); border: 1px solid var(--border); }
     .btn-outline:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
-
     .btn-success { background: var(--success); color: white; }
     .btn-success:hover:not(:disabled) { background: #047857; }
-
     .btn-danger { background: var(--danger); color: white; }
     .btn-danger:hover:not(:disabled) { background: #b91c1c; }
-
     .btn-warning { background: var(--warning); color: white; }
     .btn-warning:hover:not(:disabled) { background: #d97706; }
-
     .btn-sm { padding: 6px 12px; font-size: 12px; }
 
     /* Mini stats */
@@ -285,7 +258,6 @@
       gap: 12px;
       margin-bottom: 20px;
     }
-
     .mini-card {
       background: var(--card);
       border: 1px solid var(--border);
@@ -298,7 +270,6 @@
       box-shadow: var(--shadow-sm);
     }
     .mini-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: var(--shadow); }
-
     .mini-icon {
       width: 42px;
       height: 42px;
@@ -314,7 +285,6 @@
     .mini-icon.gold   { background: linear-gradient(135deg, #F59E0B, #d97706); }
     .mini-icon.green  { background: linear-gradient(135deg, #10b981, #047857); }
     .mini-icon.purple { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
-
     .mini-body { flex: 1; min-width: 0; }
     .mini-body .label { font-size: 11px; color: var(--text-muted); font-weight: 600; margin-bottom: 2px; }
     .mini-body .value { font-size: 18px; font-weight: 800; color: var(--text); line-height: 1; }
@@ -332,7 +302,6 @@
       flex-wrap: wrap;
       box-shadow: var(--shadow-sm);
     }
-
     .search-input { position: relative; flex: 1; min-width: 220px; }
     .search-input input {
       width: 100%;
@@ -348,7 +317,6 @@
     }
     .search-input input:focus { border-color: var(--accent); background: var(--card); box-shadow: 0 0 0 3px rgba(20,184,166,0.1); }
     .search-input i { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--text-muted); pointer-events: none; }
-
     .select-wrap { position: relative; min-width: 150px; }
     .select-wrap select {
       width: 100%;
@@ -387,18 +355,14 @@
       box-shadow: var(--shadow-sm);
       overflow: hidden;
     }
-
     .table-scroll { overflow-x: auto; }
-
     table {
       width: 100%;
       border-collapse: collapse;
       font-size: 14px;
       min-width: 900px;
     }
-
     thead { background: var(--bg); border-bottom: 1px solid var(--border); }
-
     th {
       text-align: right;
       padding: 14px 16px;
@@ -409,13 +373,10 @@
       letter-spacing: 0.5px;
       white-space: nowrap;
     }
-
     tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
     tbody tr:last-child { border-bottom: none; }
     tbody tr:hover { background: var(--bg); }
-
     td { padding: 12px 16px; color: var(--text); vertical-align: middle; }
-
     .adj-number {
       font-weight: 800;
       color: var(--accent);
@@ -443,7 +404,6 @@
     .badge-tag.purple { background: rgba(139,92,246,0.12); color: #8b5cf6; }
 
     .actions-cell { display: flex; gap: 6px; justify-content: flex-end; }
-
     .action-btn {
       width: 32px;
       height: 32px;
@@ -459,6 +419,8 @@
     }
     .action-btn:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
     .action-btn.danger:hover { border-color: var(--danger); color: var(--danger); background: rgba(239,68,68,0.06); }
+    .action-btn.success:hover { border-color: var(--success); color: var(--success); background: rgba(16,185,129,0.06); }
+    .action-btn.warning:hover { border-color: var(--warning); color: var(--warning); background: rgba(245,158,11,0.06); }
     .action-btn i { width: 15px; height: 15px; }
 
     .empty-row td { padding: 60px 20px; text-align: center; color: var(--text-muted); }
@@ -491,7 +453,6 @@
       flex-wrap: wrap;
     }
     .pagination .controls { display: flex; gap: 6px; align-items: center; }
-
     .page-btn {
       min-width: 34px;
       height: 34px;
@@ -510,7 +471,7 @@
     .page-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
     .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
-    /* Modal with scroll */
+    /* Modal */
     .modal-backdrop {
       position: fixed;
       inset: 0;
@@ -525,7 +486,6 @@
       transition: opacity 0.2s;
     }
     .modal-backdrop.show { display: flex; opacity: 1; }
-
     .modal {
       background: var(--card);
       border-radius: var(--radius);
@@ -540,8 +500,8 @@
       overflow: hidden;
     }
     .modal.modal-lg { max-width: 900px; }
+    .modal.modal-xl { max-width: 1200px; }
     .modal-backdrop.show .modal { transform: scale(1); }
-
     .modal-header {
       padding: 16px 20px;
       border-bottom: 1px solid var(--border);
@@ -553,7 +513,6 @@
     }
     .modal-header h3 { font-size: 16px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px; }
     .modal-header h3 i { width: 18px; height: 18px; color: var(--accent); }
-
     .modal-close {
       width: 32px;
       height: 32px;
@@ -569,7 +528,6 @@
     }
     .modal-close:hover { background: var(--bg); color: var(--danger); }
     .modal-close i { width: 18px; height: 18px; }
-
     .modal-body {
       padding: 20px;
       overflow-y: auto;
@@ -579,10 +537,7 @@
       scrollbar-color: var(--border) transparent;
     }
     .modal-body::-webkit-scrollbar { width: 8px; }
-    .modal-body::-webkit-scrollbar-track { background: transparent; }
     .modal-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
-    .modal-body::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
-
     .modal-footer {
       padding: 14px 20px;
       border-top: 1px solid var(--border);
@@ -600,10 +555,8 @@
       grid-template-columns: repeat(2, 1fr);
       gap: 14px;
     }
-
     .form-group { display: flex; flex-direction: column; }
     .form-group.full { grid-column: 1 / -1; }
-
     .form-group label {
       font-size: 12px;
       font-weight: 700;
@@ -614,7 +567,6 @@
       gap: 4px;
     }
     .form-group label .req { color: var(--danger); }
-
     .form-group input,
     .form-group select,
     .form-group textarea {
@@ -630,7 +582,6 @@
       width: 100%;
     }
     .form-group textarea { resize: vertical; min-height: 70px; }
-
     .form-group input:focus,
     .form-group select:focus,
     .form-group textarea:focus {
@@ -646,7 +597,6 @@
       gap: 10px;
       margin-bottom: 16px;
     }
-
     .type-card {
       border: 2px solid var(--border);
       border-radius: var(--radius-sm);
@@ -660,7 +610,6 @@
     }
     .type-card:hover { border-color: var(--accent); transform: translateY(-2px); }
     .type-card.selected { border-color: var(--accent); background: rgba(20,184,166,0.06); box-shadow: 0 0 0 3px rgba(20,184,166,0.1); }
-
     .type-icon {
       width: 40px;
       height: 40px;
@@ -676,19 +625,18 @@
     .type-icon.count    { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
     .type-icon.expiry   { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
     .type-icon.other    { background: linear-gradient(135deg, #64748b, #475569); }
-
+    .type-icon.batch-edit { background: linear-gradient(135deg, #14B8A6, #0d9488); }
     .type-info { flex: 1; min-width: 0; }
     .type-info .name { font-weight: 700; font-size: 13px; color: var(--text); }
     .type-info .desc { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
 
-    /* Items in adjustment */
+    /* Items list */
     .items-list {
       border: 1px solid var(--border);
       border-radius: var(--radius-sm);
       overflow: hidden;
       margin-top: 12px;
     }
-
     .item-row {
       padding: 12px;
       border-bottom: 1px solid var(--border);
@@ -699,11 +647,9 @@
     }
     .item-row:last-child { border-bottom: none; }
     .item-row:hover { background: var(--bg); }
-
     .item-info { flex: 1; min-width: 0; }
     .item-info .name { font-weight: 700; font-size: 13px; color: var(--text); }
     .item-info .sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
-
     .item-row input[type="number"] {
       width: 90px;
       padding: 8px 10px;
@@ -718,7 +664,6 @@
       outline: none;
     }
     .item-row input:focus { border-color: var(--accent); }
-
     .item-row .remove-item {
       width: 30px;
       height: 30px;
@@ -735,7 +680,7 @@
     }
     .item-row .remove-item:hover { border-color: var(--danger); color: var(--danger); }
 
-    /* Search results for products */
+    /* Search results */
     .search-box-wrap { position: relative; }
     .search-results {
       position: absolute;
@@ -754,7 +699,6 @@
     .search-results.show { display: block; }
     .search-results::-webkit-scrollbar { width: 6px; }
     .search-results::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
-
     .search-result-item {
       padding: 10px 14px;
       cursor: pointer;
@@ -770,9 +714,191 @@
     .search-result-item .r-name { font-weight: 700; flex: 1; }
     .search-result-item .r-batch { font-size: 11px; color: var(--text-muted); font-family: monospace; }
 
-    /* Overlay (mobile) */
+    /* ============ Quick Edit Batch Modal ============ */
+    .batch-info-hero {
+      background: linear-gradient(135deg, rgba(20,184,166,0.08), rgba(139,92,246,0.05));
+      border: 1.5px solid rgba(20,184,166,0.2);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      margin-bottom: 18px;
+    }
+    .batch-info-hero .name {
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+    .batch-info-hero .meta {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.7;
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .batch-info-hero .meta span { display: inline-flex; align-items: center; gap: 4px; }
+    .batch-info-hero .meta i { width: 14px; height: 14px; }
+
+    .qty-big-box {
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+    .qty-big-box .lbl {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 10px;
+    }
+    .qty-big-box .qty-display {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .qty-big-box .qty-display .old {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-decoration: line-through;
+      font-family: 'Courier New', monospace;
+    }
+    .qty-big-box .qty-display .arrow {
+      color: var(--accent);
+      font-size: 22px;
+      font-weight: 900;
+    }
+    .qty-big-box .qty-display .new {
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--accent);
+      font-family: 'Courier New', monospace;
+    }
+    .qty-controls {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .qty-controls button {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      border: 1.5px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      font-size: 20px;
+      font-weight: 900;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    .qty-controls button:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-2px); }
+    .qty-controls button.plus { background: rgba(16,185,129,0.08); border-color: var(--success); color: var(--success); }
+    .qty-controls button.plus:hover { background: var(--success); color: white; }
+    .qty-controls button.minus { background: rgba(239,68,68,0.08); border-color: var(--danger); color: var(--danger); }
+    .qty-controls button.minus:hover { background: var(--danger); color: white; }
+    .qty-controls input {
+      width: 120px;
+      height: 48px;
+      padding: 8px 14px;
+      font-family: 'Courier New', monospace;
+      font-size: 22px;
+      font-weight: 800;
+      text-align: center;
+      background: var(--card);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      outline: none;
+    }
+    .qty-controls input:focus { border-color: var(--accent); }
+
+    .quick-presets {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 12px;
+    }
+    .quick-preset-btn {
+      padding: 6px 12px;
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 700;
+      border-radius: 20px;
+      border: 1.5px solid var(--border);
+      background: var(--card);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .quick-preset-btn:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
+
+    /* History section */
+    .history-section {
+      margin-top: 16px;
+      padding: 14px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+    }
+    .history-section h4 {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .history-section h4 i { width: 16px; height: 16px; color: var(--accent); }
+    .history-list {
+      max-height: 180px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .history-item {
+      padding: 8px 12px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+    .history-item .date {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: monospace;
+    }
+    .history-item .change {
+      font-weight: 700;
+      font-family: 'Courier New', monospace;
+    }
+    .history-item .change.plus { color: var(--success); }
+    .history-item .change.minus { color: var(--danger); }
+
+    /* Overlay */
     .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; opacity: 0; transition: opacity 0.3s; }
     .overlay.show { display: block; opacity: 1; }
+
+    /* Spinner */
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    .spin { animation: spin 1s linear infinite; }
 
     /* Responsive */
     @media (max-width: 1024px) {
@@ -782,7 +908,6 @@
       .menu-toggle { display: flex; }
       .user-info { display: none; }
     }
-
     @media (max-width: 640px) {
       .content { padding: 16px; }
       .topbar { padding: 0 14px; gap: 10px; }
@@ -795,6 +920,9 @@
       .type-grid { grid-template-columns: 1fr; }
       .modal-footer { flex-direction: column-reverse; }
       .modal-footer .btn { width: 100%; justify-content: center; }
+      .qty-controls { flex-direction: column; }
+      .qty-controls button { width: 100%; height: 40px; }
+      .qty-controls input { width: 100%; }
     }
   </style>
 </head>
@@ -854,11 +982,14 @@
       <div class="page-head">
         <div>
           <h1>التسويات</h1>
-          <p>تسجيل التوالف والفاقد وفروق الجرد</p>
+          <p>تسجيل التوالف والفاقد وفروق الجرد وتعديل كميات التشغيلات</p>
         </div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;">
           <button class="btn btn-outline" id="exportBtn">
             <i data-lucide="download"></i> تصدير
+          </button>
+          <button class="btn btn-warning" id="quickBatchEditBtn">
+            <i data-lucide="edit-3"></i> تعديل كمية تشغيلة
           </button>
           <button class="btn btn-primary" id="addBtn">
             <i data-lucide="plus"></i> تسوية جديدة
@@ -909,6 +1040,8 @@
             <option value="">كل الأنواع</option>
             <option value="damage">تالف</option>
             <option value="loss">فاقد</option>
+            <option value="count_diff">تسوية كمية التشغيلة</option>
+            <option value="batch_edit">تعديل تشغيلة</option>
             <option value="expiry">منتهي الصلاحية</option>
             <option value="other">أخرى</option>
           </select>
@@ -947,7 +1080,9 @@
     </main>
   </div>
 
-  <!-- Modal: New Adjustment -->
+  <!-- ============================================================
+       Modal: New/Edit Adjustment
+       ============================================================ -->
   <div class="modal-backdrop" id="adjustmentModal">
     <div class="modal modal-lg">
       <div class="modal-header">
@@ -976,7 +1111,7 @@
             <div class="type-icon count"><i data-lucide="calculator"></i></div>
             <div class="type-info">
               <div class="name">تسوية كمية التشغيلة</div>
-              <div class="desc">أدخل الكمية الفعلية لتصحيح رصيد التشغيلة بالزيادة أو النقصان</div>
+              <div class="desc">أدخل الكمية الفعلية لتصحيح رصيد التشغيلة</div>
             </div>
           </div>
           <div class="type-card" data-type="expiry">
@@ -1005,7 +1140,7 @@
 
           <div class="search-box-wrap">
             <div class="search-input">
-              <input type="text" id="productSearch" placeholder="ابحث عن صنف لإضافته...">
+              <input type="text" id="productSearch" placeholder="ابحث عن صنف أو امسح الباركود...">
               <i data-lucide="search"></i>
             </div>
             <div class="search-results" id="searchResults"></div>
@@ -1029,7 +1164,7 @@
       <div class="modal-footer">
         <button type="button" class="btn btn-outline" data-close>إلغاء</button>
         <button type="button" class="btn btn-primary" id="saveAdjustmentBtn">
-          <i data-lucide="save"></i> حفظ كمسودة
+          <i data-lucide="save"></i> <span id="saveBtnText">حفظ كمسودة</span>
         </button>
         <button type="button" class="btn btn-success" id="approveAdjustmentBtn">
           <i data-lucide="check-circle-2"></i> اعتماد
@@ -1038,7 +1173,9 @@
     </div>
   </div>
 
-  <!-- Modal: View Adjustment -->
+  <!-- ============================================================
+       Modal: View Adjustment
+       ============================================================ -->
   <div class="modal-backdrop" id="viewModal">
     <div class="modal modal-lg">
       <div class="modal-header">
@@ -1046,8 +1183,98 @@
         <button class="modal-close" data-close><i data-lucide="x"></i></button>
       </div>
       <div class="modal-body" id="viewBody"></div>
-      <div class="modal-footer">
+      <div class="modal-footer" id="viewFooter">
         <button type="button" class="btn btn-outline" data-close>إغلاق</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       Modal: Quick Batch Edit
+       ============================================================ -->
+  <div class="modal-backdrop" id="batchEditModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3><i data-lucide="edit-3"></i> تعديل كمية تشغيلة</h3>
+        <button class="modal-close" data-close><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body">
+
+        <!-- Search Box -->
+        <div id="batchSearchWrap">
+          <div class="search-box-wrap">
+            <div class="search-input">
+              <input type="text" id="batchSearchInput" placeholder="ابحث عن صنف أو تشغيلة أو امسح الباركود...">
+              <i data-lucide="search"></i>
+            </div>
+            <div class="search-results" id="batchSearchResults"></div>
+          </div>
+        </div>
+
+        <!-- Batch Info -->
+        <div id="batchEditContent" style="display:none;">
+          <div class="batch-info-hero" id="batchInfoHero"></div>
+
+          <div class="qty-big-box">
+            <div class="lbl">تعديل الكمية المتاحة</div>
+            <div class="qty-display">
+              <span class="old" id="oldQtyDisplay">0</span>
+              <span class="arrow">→</span>
+              <span class="new" id="newQtyDisplay">0</span>
+            </div>
+            <div class="qty-controls">
+              <button type="button" class="minus" id="qtyMinusBtn">−</button>
+              <input type="number" id="newQtyInput" min="0" step="1" value="0">
+              <button type="button" class="plus" id="qtyPlusBtn">+</button>
+            </div>
+            <div class="quick-presets" id="quickPresets">
+              <button type="button" class="quick-preset-btn" data-delta="-10">−10</button>
+              <button type="button" class="quick-preset-btn" data-delta="-5">−5</button>
+              <button type="button" class="quick-preset-btn" data-delta="-1">−1</button>
+              <button type="button" class="quick-preset-btn" data-delta="0">تصفير</button>
+              <button type="button" class="quick-preset-btn" data-delta="1">+1</button>
+              <button type="button" class="quick-preset-btn" data-delta="5">+5</button>
+              <button type="button" class="quick-preset-btn" data-delta="10">+10</button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>سبب التعديل <span class="req">*</span></label>
+            <select id="batchEditReason">
+              <option value="count_diff">تسوية جرد (فرق فعلي)</option>
+              <option value="damage">تالف</option>
+              <option value="loss">فاقد</option>
+              <option value="expiry">منتهي الصلاحية</option>
+              <option value="other">سبب آخر</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>ملاحظات</label>
+            <textarea id="batchEditNotes" maxlength="255" placeholder="ملاحظات عن التعديل..."></textarea>
+          </div>
+
+          <!-- History -->
+          <div class="history-section">
+            <h4><i data-lucide="history"></i> سجل التعديلات على هذه التشغيلة</h4>
+            <div class="history-list" id="batchHistoryList">
+              <div style="text-align:center;padding:12px;font-size:12px;color:var(--text-muted);">
+                لا يوجد سجل بعد
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" data-close>إلغاء</button>
+        <button type="button" class="btn btn-warning" id="batchEditResetBtn" style="display:none;">
+          <i data-lucide="rotate-ccw"></i> اختيار تشغيلة أخرى
+        </button>
+        <button type="button" class="btn btn-success" id="batchEditSaveBtn" disabled>
+          <i data-lucide="save"></i> حفظ التعديل
+        </button>
       </div>
     </div>
   </div>
@@ -1064,6 +1291,11 @@
       const session = Refad.Auth.guardPage('inventory.adjust');
       if (!session) return;
 
+      const canManage = Refad.Session.has('inventory.adjust');
+      const isOwner = Refad.Session.has('company.owner') || 
+                     Refad.Session.has('admin.full') ||
+                     session.is_owner === true;
+
       // ============================================================
       // 2) State
       // ============================================================
@@ -1076,19 +1308,29 @@
         filterType: '',
         filterStatus: '',
 
+        // Adjustment Modal
         currentType: null,
         currentItems: [],
+        editingAdjustmentId: null,
+
+        // Batch Edit Modal
+        selectedBatch: null,
+        originalBatchQty: 0,
+        newBatchQty: 0,
+
+        // Products
         allProducts: [],
         allBatches: [],
         barcodeMap: {}
       };
 
       const TYPE_INFO = {
-        damage:     { label: 'تالف',           icon: 'trash-2',         cls: 'red' },
-        loss:       { label: 'فاقد',           icon: 'alert-circle',    cls: 'gold' },
-        count_diff: { label: 'تسوية كمية التشغيلة', icon: 'calculator', cls: 'blue' },
-        expiry:     { label: 'منتهي الصلاحية', icon: 'calendar-x',      cls: 'purple' },
-        other:      { label: 'أخرى',           icon: 'more-horizontal', cls: 'gray' }
+        damage:      { label: 'تالف',              icon: 'trash-2',         cls: 'red' },
+        loss:        { label: 'فاقد',              icon: 'alert-circle',    cls: 'gold' },
+        count_diff:  { label: 'تسوية كمية التشغيلة', icon: 'calculator',    cls: 'blue' },
+        batch_edit:  { label: 'تعديل تشغيلة',      icon: 'edit-3',          cls: 'green' },
+        expiry:      { label: 'منتهي الصلاحية',    icon: 'calendar-x',      cls: 'purple' },
+        other:       { label: 'أخرى',              icon: 'more-horizontal', cls: 'gray' }
       };
 
       // ============================================================
@@ -1164,7 +1406,7 @@
         if (session.avatar_url) av.innerHTML = `<img src="${Refad.escapeHtml(session.avatar_url)}" alt="">`;
         else av.textContent = initial;
         document.getElementById('userName').textContent = session.full_name;
-        document.getElementById('userRole').textContent = Refad.Session.has('company.owner') ? 'صاحب الشركة' : 'موظف';
+        document.getElementById('userRole').textContent = isOwner ? 'صاحب الشركة' : (canManage ? 'مشرف' : 'موظف');
       }
 
       function setupTheme() {
@@ -1210,7 +1452,7 @@
       }
 
       // ============================================================
-      // 5) Load adjustments (filter out stocktake sessions)
+      // 5) Load adjustments
       // ============================================================
       async function loadAdjustments(silent) {
         if (!silent) renderSkeleton();
@@ -1223,7 +1465,7 @@
             limit: 500
           });
 
-          // ✅ استبعد جلسات الجرد (adjustment_number يبدأ بـ ST-)
+          // استبعد جلسات الجرد
           state.all = rows.filter(r => !(r.adjustment_number || '').startsWith('ST-'));
           applyFilters();
           renderStats();
@@ -1320,6 +1562,9 @@
           const t = TYPE_INFO[r.type] || { label: r.type, icon: 'circle', cls: 'gray' };
           const value = calcAdjustmentValue(r);
           const itemCount = (r.stock_adjustment_items || []).length;
+          const canEdit = r.status === 'pending';
+          const canDelete = r.status === 'pending' || (isOwner && r.status === 'approved');
+          const canCancel = r.status === 'approved' && isOwner;
 
           return `
             <tr>
@@ -1343,7 +1588,9 @@
                   <button class="action-btn" data-action="view" data-id="${r.id}" title="عرض">
                     <i data-lucide="eye"></i>
                   </button>
-                  ${r.status === 'approved' ? '' : `<button class="action-btn danger" data-action="delete" data-id="${r.id}" title="حذف"><i data-lucide="trash-2"></i></button>`}
+                  ${canEdit ? `<button class="action-btn" data-action="edit" data-id="${r.id}" title="تعديل"><i data-lucide="pencil"></i></button>` : ''}
+                  ${canCancel ? `<button class="action-btn warning" data-action="cancel" data-id="${r.id}" title="إلغاء الاعتماد"><i data-lucide="rotate-ccw"></i></button>` : ''}
+                  ${canDelete ? `<button class="action-btn danger" data-action="delete" data-id="${r.id}" title="حذف"><i data-lucide="trash-2"></i></button>` : ''}
                 </div>
               </td>
             </tr>
@@ -1357,7 +1604,6 @@
       function renderPagination(pag) {
         const el = document.getElementById('pagination');
         const { page, pages, total, perPage } = pag;
-
         if (total === 0) { el.innerHTML = ''; return; }
 
         const from = (page - 1) * perPage + 1;
@@ -1413,7 +1659,7 @@
               order: { column: 'name', ascending: true }
             }),
             Refad.db.select('batches', {
-              columns: 'id, product_id, batch_number, quantity_left, cost_price, expiry_date',
+              columns: 'id, product_id, batch_number, quantity_left, quantity_in, cost_price, sale_price, expiry_date',
               eq: { company_id: session.company_id },
               order: { column: 'expiry_date', ascending: true }
             }).catch(() => []),
@@ -1434,13 +1680,15 @@
       }
 
       // ============================================================
-      // 8) Open new adjustment modal
+      // 8) Open New/Edit Adjustment Modal
       // ============================================================
       function openNewAdjustmentModal() {
         state.currentType = null;
         state.currentItems = [];
+        state.editingAdjustmentId = null;
 
         document.getElementById('modalTitle').textContent = 'تسوية جديدة';
+        document.getElementById('saveBtnText').textContent = 'حفظ كمسودة';
         document.getElementById('adjustmentNotes').value = '';
         document.getElementById('productSearch').value = '';
         document.querySelectorAll('.type-card').forEach(c => c.classList.remove('selected'));
@@ -1450,6 +1698,66 @@
 
         document.getElementById('adjustmentModal').classList.add('show');
         if (window.lucide) lucide.createIcons();
+      }
+
+      async function openEditAdjustmentModal(id) {
+        try {
+          const adj = state.all.find(r => r.id === id);
+          if (!adj) return;
+
+          if (adj.status !== 'pending') {
+            Refad.toast.warning('لا يمكن تعديل إلا التسويات المعلقة');
+            return;
+          }
+
+          // احصل على العناصر
+          const items = await Refad.db.select('stock_adjustment_items', {
+            columns: 'id, product_id, batch_id, system_qty, actual_qty, difference, unit_cost',
+            eq: { adjustment_id: id }
+          });
+
+          state.editingAdjustmentId = id;
+          state.currentType = adj.type;
+          state.currentItems = items
+            .map(it => {
+              const batch = state.allBatches.find(b => b.id === it.batch_id);
+              const product = state.allProducts.find(p => p.id === it.product_id);
+              if (!batch || !product) return null;
+
+              const quantity = adj.type === 'count_diff'
+                ? Number(it.actual_qty) || 0
+                : Math.abs(Number(it.difference) || 0);
+
+              return {
+                id: it.id,
+                product_id: product.id,
+                product,
+                batch_id: batch.id,
+                batch,
+                quantity,
+                unit_cost: Number(it.unit_cost) || 0
+              };
+            })
+            .filter(Boolean);
+
+          document.getElementById('modalTitle').textContent = `تعديل التسوية ${adj.adjustment_number}`;
+          document.getElementById('saveBtnText').textContent = 'حفظ التعديلات';
+          document.getElementById('adjustmentNotes').value = adj.notes || '';
+          document.getElementById('productSearch').value = '';
+
+          document.querySelectorAll('.type-card').forEach(c => {
+            c.classList.toggle('selected', c.dataset.type === adj.type);
+          });
+
+          renderItemsList();
+          updateTotalBox();
+
+          document.getElementById('adjustmentModal').classList.add('show');
+          if (window.lucide) lucide.createIcons();
+        } catch (e) {
+          console.error('Open edit failed:', e);
+          Refad.toast.error('تعذّر الفتح: ' + e.message);
+        }
       }
 
       function setupTypeCards() {
@@ -1480,7 +1788,7 @@
           if (!v || v.length < 1) { results.classList.remove('show'); return; }
           const q = v.toLowerCase().trim();
 
-          // ✅ لو باركود → أضف مباشرة
+          // بحث بالباركود
           const bm = state.barcodeMap[q];
           if (bm) {
             addBatchForProduct(bm);
@@ -1528,13 +1836,8 @@
           const item = e.target.closest('.search-result-item');
           if (!item) return;
           addBatchForProduct(parseInt(item.dataset.id, 10), parseInt(item.dataset.batchId, 10));
-          if (item.dataset.batchId) {
-            item.remove();
-            if (!results.querySelector('.search-result-item[data-batch-id]')) {
-              input.value = '';
-              results.classList.remove('show');
-            }
-          }
+          input.value = '';
+          results.classList.remove('show');
         });
 
         document.addEventListener('click', e => {
@@ -1553,7 +1856,7 @@
         const product = state.allProducts.find(p => p.id === pid);
         if (!product) return;
 
-        // ✅ لو نفس التشغيلة مضافة → تجاهل
+        // لو نفس التشغيلة مضافة
         if (state.currentItems.some(it => it.batch_id === batch.id)) {
           Refad.toast.info('التشغيلة مضافة بالفعل');
           return;
@@ -1662,7 +1965,7 @@
       }
 
       // ============================================================
-      // 11) Save / Approve adjustment
+      // 11) Save / Update / Approve adjustment
       // ============================================================
       async function saveAdjustment(approve) {
         if (!state.currentType) {
@@ -1676,13 +1979,11 @@
         for (const item of state.currentItems) {
           const minimum = state.currentType === 'count_diff' ? 0 : 1;
           if (!Number.isInteger(item.quantity) || item.quantity < minimum) {
-            Refad.toast.warning(state.currentType === 'count_diff'
-              ? 'أدخل كمية فعلية صحيحة لكل تشغيلة'
-              : 'أدخل كمية صحيحة أكبر من صفر لكل تشغيلة');
+            Refad.toast.warning('أدخل كمية صحيحة');
             return;
           }
           if (state.currentType !== 'count_diff' && item.quantity > Number(item.batch.quantity_left || 0)) {
-            Refad.toast.warning(`الكمية المطلوبة أكبر من رصيد التشغيلة ${item.batch.batch_number || ''}`);
+            Refad.toast.warning(`الكمية المطلوبة أكبر من رصيد التشغيلة`);
             return;
           }
         }
@@ -1692,29 +1993,52 @@
         const btn = document.getElementById(btnId);
         const originalHtml = btn.innerHTML;
         btn.disabled = true;
-        btn.innerHTML = '<i data-lucide="loader-2"></i> جارٍ الحفظ...';
+        btn.innerHTML = '<i data-lucide="loader-2" class="spin"></i> جارٍ الحفظ...';
         if (window.lucide) lucide.createIcons();
 
         try {
-          // 1. رقم التسوية
-          const count = await Refad.db.count('stock_adjustments', {
-            eq: { company_id: session.company_id }
-          });
-          const year = new Date().getFullYear();
-          const adjNumber = `ADJ-${year}-${String(count + 1).padStart(4, '0')}`;
+          let adjId = state.editingAdjustmentId;
+          let adjNumber;
 
-          // 2. أنشئ التسوية
-          const created = await Refad.db.insert('stock_adjustments', {
-            company_id: session.company_id,
-            adjustment_number: adjNumber,
-            type: state.currentType,
-            status: approve ? 'approved' : 'pending',
-            notes: notes || null,
-            created_by: session.user_id,
-            approved_by: approve ? session.user_id : null
-          });
+          if (adjId) {
+            // تعديل
+            const existing = state.all.find(r => r.id === adjId);
+            adjNumber = existing.adjustment_number;
 
-          // 3. أضف الأصناف
+            // حدّث التسوية
+            await Refad.db.update('stock_adjustments', adjId, {
+              type: state.currentType,
+              notes: notes || null
+            });
+
+            // احذف العناصر القديمة
+            const oldItems = await Refad.db.select('stock_adjustment_items', {
+              columns: 'id',
+              eq: { adjustment_id: adjId }
+            });
+            for (const oi of oldItems) {
+              await Refad.db.remove('stock_adjustment_items', oi.id);
+            }
+          } else {
+            // إنشاء جديد
+            const count = await Refad.db.count('stock_adjustments', {
+              eq: { company_id: session.company_id }
+            });
+            const year = new Date().getFullYear();
+            adjNumber = `ADJ-${year}-${String(count + 1).padStart(4, '0')}`;
+
+            const created = await Refad.db.insert('stock_adjustments', {
+              company_id: session.company_id,
+              adjustment_number: adjNumber,
+              type: state.currentType,
+              status: 'pending',
+              notes: notes || null,
+              created_by: session.user_id
+            });
+            adjId = created.id;
+          }
+
+          // أضف العناصر
           const itemsToInsert = state.currentItems.map(it => {
             const systemQty = Number(it.batch.quantity_left) || 0;
             const actualQty = state.currentType === 'count_diff'
@@ -1722,7 +2046,7 @@
               : Math.max(0, systemQty - it.quantity);
             const difference = actualQty - systemQty;
             return {
-              adjustment_id: created.id,
+              adjustment_id: adjId,
               product_id: it.product_id,
               batch_id: it.batch_id,
               system_qty: systemQty,
@@ -1731,64 +2055,30 @@
               unit_cost: it.unit_cost
             };
           });
-          await Refad.db.insertMany('stock_adjustment_items', itemsToInsert);
 
-          // 4. عند الاعتماد، طبّق الرصيد النهائي وسجّل فرق المخزون
+          if (itemsToInsert.length) {
+            await Refad.db.insertMany('stock_adjustment_items', itemsToInsert);
+          }
+
+          // اعتماد فوري
           if (approve) {
-            for (const it of state.currentItems) {
-              const systemQty = Number(it.batch.quantity_left) || 0;
-              const newQty = state.currentType === 'count_diff'
-                ? it.quantity
-                : Math.max(0, systemQty - it.quantity);
-              const difference = newQty - systemQty;
-
-              await Refad.db.update('batches', it.batch_id, {
-                quantity_left: newQty
-              });
-
-              // حدّث محلياً
-              const localBatch = state.allBatches.find(b => b.id === it.batch_id);
-              if (localBatch) localBatch.quantity_left = newQty;
-
-              // حركة المخزون
-              const movType = difference < 0 && ['damage', 'loss', 'expiry'].includes(state.currentType)
-                ? 'loss'
-                : 'adjust';
-
-              if (difference !== 0) {
-                await Refad.db.insert('inventory_movements', {
-                  company_id: session.company_id,
-                  product_id: it.product_id,
-                  batch_id: it.batch_id,
-                  movement_type: movType,
-                  reference_type: 'adjustment',
-                  reference_id: created.id,
-                  quantity: difference,
-                  unit_cost: it.unit_cost,
-                  balance_after: newQty,
-                  notes: `${TYPE_INFO[state.currentType]?.label || ''} — ${adjNumber}`,
-                  user_id: session.user_id
-                });
-              }
-            }
+            await applyAdjustmentToStock(adjId, adjNumber);
+            await Refad.db.update('stock_adjustments', adjId, {
+              status: 'approved',
+              approved_by: session.user_id
+            });
           }
 
           await Refad.logActivity(
-            approve ? 'approve_adjustment' : 'create_adjustment',
+            state.editingAdjustmentId ? 'update_adjustment' : (approve ? 'approve_adjustment' : 'create_adjustment'),
             'inventory',
-            `${approve ? 'اعتماد' : 'إنشاء'} تسوية ${adjNumber}`,
-            created.id
+            `${state.editingAdjustmentId ? 'تعديل' : (approve ? 'اعتماد' : 'إنشاء')} تسوية ${adjNumber}`,
+            adjId
           );
 
-          if (approve) {
-            Refad.scanInventoryAlerts(session.company_id).catch(error => {
-              console.error('[Adjustments] Alert notification dispatch failed:', error);
-              Refad.toast.warning('تم اعتماد التسوية، لكن تعذّر إرسال تنبيهات المخزون');
-            });
-          }
-          Refad.toast.success(approve ? 'تم اعتماد التسوية وتحديث أرصدة التشغيلات' : 'تم حفظ التسوية كمسودة');
-
+          Refad.toast.success(approve ? 'تم اعتماد التسوية وتحديث الأرصدة' : 'تم الحفظ');
           closeAllModals();
+          await loadProductsAndBatches();
           await loadAdjustments(true);
         } catch (e) {
           console.error('Save adjustment failed:', e);
@@ -1800,8 +2090,384 @@
         }
       }
 
+      /**
+       * تطبيق التسوية على المخزون
+       */
+      async function applyAdjustmentToStock(adjId, adjNumber) {
+        for (const it of state.currentItems) {
+          const systemQty = Number(it.batch.quantity_left) || 0;
+          const newQty = state.currentType === 'count_diff'
+            ? it.quantity
+            : Math.max(0, systemQty - it.quantity);
+          const difference = newQty - systemQty;
+
+          await Refad.db.update('batches', it.batch_id, {
+            quantity_left: newQty
+          });
+
+          const localBatch = state.allBatches.find(b => b.id === it.batch_id);
+          if (localBatch) localBatch.quantity_left = newQty;
+
+          if (difference !== 0) {
+            const movType = difference < 0 && ['damage', 'loss', 'expiry'].includes(state.currentType)
+              ? 'loss'
+              : 'adjust';
+
+            await Refad.db.insert('inventory_movements', {
+              company_id: session.company_id,
+              product_id: it.product_id,
+              batch_id: it.batch_id,
+              movement_type: movType,
+              reference_type: 'adjustment',
+              reference_id: adjId,
+              quantity: difference,
+              unit_cost: it.unit_cost,
+              balance_after: newQty,
+              notes: `${TYPE_INFO[state.currentType]?.label || ''} — ${adjNumber}`,
+              user_id: session.user_id
+            });
+          }
+        }
+      }
+
       // ============================================================
-      // 12) View adjustment
+      // 12) Quick Batch Edit Modal
+      // ============================================================
+      function openBatchEditModal() {
+        state.selectedBatch = null;
+        state.originalBatchQty = 0;
+        state.newBatchQty = 0;
+
+        document.getElementById('batchSearchWrap').style.display = 'block';
+        document.getElementById('batchEditContent').style.display = 'none';
+        document.getElementById('batchEditResetBtn').style.display = 'none';
+        document.getElementById('batchEditSaveBtn').disabled = true;
+        document.getElementById('batchSearchInput').value = '';
+        document.getElementById('batchSearchResults').classList.remove('show');
+        document.getElementById('batchEditNotes').value = '';
+
+        document.getElementById('batchEditModal').classList.add('show');
+        if (window.lucide) lucide.createIcons();
+
+        // Focus on search
+        setTimeout(() => document.getElementById('batchSearchInput')?.focus(), 300);
+      }
+
+      function setupBatchEditModal() {
+        const input = document.getElementById('batchSearchInput');
+        const results = document.getElementById('batchSearchResults');
+
+        const handler = Refad.debounce(v => {
+          if (!v || v.length < 1) { results.classList.remove('show'); return; }
+          const q = v.toLowerCase().trim();
+
+          // بحث بالباركود
+          const bm = state.barcodeMap[q];
+          if (bm) {
+            selectBatchForEdit(bm);
+            input.value = '';
+            results.classList.remove('show');
+            return;
+          }
+
+          const matches = state.allProducts
+            .filter(p =>
+              (p.name || '').toLowerCase().includes(q) ||
+              (p.name_en || '').toLowerCase().includes(q)
+            )
+            .slice(0, 15);
+
+          if (!matches.length) {
+            results.innerHTML = `<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:13px;">لا توجد نتائج</div>`;
+          } else {
+            let html = '';
+            matches.forEach(p => {
+              const productBatches = state.allBatches.filter(b => b.product_id === p.id);
+              if (!productBatches.length) {
+                html += `<div class="search-result-item disabled"><div style="flex:1;"><div class="r-name">${Refad.escapeHtml(p.name)}</div><div class="r-batch">لا توجد تشغيلات</div></div></div>`;
+              } else {
+                productBatches.forEach(batch => {
+                  html += `
+                    <div class="search-result-item" data-batch-id="${batch.id}">
+                      <div style="flex:1;">
+                        <div class="r-name">${Refad.escapeHtml(p.name)} — ${Refad.escapeHtml(batch.batch_number || 'بدون رقم')}</div>
+                        <div class="r-batch">الرصيد: ${Refad.format.number(batch.quantity_left || 0)} • تكلفة: ${Refad.format.money(batch.cost_price || 0)}${batch.expiry_date ? ` • ${Refad.format.date(batch.expiry_date)}` : ''}</div>
+                      </div>
+                      <i data-lucide="edit-3" style="color:var(--accent);width:16px;height:16px;"></i>
+                    </div>
+                  `;
+                });
+              }
+            });
+            results.innerHTML = html;
+            if (window.lucide) lucide.createIcons();
+          }
+
+          results.classList.add('show');
+        }, 200);
+
+        input.addEventListener('input', e => handler(e.target.value));
+        input.addEventListener('focus', () => { if (input.value) results.classList.add('show'); });
+
+        results.addEventListener('click', e => {
+          const item = e.target.closest('.search-result-item');
+          if (!item || !item.dataset.batchId) return;
+          selectBatchForEdit(parseInt(item.dataset.batchId, 10));
+          input.value = '';
+          results.classList.remove('show');
+        });
+
+        document.addEventListener('click', e => {
+          if (!e.target.closest('#batchSearchWrap .search-box-wrap')) results.classList.remove('show');
+        });
+      }
+
+      async function selectBatchForEdit(batchId) {
+        const batch = state.allBatches.find(b => b.id === batchId);
+        if (!batch) {
+          Refad.toast.error('التشغيلة غير موجودة');
+          return;
+        }
+        const product = state.allProducts.find(p => p.id === batch.product_id);
+        if (!product) {
+          Refad.toast.error('الصنف غير موجود');
+          return;
+        }
+
+        state.selectedBatch = batch;
+        state.originalBatchQty = Number(batch.quantity_left) || 0;
+        state.newBatchQty = state.originalBatchQty;
+
+        // Hero
+        document.getElementById('batchInfoHero').innerHTML = `
+          <div class="name">${Refad.escapeHtml(product.name)}</div>
+          <div class="meta">
+            <span><i data-lucide="layers"></i> تشغيلة: ${Refad.escapeHtml(batch.batch_number || '—')}</span>
+            <span><i data-lucide="package"></i> ${Refad.escapeHtml([product.form, product.unit].filter(Boolean).join(' • '))}</span>
+            <span><i data-lucide="dollar-sign"></i> تكلفة: ${Refad.format.money(batch.cost_price || 0)}</span>
+            ${batch.expiry_date ? `<span><i data-lucide="calendar"></i> الصلاحية: ${Refad.format.date(batch.expiry_date)}</span>` : ''}
+          </div>
+        `;
+
+        // Qty display
+        document.getElementById('oldQtyDisplay').textContent = Refad.format.number(state.originalBatchQty);
+        document.getElementById('newQtyDisplay').textContent = Refad.format.number(state.newBatchQty);
+        document.getElementById('newQtyInput').value = state.newBatchQty;
+
+        // Show content, hide search
+        document.getElementById('batchSearchWrap').style.display = 'none';
+        document.getElementById('batchEditContent').style.display = 'block';
+        document.getElementById('batchEditResetBtn').style.display = 'inline-flex';
+        document.getElementById('batchEditSaveBtn').disabled = true;
+
+        // Load history
+        loadBatchHistory(batchId);
+
+        if (window.lucide) lucide.createIcons();
+      }
+
+      async function loadBatchHistory(batchId) {
+        const container = document.getElementById('batchHistoryList');
+        container.innerHTML = `<div style="text-align:center;padding:12px;font-size:12px;color:var(--text-muted);">جاري التحميل...</div>`;
+
+        try {
+          const movements = await Refad.db.select('inventory_movements', {
+            columns: 'id, quantity, balance_after, movement_type, notes, created_at, reference_type, reference_id',
+            eq: { company_id: session.company_id, batch_id: batchId },
+            order: { column: 'created_at', ascending: false },
+            limit: 20
+          }).catch(() => []);
+
+          if (!movements.length) {
+            container.innerHTML = `<div style="text-align:center;padding:12px;font-size:12px;color:var(--text-muted);">
+              لا يوجد سجل بعد
+            </div>`;
+            return;
+          }
+
+          container.innerHTML = movements.map(m => {
+            const qty = Number(m.quantity) || 0;
+            const sign = qty > 0 ? '+' : '';
+            const cls = qty > 0 ? 'plus' : 'minus';
+            const typeLabel = {
+              in: 'إضافة',
+              out: 'صرف',
+              adjust: 'تسوية',
+              loss: 'فقد',
+              return: 'مرتجع'
+            }[m.movement_type] || m.movement_type;
+
+            return `
+              <div class="history-item">
+                <div>
+                  <div style="font-weight:700;">${typeLabel}</div>
+                  <div class="date">${Refad.format.datetime(m.created_at)}</div>
+                </div>
+                <div class="change ${cls}">${sign}${Refad.format.number(Math.abs(qty))}</div>
+              </div>
+            `;
+          }).join('');
+        } catch (e) {
+          console.error('Load history failed:', e);
+          container.innerHTML = `<div style="text-align:center;padding:12px;font-size:12px;color:var(--danger);">
+            تعذّر تحميل السجل
+          </div>`;
+        }
+      }
+
+      function setupBatchEditControls() {
+        const input = document.getElementById('newQtyInput');
+        const minusBtn = document.getElementById('qtyMinusBtn');
+        const plusBtn = document.getElementById('qtyPlusBtn');
+
+        const updateQty = (val) => {
+          let v = Number(val);
+          if (!Number.isFinite(v) || v < 0) v = 0;
+          v = Math.floor(v);
+          state.newBatchQty = v;
+          input.value = v;
+          document.getElementById('newQtyDisplay').textContent = Refad.format.number(v);
+          document.getElementById('batchEditSaveBtn').disabled = (v === state.originalBatchQty);
+        };
+
+        input.addEventListener('input', e => updateQty(e.target.value));
+
+        minusBtn.addEventListener('click', () => updateQty(Math.max(0, state.newBatchQty - 1)));
+        plusBtn.addEventListener('click', () => updateQty(state.newBatchQty + 1));
+
+        // Quick presets
+        document.getElementById('quickPresets').addEventListener('click', e => {
+          const btn = e.target.closest('[data-delta]');
+          if (!btn) return;
+          const delta = parseInt(btn.dataset.delta, 10);
+          if (delta === 0) {
+            updateQty(0);
+          } else {
+            updateQty(Math.max(0, state.newBatchQty + delta));
+          }
+        });
+
+        // Reset button
+        document.getElementById('batchEditResetBtn').addEventListener('click', () => {
+          state.selectedBatch = null;
+          document.getElementById('batchSearchWrap').style.display = 'block';
+          document.getElementById('batchEditContent').style.display = 'none';
+          document.getElementById('batchEditResetBtn').style.display = 'none';
+          document.getElementById('batchEditSaveBtn').disabled = true;
+          document.getElementById('batchSearchInput').value = '';
+          setTimeout(() => document.getElementById('batchSearchInput')?.focus(), 200);
+        });
+
+        // Save
+        document.getElementById('batchEditSaveBtn').addEventListener('click', saveBatchEdit);
+      }
+
+      async function saveBatchEdit() {
+        if (!state.selectedBatch) return;
+        if (state.newBatchQty === state.originalBatchQty) {
+          Refad.toast.info('لم تقم بتغيير الكمية');
+          return;
+        }
+
+        const reason = document.getElementById('batchEditReason').value;
+        const notes = document.getElementById('batchEditNotes').value.trim();
+
+        const difference = state.newBatchQty - state.originalBatchQty;
+
+        const ok = await Refad.alert.confirm(
+          'تأكيد التعديل',
+          `سيتم تعديل كمية التشغيلة من ${state.originalBatchQty} إلى ${state.newBatchQty} (${difference > 0 ? '+' : ''}${difference})
+
+سيتم تسجيل هذا التعديل في سجل التسويات.`,
+          'تأكيد'
+        );
+        if (!ok) return;
+
+        const btn = document.getElementById('batchEditSaveBtn');
+        const originalHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i data-lucide="loader-2" class="spin"></i> جارٍ الحفظ...';
+        if (window.lucide) lucide.createIcons();
+
+        try {
+          const batch = state.selectedBatch;
+          const product = state.allProducts.find(p => p.id === batch.product_id);
+
+          // 1) حدّث الكمية
+          await Refad.db.update('batches', batch.id, {
+            quantity_left: state.newBatchQty
+          });
+
+          // 2) حدّث محلياً
+          const localBatch = state.allBatches.find(b => b.id === batch.id);
+          if (localBatch) localBatch.quantity_left = state.newBatchQty;
+
+          // 3) سجّل حركة المخزون
+          const movType = difference < 0 && ['damage', 'loss', 'expiry'].includes(reason)
+            ? 'loss'
+            : 'adjust';
+
+          await Refad.db.insert('inventory_movements', {
+            company_id: session.company_id,
+            product_id: batch.product_id,
+            batch_id: batch.id,
+            movement_type: movType,
+            reference_type: 'batch_edit',
+            reference_id: batch.id,
+            quantity: difference,
+            unit_cost: batch.cost_price || 0,
+            balance_after: state.newBatchQty,
+            notes: `${TYPE_INFO[reason]?.label || reason}${notes ? ' — ' + notes : ''}`,
+            user_id: session.user_id
+          });
+
+          // 4) سجّل تسوية
+          const count = await Refad.db.count('stock_adjustments', {
+            eq: { company_id: session.company_id }
+          });
+          const year = new Date().getFullYear();
+          const adjNumber = `ADJ-${year}-${String(count + 1).padStart(4, '0')}`;
+
+          const created = await Refad.db.insert('stock_adjustments', {
+            company_id: session.company_id,
+            adjustment_number: adjNumber,
+            type: reason === 'count_diff' ? 'count_diff' : (reason === 'other' ? 'other' : reason),
+            status: 'approved',
+            notes: notes || `تعديل مباشر للكمية من ${state.originalBatchQty} إلى ${state.newBatchQty}`,
+            created_by: session.user_id,
+            approved_by: session.user_id
+          });
+
+          await Refad.db.insert('stock_adjustment_items', {
+            adjustment_id: created.id,
+            product_id: batch.product_id,
+            batch_id: batch.id,
+            system_qty: state.originalBatchQty,
+            actual_qty: state.newBatchQty,
+            difference,
+            unit_cost: batch.cost_price || 0
+          });
+
+          await Refad.logActivity('quick_batch_edit', 'inventory',
+            `تعديل سريع لتشغيلة ${batch.batch_number || '—'} (${product?.name || ''}) - ${adjNumber}`,
+            created.id);
+
+          Refad.toast.success(`تم التعديل — ${difference > 0 ? '+' : ''}${difference}`);
+
+          closeAllModals();
+          await loadAdjustments(true);
+        } catch (e) {
+          console.error('Save batch edit failed:', e);
+          Refad.toast.error('فشل التعديل: ' + e.message);
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = originalHtml;
+          if (window.lucide) lucide.createIcons();
+        }
+      }
+
+      // ============================================================
+      // 13) View adjustment
       // ============================================================
       async function viewAdjustment(id) {
         try {
@@ -1898,6 +2564,23 @@
             </div>
           `;
 
+          // Footer actions
+          const footer = document.getElementById('viewFooter');
+          let footerHtml = `<button type="button" class="btn btn-outline" data-close>إغلاق</button>`;
+
+          if (adj.status === 'pending' && canManage) {
+            footerHtml += `<button type="button" class="btn btn-primary" onclick="window.__adjEdit(${adj.id})"><i data-lucide="pencil"></i> تعديل</button>`;
+            footerHtml += `<button type="button" class="btn btn-success" onclick="window.__adjApprove(${adj.id})"><i data-lucide="check-circle-2"></i> اعتماد</button>`;
+          } else if (adj.status === 'approved' && isOwner) {
+            footerHtml += `<button type="button" class="btn btn-warning" onclick="window.__adjCancel(${adj.id})"><i data-lucide="rotate-ccw"></i> إلغاء الاعتماد</button>`;
+          }
+
+          footer.innerHTML = footerHtml;
+
+          footer.querySelectorAll('[data-close]').forEach(b => {
+            b.addEventListener('click', closeAllModals);
+          });
+
           document.getElementById('viewModal').classList.add('show');
           if (window.lucide) lucide.createIcons();
         } catch (e) {
@@ -1906,8 +2589,142 @@
         }
       }
 
+      // Expose functions to global for onclick
+      window.__adjEdit = (id) => {
+        closeAllModals();
+        setTimeout(() => openEditAdjustmentModal(id), 200);
+      };
+
+      window.__adjApprove = async (id) => {
+        const adj = state.all.find(r => r.id === id);
+        if (!adj) return;
+
+        const ok = await Refad.alert.confirm(
+          'اعتماد التسوية',
+          `سيتم اعتماد التسوية "${adj.adjustment_number}" وتحديث أرصدة التشغيلات. متابعة؟`,
+          'اعتماد'
+        );
+        if (!ok) return;
+
+        try {
+          // احصل على العناصر
+          const items = await Refad.db.select('stock_adjustment_items', {
+            columns: 'id, product_id, batch_id, system_qty, actual_qty, difference, unit_cost',
+            eq: { adjustment_id: id }
+          });
+
+          // طبّق على المخزون
+          for (const it of items) {
+            const newQty = Number(it.actual_qty) || 0;
+            const difference = Number(it.difference) || 0;
+
+            await Refad.db.update('batches', it.batch_id, {
+              quantity_left: newQty
+            });
+
+            if (difference !== 0) {
+              const movType = difference < 0 && ['damage', 'loss', 'expiry'].includes(adj.type)
+                ? 'loss'
+                : 'adjust';
+
+              await Refad.db.insert('inventory_movements', {
+                company_id: session.company_id,
+                product_id: it.product_id,
+                batch_id: it.batch_id,
+                movement_type: movType,
+                reference_type: 'adjustment',
+                reference_id: id,
+                quantity: difference,
+                unit_cost: it.unit_cost,
+                balance_after: newQty,
+                notes: `${TYPE_INFO[adj.type]?.label || ''} — ${adj.adjustment_number}`,
+                user_id: session.user_id
+              });
+            }
+          }
+
+          await Refad.db.update('stock_adjustments', id, {
+            status: 'approved',
+            approved_by: session.user_id
+          });
+
+          await Refad.logActivity('approve_adjustment', 'inventory',
+            `اعتماد تسوية ${adj.adjustment_number}`, id);
+
+          Refad.toast.success('تم الاعتماد');
+          closeAllModals();
+          await loadProductsAndBatches();
+          await loadAdjustments(true);
+        } catch (e) {
+          console.error('Approve failed:', e);
+          Refad.toast.error('فشل الاعتماد: ' + e.message);
+        }
+      };
+
+      window.__adjCancel = async (id) => {
+        const adj = state.all.find(r => r.id === id);
+        if (!adj) return;
+
+        const ok = await Refad.alert.confirm(
+          'إلغاء الاعتماد',
+          `سيتم إلغاء اعتماد التسوية "${adj.adjustment_number}" وإرجاع الكميات للوضع السابق. متابعة؟`,
+          'إلغاء الاعتماد'
+        );
+        if (!ok) return;
+
+        try {
+          const items = await Refad.db.select('stock_adjustment_items', {
+            columns: 'id, product_id, batch_id, system_qty, actual_qty, difference, unit_cost',
+            eq: { adjustment_id: id }
+          });
+
+          // أرجع الكميات القديمة
+          for (const it of items) {
+            const oldQty = Number(it.system_qty) || 0;
+            const difference = Number(it.difference) || 0;
+
+            await Refad.db.update('batches', it.batch_id, {
+              quantity_left: oldQty
+            });
+
+            // سجّل حركة عكسية
+            if (difference !== 0) {
+              await Refad.db.insert('inventory_movements', {
+                company_id: session.company_id,
+                product_id: it.product_id,
+                batch_id: it.batch_id,
+                movement_type: 'adjust',
+                reference_type: 'adjustment_cancel',
+                reference_id: id,
+                quantity: -difference,
+                unit_cost: it.unit_cost,
+                balance_after: oldQty,
+                notes: `إلغاء اعتماد تسوية ${adj.adjustment_number}`,
+                user_id: session.user_id
+              });
+            }
+          }
+
+          await Refad.db.update('stock_adjustments', id, {
+            status: 'pending',
+            approved_by: null
+          });
+
+          await Refad.logActivity('cancel_adjustment', 'inventory',
+            `إلغاء اعتماد تسوية ${adj.adjustment_number}`, id);
+
+          Refad.toast.success('تم إلغاء الاعتماد');
+          closeAllModals();
+          await loadProductsAndBatches();
+          await loadAdjustments(true);
+        } catch (e) {
+          console.error('Cancel failed:', e);
+          Refad.toast.error('فشل الإلغاء: ' + e.message);
+        }
+      };
+
       // ============================================================
-      // 13) Delete adjustment
+      // 14) Delete adjustment
       // ============================================================
       async function deleteAdjustment(id, num) {
         const ok = await Refad.alert.confirm(
@@ -1918,7 +2735,14 @@
         if (!ok) return;
 
         try {
-          await Refad.db.removeWhere('stock_adjustment_items', { adjustment_id: id });
+          // احذف العناصر
+          const items = await Refad.db.select('stock_adjustment_items', {
+            columns: 'id',
+            eq: { adjustment_id: id }
+          });
+          for (const it of items) {
+            await Refad.db.remove('stock_adjustment_items', it.id);
+          }
           await Refad.db.remove('stock_adjustments', id);
           await Refad.logActivity('delete_adjustment', 'inventory', `حذف تسوية ${num}`, id);
           Refad.toast.success('تم الحذف');
@@ -1930,11 +2754,12 @@
       }
 
       // ============================================================
-      // 14) Modal helpers
+      // 15) Modal helpers
       // ============================================================
       function closeAllModals() {
         document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.remove('show'));
         document.getElementById('searchResults')?.classList.remove('show');
+        document.getElementById('batchSearchResults')?.classList.remove('show');
       }
 
       function setupModals() {
@@ -1952,7 +2777,7 @@
       }
 
       // ============================================================
-      // 15) Events
+      // 16) Events
       // ============================================================
       function bindEvents() {
         const searchHandler = Refad.debounce(v => { state.search = v; applyFilters(); }, 250);
@@ -1968,6 +2793,7 @@
         });
 
         document.getElementById('addBtn').addEventListener('click', openNewAdjustmentModal);
+        document.getElementById('quickBatchEditBtn').addEventListener('click', openBatchEditModal);
 
         document.getElementById('saveAdjustmentBtn').addEventListener('click', () => saveAdjustment(false));
         document.getElementById('approveAdjustmentBtn').addEventListener('click', () => saveAdjustment(true));
@@ -1985,7 +2811,9 @@
           if (!adj) return;
 
           if (btn.dataset.action === 'view') viewAdjustment(id);
+          else if (btn.dataset.action === 'edit') openEditAdjustmentModal(id);
           else if (btn.dataset.action === 'delete') deleteAdjustment(id, adj.adjustment_number);
+          else if (btn.dataset.action === 'cancel') window.__adjCancel(id);
         });
 
         // Export
@@ -2014,7 +2842,7 @@
       }
 
       // ============================================================
-      // 16) Init
+      // 17) Init
       // ============================================================
       async function init() {
         buildSidebar();
@@ -2025,6 +2853,8 @@
         setupNotifBtn();
         setupTypeCards();
         setupProductSearch();
+        setupBatchEditModal();
+        setupBatchEditControls();
         setupModals();
         bindEvents();
 
@@ -2040,12 +2870,14 @@
         init();
       }
 
-      console.log('%c[Refad] Adjustments ready', 'color:#14B8A6;font-weight:bold');
+      const spinnerStyle = document.createElement('style');
+      spinnerStyle.textContent = '@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }';
+      document.head.appendChild(spinnerStyle);
+
+      console.log('%c[Refad] Adjustments + Batch Edit ready', 'color:#14B8A6;font-weight:bold');
 
     })();
   </script>
-
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 </body>
 </html>

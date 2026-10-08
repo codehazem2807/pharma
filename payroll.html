@@ -18,6 +18,7 @@
   <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
 
   <style>
@@ -38,6 +39,7 @@
       --success: #10b981;
       --warning: #f59e0b;
       --info: #3b82f6;
+      --purple: #8b5cf6;
       --sidebar-bg: #0B2C4D;
       --sidebar-text: #cbd5e1;
       --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
@@ -84,7 +86,6 @@
       transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       box-shadow: -4px 0 20px rgba(0,0,0,0.1);
     }
-
     .sidebar-header {
       padding: 20px 22px;
       border-bottom: 1px solid rgba(255,255,255,0.08);
@@ -94,7 +95,6 @@
       height: var(--topbar-h);
       box-sizing: border-box;
     }
-
     .sidebar-logo {
       width: 40px;
       height: 40px;
@@ -108,16 +108,12 @@
     }
     .sidebar-logo img { width: 70%; height: 70%; object-fit: contain; }
     .sidebar-logo .fallback { color: white; font-weight: 800; font-size: 18px; }
-
     .sidebar-brand h2 { color: white; font-size: 20px; font-weight: 800; letter-spacing: -0.5px; line-height: 1.2; }
     .sidebar-brand p { font-size: 10px; color: var(--sidebar-text); opacity: 0.7; font-weight: 500; margin-top: 2px; }
-
-    .sidebar-nav { flex: 1; overflow-y: auto; padding: 12px 0; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.15) transparent; }
+    .sidebar-nav { flex: 1; overflow-y: auto; padding: 12px 0; }
     .sidebar-nav::-webkit-scrollbar { width: 5px; }
     .sidebar-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 10px; }
-
     .nav-section { padding: 8px 20px 4px; font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 1px; margin-top: 8px; }
-
     .nav-item {
       display: flex;
       align-items: center;
@@ -129,12 +125,10 @@
       font-weight: 500;
       border-right: 3px solid transparent;
       transition: all 0.2s;
-      position: relative;
       cursor: pointer;
     }
-    .nav-item:hover { background: rgba(255,255,255,0.05); color: white; border-right-color: rgba(20,184,166,0.5); }
+    .nav-item:hover { background: rgba(255,255,255,0.05); color: white; }
     .nav-item.active { background: rgba(20,184,166,0.12); color: white; border-right-color: var(--accent); font-weight: 600; }
-    .nav-item.active::before { content: ''; position: absolute; right: 0; top: 50%; transform: translateY(-50%); width: 3px; height: 60%; background: var(--accent); border-radius: 0 4px 4px 0; }
     .nav-item i, .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; opacity: 0.85; }
     .nav-item .badge { margin-right: auto; background: var(--danger); color: white; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
     .nav-item .badge.teal { background: var(--accent); }
@@ -142,7 +136,6 @@
 
     /* Main */
     .main { flex: 1; margin-right: var(--sidebar-w); min-width: 0; display: flex; flex-direction: column; }
-
     .topbar {
       height: var(--topbar-h);
       background: var(--card);
@@ -156,13 +149,10 @@
       z-index: 50;
       box-shadow: var(--shadow-sm);
     }
-
     .menu-toggle { display: none; background: transparent; border: none; color: var(--text); cursor: pointer; padding: 8px; border-radius: 8px; }
     .menu-toggle:hover { background: var(--bg); }
-
     .topbar-title { font-size: 18px; font-weight: 700; color: var(--text); flex-shrink: 0; }
     .topbar-actions { display: flex; align-items: center; gap: 8px; margin-right: auto; }
-
     .icon-btn {
       width: 40px;
       height: 40px;
@@ -180,7 +170,6 @@
     .icon-btn:hover { border-color: var(--accent); color: var(--accent); }
     .icon-btn i, .icon-btn svg { width: 18px; height: 18px; }
     .icon-btn .dot { position: absolute; top: 8px; left: 8px; width: 8px; height: 8px; background: var(--danger); border-radius: 50%; border: 2px solid var(--card); }
-
     .user-menu {
       display: flex;
       align-items: center;
@@ -193,7 +182,6 @@
       background: var(--card);
     }
     .user-menu:hover { background: var(--bg); }
-
     .user-avatar {
       width: 34px;
       height: 34px;
@@ -212,7 +200,6 @@
     .user-info { display: flex; flex-direction: column; line-height: 1.2; }
     .user-info .name { font-size: 13px; font-weight: 700; color: var(--text); }
     .user-info .role { font-size: 11px; color: var(--text-muted); }
-
     .dropdown { position: absolute; top: calc(100% + 8px); left: 0; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: var(--shadow-lg); min-width: 200px; padding: 6px; opacity: 0; visibility: hidden; transform: translateY(-8px); transition: all 0.2s; z-index: 100; }
     .dropdown.show { opacity: 1; visibility: visible; transform: translateY(0); }
     .dropdown-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; color: var(--text); font-size: 13px; font-weight: 500; cursor: pointer; transition: background 0.15s; text-decoration: none; }
@@ -224,7 +211,6 @@
 
     /* Content */
     .content { padding: 24px; flex: 1; }
-
     .page-head {
       display: flex;
       align-items: center;
@@ -253,22 +239,18 @@
     }
     .btn:disabled { opacity: 0.6; cursor: not-allowed; }
     .btn i { width: 16px; height: 16px; }
-
     .btn-primary { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; }
     .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(20,184,166,0.35); }
-
     .btn-outline { background: var(--card); color: var(--text); border: 1px solid var(--border); }
     .btn-outline:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
-
     .btn-success { background: var(--success); color: white; }
     .btn-success:hover:not(:disabled) { background: #047857; }
-
     .btn-danger { background: var(--danger); color: white; }
     .btn-danger:hover:not(:disabled) { background: #b91c1c; }
-
     .btn-warning { background: var(--warning); color: white; }
     .btn-warning:hover:not(:disabled) { background: #d97706; }
-
+    .btn-purple { background: linear-gradient(135deg, #8b5cf6, #6d28d9); color: white; }
+    .btn-purple:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(139,92,246,0.4); }
     .btn-sm { padding: 6px 12px; font-size: 12px; }
 
     /* Month selector */
@@ -284,11 +266,7 @@
       flex-wrap: wrap;
       box-shadow: var(--shadow-sm);
     }
-    .month-selector label {
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--text);
-    }
+    .month-selector label { font-size: 13px; font-weight: 700; color: var(--text); }
     .month-selector input[type="number"],
     .month-selector select {
       padding: 9px 14px;
@@ -312,7 +290,6 @@
       gap: 12px;
       margin-bottom: 20px;
     }
-
     .mini-card {
       background: var(--card);
       border: 1px solid var(--border);
@@ -325,7 +302,6 @@
       box-shadow: var(--shadow-sm);
     }
     .mini-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: var(--shadow); }
-
     .mini-icon {
       width: 42px;
       height: 42px;
@@ -341,7 +317,6 @@
     .mini-icon.red    { background: linear-gradient(135deg, #ef4444, #b91c1c); }
     .mini-icon.gold   { background: linear-gradient(135deg, #F59E0B, #d97706); }
     .mini-icon.purple { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
-
     .mini-body { flex: 1; min-width: 0; }
     .mini-body .label { font-size: 11px; color: var(--text-muted); font-weight: 600; margin-bottom: 2px; }
     .mini-body .value { font-size: 18px; font-weight: 800; color: var(--text); line-height: 1; }
@@ -368,18 +343,14 @@
       box-shadow: var(--shadow-sm);
       overflow: hidden;
     }
-
     .table-scroll { overflow-x: auto; }
-
     table {
       width: 100%;
       border-collapse: collapse;
       font-size: 14px;
       min-width: 1100px;
     }
-
     thead { background: var(--bg); border-bottom: 1px solid var(--border); }
-
     th {
       text-align: right;
       padding: 14px 12px;
@@ -390,11 +361,9 @@
       letter-spacing: 0.5px;
       white-space: nowrap;
     }
-
     tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
     tbody tr:last-child { border-bottom: none; }
     tbody tr:hover { background: var(--bg); }
-
     td { padding: 12px; color: var(--text); vertical-align: middle; }
 
     .emp-cell { display: flex; align-items: center; gap: 10px; }
@@ -422,6 +391,7 @@
       font-family: 'Courier New', monospace;
     }
     .money-cell.basic { color: var(--text); }
+    .money-cell.earned { color: var(--gold); }
     .money-cell.deductions { color: var(--danger); }
     .money-cell.bonuses { color: var(--success); }
     .money-cell.net {
@@ -443,9 +413,10 @@
     .badge-tag.green  { background: rgba(16,185,129,0.12); color: var(--success); }
     .badge-tag.gold   { background: rgba(245,158,11,0.12); color: var(--warning); }
     .badge-tag.gray   { background: rgba(148,163,184,0.15); color: var(--text-muted); }
+    .badge-tag.red    { background: rgba(239,68,68,0.12); color: var(--danger); }
+    .badge-tag.purple { background: rgba(139,92,246,0.12); color: var(--purple); }
 
     .actions-cell { display: flex; gap: 6px; justify-content: flex-end; }
-
     .action-btn {
       width: 32px;
       height: 32px;
@@ -472,10 +443,7 @@
       background: var(--bg);
       border-top: 2px solid var(--accent);
     }
-
-    .summary-box {
-      text-align: center;
-    }
+    .summary-box { text-align: center; }
     .summary-box .label {
       font-size: 11px;
       color: var(--text-muted);
@@ -494,32 +462,8 @@
     .summary-box .value.bonuses { color: var(--success); }
     .summary-box .value.net { color: var(--accent); font-size: 22px; }
 
-    /* Card */
-    .card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow-sm);
-      overflow: hidden;
-      margin-bottom: 16px;
-    }
-
-    .card-header {
-      padding: 14px 18px;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-    .card-header h3 { font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
-    .card-header h3 i { width: 18px; height: 18px; color: var(--accent); }
-
-    /* Pending banner */
-    .pending-banner {
-      background: linear-gradient(135deg, var(--warning), #d97706);
-      color: white;
+    /* Status banner */
+    .status-banner {
       padding: 14px 18px;
       border-radius: var(--radius);
       margin-bottom: 16px;
@@ -530,9 +474,43 @@
       flex-wrap: wrap;
       box-shadow: var(--shadow);
     }
-    .pending-banner .info { display: flex; align-items: center; gap: 12px; font-weight: 700; }
-    .pending-banner .info i { width: 22px; height: 22px; }
-    .pending-banner .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .status-banner.pending {
+      background: linear-gradient(135deg, var(--warning), #d97706);
+      color: white;
+    }
+    .status-banner.paid {
+      background: linear-gradient(135deg, var(--success), #047857);
+      color: white;
+    }
+    .status-banner .info { display: flex; align-items: center; gap: 12px; font-weight: 700; }
+    .status-banner .info i { width: 22px; height: 22px; }
+    .status-banner .meta {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      font-size: 12px;
+      opacity: 0.9;
+    }
+    .status-banner .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .status-banner .btn { color: white; border: 1.5px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.15); }
+    .status-banner .btn:hover:not(:disabled) { background: rgba(255,255,255,0.25); }
+    .status-banner .btn.btn-danger { background: rgba(239,68,68,0.9); border-color: transparent; }
+
+    /* Info alert */
+    .info-alert {
+      padding: 12px 16px;
+      border-radius: var(--radius-sm);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    .info-alert.info { background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.2); color: var(--info); }
+    .info-alert.warning { background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.2); color: #b9770e; }
+    .info-alert.success { background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.2); color: var(--success); }
+    .info-alert i { width: 18px; height: 18px; flex-shrink: 0; margin-top: 2px; }
 
     /* Modal */
     .modal-backdrop {
@@ -549,7 +527,6 @@
       transition: opacity 0.2s;
     }
     .modal-backdrop.show { display: flex; opacity: 1; }
-
     .modal {
       background: var(--card);
       border-radius: var(--radius);
@@ -563,8 +540,8 @@
       transition: transform 0.2s;
       overflow: hidden;
     }
+    .modal.modal-lg { max-width: 800px; }
     .modal-backdrop.show .modal { transform: scale(1); }
-
     .modal-header {
       padding: 16px 20px;
       border-bottom: 1px solid var(--border);
@@ -576,7 +553,6 @@
     }
     .modal-header h3 { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
     .modal-header h3 i { width: 18px; height: 18px; color: var(--accent); }
-
     .modal-close {
       width: 32px;
       height: 32px;
@@ -592,7 +568,6 @@
     }
     .modal-close:hover { background: var(--bg); color: var(--danger); }
     .modal-close i { width: 18px; height: 18px; }
-
     .modal-body {
       padding: 20px;
       overflow-y: auto;
@@ -601,7 +576,6 @@
     }
     .modal-body::-webkit-scrollbar { width: 8px; }
     .modal-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
-
     .modal-footer {
       padding: 14px 20px;
       border-top: 1px solid var(--border);
@@ -610,57 +584,116 @@
       justify-content: flex-end;
       background: var(--bg);
       flex-shrink: 0;
+      flex-wrap: wrap;
     }
 
-    .form-group { margin-bottom: 14px; }
-    .form-group label {
-      display: block;
-      font-size: 12px;
+    /* Detail sections */
+    .detail-hero {
+      background: linear-gradient(135deg, rgba(20,184,166,0.08), rgba(139,92,246,0.05));
+      border: 1.5px solid rgba(20,184,166,0.2);
+      border-radius: var(--radius);
+      padding: 18px;
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .detail-hero-info { display: flex; align-items: center; gap: 14px; }
+    .detail-hero-avatar {
+      width: 56px;
+      height: 56px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 800;
+      font-size: 22px;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .detail-hero-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .detail-hero-name { font-size: 18px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+    .detail-hero-sub { font-size: 12px; color: var(--text-muted); }
+    .detail-hero-net { text-align: center; }
+    .detail-hero-net .lbl {
+      font-size: 11px;
+      color: var(--text-muted);
       font-weight: 700;
-      color: var(--text);
-      margin-bottom: 6px;
+      text-transform: uppercase;
+      margin-bottom: 4px;
     }
-    .form-group input,
-    .form-group textarea,
-    .form-group select {
-      width: 100%;
-      padding: 10px 14px;
-      font-family: inherit;
-      font-size: 14px;
-      background: var(--bg);
-      border: 1.5px solid var(--border);
-      border-radius: var(--radius-sm);
-      color: var(--text);
-      outline: none;
-      transition: all 0.2s;
-    }
-    .form-group input:focus,
-    .form-group textarea:focus,
-    .form-group select:focus {
-      border-color: var(--accent);
-      background: var(--card);
-      box-shadow: 0 0 0 3px rgba(20,184,166,0.1);
+    .detail-hero-net .val {
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--success);
+      font-family: 'Courier New', monospace;
+      direction: ltr;
     }
 
-    .emp-summary-box {
+    .detail-sections {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 14px;
+    }
+    .detail-section {
       padding: 14px;
       background: var(--bg);
+      border-radius: 12px;
       border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      margin-bottom: 14px;
     }
-    .emp-summary-box .row {
+    .detail-section-title {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .detail-section-title i { width: 14px; height: 14px; }
+    .detail-section.attendance .detail-section-title { color: var(--info); }
+    .detail-section.earnings .detail-section-title { color: var(--success); }
+    .detail-section.deductions .detail-section-title { color: var(--danger); }
+    .detail-section.bonuses .detail-section-title { color: var(--purple); }
+
+    .detail-line {
       display: flex;
       justify-content: space-between;
-      padding: 5px 0;
+      align-items: center;
+      padding: 6px 0;
       font-size: 13px;
     }
-    .emp-summary-box .row .label { color: var(--text-muted); font-weight: 600; }
-    .emp-summary-box .row .value { font-weight: 700; font-family: 'Courier New', monospace; }
+    .detail-line .lbl { color: var(--text-muted); font-weight: 600; font-size: 12.5px; }
+    .detail-line .val {
+      font-weight: 800;
+      font-family: 'Courier New', monospace;
+      font-size: 13.5px;
+      direction: ltr;
+    }
+    .detail-line .val.success { color: var(--success); }
+    .detail-line .val.danger { color: var(--danger); }
+    .detail-line .val.purple { color: var(--purple); }
+    .detail-line .val.info { color: var(--info); }
+    .detail-line.total {
+      margin-top: 8px;
+      padding-top: 10px;
+      border-top: 1.5px dashed var(--border);
+    }
 
-    /* Overlay (mobile) */
+    /* Overlay */
     .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; opacity: 0; transition: opacity 0.3s; }
     .overlay.show { display: block; opacity: 1; }
+
+    /* Spinner */
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    .spin { animation: spin 1s linear infinite; }
 
     /* Responsive */
     @media (max-width: 1024px) {
@@ -670,7 +703,6 @@
       .menu-toggle { display: flex; }
       .user-info { display: none; }
     }
-
     @media (max-width: 640px) {
       .content { padding: 16px; }
       .topbar { padding: 0 14px; gap: 10px; }
@@ -680,6 +712,7 @@
       .month-selector { padding: 12px; flex-direction: column; align-items: stretch; }
       .modal-footer { flex-direction: column-reverse; }
       .modal-footer .btn { width: 100%; justify-content: center; }
+      .payroll-summary { grid-template-columns: repeat(2, 1fr); }
     }
   </style>
 </head>
@@ -703,7 +736,6 @@
 
   <!-- Main -->
   <div class="main">
-
     <header class="topbar">
       <button class="menu-toggle" id="menuToggle"><i data-lucide="menu"></i></button>
       <div class="topbar-title">الرواتب</div>
@@ -739,14 +771,14 @@
       <div class="page-head">
         <div>
           <h1>الرواتب</h1>
-          <p>إدارة كشوف الرواتب الشهرية</p>
+          <p>إدارة كشوف الرواتب الشهرية المرتبطة بالحضور</p>
         </div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;">
           <button class="btn btn-outline" id="exportBtn">
             <i data-lucide="download"></i> تصدير
           </button>
           <button class="btn btn-primary" id="generateBtn">
-            <i data-lucide="sparkles"></i> إنشاء كشف الشهر
+            <i data-lucide="sparkles"></i> استيراد من كشف الحضور
           </button>
         </div>
       </div>
@@ -794,29 +826,44 @@
         </div>
       </div>
 
-      <!-- Empty state (no data) -->
+      <!-- Empty state -->
       <div class="empty-state" id="emptyState" style="display:none;">
         <i data-lucide="wallet"></i>
         <h2>لا يوجد كشف رواتب لهذا الشهر</h2>
-        <p>اضغط "إنشاء كشف الشهر" لإنشاء الكشف من بيانات الموظفين</p>
+        <p>اضغط "استيراد من كشف الحضور" لإنشاء الكشف تلقائياً</p>
         <button class="btn btn-primary" id="generateBtn2">
-          <i data-lucide="sparkles"></i> إنشاء كشف الشهر
+          <i data-lucide="sparkles"></i> استيراد من كشف الحضور
         </button>
       </div>
 
       <!-- Content -->
       <div id="payrollContent" style="display:none;">
 
-        <!-- Pending banner -->
-        <div class="pending-banner" id="pendingBanner" style="display:none;">
+        <!-- Status banner -->
+        <div class="status-banner" id="statusBanner" style="display:none;">
           <div class="info">
-            <i data-lucide="alert-circle"></i>
-            <span>هذا الكشف <strong>معلق</strong> — لم يتم اعتماده بعد</span>
+            <i data-lucide="alert-circle" id="statusIcon"></i>
+            <div>
+              <div id="statusTitle">هذا الكشف معلق</div>
+              <div class="meta" id="statusMeta" style="display:none;"></div>
+            </div>
           </div>
-          <div class="actions">
-            <button class="btn btn-success btn-sm" id="approveBtn">
+          <div class="actions" id="statusActions">
+            <button class="btn btn-sm" id="approveBtn">
               <i data-lucide="check-circle-2"></i> اعتماد وصرف
             </button>
+            <button class="btn btn-sm" id="regenerateBtn" title="إعادة استيراد من الحضور">
+              <i data-lucide="refresh-cw"></i> إعادة استيراد
+            </button>
+          </div>
+        </div>
+
+        <!-- Info alert -->
+        <div class="info-alert info" id="linkedAlert" style="display:none;">
+          <i data-lucide="info"></i>
+          <div>
+            <strong>مرتبط بكشف الحضور:</strong> الرواتب محسوبة تلقائياً من سجلات الحضور.
+            عند الاعتماد، سيتم تسجيل مبلغ إجمالي كمصروف في "المصاريف" وسيُخصم من صافي الربح.
           </div>
         </div>
 
@@ -827,7 +874,8 @@
               <thead>
                 <tr>
                   <th>الموظف</th>
-                  <th>الراتب الأساسي</th>
+                  <th>الأساسي</th>
+                  <th>المستحق</th>
                   <th>الخصومات</th>
                   <th>الحوافز</th>
                   <th>الصافي</th>
@@ -864,48 +912,20 @@
     </main>
   </div>
 
-  <!-- Modal: Edit Row -->
-  <div class="modal-backdrop" id="editModal">
-    <div class="modal">
+  <!-- Modal: Detail -->
+  <div class="modal-backdrop" id="detailModal">
+    <div class="modal modal-lg">
       <div class="modal-header">
-        <h3><i data-lucide="edit-3"></i> <span id="editModalTitle">تعديل الراتب</span></h3>
+        <h3><i data-lucide="file-text"></i> تفاصيل الراتب</h3>
         <button class="modal-close" data-close><i data-lucide="x"></i></button>
       </div>
-      <form id="editForm">
-        <div class="modal-body">
-
-          <div class="emp-summary-box" id="empSummaryBox">
-            <!-- JS -->
-          </div>
-
-          <div class="form-group">
-            <label>الراتب الأساسي</label>
-            <input type="number" name="basic_salary" min="0" step="0.01" required>
-          </div>
-
-          <div class="form-group">
-            <label>الخصومات</label>
-            <input type="number" name="deductions" min="0" step="0.01" value="0">
-          </div>
-
-          <div class="form-group">
-            <label>الحوافز</label>
-            <input type="number" name="bonuses" min="0" step="0.01" value="0">
-          </div>
-
-          <div class="form-group">
-            <label>ملاحظات</label>
-            <textarea name="notes" maxlength="255" placeholder="ملاحظات إضافية..."></textarea>
-          </div>
-
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-outline" data-close>إلغاء</button>
-          <button type="submit" class="btn btn-primary" id="saveBtn">
-            <i data-lucide="save"></i> <span id="saveBtnText">حفظ</span>
-          </button>
-        </div>
-      </form>
+      <div class="modal-body" id="detailModalBody"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" data-close>إغلاق</button>
+        <button type="button" class="btn btn-primary" id="printPayslipBtn">
+          <i data-lucide="printer"></i> طباعة قسيمة
+        </button>
+      </div>
     </div>
   </div>
 
@@ -922,6 +942,9 @@
       if (!session) return;
 
       const canManage = Refad.Session.has('payroll.manage');
+      const isOwner = Refad.Session.has('company.owner') || 
+                     Refad.Session.has('admin.full') ||
+                     session.is_owner === true;
 
       // ============================================================
       // 2) State
@@ -930,9 +953,9 @@
         month: new Date().getMonth() + 1,
         year: new Date().getFullYear(),
         rows: [],
-        summary: { basic: 0, deductions: 0, bonuses: 0, net: 0 },
-        editingId: null,
-        currentRow: null
+        records: [],
+        auditLog: [],
+        currentDetail: null
       };
 
       const MONTH_NAMES = [
@@ -1013,7 +1036,7 @@
         if (session.avatar_url) av.innerHTML = `<img src="${Refad.escapeHtml(session.avatar_url)}" alt="">`;
         else av.textContent = initial;
         document.getElementById('userName').textContent = session.full_name;
-        document.getElementById('userRole').textContent = Refad.Session.has('company.owner') ? 'صاحب الشركة' : 'موظف';
+        document.getElementById('userRole').textContent = isOwner ? 'صاحب الشركة' : (canManage ? 'مشرف' : 'موظف');
       }
 
       function setupTheme() {
@@ -1082,19 +1105,72 @@
       }
 
       // ============================================================
-      // 6) Load payroll
+      // 6) Load payroll - Safe version (no JOIN)
       // ============================================================
       async function loadPayroll(silent) {
         try {
           const rows = await Refad.db.select('payroll', {
             columns: `id, user_id, month, year, basic_salary, deductions, bonuses, overtime, net_salary,
-                      status, paid_at, notes,
-                      users(id, full_name, username, avatar_url, salary)`,
+                      status, paid_at, notes, approved_at, approved_by, expense_id, 
+                      payroll_record_id, period_from, period_to`,
             eq: { company_id: session.company_id, month: state.month, year: state.year },
-            order: { column: 'user_id', ascending: true }
+            order: { column: 'id', ascending: true }
+          }).catch(err => {
+            console.warn('[Payroll] Query failed:', err.message);
+            return [];
           });
 
-          state.rows = rows.filter(r => r.users);
+          if (!rows || rows.length === 0) {
+            state.rows = [];
+            state.records = [];
+            state.auditLog = [];
+            showEmpty();
+            renderStats();
+            return;
+          }
+
+          // جلب الموظفين يدوياً (بدون JOIN)
+          const userIds = [...new Set(rows.map(r => r.user_id).filter(Boolean))];
+          let empMap = {};
+          
+          if (userIds.length > 0) {
+            const employees = await Refad.db.select('users', {
+              columns: 'id, full_name, username, avatar_url, salary',
+              in: { id: userIds }
+            }).catch(err => {
+              console.warn('[Payroll] Users query failed:', err.message);
+              return [];
+            });
+            
+            employees.forEach(e => { empMap[e.id] = e; });
+          }
+
+          state.rows = rows.map(r => ({
+            ...r,
+            users: empMap[r.user_id] || null
+          })).filter(r => r.users);
+
+          // جلب payroll_records المرتبطة
+          const recordIds = state.rows.map(r => r.payroll_record_id).filter(Boolean);
+          if (recordIds.length > 0) {
+            state.records = await Refad.db.select('payroll_records', {
+              columns: '*',
+              in: { id: recordIds }
+            }).catch(err => {
+              console.warn('[Payroll] Records query failed:', err.message);
+              return [];
+            });
+          } else {
+            state.records = [];
+          }
+
+          // جلب سجل العمليات
+          state.auditLog = await Refad.db.select('payroll_audit', {
+            columns: '*',
+            eq: { company_id: session.company_id, month: state.month, year: state.year },
+            order: { column: 'created_at', ascending: false },
+            limit: 20
+          }).catch(() => []);
 
           if (state.rows.length === 0) {
             showEmpty();
@@ -1103,7 +1179,7 @@
             showContent();
             renderTable();
             renderStats();
-            checkPending();
+            renderStatusBanner();
           }
         } catch (e) {
           console.error('[Payroll] load failed:', e);
@@ -1122,9 +1198,58 @@
         document.getElementById('payrollContent').style.display = 'block';
       }
 
-      function checkPending() {
+      // ============================================================
+      // 7) Status banner
+      // ============================================================
+      function renderStatusBanner() {
+        const banner = document.getElementById('statusBanner');
+        const icon = document.getElementById('statusIcon');
+        const title = document.getElementById('statusTitle');
+        const meta = document.getElementById('statusMeta');
+        const actions = document.getElementById('statusActions');
+        const linkedAlert = document.getElementById('linkedAlert');
+
         const hasPending = state.rows.some(r => r.status === 'pending');
-        document.getElementById('pendingBanner').style.display = hasPending ? 'flex' : 'none';
+        const hasPaid = state.rows.some(r => r.status === 'paid');
+        const hasRecords = state.rows.some(r => r.payroll_record_id);
+
+        if (!hasPending && !hasPaid) {
+          banner.style.display = 'none';
+          linkedAlert.style.display = 'none';
+          return;
+        }
+
+        banner.style.display = 'flex';
+        linkedAlert.style.display = hasRecords ? 'flex' : 'none';
+
+        if (hasPending && !hasPaid) {
+          banner.className = 'status-banner pending';
+          icon.setAttribute('data-lucide', 'alert-circle');
+          title.textContent = 'هذا الكشف معلق — لم يتم اعتماده بعد';
+          meta.style.display = 'none';
+          actions.style.display = 'flex';
+        } else if (hasPaid && !hasPending) {
+          banner.className = 'status-banner paid';
+          icon.setAttribute('data-lucide', 'check-circle-2');
+          title.textContent = 'تم اعتماد وصرف هذا الكشف ✓';
+          
+          const paidDate = state.rows.find(r => r.paid_at)?.paid_at;
+          const totalNet = state.rows.reduce((s, r) => s + (Number(r.net_salary) || 0), 0);
+          
+          meta.style.display = 'block';
+          meta.innerHTML = `
+            <div>📅 تاريخ الاعتماد: ${paidDate ? Refad.format.datetime(paidDate) : '—'}</div>
+            <div>💰 الإجمالي: ${Refad.format.money(totalNet)} — مسجل كمصروف</div>
+          `;
+          actions.style.display = 'none';
+        } else {
+          banner.className = 'status-banner pending';
+          icon.setAttribute('data-lucide', 'alert-triangle');
+          title.textContent = 'بعض الرواتب مدفوعة، بعضها معلق';
+          meta.style.display = 'none';
+          actions.style.display = 'flex';
+        }
+
         if (window.lucide) lucide.createIcons();
       }
 
@@ -1141,14 +1266,14 @@
       }
 
       // ============================================================
-      // 7) Render table
+      // 8) Render table
       // ============================================================
       function renderTable() {
         const tbody = document.getElementById('tableBody');
         if (!state.rows.length) {
           tbody.innerHTML = `
             <tr>
-              <td colspan="7" style="padding:40px;text-align:center;color:var(--text-muted);">
+              <td colspan="8" style="padding:40px;text-align:center;color:var(--text-muted);">
                 لا توجد بيانات
               </td>
             </tr>
@@ -1159,9 +1284,16 @@
         tbody.innerHTML = state.rows.map(r => {
           const emp = r.users;
           const initial = (emp.full_name || '؟').trim().charAt(0);
+          const record = state.records.find(rec => rec.id === r.payroll_record_id);
+          
           const statusTag = r.status === 'paid'
-            ? '<span class="badge-tag green">مدفوع</span>'
-            : '<span class="badge-tag gold">معلق</span>';
+            ? '<span class="badge-tag green"><i data-lucide="check" style="width:10px;height:10px;"></i> مدفوع</span>'
+            : '<span class="badge-tag gold"><i data-lucide="clock" style="width:10px;height:10px;"></i> معلق</span>';
+
+          const earnedAmount = record ? Number(record.net_salary) : Number(r.basic_salary);
+          const linkBadge = r.payroll_record_id 
+            ? '<span class="badge-tag purple" style="font-size:9px;"><i data-lucide="link" style="width:9px;height:9px;"></i> مرتبط</span>' 
+            : '';
 
           return `
             <tr>
@@ -1171,23 +1303,22 @@
                     ${emp.avatar_url ? `<img src="${Refad.escapeHtml(emp.avatar_url)}" alt="">` : Refad.escapeHtml(initial)}
                   </div>
                   <div>
-                    <div class="emp-name">${Refad.escapeHtml(emp.full_name)}</div>
+                    <div class="emp-name">${Refad.escapeHtml(emp.full_name)} ${linkBadge}</div>
                     <div class="emp-sub">${Refad.escapeHtml(emp.username)}</div>
                   </div>
                 </div>
               </td>
               <td class="money-cell basic">${Refad.format.number(r.basic_salary || 0, 2)}</td>
+              <td class="money-cell earned">${Refad.format.number(earnedAmount || 0, 2)}</td>
               <td class="money-cell deductions">- ${Refad.format.number(r.deductions || 0, 2)}</td>
               <td class="money-cell bonuses">+ ${Refad.format.number((r.bonuses || 0) + (r.overtime || 0), 2)}</td>
               <td class="money-cell net">${Refad.format.number(r.net_salary || 0, 2)}</td>
               <td>${statusTag}</td>
               <td>
                 <div class="actions-cell">
-                  ${canManage && r.status !== 'paid' ? `
-                    <button class="action-btn" data-action="edit" data-id="${r.id}" title="تعديل">
-                      <i data-lucide="pencil"></i>
-                    </button>
-                  ` : ''}
+                  <button class="action-btn" data-action="detail" data-id="${r.id}" title="التفاصيل">
+                    <i data-lucide="eye"></i>
+                  </button>
                   ${canManage && r.status !== 'paid' ? `
                     <button class="action-btn danger" data-action="delete" data-id="${r.id}" title="حذف">
                       <i data-lucide="trash-2"></i>
@@ -1216,178 +1347,574 @@
       }
 
       // ============================================================
-      // 8) Generate payroll
+      // 9) Generate from Attendance (SAFE - no .delete)
       // ============================================================
-      async function generatePayroll() {
+      async function generateFromAttendance() {
+        const monthStart = `${state.year}-${String(state.month).padStart(2, '0')}-01`;
+        const monthEnd = dayjs(monthStart).endOf('month').format('YYYY-MM-DD');
+
         const ok = await Refad.alert.confirm(
-          'إنشاء كشف الشهر',
-          `سيتم إنشاء كشف رواتب لشهر ${MONTH_NAMES[state.month - 1]} ${state.year} لكل الموظفين النشطين. متابعة؟`,
-          'إنشاء'
+          'استيراد من كشف الحضور',
+          `سيتم جلب كشوف الرواتب المحسوبة من الحضور للفترة ${monthStart} → ${monthEnd}. متابعة؟`,
+          'استيراد'
         );
         if (!ok) return;
 
+        const btn1 = document.getElementById('generateBtn');
+        const btn2 = document.getElementById('generateBtn2');
+        const old1 = btn1?.innerHTML;
+        const old2 = btn2?.innerHTML;
+        if (btn1) { btn1.disabled = true; btn1.innerHTML = '<i data-lucide="loader-2" class="spin"></i> جارٍ الاستيراد...'; }
+        if (btn2) { btn2.disabled = true; btn2.innerHTML = '<i data-lucide="loader-2" class="spin"></i> جارٍ الاستيراد...'; }
+        if (window.lucide) lucide.createIcons();
+
         try {
-          // 1. تحقق أنه لم يتم الإنشاء مسبقاً
-          const existingCount = await Refad.db.count('payroll', {
+          // 1) اجلب الصفوف الموجودة مسبقاً
+          const existingRows = await Refad.db.select('payroll', {
+            columns: 'id, user_id, status',
             eq: { company_id: session.company_id, month: state.month, year: state.year }
-          });
-
-          if (existingCount > 0) {
-            Refad.toast.warning('يوجد كشف لهذا الشهر بالفعل');
-            return;
-          }
-
-          // 2. جلب الموظفين النشطين
-          const employees = await Refad.db.select('users', {
-            columns: 'id, full_name, salary',
-            eq: { company_id: session.company_id, is_active: true }
-          });
-
-          if (!employees.length) {
-            Refad.toast.warning('لا يوجد موظفين نشطين');
-            return;
-          }
-
-          // 3. جلب الحضور للشهر (لحساب الخصومات للغياب)
-          const monthStart = `${state.year}-${String(state.month).padStart(2, '0')}-01`;
-          const monthEnd = dayjs(monthStart).endOf('month').format('YYYY-MM-DD');
-
-          const attendance = await Refad.db.select('attendance', {
-            columns: 'user_id, status, att_date',
-            eq: { company_id: session.company_id },
-            gte: { att_date: monthStart },
-            lte: { att_date: monthEnd }
           }).catch(() => []);
 
-          // Count absences per employee
-          const absenceMap = {};
-          attendance.forEach(a => {
-            if (a.status === 'absent') {
-              absenceMap[a.user_id] = (absenceMap[a.user_id] || 0) + 1;
+          let paidUserIds = new Set();
+
+          if (existingRows.length > 0) {
+            const paidRows = existingRows.filter(r => r.status === 'paid');
+            const pendingRows = existingRows.filter(r => r.status === 'pending');
+
+            // احفظ المدفوعين
+            paidRows.forEach(r => paidUserIds.add(r.user_id));
+
+            if (paidRows.length === existingRows.length) {
+              Refad.toast.warning('هذا الكشف معتمد بالكامل ولا يمكن إعادة إنشائه');
+              return;
             }
+
+            const replace = await Refad.alert.confirm(
+              'يوجد كشف جزئي',
+              `يوجد ${pendingRows.length} صف معلق و ${paidRows.length} صف مدفوع.
+              
+سيتم حذف الصفوف المعلقة وإعادة استيرادها. الصفوف المدفوعة ستبقى كما هي. متابعة؟`,
+              'تحديث'
+            );
+            if (!replace) return;
+
+            // ✅ احذف المعلقة واحدة واحدة (بدون .delete)
+            for (const r of pendingRows) {
+              try {
+                await Refad.db.remove('payroll', r.id);
+              } catch (err) {
+                console.warn(`Failed to delete payroll #${r.id}:`, err.message);
+              }
+            }
+          }
+
+          // 2) اجلب سجلات payroll_records للفترة
+          const records = await Refad.db.select('payroll_records', {
+            columns: '*',
+            eq: { company_id: session.company_id },
+            gte: { period_from: monthStart },
+            lte: { period_to: monthEnd }
+          }).catch(err => {
+            console.warn('Failed to load records:', err.message);
+            return [];
           });
 
-          // 4. احسب الراتب لكل موظف
-          const rowsToInsert = employees.map(emp => {
-            const basic = Number(emp.salary) || 0;
-            const absences = absenceMap[emp.id] || 0;
-            // خصم الغياب = (الراتب / 30) × عدد الغياب
-            const absenceDeduction = absences > 0 ? (basic / 30) * absences : 0;
-            const deductions = Math.round(absenceDeduction * 100) / 100;
-            const bonuses = 0;
-            const overtime = 0;
-            const net = Math.round((basic + bonuses + overtime - deductions) * 100) / 100;
+          if (!records.length) {
+            Refad.toast.warning('لا يوجد كشف حضور محسوب لهذه الفترة. اذهب لصفحة الحضور واحسب أولاً.');
+            return;
+          }
 
-            return {
+          // 3) جلب بيانات الموظفين
+          const userIds = records.map(r => r.user_id).filter(Boolean);
+          const employees = await Refad.db.select('users', {
+            columns: 'id, full_name, username, salary, avatar_url',
+            in: { id: userIds }
+          }).catch(() => []);
+          
+          const empMap = {};
+          employees.forEach(e => { empMap[e.id] = e; });
+
+          // 4) أنشئ صفوف payroll (استبعد المدفوعة)
+          const rowsToInsert = records
+            .filter(r => empMap[r.user_id])
+            .filter(r => !paidUserIds.has(r.user_id))  // ✅ استبعد المدفوعين
+            .map(r => ({
               company_id: session.company_id,
-              user_id: emp.id,
+              user_id: r.user_id,
               month: state.month,
               year: state.year,
-              basic_salary: basic,
-              deductions,
-              bonuses,
-              overtime,
-              net_salary: net,
+              basic_salary: Number(r.base_salary) || 0,
+              deductions: Number(r.total_deductions) || 0,
+              bonuses: (Number(r.perfect_attendance_bonus) || 0) + (Number(r.no_late_bonus) || 0) + (Number(r.manual_bonus) || 0),
+              overtime: Number(r.overtime_pay) || 0,
+              net_salary: Number(r.net_salary) || 0,
               status: 'pending',
-              notes: absences > 0 ? `خصم ${absences} يوم غياب` : null
-            };
-          });
+              notes: `مرتبط بكشف الحضور (${r.present_days || 0} حاضر / ${r.absent_days || 0} غائب)`,
+              payroll_record_id: r.id,
+              period_from: r.period_from,
+              period_to: r.period_to
+            }));
 
-          await Refad.db.insertMany('payroll', rowsToInsert);
+          if (!rowsToInsert.length) {
+            Refad.toast.warning('لا يوجد موظفين صالحين للاستيراد');
+            return;
+          }
+
+          // 5) أدخل واحد واحد (أكثر أماناً)
+          let inserted = 0;
+          for (const row of rowsToInsert) {
+            try {
+              await Refad.db.insert('payroll', row);
+              inserted++;
+            } catch (err) {
+              console.warn('Failed to insert payroll row:', err.message);
+            }
+          }
+
+          // 6) سجل العملية
+          await Refad.db.insert('payroll_audit', {
+            company_id: session.company_id,
+            month: state.month,
+            year: state.year,
+            action: 'generated',
+            total_amount: rowsToInsert.reduce((s, r) => s + r.net_salary, 0),
+            employees_count: inserted,
+            user_id: session.user_id,
+            details: `استيراد من كشف الحضور: ${inserted} موظف`
+          }).catch(() => {});
 
           await Refad.logActivity('generate_payroll', 'payroll',
-            `إنشاء كشف رواتب ${MONTH_NAMES[state.month - 1]} ${state.year}`, null);
+            `استيراد رواتب ${MONTH_NAMES[state.month - 1]} ${state.year} - ${inserted} موظف`, null);
 
-          Refad.toast.success('تم إنشاء كشف الرواتب');
+          Refad.toast.success(`تم الاستيراد — ${inserted} موظف`);
           await loadPayroll(true);
         } catch (e) {
           console.error('Generate failed:', e);
-          Refad.toast.error('فشل الإنشاء: ' + e.message);
+          Refad.toast.error('فشل الاستيراد: ' + e.message);
+        } finally {
+          if (btn1) { btn1.disabled = false; btn1.innerHTML = old1; }
+          if (btn2) { btn2.disabled = false; btn2.innerHTML = old2; }
+          if (window.lucide) lucide.createIcons();
         }
       }
 
       // ============================================================
-      // 9) Edit row
+      // 10) Approve & Pay
       // ============================================================
-      function openEditModal(row) {
-        state.editingId = row.id;
-        state.currentRow = row;
+      async function approveAndPay() {
+        const pendingRows = state.rows.filter(r => r.status === 'pending');
+        if (!pendingRows.length) {
+          Refad.toast.warning('لا يوجد رواتب معلقة');
+          return;
+        }
+
+        const totalNet = pendingRows.reduce((s, r) => s + (Number(r.net_salary) || 0), 0);
+
+        const ok = await Refad.alert.confirm(
+          'اعتماد وصرف الرواتب',
+          `سيتم اعتماد ${pendingRows.length} راتب بإجمالي ${Refad.format.money(totalNet)}.
+          
+سيتم تسجيل المبلغ كمصروف في قسم "المصاريف" وسيُخصم تلقائياً من صافي الربح.
+
+هل أنت متأكد؟`,
+          'اعتماد وصرف'
+        );
+        if (!ok) return;
+
+        const btn = document.getElementById('approveBtn');
+        const oldHTML = btn?.innerHTML;
+        if (btn) {
+          btn.disabled = true;
+          btn.innerHTML = '<i data-lucide="loader-2" class="spin"></i> جارٍ الاعتماد...';
+          if (window.lucide) lucide.createIcons();
+        }
+
+        try {
+          const now = new Date().toISOString();
+
+          // 1) سجل مصروف واحد إجمالي
+          const expense = await Refad.db.insert('expenses', {
+            company_id: session.company_id,
+            category: 'salary',
+            amount: totalNet,
+            description: `رواتب ${MONTH_NAMES[state.month - 1]} ${state.year} — ${pendingRows.length} موظف`,
+            expense_date: Refad.date.today(),
+            user_id: session.user_id
+          });
+
+          // 2) حدّث كل صف payroll
+          for (const r of pendingRows) {
+            await Refad.db.update('payroll', r.id, {
+              status: 'paid',
+              paid_at: now,
+              approved_at: now,
+              approved_by: session.user_id,
+              expense_id: expense.id
+            });
+
+            if (r.payroll_record_id) {
+              await Refad.db.update('payroll_records', r.payroll_record_id, {
+                status: 'paid'
+              }).catch(() => {});
+            }
+          }
+
+          // 3) سجل العملية
+          await Refad.db.insert('payroll_audit', {
+            company_id: session.company_id,
+            month: state.month,
+            year: state.year,
+            action: 'approved',
+            total_amount: totalNet,
+            employees_count: pendingRows.length,
+            user_id: session.user_id,
+            details: `اعتماد وصرف رواتب — المصروف #${expense.id}`
+          }).catch(() => {});
+
+          await Refad.logActivity('approve_payroll', 'payroll',
+            `اعتماد رواتب ${MONTH_NAMES[state.month - 1]} ${state.year} - ${Refad.format.money(totalNet)}`, expense.id);
+
+          Refad.toast.success(`تم الاعتماد — ${Refad.format.money(totalNet)}`);
+
+          setTimeout(async () => {
+            const view = await Refad.alert.confirm(
+              'تم تسجيل المصروف ✓',
+              'تم تسجيل مبلغ الرواتب في قسم المصاريف. هل تريد فتح صفحة المصاريف؟',
+              'فتح'
+            );
+            if (view) window.location.href = 'expenses.html';
+          }, 1500);
+
+          await loadPayroll(true);
+        } catch (e) {
+          console.error('Approve failed:', e);
+          Refad.toast.error('فشل الاعتماد: ' + e.message);
+        } finally {
+          if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = oldHTML;
+            if (window.lucide) lucide.createIcons();
+          }
+        }
+      }
+
+      // ============================================================
+      // 11) Detail Modal
+      // ============================================================
+      function openDetailModal(rowId) {
+        const row = state.rows.find(r => r.id === rowId);
+        if (!row) return;
+
+        state.currentDetail = row;
 
         const emp = row.users;
         const initial = (emp.full_name || '؟').trim().charAt(0);
+        const record = state.records.find(rec => rec.id === row.payroll_record_id);
 
-        document.getElementById('editModalTitle').textContent = `تعديل راتب ${emp.full_name}`;
-        document.getElementById('empSummaryBox').innerHTML = `
-          <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
-            <div class="emp-avatar" style="width:42px;height:42px;font-size:16px;">
-              ${emp.avatar_url ? `<img src="${Refad.escapeHtml(emp.avatar_url)}" alt="">` : Refad.escapeHtml(initial)}
+        let html = `
+          <div class="detail-hero">
+            <div class="detail-hero-info">
+              <div class="detail-hero-avatar">
+                ${emp.avatar_url ? `<img src="${Refad.escapeHtml(emp.avatar_url)}" alt="">` : Refad.escapeHtml(initial)}
+              </div>
+              <div>
+                <div class="detail-hero-name">${Refad.escapeHtml(emp.full_name)}</div>
+                <div class="detail-hero-sub">
+                  ${Refad.escapeHtml(emp.username)} • 
+                  ${MONTH_NAMES[state.month - 1]} ${state.year}
+                </div>
+              </div>
             </div>
-            <div>
-              <div style="font-weight:700;">${Refad.escapeHtml(emp.full_name)}</div>
-              <div style="font-size:11px;color:var(--text-muted);">${Refad.escapeHtml(emp.username)}</div>
+            <div class="detail-hero-net">
+              <div class="lbl">الصافي</div>
+              <div class="val">${Refad.format.money(row.net_salary || 0)}</div>
             </div>
           </div>
-          <div class="row"><span class="label">الشهر:</span><span class="value">${MONTH_NAMES[state.month - 1]} ${state.year}</span></div>
         `;
 
-        const form = document.getElementById('editForm');
-        form.basic_salary.value = row.basic_salary || 0;
-        form.deductions.value = row.deductions || 0;
-        form.bonuses.value = row.bonuses || 0;
-        form.notes.value = row.notes || '';
+        if (record) {
+          html += `
+            <div class="detail-sections">
 
-        document.getElementById('editModal').classList.add('show');
+              <div class="detail-section attendance">
+                <div class="detail-section-title">
+                  <i data-lucide="calendar-check"></i>
+                  الحضور والغياب
+                </div>
+                <div class="detail-line">
+                  <span class="lbl">أيام الحضور</span>
+                  <span class="val success">${record.present_days || 0}</span>
+                </div>
+                <div class="detail-line">
+                  <span class="lbl">أيام التأخير</span>
+                  <span class="val" style="color:var(--gold);">${record.late_days || 0}</span>
+                </div>
+                <div class="detail-line">
+                  <span class="lbl">أيام الغياب</span>
+                  <span class="val danger">${record.absent_days || 0}</span>
+                </div>
+                ${record.unexcused_absent_days > 0 ? `
+                  <div class="detail-line">
+                    <span class="lbl">↳ بدون إذن</span>
+                    <span class="val danger">${record.unexcused_absent_days}</span>
+                  </div>
+                ` : ''}
+                <div class="detail-line">
+                  <span class="lbl">أيام الإجازة</span>
+                  <span class="val purple">${record.leave_days || 0}</span>
+                </div>
+                <div class="detail-line">
+                  <span class="lbl">إجمالي الساعات</span>
+                  <span class="val info">${Refad.format.number(record.total_work_hours || 0, 1)}</span>
+                </div>
+                ${record.overtime_hours > 0 ? `
+                  <div class="detail-line">
+                    <span class="lbl">ساعات إضافي</span>
+                    <span class="val purple">+${Refad.format.number(record.overtime_hours, 1)}</span>
+                  </div>
+                ` : ''}
+                ${record.short_hours > 0 ? `
+                  <div class="detail-line">
+                    <span class="lbl">ساعات نقص</span>
+                    <span class="val danger">-${Refad.format.number(record.short_hours, 1)}</span>
+                  </div>
+                ` : ''}
+              </div>
+
+              <div class="detail-section earnings">
+                <div class="detail-section-title">
+                  <i data-lucide="arrow-up-circle"></i>
+                  الإضافات
+                </div>
+                <div class="detail-line">
+                  <span class="lbl">الراتب الأساسي</span>
+                  <span class="val">${Refad.format.money(record.base_salary || 0)}</span>
+                </div>
+                <div class="detail-line">
+                  <span class="lbl">الأجر اليومي</span>
+                  <span class="val info">${Refad.format.money(record.daily_wage || 0)}</span>
+                </div>
+                ${record.overtime_pay > 0 ? `
+                  <div class="detail-line">
+                    <span class="lbl">أجر إضافي</span>
+                    <span class="val success">+${Refad.format.money(record.overtime_pay)}</span>
+                  </div>
+                ` : ''}
+                ${record.perfect_attendance_bonus > 0 ? `
+                  <div class="detail-line">
+                    <span class="lbl">🎁 مكافأة حضور كامل</span>
+                    <span class="val success">+${Refad.format.money(record.perfect_attendance_bonus)}</span>
+                  </div>
+                ` : ''}
+                ${record.no_late_bonus > 0 ? `
+                  <div class="detail-line">
+                    <span class="lbl">⭐ مكافأة عدم تأخير</span>
+                    <span class="val success">+${Refad.format.money(record.no_late_bonus)}</span>
+                  </div>
+                ` : ''}
+                ${record.manual_bonus > 0 ? `
+                  <div class="detail-line">
+                    <span class="lbl">مكافأة يدوية</span>
+                    <span class="val purple">+${Refad.format.money(record.manual_bonus)}</span>
+                  </div>
+                ` : ''}
+                <div class="detail-line total">
+                  <span class="lbl">إجمالي الإضافات</span>
+                  <span class="val success">+${Refad.format.money((record.overtime_pay || 0) + (record.perfect_attendance_bonus || 0) + (record.no_late_bonus || 0) + (record.manual_bonus || 0))}</span>
+                </div>
+              </div>
+
+              <div class="detail-section deductions">
+                <div class="detail-section-title">
+                  <i data-lucide="arrow-down-circle"></i>
+                  الجزاءات
+                </div>
+                ${record.late_deduction > 0 ? `
+                  <div class="detail-line">
+                    <span class="lbl">جزاء تأخير</span>
+                    <span class="val danger">-${Refad.format.money(record.late_deduction)}</span>
+                  </div>
+                ` : ''}
+                ${record.absent_deduction > 0 ? `
+                  <div class="detail-line">
+                    <span class="lbl">جزاء غياب</span>
+                    <span class="val danger">-${Refad.format.money(record.absent_deduction)}</span>
+                  </div>
+                ` : ''}
+                ${record.unexcused_absent_deduction > 0 ? `
+                  <div class="detail-line">
+                    <span class="lbl">↳ جزاء بدون إذن</span>
+                    <span class="val danger">-${Refad.format.money(record.unexcused_absent_deduction)}</span>
+                  </div>
+                ` : ''}
+                ${record.short_hours_deduction > 0 ? `
+                  <div class="detail-line">
+                    <span class="lbl">جزاء نقص ساعات</span>
+                    <span class="val danger">-${Refad.format.money(record.short_hours_deduction)}</span>
+                  </div>
+                ` : ''}
+                ${record.manual_deduction > 0 ? `
+                  <div class="detail-line">
+                    <span class="lbl">خصم يدوي</span>
+                    <span class="val danger">-${Refad.format.money(record.manual_deduction)}</span>
+                  </div>
+                ` : ''}
+                ${!record.total_deductions ? `
+                  <div class="detail-line" style="justify-content:center;color:var(--success);font-size:12px;">
+                    ✓ لا توجد جزاءات
+                  </div>
+                ` : ''}
+                <div class="detail-line total">
+                  <span class="lbl">إجمالي الجزاءات</span>
+                  <span class="val danger">-${Refad.format.money(record.total_deductions || 0)}</span>
+                </div>
+              </div>
+
+            </div>
+
+            ${row.status === 'paid' ? `
+              <div class="info-alert success" style="margin-top:16px;">
+                <i data-lucide="check-circle-2"></i>
+                <div>
+                  <strong>تم الصرف:</strong>
+                  ${row.paid_at ? Refad.format.datetime(row.paid_at) : ''}
+                  ${row.expense_id ? `<br>رقم المصروف: #${row.expense_id}` : ''}
+                </div>
+              </div>
+            ` : ''}
+          `;
+        } else {
+          html += `
+            <div class="detail-sections">
+              <div class="detail-section earnings">
+                <div class="detail-section-title">
+                  <i data-lucide="wallet"></i>
+                  تفاصيل الراتب
+                </div>
+                <div class="detail-line">
+                  <span class="lbl">الراتب الأساسي</span>
+                  <span class="val">${Refad.format.money(row.basic_salary || 0)}</span>
+                </div>
+                <div class="detail-line">
+                  <span class="lbl">الخصومات</span>
+                  <span class="val danger">-${Refad.format.money(row.deductions || 0)}</span>
+                </div>
+                <div class="detail-line">
+                  <span class="lbl">الحوافز</span>
+                  <span class="val success">+${Refad.format.money(row.bonuses || 0)}</span>
+                </div>
+                <div class="detail-line">
+                  <span class="lbl">الإضافي</span>
+                  <span class="val purple">+${Refad.format.money(row.overtime || 0)}</span>
+                </div>
+                <div class="detail-line total">
+                  <span class="lbl">الصافي</span>
+                  <span class="val success">${Refad.format.money(row.net_salary || 0)}</span>
+                </div>
+              </div>
+            </div>
+            ${row.notes ? `<div class="info-alert info" style="margin-top:14px;"><i data-lucide="info"></i><div>${Refad.escapeHtml(row.notes)}</div></div>` : ''}
+          `;
+        }
+
+        document.getElementById('detailModalBody').innerHTML = html;
+        document.getElementById('detailModal').classList.add('show');
         if (window.lucide) lucide.createIcons();
       }
 
-      function closeEditModal() {
-        document.getElementById('editModal').classList.remove('show');
-        state.editingId = null;
-        state.currentRow = null;
+      function closeDetailModal() {
+        document.getElementById('detailModal').classList.remove('show');
+        state.currentDetail = null;
       }
 
-      async function saveEdit(e) {
-        e.preventDefault();
-        const form = e.target;
-        const btn = document.getElementById('saveBtn');
-        const originalText = document.getElementById('saveBtnText').textContent;
+      function printPayslip() {
+        const row = state.currentDetail;
+        if (!row) return;
 
-        const basic = Refad.toNum(form.basic_salary.value);
-        const deductions = Refad.toNum(form.deductions.value);
-        const bonuses = Refad.toNum(form.bonuses.value);
-        const notes = form.notes.value.trim() || null;
+        const emp = row.users;
+        const record = state.records.find(rec => rec.id === row.payroll_record_id);
+        const company = Refad.company || { name: 'الشركة' };
 
-        // overtime from current row
-        const overtime = state.currentRow?.overtime || 0;
-        const net = Math.round((basic + bonuses + overtime - deductions) * 100) / 100;
+        const w = window.open('', '_blank');
+        w.document.write(`
+          <!DOCTYPE html>
+          <html dir="rtl">
+          <head>
+            <meta charset="UTF-8">
+            <title>قسيمة راتب - ${Refad.escapeHtml(emp.full_name)}</title>
+            <style>
+              body { font-family: Cairo, Arial; padding: 30px; color: #0f172a; }
+              h1 { color: #0B2C4D; margin-bottom: 4px; font-size: 22px; }
+              .sub { color: #64748b; font-size: 13px; margin-bottom: 20px; }
+              .hero { background: #F1F5F9; padding: 16px; border-radius: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+              .hero-info { font-size: 14px; }
+              .hero-info strong { color: #0B2C4D; }
+              .net { text-align: center; }
+              .net .lbl { font-size: 11px; color: #64748b; font-weight: 700; }
+              .net .val { font-size: 26px; font-weight: 800; color: #14B8A6; font-family: 'Courier New'; }
+              table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 16px; }
+              th, td { border: 1px solid #cbd5e1; padding: 8px; text-align: right; }
+              th { background: #F1F5F9; font-weight: 700; }
+              .section-title { background: #14B8A6; color: white; padding: 8px; font-weight: 700; margin-top: 16px; }
+              .total-row { background: #F1F5F9; font-weight: 700; }
+              .footer { margin-top: 30px; text-align: center; font-size: 11px; color: #94a3b8; }
+            </style>
+          </head>
+          <body>
+            <h1>قسيمة راتب — ${MONTH_NAMES[state.month - 1]} ${state.year}</h1>
+            <div class="sub">${Refad.escapeHtml(company.name || '')}</div>
 
-        btn.disabled = true;
-        document.getElementById('saveBtnText').textContent = 'جارٍ الحفظ...';
+            <div class="hero">
+              <div class="hero-info">
+                <div><strong>الموظف:</strong> ${Refad.escapeHtml(emp.full_name)}</div>
+                <div><strong>اسم المستخدم:</strong> ${Refad.escapeHtml(emp.username)}</div>
+                <div><strong>تاريخ الطباعة:</strong> ${Refad.format.date(new Date())}</div>
+              </div>
+              <div class="net">
+                <div class="lbl">صافي الراتب</div>
+                <div class="val">${Refad.format.money(row.net_salary || 0)}</div>
+              </div>
+            </div>
 
-        try {
-          await Refad.db.update('payroll', state.editingId, {
-            basic_salary: basic,
-            deductions,
-            bonuses,
-            net_salary: net,
-            notes
-          });
+            ${record ? `
+              <div class="section-title">الحضور والغياب</div>
+              <table>
+                <tr>
+                  <td>أيام الحضور: <strong>${record.present_days || 0}</strong></td>
+                  <td>أيام التأخير: <strong>${record.late_days || 0}</strong></td>
+                  <td>أيام الغياب: <strong>${record.absent_days || 0}</strong></td>
+                  <td>أيام الإجازة: <strong>${record.leave_days || 0}</strong></td>
+                </tr>
+              </table>
+            ` : ''}
 
-          await Refad.logActivity('update_payroll', 'payroll', 'تعديل راتب', state.editingId);
-          Refad.toast.success('تم الحفظ');
-          closeEditModal();
-          await loadPayroll(true);
-        } catch (err) {
-          console.error('Save failed:', err);
-          Refad.toast.error('فشل الحفظ: ' + err.message);
-        } finally {
-          btn.disabled = false;
-          document.getElementById('saveBtnText').textContent = originalText;
-        }
+            <div class="section-title">تفاصيل الراتب</div>
+            <table>
+              <thead>
+                <tr><th>البند</th><th>المبلغ</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>الراتب الأساسي</td><td>${Refad.format.money(row.basic_salary || 0)}</td></tr>
+                ${row.overtime > 0 ? `<tr><td>أجر إضافي</td><td>+ ${Refad.format.money(row.overtime)}</td></tr>` : ''}
+                ${row.bonuses > 0 ? `<tr><td>مكافآت</td><td>+ ${Refad.format.money(row.bonuses)}</td></tr>` : ''}
+                ${row.deductions > 0 ? `<tr><td>خصومات</td><td style="color:#ef4444;">- ${Refad.format.money(row.deductions)}</td></tr>` : ''}
+                <tr class="total-row"><td>الصافي</td><td>${Refad.format.money(row.net_salary || 0)}</td></tr>
+              </tbody>
+            </table>
+
+            <div class="footer">
+              تم إنشاء هذه القسيمة من نظام رفاد — ${Refad.format.datetime(new Date())}
+            </div>
+
+            <script>window.onload = () => setTimeout(() => window.print(), 300);<\/script>
+          </body>
+          </html>
+        `);
+        w.document.close();
       }
 
       // ============================================================
-      // 10) Delete row
+      // 12) Delete row
       // ============================================================
       async function deleteRow(id) {
         const ok = await Refad.alert.confirm('حذف السطر', 'هل تريد حذف هذا السطر من الكشف؟', 'حذف');
@@ -1404,108 +1931,95 @@
       }
 
       // ============================================================
-      // 11) Approve & pay
+      // 13) Regenerate (SAFE - no .delete)
       // ============================================================
-      async function approveAll() {
+      async function regenerateFromRecords() {
         const ok = await Refad.alert.confirm(
-          'اعتماد وصرف الرواتب',
-          `سيتم اعتماد كل رواتب شهر ${MONTH_NAMES[state.month - 1]} ${state.year} وتسجيلها كمصروف. متابعة؟`,
-          'اعتماد'
+          'إعادة الاستيراد',
+          'سيتم حذف الصفوف المعلقة وإعادة استيرادها من كشف الحضور. الصفوف المدفوعة لن تتأثر. متابعة؟',
+          'إعادة'
         );
         if (!ok) return;
 
-        const btn = document.getElementById('approveBtn');
-        btn.disabled = true;
-        btn.innerHTML = '<i data-lucide="loader-2"></i> جارٍ الاعتماد...';
-        if (window.lucide) lucide.createIcons();
-
         try {
-          const totalNet = state.rows.reduce((s, r) => s + (Number(r.net_salary) || 0), 0);
-          const now = new Date().toISOString();
+          // ✅ احذف المعلقة واحدة واحدة (بدون .delete)
+          const pendingRows = await Refad.db.select('payroll', {
+            columns: 'id',
+            eq: { 
+              company_id: session.company_id, 
+              month: state.month, 
+              year: state.year, 
+              status: 'pending' 
+            }
+          }).catch(() => []);
 
-          // 1. حدّث كل سطر
-          for (const r of state.rows) {
-            await Refad.db.update('payroll', r.id, {
-              status: 'paid',
-              paid_at: now
-            });
+          for (const r of pendingRows) {
+            try {
+              await Refad.db.remove('payroll', r.id);
+            } catch (err) {
+              console.warn(`Failed to delete payroll #${r.id}:`, err.message);
+            }
           }
 
-          // 2. سجل مصروف
-          await Refad.db.insert('expenses', {
-            company_id: session.company_id,
-            category: 'salary',
-            amount: totalNet,
-            description: `رواتب ${MONTH_NAMES[state.month - 1]} ${state.year}`,
-            expense_date: Refad.date.today(),
-            user_id: session.user_id
-          });
-
-          await Refad.logActivity('approve_payroll', 'payroll',
-            `اعتماد رواتب ${MONTH_NAMES[state.month - 1]} ${state.year} - ${Refad.format.money(totalNet)}`, null);
-
-          Refad.toast.success(`تم الاعتماد — ${Refad.format.money(totalNet)}`);
-          await loadPayroll(true);
+          await generateFromAttendance();
         } catch (e) {
-          console.error('Approve failed:', e);
-          Refad.toast.error('فشل الاعتماد: ' + e.message);
-        } finally {
-          btn.disabled = false;
-          btn.innerHTML = '<i data-lucide="check-circle-2"></i> اعتماد وصرف';
-          if (window.lucide) lucide.createIcons();
+          Refad.toast.error('فشل: ' + e.message);
         }
       }
 
       // ============================================================
-      // 12) Events
+      // 14) Events
       // ============================================================
       function bindEvents() {
-        document.getElementById('generateBtn').addEventListener('click', generatePayroll);
-        document.getElementById('generateBtn2').addEventListener('click', generatePayroll);
-        document.getElementById('approveBtn').addEventListener('click', approveAll);
+        document.getElementById('generateBtn').addEventListener('click', generateFromAttendance);
+        document.getElementById('generateBtn2').addEventListener('click', generateFromAttendance);
+        document.getElementById('approveBtn').addEventListener('click', approveAndPay);
+        document.getElementById('regenerateBtn').addEventListener('click', regenerateFromRecords);
 
         document.getElementById('tableBody').addEventListener('click', e => {
           const btn = e.target.closest('[data-action]');
           if (!btn) return;
           const action = btn.dataset.action;
           const id = parseInt(btn.dataset.id, 10);
-          const row = state.rows.find(r => r.id === id);
-          if (!row) return;
 
-          if (action === 'edit') openEditModal(row);
+          if (action === 'detail') openDetailModal(id);
           else if (action === 'delete') deleteRow(id);
         });
 
-        // Modal close
         document.querySelectorAll('[data-close]').forEach(b => {
-          b.addEventListener('click', closeEditModal);
+          b.addEventListener('click', closeDetailModal);
         });
-        document.getElementById('editModal').addEventListener('click', e => {
-          if (e.target.id === 'editModal') closeEditModal();
+        document.getElementById('detailModal').addEventListener('click', e => {
+          if (e.target.id === 'detailModal') closeDetailModal();
         });
         document.addEventListener('keydown', e => {
-          if (e.key === 'Escape') closeEditModal();
+          if (e.key === 'Escape') closeDetailModal();
         });
+        document.getElementById('printPayslipBtn').addEventListener('click', printPayslip);
 
-        document.getElementById('editForm').addEventListener('submit', saveEdit);
-
-        // Export
         document.getElementById('exportBtn').addEventListener('click', () => {
           if (!state.rows.length) {
             Refad.toast.warning('لا توجد بيانات');
             return;
           }
-          const rows = state.rows.map(r => ({
-            'الموظف': r.users?.full_name || '',
-            'اسم المستخدم': r.users?.username || '',
-            'الراتب الأساسي': r.basic_salary || 0,
-            'الخصومات': r.deductions || 0,
-            'الحوافز': r.bonuses || 0,
-            'الإضافي': r.overtime || 0,
-            'الصافي': r.net_salary || 0,
-            'الحالة': r.status === 'paid' ? 'مدفوع' : 'معلق',
-            'ملاحظات': r.notes || ''
-          }));
+          const rows = state.rows.map(r => {
+            const record = state.records.find(rec => rec.id === r.payroll_record_id);
+            return {
+              'الموظف': r.users?.full_name || '',
+              'اسم المستخدم': r.users?.username || '',
+              'الراتب الأساسي': r.basic_salary || 0,
+              'أيام الحضور': record?.present_days || 0,
+              'أيام التأخير': record?.late_days || 0,
+              'أيام الغياب': record?.absent_days || 0,
+              'أيام الإجازة': record?.leave_days || 0,
+              'الخصومات': r.deductions || 0,
+              'الحوافز': r.bonuses || 0,
+              'الإضافي': r.overtime || 0,
+              'الصافي': r.net_salary || 0,
+              'الحالة': r.status === 'paid' ? 'مدفوع' : 'معلق',
+              'ملاحظات': r.notes || ''
+            };
+          });
           const ws = XLSX.utils.json_to_sheet(rows);
           const wb = XLSX.utils.book_new();
           XLSX.utils.book_append_sheet(wb, ws, 'Payroll');
@@ -1515,7 +2029,7 @@
       }
 
       // ============================================================
-      // 13) Init
+      // 15) Init
       // ============================================================
       async function init() {
         buildSidebar();
@@ -1530,6 +2044,7 @@
         await loadPayroll();
 
         Refad.registerServiceWorker();
+        console.log('%c[Refad] Payroll + Attendance Integration ready', 'color:#14B8A6;font-weight:bold');
       }
 
       if (document.readyState === 'loading') {
@@ -1538,12 +2053,8 @@
         init();
       }
 
-      console.log('%c[Refad] Payroll ready', 'color:#14B8A6;font-weight:bold');
-
     })();
   </script>
-
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 </body>
 </html>
