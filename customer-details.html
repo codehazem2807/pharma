@@ -19,179 +19,808 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
+
     :root {
-      --primary: #0B2C4D; --primary-light: #1e4a73;
-      --accent: #14B8A6; --accent-dark: #0d9488;
-      --gold: #F59E0B; --bg: #F1F5F9; --card: #ffffff;
-      --text: #0f172a; --text-muted: #64748b; --border: #e2e8f0;
-      --danger: #ef4444; --success: #10b981; --warning: #f59e0b; --info: #3b82f6;
-      --sidebar-bg: #0B2C4D; --sidebar-text: #cbd5e1;
+      --primary: #0B2C4D;
+      --primary-light: #1e4a73;
+      --accent: #14B8A6;
+      --accent-dark: #0d9488;
+      --gold: #F59E0B;
+      --bg: #F1F5F9;
+      --card: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --danger: #ef4444;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --info: #3b82f6;
+      --purple: #8b5cf6;
+      --sidebar-bg: #0B2C4D;
+      --sidebar-text: #cbd5e1;
       --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
       --shadow: 0 4px 20px rgba(11, 44, 77, 0.08);
       --shadow-lg: 0 10px 40px rgba(11, 44, 77, 0.12);
-      --radius: 14px; --radius-sm: 10px;
-      --sidebar-w: 260px; --topbar-h: 64px;
+      --radius: 14px;
+      --radius-sm: 10px;
+      --sidebar-w: 260px;
+      --topbar-h: 64px;
     }
+
     [data-theme="dark"] {
-      --bg: #0a1628; --card: #0f2137; --text: #f1f5f9; --text-muted: #94a3b8;
-      --border: #1e3a5f; --sidebar-bg: #061a2e; --sidebar-text: #94a3b8;
+      --bg: #0a1628;
+      --card: #0f2137;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --border: #1e3a5f;
+      --sidebar-bg: #061a2e;
+      --sidebar-text: #94a3b8;
     }
-    html, body { height: 100%; font-family: 'Cairo', sans-serif; background: var(--bg); color: var(--text); transition: background 0.3s, color 0.3s; }
+
+    html, body {
+      height: 100%;
+      font-family: 'Cairo', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      transition: background 0.3s, color 0.3s;
+    }
+
     body { display: flex; min-height: 100vh; overflow-x: hidden; }
 
-    /* Sidebar (same style as others) */
-    .sidebar { width: var(--sidebar-w); height: 100vh; background: var(--sidebar-bg); color: var(--sidebar-text); position: fixed; top: 0; right: 0; z-index: 100; display: flex; flex-direction: column; transition: transform 0.3s; box-shadow: -4px 0 20px rgba(0,0,0,0.1); }
-    .sidebar-header { padding: 20px 22px; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 14px; height: var(--topbar-h); box-sizing: border-box; }
-    .sidebar-logo { width: 40px; height: 40px; background: linear-gradient(135deg, var(--accent), var(--accent-dark)); border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 12px rgba(20,184,166,0.4); }
+    /* ============ Sidebar ============ */
+    .sidebar {
+      width: var(--sidebar-w);
+      height: 100vh;
+      background: var(--sidebar-bg);
+      color: var(--sidebar-text);
+      position: fixed;
+      top: 0; right: 0;
+      z-index: 100;
+      display: flex; flex-direction: column;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: -4px 0 20px rgba(0,0,0,0.1);
+    }
+    .sidebar-header {
+      padding: 20px 22px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      display: flex; align-items: center; gap: 14px;
+      height: var(--topbar-h);
+      box-sizing: border-box;
+    }
+    .sidebar-logo {
+      width: 40px; height: 40px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 4px 12px rgba(20,184,166,0.4);
+    }
     .sidebar-logo img { width: 70%; height: 70%; object-fit: contain; }
     .sidebar-logo .fallback { color: white; font-weight: 800; font-size: 18px; }
     .sidebar-brand h2 { color: white; font-size: 20px; font-weight: 800; line-height: 1.2; }
     .sidebar-brand p { font-size: 10px; color: var(--sidebar-text); opacity: 0.7; font-weight: 500; margin-top: 2px; }
-    .sidebar-nav { flex: 1; overflow-y: auto; padding: 12px 0; }
+    .sidebar-nav { flex: 1; overflow-y: auto; padding: 12px 0; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.15) transparent; }
     .sidebar-nav::-webkit-scrollbar { width: 5px; }
     .sidebar-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 10px; }
     .nav-section { padding: 8px 20px 4px; font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 1px; margin-top: 8px; }
-    .nav-item { display: flex; align-items: center; gap: 12px; padding: 11px 22px; color: var(--sidebar-text); text-decoration: none; font-size: 14px; font-weight: 500; border-right: 3px solid transparent; transition: all 0.2s; cursor: pointer; position: relative; }
-    .nav-item:hover { background: rgba(255,255,255,0.05); color: white; }
+    .nav-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 11px 22px;
+      color: var(--sidebar-text);
+      text-decoration: none;
+      font-size: 14px; font-weight: 500;
+      border-right: 3px solid transparent;
+      transition: all 0.2s;
+      position: relative;
+      cursor: pointer;
+    }
+    .nav-item:hover { background: rgba(255,255,255,0.05); color: white; border-right-color: rgba(20,184,166,0.5); }
     .nav-item.active { background: rgba(20,184,166,0.12); color: white; border-right-color: var(--accent); font-weight: 600; }
+    .nav-item.active::before { content: ''; position: absolute; right: 0; top: 50%; transform: translateY(-50%); width: 3px; height: 60%; background: var(--accent); border-radius: 0 4px 4px 0; }
     .nav-item i, .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; opacity: 0.85; }
     .nav-item .badge { margin-right: auto; background: var(--danger); color: white; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
     .nav-item .badge.teal { background: var(--accent); }
     .nav-item .badge.gold { background: var(--gold); }
+    .nav-item .badge.new { background: var(--purple); }
 
-    /* Main */
+    /* ============ Main ============ */
     .main { flex: 1; margin-right: var(--sidebar-w); min-width: 0; display: flex; flex-direction: column; }
-    .topbar { height: var(--topbar-h); background: var(--card); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 16px; padding: 0 24px; position: sticky; top: 0; z-index: 50; box-shadow: var(--shadow-sm); }
+    .topbar {
+      height: var(--topbar-h);
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 16px;
+      padding: 0 24px;
+      position: sticky; top: 0;
+      z-index: 50;
+      box-shadow: var(--shadow-sm);
+    }
     .menu-toggle { display: none; background: transparent; border: none; color: var(--text); cursor: pointer; padding: 8px; border-radius: 8px; }
-    .topbar-title { font-size: 18px; font-weight: 700; color: var(--text); flex-shrink: 0; }
+    .menu-toggle:hover { background: var(--bg); }
+    .topbar-title { font-size: 18px; font-weight: 700; color: var(--text); flex-shrink: 0; display: flex; align-items: center; gap: 8px; }
+    .topbar-title a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: color 0.2s;
+    }
+    .topbar-title a:hover { color: var(--accent); }
     .topbar-actions { display: flex; align-items: center; gap: 8px; margin-right: auto; }
-    .icon-btn { width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--border); background: var(--card); color: var(--text); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+    .icon-btn {
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      position: relative;
+      transition: all 0.2s;
+    }
     .icon-btn:hover { border-color: var(--accent); color: var(--accent); }
-    .icon-btn i { width: 18px; height: 18px; }
-    .user-menu { display: flex; align-items: center; gap: 10px; padding: 5px 12px 5px 5px; border-radius: 10px; cursor: pointer; border: 1px solid var(--border); background: var(--card); transition: background 0.2s; }
+    .icon-btn i, .icon-btn svg { width: 18px; height: 18px; }
+    .user-menu {
+      display: flex; align-items: center; gap: 10px;
+      padding: 5px 12px 5px 5px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.2s;
+      border: 1px solid var(--border);
+      background: var(--card);
+    }
     .user-menu:hover { background: var(--bg); }
-    .user-avatar { width: 34px; height: 34px; border-radius: 9px; background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; flex-shrink: 0; overflow: hidden; }
+    .user-avatar {
+      width: 34px; height: 34px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-weight: 700; font-size: 14px;
+      flex-shrink: 0; overflow: hidden;
+    }
     .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
     .user-info { display: flex; flex-direction: column; line-height: 1.2; }
     .user-info .name { font-size: 13px; font-weight: 700; color: var(--text); }
     .user-info .role { font-size: 11px; color: var(--text-muted); }
     .dropdown { position: absolute; top: calc(100% + 8px); left: 0; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: var(--shadow-lg); min-width: 200px; padding: 6px; opacity: 0; visibility: hidden; transform: translateY(-8px); transition: all 0.2s; z-index: 100; }
     .dropdown.show { opacity: 1; visibility: visible; transform: translateY(0); }
-    .dropdown-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; color: var(--text); font-size: 13px; font-weight: 500; cursor: pointer; text-decoration: none; }
+    .dropdown-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; color: var(--text); font-size: 13px; font-weight: 500; cursor: pointer; transition: background 0.15s; text-decoration: none; }
     .dropdown-item:hover { background: var(--bg); }
     .dropdown-item.danger { color: var(--danger); }
+    .dropdown-item.danger:hover { background: rgba(239,68,68,0.08); }
     .dropdown-item i { width: 16px; height: 16px; }
     .dropdown-divider { height: 1px; background: var(--border); margin: 6px 0; }
 
-    /* Content */
+    /* ============ Content ============ */
     .content { padding: 24px; flex: 1; }
 
-    .page-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
-    .page-head h1 { font-size: 22px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
-    .page-head p { font-size: 13px; color: var(--text-muted); }
-
-    .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; font-family: inherit; font-size: 14px; font-weight: 600; border-radius: var(--radius-sm); border: none; cursor: pointer; transition: all 0.2s; text-decoration: none; white-space: nowrap; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 18px;
+      font-family: inherit;
+      font-size: 14px; font-weight: 600;
+      border-radius: var(--radius-sm);
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
     .btn i { width: 16px; height: 16px; }
     .btn-primary { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; }
-    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(20,184,166,0.35); }
+    .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(20,184,166,0.35); }
     .btn-outline { background: var(--card); color: var(--text); border: 1px solid var(--border); }
-    .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-outline:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+    .btn-success { background: var(--success); color: white; }
+    .btn-success:hover:not(:disabled) { background: #047857; }
     .btn-danger { background: var(--danger); color: white; }
+    .btn-danger:hover:not(:disabled) { background: #b91c1c; }
+    .btn-gold { background: var(--gold); color: white; }
+    .btn-gold:hover:not(:disabled) { background: #d97706; }
     .btn-sm { padding: 6px 12px; font-size: 12px; }
 
-    .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-sm); overflow: hidden; margin-bottom: 16px; }
-    .card-header { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-    .card-header h3 { font-size: 15px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px; }
-    .card-header h3 i { width: 18px; height: 18px; color: var(--accent); }
-    .card-body { padding: 18px; }
+    /* ============ Page Head ============ */
+    .page-head {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .page-head-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+      flex: 1;
+    }
+    .back-btn {
+      width: 42px; height: 42px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+      text-decoration: none;
+      flex-shrink: 0;
+    }
+    .back-btn:hover { border-color: var(--accent); color: var(--accent); transform: translateX(-2px); }
+    .back-btn i { width: 18px; height: 18px; }
+    .page-head h1 { font-size: 22px; font-weight: 800; color: var(--text); margin-bottom: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .page-head p { font-size: 13px; color: var(--text-muted); }
 
-    /* Profile header */
-    .profile-head {
+    /* ============ Alert Banners ============ */
+    .alert-banner {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 14px 18px;
+      border-radius: var(--radius);
+      margin-bottom: 16px;
+      font-size: 13px;
+      line-height: 1.6;
+      font-weight: 600;
+    }
+    .alert-banner.danger {
+      background: rgba(239,68,68,0.08);
+      border: 1.5px solid rgba(239,68,68,0.25);
+      color: var(--danger);
+    }
+    .alert-banner.warning {
+      background: rgba(245,158,11,0.08);
+      border: 1.5px solid rgba(245,158,11,0.25);
+      color: var(--gold);
+    }
+    .alert-banner i { width: 20px; height: 20px; flex-shrink: 0; margin-top: 2px; }
+    .alert-banner strong { font-weight: 800; }
+
+    /* ============ Profile Hero ============ */
+    .profile-hero {
       background: linear-gradient(135deg, var(--primary), var(--primary-light));
       color: white;
       padding: 24px;
       border-radius: var(--radius);
+      margin-bottom: 20px;
       display: flex;
       align-items: center;
       gap: 20px;
-      margin-bottom: 20px;
       flex-wrap: wrap;
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--shadow-lg);
     }
+    .profile-hero::before {
+      content: '';
+      position: absolute;
+      top: -50%; left: -20%;
+      width: 60%; height: 200%;
+      background: radial-gradient(circle, rgba(20,184,166,0.25), transparent 70%);
+      pointer-events: none;
+    }
+    .profile-hero::after {
+      content: '';
+      position: absolute;
+      bottom: -50%; right: -20%;
+      width: 60%; height: 200%;
+      background: radial-gradient(circle, rgba(245,158,11,0.15), transparent 70%);
+      pointer-events: none;
+    }
+    .profile-hero > * { position: relative; z-index: 1; }
+
     .profile-avatar {
-      width: 80px; height: 80px;
-      border-radius: 20px;
+      width: 88px; height: 88px;
+      border-radius: 22px;
       background: rgba(255,255,255,0.15);
+      backdrop-filter: blur(10px);
       border: 2px solid rgba(255,255,255,0.3);
       display: flex; align-items: center; justify-content: center;
-      font-weight: 800; font-size: 32px;
+      font-weight: 800; font-size: 36px;
       flex-shrink: 0;
       overflow: hidden;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
     }
     .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
     .profile-info { flex: 1; min-width: 200px; }
-    .profile-info h1 { font-size: 24px; font-weight: 800; margin-bottom: 6px; }
-    .profile-info .meta { display: flex; gap: 16px; flex-wrap: wrap; font-size: 13px; opacity: 0.9; }
-    .profile-info .meta span { display: inline-flex; align-items: center; gap: 5px; }
-    .profile-info .meta i { width: 14px; height: 14px; }
-    .profile-balance {
-      background: rgba(255,255,255,0.12);
-      border: 1px solid rgba(255,255,255,0.2);
-      padding: 14px 20px;
-      border-radius: 12px;
-      text-align: center;
-      min-width: 160px;
+    .profile-name {
+      font-size: 26px;
+      font-weight: 800;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
     }
-    .profile-balance .lbl { font-size: 11px; opacity: 0.85; font-weight: 600; margin-bottom: 4px; }
-    .profile-balance .val { font-size: 24px; font-weight: 800; }
+    .profile-status {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      background: rgba(255,255,255,0.15);
+      backdrop-filter: blur(10px);
+    }
+    .profile-status.active { background: rgba(16,185,129,0.25); }
+    .profile-status.inactive { background: rgba(239,68,68,0.25); }
 
+    .profile-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      font-size: 13px;
+      opacity: 0.9;
+    }
+    .profile-meta span { display: flex; align-items: center; gap: 6px; }
+    .profile-meta i { width: 14px; height: 14px; opacity: 0.85; }
+
+    .profile-balance-box {
+      background: rgba(255,255,255,0.12);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 16px 24px;
+      border-radius: 14px;
+      text-align: center;
+      min-width: 180px;
+    }
+    .profile-balance-box .lbl {
+      font-size: 11px;
+      opacity: 0.85;
+      font-weight: 600;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .profile-balance-box .val {
+      font-size: 26px;
+      font-weight: 800;
+      line-height: 1.1;
+    }
+
+    /* ============ Stats Grid ============ */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      display: flex; align-items: center; gap: 14px;
+      box-shadow: var(--shadow-sm);
+      position: relative;
+      overflow: hidden;
+      transition: all 0.2s;
+    }
+    .stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+    .stat-card::before { content: ''; position: absolute; top: 0; right: 0; width: 4px; height: 100%; background: var(--accent); }
+    .stat-card.info::before { background: var(--info); }
+    .stat-card.success::before { background: var(--success); }
+    .stat-card.danger::before { background: var(--danger); }
+    .stat-card.gold::before { background: var(--gold); }
+    .stat-card.purple::before { background: var(--purple); }
+    .stat-icon {
+      width: 48px; height: 48px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      background: rgba(20,184,166,0.12);
+      color: var(--accent);
+    }
+    .stat-icon.info { background: rgba(59,130,246,0.12); color: var(--info); }
+    .stat-icon.success { background: rgba(16,185,129,0.12); color: var(--success); }
+    .stat-icon.danger { background: rgba(239,68,68,0.12); color: var(--danger); }
+    .stat-icon.gold { background: rgba(245,158,11,0.12); color: var(--gold); }
+    .stat-icon.purple { background: rgba(139,92,246,0.12); color: var(--purple); }
+    .stat-icon i { width: 22px; height: 22px; }
+    .stat-body { flex: 1; min-width: 0; }
+    .stat-body .label { font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px; }
+    .stat-body .value { font-size: 20px; font-weight: 800; color: var(--text); line-height: 1.2; overflow-wrap: anywhere; }
+    .stat-body .value.danger { color: var(--danger); }
+    .stat-body .value.success { color: var(--success); }
+    .stat-body .value.gold { color: var(--gold); }
+    .stat-body .value.info { color: var(--info); }
+    .stat-body .sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+    /* ============ Credit Limit Card ============ */
+    .credit-limit-card {
+      background: linear-gradient(135deg, rgba(139,92,246,0.06), rgba(20,184,166,0.04));
+      border: 1.5px solid rgba(139,92,246,0.2);
+      border-radius: var(--radius);
+      padding: 18px;
+      margin-bottom: 20px;
+    }
+    .credit-limit-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+    .credit-limit-title {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--purple);
+      display: flex; align-items: center; gap: 6px;
+    }
+    .credit-limit-title i { width: 16px; height: 16px; }
+    .credit-limit-usage {
+      font-size: 20px;
+      font-weight: 800;
+    }
+    .credit-limit-usage.ok { color: var(--success); }
+    .credit-limit-usage.warning { color: var(--gold); }
+    .credit-limit-usage.danger { color: var(--danger); }
+    .credit-limit-usage.none { color: var(--text-muted); font-size: 14px; }
+
+    .credit-progress {
+      height: 12px;
+      background: rgba(148,163,184,0.2);
+      border-radius: 6px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+    .credit-progress > div {
+      height: 100%;
+      border-radius: 6px;
+      transition: width 0.4s;
+    }
+    .credit-progress > div.ok { background: linear-gradient(90deg, var(--success), #047857); }
+    .credit-progress > div.warning { background: linear-gradient(90deg, var(--gold), #d97706); }
+    .credit-progress > div.danger { background: linear-gradient(90deg, var(--danger), #b91c1c); }
+
+    .credit-info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+    }
+    .credit-info-item {
+      background: var(--card);
+      border-radius: 10px;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+    }
+    .credit-info-item .lbl {
+      font-size: 10px;
+      color: var(--text-muted);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      margin-bottom: 4px;
+    }
+    .credit-info-item .val {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--text);
+    }
+
+    /* ============ Tabs ============ */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 6px;
+      margin-bottom: 16px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tab {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 18px;
+      font-family: inherit;
+      font-size: 13px; font-weight: 600;
+      color: var(--text-muted);
+      background: transparent;
+      border: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .tab:hover { background: var(--bg); color: var(--text); }
+    .tab.active { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; box-shadow: 0 4px 12px rgba(20,184,166,0.3); }
+    .tab i { width: 16px; height: 16px; }
+    .tab .count-badge {
+      background: rgba(255,255,255,0.2);
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+    }
+    .tab:not(.active) .count-badge { background: rgba(148,163,184,0.2); color: var(--text-muted); }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; animation: fadeIn 0.3s; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ============ Cards ============ */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+    .card-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .card-header h3 { font-size: 15px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px; }
+    .card-header h3 i { width: 18px; height: 18px; color: var(--accent); }
+    .card-body { padding: 18px; }
+
+    /* ============ Info Grid ============ */
     .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
-    .info-item { background: var(--bg); border-radius: 10px; padding: 12px 14px; }
-    .info-item .lbl { font-size: 11px; color: var(--text-muted); font-weight: 600; margin-bottom: 4px; }
-    .info-item .val { font-size: 14px; font-weight: 700; color: var(--text); word-break: break-word; }
+    .info-item {
+      background: var(--bg);
+      border-radius: 10px;
+      padding: 12px 14px;
+    }
+    .info-item .lbl {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .info-item .lbl i { width: 12px; height: 12px; }
+    .info-item .val {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+      word-break: break-word;
+    }
 
-    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 16px; }
-    .stat-box { background: var(--bg); border-radius: 12px; padding: 16px; text-align: center; }
-    .stat-box .v { font-size: 22px; font-weight: 800; color: var(--accent); }
-    .stat-box .l { font-size: 11px; color: var(--text-muted); font-weight: 600; margin-top: 4px; }
-
-    table.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    table.data-table thead { background: var(--bg); }
-    table.data-table th { text-align: right; padding: 10px 8px; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; white-space: nowrap; }
-    table.data-table td { padding: 10px 8px; color: var(--text); border-bottom: 1px solid var(--border); vertical-align: middle; }
+    /* ============ Table ============ */
+    .table-wrap { overflow-x: auto; }
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      min-width: 800px;
+    }
+    table.data-table thead { background: var(--bg); border-bottom: 1px solid var(--border); }
+    table.data-table th {
+      text-align: right;
+      padding: 12px 14px;
+      font-size: 11px; font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+    }
+    table.data-table tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+    }
     table.data-table tbody tr:hover { background: var(--bg); }
-    table.data-table tbody tr:last-child td { border-bottom: none; }
+    table.data-table tbody tr:last-child { border-bottom: none; }
+    table.data-table td { padding: 12px 14px; color: var(--text); vertical-align: middle; }
 
-    .badge-tag { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
-    .badge-tag.green { background: rgba(16,185,129,0.12); color: var(--success); }
-    .badge-tag.gold { background: rgba(245,158,11,0.12); color: var(--gold); }
-    .badge-tag.red { background: rgba(239,68,68,0.12); color: var(--danger); }
-    .badge-tag.gray { background: rgba(107,114,128,0.12); color: #6b7280; }
-    .badge-tag.blue { background: rgba(59,130,246,0.12); color: var(--info); }
-
-    .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 16px; overflow-x: auto; }
-    .tab { padding: 10px 18px; font-size: 13px; font-weight: 600; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; background: transparent; border-top: none; border-right: none; border-left: none; font-family: inherit; transition: all 0.2s; white-space: nowrap; }
-    .tab:hover { color: var(--text); }
-    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-
-    .empty-state { padding: 40px 20px; text-align: center; color: var(--text-muted); }
-    .empty-state i { width: 42px; height: 42px; opacity: 0.3; margin-bottom: 10px; }
-    .empty-state p { font-size: 13px; }
-
-    .loader { text-align: center; padding: 40px; color: var(--text-muted); }
-    .loader i { width: 36px; height: 36px; animation: spin 1s linear infinite; color: var(--accent); margin-bottom: 10px; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    .money { font-weight: 700; }
-    .money.accent { color: var(--accent); }
+    .money { font-weight: 700; color: var(--text); }
     .money.danger { color: var(--danger); }
     .money.success { color: var(--success); }
+    .money.gold { color: var(--gold); }
+    .money.accent { color: var(--accent); }
+    .money.purple { color: var(--purple); }
 
+    .type-link {
+      color: var(--accent);
+      font-weight: 700;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: opacity 0.2s;
+    }
+    .type-link:hover { opacity: 0.8; text-decoration: underline; }
+    .type-link i { width: 12px; height: 12px; }
+
+    .status-pill {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px; font-weight: 700;
+      white-space: nowrap;
+    }
+    .status-pill.paid { background: rgba(16,185,129,0.12); color: var(--success); }
+    .status-pill.partial { background: rgba(245,158,11,0.12); color: var(--gold); }
+    .status-pill.unpaid { background: rgba(239,68,68,0.12); color: var(--danger); }
+    .status-pill.cancelled { background: rgba(148,163,184,0.15); color: var(--text-muted); }
+    .status-pill.active { background: rgba(16,185,129,0.12); color: var(--success); }
+    .status-pill.applied { background: rgba(59,130,246,0.12); color: var(--info); }
+    .status-pill.credit { background: rgba(16,185,129,0.12); color: var(--success); }
+    .status-pill.debit { background: rgba(239,68,68,0.12); color: var(--danger); }
+    .status-pill.draft { background: rgba(148,163,184,0.15); color: var(--text-muted); }
+    .status-pill.confirmed { background: rgba(59,130,246,0.12); color: var(--info); }
+    .status-pill.invoiced { background: rgba(16,185,129,0.12); color: var(--success); }
+    .status-pill.return { background: rgba(245,158,11,0.12); color: var(--gold); }
+
+    /* ============ Statement rows ============ */
+    .statement-row-opening { background: rgba(148,163,184,0.08); }
+    .statement-row-in { background: rgba(16,185,129,0.04); }
+    .statement-row-out { background: rgba(239,68,68,0.04); }
+
+    /* ============ Empty / Loader ============ */
+    .empty-state {
+      padding: 60px 20px;
+      text-align: center;
+      color: var(--text-muted);
+    }
+    .empty-state i { width: 52px; height: 52px; opacity: 0.3; margin-bottom: 14px; }
+    .empty-state h3 { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+    .empty-state p { font-size: 13px; }
+
+    .loader { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+    .loader i { width: 40px; height: 40px; animation: spin 1s linear infinite; color: var(--accent); margin-bottom: 12px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ============ Modal ============ */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(11, 44, 77, 0.5);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      display: none;
+      align-items: center; justify-content: center;
+      padding: 20px;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .modal-backdrop.show { display: flex; opacity: 1; }
+    .modal {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-lg);
+      width: 100%;
+      max-width: 560px;
+      max-height: 90vh;
+      display: flex; flex-direction: column;
+      transform: scale(0.95);
+      transition: transform 0.2s;
+      overflow: hidden;
+    }
+    .modal.modal-lg { max-width: 800px; }
+    .modal-backdrop.show .modal { transform: scale(1); }
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+    .modal-header h3 { font-size: 16px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px; }
+    .modal-header h3 i { width: 18px; height: 18px; color: var(--accent); }
+    .modal-close {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+    }
+    .modal-close:hover { background: var(--bg); color: var(--danger); }
+    .modal-close i { width: 18px; height: 18px; }
+    .modal-body { padding: 20px; overflow-y: auto; flex: 1; min-height: 0; }
+    .modal-body::-webkit-scrollbar { width: 8px; }
+    .modal-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+    .modal-footer {
+      padding: 14px 20px;
+      border-top: 1px solid var(--border);
+      display: flex; gap: 10px; justify-content: flex-end;
+      background: var(--bg);
+      flex-shrink: 0;
+    }
+
+    /* ============ Form ============ */
+    .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+    .form-group { display: flex; flex-direction: column; }
+    .form-group.full { grid-column: 1 / -1; }
+    .form-group label {
+      font-size: 12px; font-weight: 700;
+      color: var(--text);
+      margin-bottom: 6px;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .form-group label .req { color: var(--danger); }
+    .form-group label .hint { color: var(--text-muted); font-weight: 500; font-size: 11px; margin-right: auto; }
+    .form-group input, .form-group select, .form-group textarea {
+      padding: 10px 14px;
+      font-family: inherit;
+      font-size: 14px;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      outline: none;
+      transition: all 0.2s;
+      width: 100%;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      border-color: var(--accent);
+      background: var(--card);
+      box-shadow: 0 0 0 3px rgba(20,184,166,0.1);
+    }
+    .form-group textarea { resize: vertical; min-height: 70px; }
+
+    .form-section-title {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--purple);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 10px 0 6px;
+      border-bottom: 1px solid var(--border);
+      margin: 6px 0 12px;
+      display: flex; align-items: center; gap: 6px;
+      grid-column: 1 / -1;
+    }
+    .form-section-title i { width: 14px; height: 14px; }
+
+    .type-picker {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      grid-column: 1 / -1;
+    }
+    .type-option {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 6px;
+      padding: 14px 10px;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--bg);
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+    .type-option:hover { border-color: var(--accent); }
+    .type-option.selected {
+      border-color: var(--accent);
+      background: rgba(20,184,166,0.08);
+      box-shadow: 0 0 0 3px rgba(20,184,166,0.1);
+    }
+    .type-option.credit.selected { border-color: var(--success); background: rgba(16,185,129,0.08); box-shadow: 0 0 0 3px rgba(16,185,129,0.1); }
+    .type-option.debit.selected { border-color: var(--danger); background: rgba(239,68,68,0.08); box-shadow: 0 0 0 3px rgba(239,68,68,0.1); }
+    .type-option i { width: 24px; height: 24px; color: var(--text-muted); }
+    .type-option.credit.selected i { color: var(--success); }
+    .type-option.debit.selected i { color: var(--danger); }
+    .type-option span { font-size: 13px; font-weight: 800; color: var(--text); }
+
+    /* ============ Overlay ============ */
     .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; opacity: 0; transition: opacity 0.3s; }
     .overlay.show { display: block; opacity: 1; }
 
+    /* ============ Responsive ============ */
     @media (max-width: 1024px) {
       .sidebar { transform: translateX(100%); }
       .sidebar.open { transform: translateX(0); }
@@ -205,14 +834,24 @@
       .topbar-title { font-size: 15px; }
       .page-head { flex-direction: column; align-items: stretch; }
       .page-head h1 { font-size: 18px; }
-      .profile-head { flex-direction: column; text-align: center; }
-      .profile-info .meta { justify-content: center; }
-      .profile-balance { width: 100%; }
+      .profile-hero { flex-direction: column; text-align: center; padding: 20px; }
+      .profile-name { justify-content: center; }
+      .profile-meta { justify-content: center; }
+      .profile-balance-box { width: 100%; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .stat-card { padding: 14px; }
+      .stat-icon { width: 40px; height: 40px; }
+      .stat-body .value { font-size: 16px; }
+      .form-grid { grid-template-columns: 1fr; }
+      .modal-footer { flex-direction: column-reverse; }
+      .modal-footer .btn { width: 100%; justify-content: center; }
+      .type-picker { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
 
+  <!-- Sidebar -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
@@ -228,17 +867,33 @@
 
   <div class="overlay" id="overlay"></div>
 
+  <!-- Main -->
   <div class="main">
     <header class="topbar">
       <button class="menu-toggle" id="menuToggle"><i data-lucide="menu"></i></button>
-      <div class="topbar-title" id="topbarTitle">تفاصيل عميل</div>
+      <div class="topbar-title">
+        <a href="customers.html">
+          <i data-lucide="arrow-right" style="width:16px;height:16px;"></i>
+          العملاء
+        </a>
+        <i data-lucide="chevron-left" style="width:14px;height:14px;opacity:0.4;"></i>
+        <span id="topbarTitle">تفاصيل العميل</span>
+      </div>
       <div class="topbar-actions">
-        <button class="icon-btn" id="themeToggle"><i data-lucide="moon" id="themeIcon"></i></button>
-        <button class="icon-btn" id="notifBtn" style="position:relative;"><i data-lucide="bell"></i><span class="dot" id="notifDot" style="display:none;"></span></button>
+        <button class="icon-btn" id="themeToggle" title="الوضع الليلي/النهاري">
+          <i data-lucide="moon" id="themeIcon"></i>
+        </button>
+        <button class="icon-btn" id="notifBtn" title="الإشعارات" style="position:relative;">
+          <i data-lucide="bell"></i>
+          <span class="dot" id="notifDot" style="display:none;"></span>
+        </button>
         <div style="position:relative;">
           <div class="user-menu" id="userMenu">
             <div class="user-avatar" id="userAvatar">م</div>
-            <div class="user-info"><span class="name" id="userName">—</span><span class="role" id="userRole">—</span></div>
+            <div class="user-info">
+              <span class="name" id="userName">—</span>
+              <span class="role" id="userRole">—</span>
+            </div>
             <i data-lucide="chevron-down" style="width:14px;height:14px;opacity:0.5;"></i>
           </div>
           <div class="dropdown" id="userDropdown">
@@ -253,24 +908,165 @@
 
     <main class="content">
       <div class="page-head">
-        <div style="display:flex;align-items:center;gap:12px;">
-          <a href="customers.html" class="btn btn-outline btn-sm">
-            <i data-lucide="arrow-right"></i> رجوع
+        <div class="page-head-left">
+          <a href="customers.html" class="back-btn">
+            <i data-lucide="arrow-right"></i>
           </a>
-          <div>
+          <div style="min-width:0;">
             <h1 id="pageTitle">جارٍ التحميل...</h1>
             <p id="pageSubtitle">—</p>
           </div>
         </div>
-        <div style="display:flex;gap:10px;">
-          <button class="btn btn-outline btn-sm" id="printBtn"><i data-lucide="printer"></i> طباعة كشف حساب</button>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-outline btn-sm" id="printBtn">
+            <i data-lucide="printer"></i> طباعة
+          </button>
+          <button class="btn btn-outline btn-sm" id="exportBtn">
+            <i data-lucide="download"></i> تصدير
+          </button>
+          <button class="btn btn-success btn-sm" id="paymentBtn">
+            <i data-lucide="banknote"></i> تسجيل دفعة
+          </button>
+          <button class="btn btn-gold btn-sm" id="noteBtn">
+            <i data-lucide="file-text"></i> إشعار
+          </button>
         </div>
       </div>
+
+      <!-- Alerts -->
+      <div id="alertsArea"></div>
 
       <div id="contentArea">
         <div class="loader"><i data-lucide="loader-2"></i><p>جارٍ التحميل...</p></div>
       </div>
     </main>
+  </div>
+
+  <!-- ========== Modal: Payment ========== -->
+  <div class="modal-backdrop" id="paymentModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3><i data-lucide="banknote"></i> تسجيل دفعة</h3>
+        <button class="modal-close" data-close><i data-lucide="x"></i></button>
+      </div>
+      <form id="paymentForm">
+        <div class="modal-body">
+          <div class="form-grid">
+            <div class="form-section-title">
+              <i data-lucide="user"></i> العميل: <span id="paymentCustomerName" style="color:var(--text);margin-right:4px;">—</span>
+            </div>
+
+            <div class="form-group full">
+              <label>الفاتورة <span class="hint">اتركها فارغة لدفعة عامة</span></label>
+              <select id="paymentInvoice">
+                <option value="">— دفعة عامة (FIFO على الفواتير) —</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>المبلغ <span class="req">*</span></label>
+              <input type="number" id="paymentAmount" min="0.01" step="0.01" placeholder="0.00" required>
+            </div>
+
+            <div class="form-group">
+              <label>التاريخ</label>
+              <input type="date" id="paymentDate">
+            </div>
+
+            <div class="form-group">
+              <label>طريقة الدفع</label>
+              <select id="paymentMethod">
+                <option value="cash">نقدي</option>
+                <option value="bank">تحويل بنكي</option>
+                <option value="wallet">محفظة إلكترونية</option>
+                <option value="cheque">شيك</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>مرجع (اختياري)</label>
+              <input type="text" id="paymentReference" maxlength="50" placeholder="رقم التحويل...">
+            </div>
+
+            <div class="form-group full">
+              <label>ملاحظات</label>
+              <textarea id="paymentNotes" maxlength="255" placeholder="ملاحظات..."></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" data-close>إلغاء</button>
+          <button type="submit" class="btn btn-success" id="paymentSaveBtn">
+            <i data-lucide="check"></i> تسجيل الدفعة
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========== Modal: Credit/Debit Note ========== -->
+  <div class="modal-backdrop" id="noteModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3><i data-lucide="file-text"></i> إشعار جديد</h3>
+        <button class="modal-close" data-close><i data-lucide="x"></i></button>
+      </div>
+      <form id="noteForm">
+        <div class="modal-body">
+          <div class="form-grid">
+
+            <div class="form-section-title"><i data-lucide="tag"></i> نوع الإشعار</div>
+
+            <div class="type-picker" id="noteTypePicker">
+              <div class="type-option credit" data-type="credit">
+                <i data-lucide="arrow-down-circle"></i>
+                <span>إشعار دائن</span>
+              </div>
+              <div class="type-option debit" data-type="debit">
+                <i data-lucide="arrow-up-circle"></i>
+                <span>إشعار مدين</span>
+              </div>
+            </div>
+            <input type="hidden" id="noteType" value="credit" required>
+
+            <div class="form-section-title"><i data-lucide="info"></i> البيانات</div>
+
+            <div class="form-group">
+              <label>المبلغ <span class="req">*</span></label>
+              <input type="number" id="noteAmount" min="0.01" step="0.01" placeholder="0.00" required>
+            </div>
+
+            <div class="form-group">
+              <label>التاريخ</label>
+              <input type="date" id="noteDate">
+            </div>
+
+            <div class="form-group full">
+              <label>السبب <span class="req">*</span></label>
+              <input type="text" id="noteReason" maxlength="200" placeholder="مثال: مرتجع، خصم تعاقدي، تصحيح..." required>
+            </div>
+
+            <div class="form-group full">
+              <label>فاتورة مرتبطة (اختياري)</label>
+              <select id="noteInvoice">
+                <option value="">— بدون فاتورة —</option>
+              </select>
+            </div>
+
+            <div class="form-group full">
+              <label>ملاحظات</label>
+              <textarea id="noteNotes" maxlength="500" placeholder="ملاحظات إضافية..."></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" data-close>إلغاء</button>
+          <button type="submit" class="btn btn-gold" id="noteSaveBtn">
+            <i data-lucide="save"></i> إضافة الإشعار
+          </button>
+        </div>
+      </form>
+    </div>
   </div>
 
   <script src="refad-core.js"></script>
@@ -279,6 +1075,9 @@
     (function () {
       'use strict';
 
+      // ============================================================
+      // 1) Guard & Param
+      // ============================================================
       const session = Refad.Auth.guardPage('customers.view');
       if (!session) return;
 
@@ -288,14 +1087,33 @@
         return;
       }
 
+      // ============================================================
+      // 2) State
+      // ============================================================
       const state = {
         customer: null,
         invoices: [],
         orders: [],
-        payments: []
+        notes: [],
+        returns: [],
+        users: [],
+        accounts: [],
+        filtered: { invoices: [], statement: [] }
       };
 
-      // Sidebar
+      // ============================================================
+      // 3) Helpers
+      // ============================================================
+      function esc(s) { return Refad.escapeHtml(s); }
+      function fmtMoney(v) { return Refad.format.money(v); }
+      function fmtNumber(v) { return Refad.format.number(v); }
+      function toNum(v) { return Number(v) || 0; }
+      const today = () => Refad.date.today();
+      const daysUntil = (d) => Refad.format.daysLeft(d);
+
+      // ============================================================
+      // 4) Sidebar MENU
+      // ============================================================
       const MENU = [
         { section: 'الرئيسية', items: [
           { label: 'لوحة التحكم', icon: 'layout-dashboard', href: 'dashboard.html' },
@@ -326,6 +1144,9 @@
           { label: 'الرواتب', icon: 'wallet', href: 'payroll.html', permission: 'payroll.view' }
         ]},
         { section: 'المالية', items: [
+          { label: 'الحسابات', icon: 'landmark', href: 'accounts.html', permission: 'company.owner' },
+          { label: 'الشيكات', icon: 'file-check-2', href: 'cheques.html', permission: 'company.owner', badge: 'جديد', badgeClass: 'new' },
+          { label: 'الإشعارات', icon: 'file-text', href: 'credit-notes.html', permission: 'company.owner' },
           { label: 'المصاريف', icon: 'banknote', href: 'expenses.html', permission: 'expenses.view' },
           { label: 'التقارير', icon: 'bar-chart-3', href: 'reports.html', permission: 'reports.view' }
         ]},
@@ -336,30 +1157,16 @@
       ];
 
       function buildSidebar() {
-        const nav = document.getElementById('sidebarNav');
-        const frag = document.createDocumentFragment();
-        MENU.forEach(group => {
-          const allowed = group.items.filter(it => !it.permission || Refad.Session.has(it.permission));
-          if (!allowed.length) return;
-          frag.appendChild(Refad.el('div', { class: 'nav-section' }, group.section));
-          allowed.forEach(item => {
-            const a = Refad.el('a', {
-              href: item.href,
-              class: 'nav-item' + (item.href === 'customers.html' ? ' active' : '')
-            });
-            a.innerHTML = `<i data-lucide="${item.icon}"></i><span>${Refad.escapeHtml(item.label)}</span>${item.badge ? `<span class="badge ${item.badgeClass || ''}">${item.badge}</span>` : ''}`;
-            frag.appendChild(a);
-          });
-        });
-        nav.innerHTML = '';
-        nav.appendChild(frag);
-        if (window.lucide) lucide.createIcons();
-      }
+  Refad.buildMenu('customer-details.html');
+}
 
+      // ============================================================
+      // 5) UI Setup
+      // ============================================================
       function fillUser() {
         const av = document.getElementById('userAvatar');
         const initial = (session.full_name || '؟').trim().charAt(0);
-        if (session.avatar_url) av.innerHTML = `<img src="${Refad.escapeHtml(session.avatar_url)}" alt="">`;
+        if (session.avatar_url) av.innerHTML = `<img src="${esc(session.avatar_url)}" alt="">`;
         else av.textContent = initial;
         document.getElementById('userName').textContent = session.full_name;
         document.getElementById('userRole').textContent = Refad.Session.has('company.owner') ? 'صاحب الشركة' : 'موظف';
@@ -380,8 +1187,12 @@
       function setupSidebarMobile() {
         const sb = document.getElementById('sidebar');
         const ov = document.getElementById('overlay');
-        document.getElementById('menuToggle').addEventListener('click', () => { sb.classList.add('open'); ov.classList.add('show'); });
-        ov.addEventListener('click', () => { sb.classList.remove('open'); ov.classList.remove('show'); });
+        document.getElementById('menuToggle').addEventListener('click', () => {
+          sb.classList.add('open'); ov.classList.add('show');
+        });
+        ov.addEventListener('click', () => {
+          sb.classList.remove('open'); ov.classList.remove('show');
+        });
       }
 
       function setupUserMenu() {
@@ -391,7 +1202,9 @@
         document.addEventListener('click', () => d.classList.remove('show'));
         d.addEventListener('click', e => e.stopPropagation());
         document.getElementById('logoutBtn').addEventListener('click', async () => {
-          if (await Refad.alert.confirm('تسجيل الخروج', 'هل تريد الخروج؟', 'خروج')) await Refad.Auth.logout();
+          if (await Refad.alert.confirm('تسجيل الخروج', 'هل تريد الخروج؟', 'خروج')) {
+            await Refad.Auth.logout();
+          }
         });
       }
 
@@ -401,306 +1214,1298 @@
         });
       }
 
+      // ============================================================
+      // 6) Load Data
+      // ============================================================
       async function loadData() {
         try {
-          const customer = await Refad.db.selectOne('customers', { eq: { id: customerId } });
-          if (!customer || customer.company_id !== session.company_id) {
-            Refad.alert.error('غير موجود', 'العميل غير موجود').then(() => location.href = 'customers.html');
-            return;
-          }
-          state.customer = customer;
-
-          const [invoices, orders] = await Promise.all([
+          const [customer, invoices, orders, notes, returns, users, accounts] = await Promise.all([
+            Refad.db.selectOne('customers', { eq: { id: customerId } }),
             Refad.db.select('sales_invoices', {
-              columns: 'id, invoice_number, invoice_date, grand_total, paid_amount, status, payment_type',
+              columns: 'id, invoice_number, invoice_date, grand_total, paid_amount, total_profit, status, invoice_type, payment_type, cashier_id, created_at',
               eq: { customer_id: customerId },
-              order: { column: 'created_at', ascending: false },
-              limit: 100
+              order: { column: 'invoice_date', ascending: false },
+              limit: 500
             }).catch(() => []),
             Refad.db.select('sales_orders', {
-              columns: 'id, order_number, created_at, total_amount, status',
+              columns: 'id, order_number, created_at, total_amount, total_profit, status, sales_rep_id',
               eq: { customer_id: customerId },
               order: { column: 'created_at', ascending: false },
-              limit: 100
+              limit: 200
+            }).catch(() => []),
+            Refad.db.select('credit_notes', {
+              columns: 'id, note_number, note_type, note_date, amount, tax_amount, reason, status, reference_invoice_id, created_at',
+              eq: { customer_id: customerId },
+              order: { column: 'note_date', ascending: false },
+              limit: 200
+            }).catch(() => []),
+            Refad.db.select('inventory_returns', {
+              columns: 'id, return_number, return_date, return_type, total_amount, reason, status, reference_invoice_id',
+              eq: { customer_id: customerId },
+              order: { column: 'return_date', ascending: false },
+              limit: 200
+            }).catch(() => []),
+            Refad.db.select('users', {
+              columns: 'id, full_name',
+              eq: { company_id: session.company_id }
+            }).catch(() => []),
+            Refad.db.select('accounts', {
+              columns: 'id, name, type, current_balance, is_default, is_active',
+              eq: { company_id: session.company_id, is_active: true },
+              order: { column: 'is_default', ascending: false }
             }).catch(() => [])
           ]);
 
-          state.invoices = invoices;
-          state.orders = orders;
+          if (!customer || String(customer.company_id) !== String(session.company_id)) {
+            Refad.alert.error('غير موجود', 'العميل غير موجود').then(() => location.href = 'customers.html');
+            return;
+          }
 
+          state.customer = customer;
+          state.invoices = invoices || [];
+          state.orders = orders || [];
+          state.notes = notes || [];
+          state.returns = returns || [];
+          state.users = users || [];
+          state.accounts = accounts || [];
+
+          renderAlerts();
           renderPage();
+          populatePaymentInvoices();
+          populateNoteInvoices();
         } catch (e) {
-          console.error('[Customer Details] load failed:', e);
+          console.error('[CustomerDetails] load failed:', e);
           document.getElementById('contentArea').innerHTML = `
             <div class="card"><div class="card-body">
               <div class="empty-state" style="color:var(--danger);">
                 <i data-lucide="alert-circle"></i>
-                <p>فشل التحميل: ${Refad.escapeHtml(e.message || '')}</p>
+                <p>فشل التحميل: ${esc(e.message || '')}</p>
               </div>
             </div></div>`;
           if (window.lucide) lucide.createIcons();
         }
       }
 
+      // ============================================================
+      // 7) Render Alerts
+      // ============================================================
+      function renderAlerts() {
+        const c = state.customer;
+        const area = document.getElementById('alertsArea');
+        if (!c || !area) return;
+
+        const balance = toNum(c.balance);
+        const creditLimit = toNum(c.credit_limit);
+        const alerts = [];
+
+        // Credit limit exceeded
+        if (creditLimit > 0 && balance > creditLimit) {
+          alerts.push({
+            type: 'danger',
+            icon: 'alert-octagon',
+            text: `⚠️ <strong>تجاوز حد الائتمان!</strong> الرصيد (${fmtMoney(balance)}) أكبر من الحد (${fmtMoney(creditLimit)}) بمقدار ${fmtMoney(balance - creditLimit)}.`
+          });
+        } else if (creditLimit > 0 && (balance / creditLimit) >= 0.8) {
+          alerts.push({
+            type: 'warning',
+            icon: 'alert-triangle',
+            text: `⚡ <strong>قريب من حد الائتمان</strong> — استخدام ${Math.round((balance / creditLimit) * 100)}% من الحد.`
+          });
+        }
+
+        // Overdue invoices
+        const overdue = state.invoices.filter(inv => {
+          if (inv.status === 'paid' || inv.status === 'cancelled') return false;
+          const due = toNum(inv.grand_total) - toNum(inv.paid_amount);
+          if (due <= 0.01) return false;
+          const days = daysUntil(inv.invoice_date);
+          return days !== null && days < -30;
+        });
+
+        if (overdue.length > 0) {
+          const totalOverdue = overdue.reduce((s, inv) =>
+            s + (toNum(inv.grand_total) - toNum(inv.paid_amount)), 0);
+          alerts.push({
+            type: 'danger',
+            icon: 'clock-alert',
+            text: `🕐 <strong>${overdue.length} فاتورة متأخرة</strong> بإجمالي ${fmtMoney(totalOverdue)} — تحتاج متابعة.`
+          });
+        }
+
+        if (!alerts.length) {
+          area.innerHTML = '';
+          return;
+        }
+
+        area.innerHTML = alerts.map(a => `
+          <div class="alert-banner ${a.type}">
+            <i data-lucide="${a.icon}"></i>
+            <div>${a.text}</div>
+          </div>
+        `).join('');
+
+        if (window.lucide) lucide.createIcons();
+      }
+
+      // ============================================================
+      // 8) Render Page
+      // ============================================================
       function renderPage() {
         const c = state.customer;
-        const initials = Refad.escapeHtml((c.name || '؟').charAt(0));
-        const balance = parseFloat(c.balance) || 0;
-        const balanceColor = balance < 0 ? 'var(--danger)' : (balance > 0 ? 'var(--success)' : 'white');
+        const initials = esc((c.name || '؟').charAt(0));
+        const balance = toNum(c.balance);
+        const creditLimit = toNum(c.credit_limit);
+        const paymentTerms = parseInt(c.payment_terms_days, 10) || 0;
+        const isActive = c.is_active !== false;
+
+        // Balance color logic for customer: positive = علينا (له)، negative = له عندنا (مدين لنا)
+        // فعليًا في النظام: customer.balance موجب = له عندنا (دائن)، سالب = علينا (مدين)
+        // لكن في بعض الأنظمة: موجب = مدين لنا. هنستخدم المنطق المتفق عليه:
+        // balance > 0 = علينا له (دائن) - danger
+        // balance < 0 = له عندنا (مدين) - success
+        const balanceColor = balance > 0 ? 'var(--danger)' : (balance < 0 ? 'var(--success)' : 'white');
 
         document.getElementById('pageTitle').textContent = c.name;
         document.getElementById('pageSubtitle').textContent = c.phone || c.email || '—';
         document.getElementById('topbarTitle').textContent = c.name;
+        document.title = c.name + ' - رفاد';
 
-        const totalInvoices = state.invoices.length;
-        const totalSales = state.invoices.reduce((s, i) => s + (parseFloat(i.grand_total) || 0), 0);
-        const totalPaid = state.invoices.reduce((s, i) => s + (parseFloat(i.paid_amount) || 0), 0);
+        // Compute stats
+        const activeInvoices = state.invoices.filter(i => i.status !== 'cancelled');
+        const totalSales = activeInvoices
+          .filter(i => (i.invoice_type || 'sale') === 'sale')
+          .reduce((s, i) => s + toNum(i.grand_total), 0);
+        const totalPaid = activeInvoices
+          .filter(i => (i.invoice_type || 'sale') === 'sale')
+          .reduce((s, i) => s + toNum(i.paid_amount), 0);
         const totalDue = totalSales - totalPaid;
+        const invoiceCount = activeInvoices.filter(i => (i.invoice_type || 'sale') === 'sale').length;
+
+        // Credit usage
+        const usagePct = creditLimit > 0 ? Math.min(100, Math.max(0, (balance / creditLimit) * 100)) : 0;
+        let creditStatus = 'ok';
+        if (creditLimit === 0) creditStatus = 'none';
+        else if (balance > creditLimit) creditStatus = 'danger';
+        else if (usagePct >= 80) creditStatus = 'warning';
+
+        const creditStatusLabel = {
+          ok: 'متاح',
+          warning: 'قريب من الحد',
+          danger: 'تجاوز الحد',
+          none: 'بدون حد'
+        }[creditStatus];
+
+        // Tabs counts
+        const notesCount = state.notes.length;
+        const returnsCount = state.returns.length;
+        const ordersCount = state.orders.length;
 
         document.getElementById('contentArea').innerHTML = `
-          <!-- Profile header -->
-          <div class="profile-head">
+          <!-- Profile Hero -->
+          <div class="profile-hero">
             <div class="profile-avatar">${initials}</div>
             <div class="profile-info">
-              <h1>${Refad.escapeHtml(c.name)}</h1>
-              <div class="meta">
-                ${c.phone ? `<span><i data-lucide="phone"></i> ${Refad.escapeHtml(c.phone)}</span>` : ''}
-                ${c.email ? `<span><i data-lucide="mail"></i> ${Refad.escapeHtml(c.email)}</span>` : ''}
-                ${c.address ? `<span><i data-lucide="map-pin"></i> ${Refad.escapeHtml(c.address)}</span>` : ''}
-                <span><i data-lucide="calendar"></i> ${Refad.format.date(c.created_at)}</span>
+              <div class="profile-name">
+                ${esc(c.name)}
+                <span class="profile-status ${isActive ? 'active' : 'inactive'}">
+                  ${isActive ? '✓ نشط' : '✕ موقوف'}
+                </span>
+              </div>
+              <div class="profile-meta">
+                ${c.phone ? `<span><i data-lucide="phone"></i> ${esc(c.phone)}</span>` : ''}
+                ${c.email ? `<span><i data-lucide="mail"></i> ${esc(c.email)}</span>` : ''}
+                ${c.address ? `<span><i data-lucide="map-pin"></i> ${esc(c.address)}</span>` : ''}
+                <span><i data-lucide="calendar"></i> عميل منذ ${Refad.format.date(c.created_at)}</span>
               </div>
             </div>
-            <div class="profile-balance">
+            <div class="profile-balance-box">
               <div class="lbl">الرصيد الحالي</div>
-              <div class="val" style="color:${balanceColor};">${Refad.format.money(balance)}</div>
+              <div class="val" style="color:${balanceColor};">${fmtMoney(balance)}</div>
+              <div style="font-size:11px;opacity:0.85;margin-top:4px;">
+                ${balance > 0 ? 'علينا له' : (balance < 0 ? 'له عندنا' : 'مصفّى')}
+              </div>
             </div>
           </div>
 
           <!-- Stats -->
           <div class="stats-grid">
-            <div class="stat-box">
-              <div class="v">${totalInvoices}</div>
-              <div class="l">فاتورة</div>
+            <div class="stat-card info">
+              <div class="stat-icon info"><i data-lucide="receipt"></i></div>
+              <div class="stat-body">
+                <div class="label">إجمالي الفواتير</div>
+                <div class="value info">${fmtNumber(invoiceCount)}</div>
+                <div class="sub">${fmtNumber(state.orders.length)} طلب بيع</div>
+              </div>
             </div>
-            <div class="stat-box">
-              <div class="v">${Refad.format.money(totalSales)}</div>
-              <div class="l">إجمالي المبيعات</div>
+            <div class="stat-card">
+              <div class="stat-icon"><i data-lucide="trending-up"></i></div>
+              <div class="stat-body">
+                <div class="label">إجمالي المبيعات</div>
+                <div class="value accent">${fmtMoney(totalSales)}</div>
+                <div class="sub">${c.payment_terms_days > 0 ? `${c.payment_terms_days} يوم سداد` : 'نقدي'}</div>
+              </div>
             </div>
-            <div class="stat-box">
-              <div class="v" style="color:var(--success);">${Refad.format.money(totalPaid)}</div>
-              <div class="l">إجمالي المدفوع</div>
+            <div class="stat-card success">
+              <div class="stat-icon success"><i data-lucide="check-circle"></i></div>
+              <div class="stat-body">
+                <div class="label">إجمالي المدفوع</div>
+                <div class="value success">${fmtMoney(totalPaid)}</div>
+                <div class="sub">${totalSales > 0 ? Math.round((totalPaid / totalSales) * 100) + '%' : '—'}</div>
+              </div>
             </div>
-            <div class="stat-box">
-              <div class="v" style="color:var(--danger);">${Refad.format.money(totalDue)}</div>
-              <div class="l">المتبقي</div>
+            <div class="stat-card danger">
+              <div class="stat-icon danger"><i data-lucide="alert-circle"></i></div>
+              <div class="stat-body">
+                <div class="label">المتبقي</div>
+                <div class="value danger">${fmtMoney(totalDue)}</div>
+                <div class="sub">${state.invoices.filter(i => i.status !== 'paid' && i.status !== 'cancelled' && (toNum(i.grand_total) - toNum(i.paid_amount)) > 0.01).length} فاتورة مفتوحة</div>
+              </div>
             </div>
           </div>
 
-          <!-- Info + notes -->
-          <div class="card">
-            <div class="card-header">
-              <h3><i data-lucide="info"></i> معلومات العميل</h3>
-            </div>
-            <div class="card-body">
-              <div class="info-grid">
-                <div class="info-item">
-                  <div class="lbl">الهاتف</div>
-                  <div class="val">${Refad.escapeHtml(c.phone || '—')}</div>
+          <!-- Credit Limit -->
+          ${creditLimit > 0 ? `
+            <div class="credit-limit-card">
+              <div class="credit-limit-header">
+                <div class="credit-limit-title">
+                  <i data-lucide="wallet"></i>
+                  <span>حد الائتمان</span>
                 </div>
-                <div class="info-item">
-                  <div class="lbl">البريد الإلكتروني</div>
-                  <div class="val">${Refad.escapeHtml(c.email || '—')}</div>
+                <div class="credit-limit-usage ${creditStatus}">
+                  ${creditStatusLabel} ${usagePct > 0 ? `(${Math.round(usagePct)}%)` : ''}
                 </div>
-                <div class="info-item">
-                  <div class="lbl">العنوان</div>
-                  <div class="val">${Refad.escapeHtml(c.address || '—')}</div>
+              </div>
+              <div class="credit-progress">
+                <div class="${creditStatus}" style="width:${usagePct}%;"></div>
+              </div>
+              <div class="credit-info-grid">
+                <div class="credit-info-item">
+                  <div class="lbl">حد الائتمان</div>
+                  <div class="val">${fmtMoney(creditLimit)}</div>
                 </div>
-                <div class="info-item">
-                  <div class="lbl">الحالة</div>
-                  <div class="val">
-                    <span class="badge-tag ${c.is_active === false ? 'red' : 'green'}">
-                      ${c.is_active === false ? 'موقوف' : 'نشط'}
-                    </span>
-                  </div>
+                <div class="credit-info-item">
+                  <div class="lbl">الرصيد الحالي</div>
+                  <div class="val" style="color:${balance > creditLimit ? 'var(--danger)' : 'var(--text)'};">${fmtMoney(balance)}</div>
                 </div>
-                ${c.notes ? `
-                  <div class="info-item" style="grid-column:1/-1;">
-                    <div class="lbl">ملاحظات</div>
-                    <div class="val" style="font-weight:400;">${Refad.escapeHtml(c.notes)}</div>
+                <div class="credit-info-item">
+                  <div class="lbl">المتاح</div>
+                  <div class="val" style="color:${(creditLimit - balance) < 0 ? 'var(--danger)' : 'var(--success)'};">${fmtMoney(creditLimit - balance)}</div>
+                </div>
+                ${paymentTerms > 0 ? `
+                  <div class="credit-info-item">
+                    <div class="lbl">فترة السداد</div>
+                    <div class="val">${paymentTerms} يوم</div>
                   </div>
                 ` : ''}
               </div>
             </div>
+          ` : ''}
+
+          <!-- Tabs -->
+          <div class="tabs">
+            <button class="tab active" data-tab="overview">
+              <i data-lucide="layout-dashboard"></i> نظرة عامة
+            </button>
+            <button class="tab" data-tab="invoices">
+              <i data-lucide="receipt"></i> الفواتير
+              <span class="count-badge">${invoiceCount}</span>
+            </button>
+            <button class="tab" data-tab="orders">
+              <i data-lucide="shopping-cart"></i> الطلبات
+              <span class="count-badge">${ordersCount}</span>
+            </button>
+            <button class="tab" data-tab="notes">
+              <i data-lucide="file-text"></i> الإشعارات
+              <span class="count-badge">${notesCount}</span>
+            </button>
+            <button class="tab" data-tab="returns">
+              <i data-lucide="undo-2"></i> المرتجعات
+              <span class="count-badge">${returnsCount}</span>
+            </button>
+            <button class="tab" data-tab="statement">
+              <i data-lucide="book-open"></i> كشف الحساب
+            </button>
           </div>
 
-          <!-- Invoices -->
-          <div class="card">
-            <div class="card-header">
-              <h3><i data-lucide="receipt"></i> آخر الفواتير (${state.invoices.length})</h3>
-            </div>
-            <div class="card-body" style="padding:0;">
-              ${state.invoices.length ? `
-                <div style="overflow-x:auto;">
-                  <table class="data-table">
-                    <thead>
-                      <tr>
-                        <th>رقم الفاتورة</th>
-                        <th>التاريخ</th>
-                        <th>الإجمالي</th>
-                        <th>المدفوع</th>
-                        <th>المتبقي</th>
-                        <th>الحالة</th>
-                        <th></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      ${state.invoices.slice(0, 30).map(inv => {
-                        const grand = parseFloat(inv.grand_total) || 0;
-                        const paid = parseFloat(inv.paid_amount) || 0;
-                        const due = grand - paid;
-                        const statusMap = {
-                          paid: { label: 'مدفوع', cls: 'green' },
-                          partial: { label: 'جزئي', cls: 'gold' },
-                          unpaid: { label: 'غير مدفوع', cls: 'red' },
-                          cancelled: { label: 'ملغي', cls: 'gray' }
-                        };
-                        const s = statusMap[inv.status] || { label: inv.status, cls: 'gray' };
-                        return `
-                          <tr>
-                            <td><strong>${Refad.escapeHtml(inv.invoice_number)}</strong></td>
-                            <td>${Refad.format.date(inv.invoice_date)}</td>
-                            <td class="money">${Refad.format.money(grand)}</td>
-                            <td class="money success">${Refad.format.money(paid)}</td>
-                            <td class="money ${due > 0 ? 'danger' : ''}">${Refad.format.money(due)}</td>
-                            <td><span class="badge-tag ${s.cls}">${s.label}</span></td>
-                            <td>
-                              <a href="invoices.html?id=${inv.id}" class="btn btn-outline btn-sm" style="padding:4px 10px;font-size:11px;">
-                                <i data-lucide="eye" style="width:12px;height:12px;"></i>
-                              </a>
-                            </td>
-                          </tr>
-                        `;
-                      }).join('')}
-                    </tbody>
-                  </table>
+          <!-- Tab: Overview -->
+          <div class="tab-panel active" data-panel="overview">
+            <div class="card">
+              <div class="card-header">
+                <h3><i data-lucide="info"></i> معلومات العميل</h3>
+              </div>
+              <div class="card-body">
+                <div class="info-grid">
+                  <div class="info-item">
+                    <div class="lbl"><i data-lucide="phone"></i> الهاتف</div>
+                    <div class="val">${esc(c.phone || '—')}</div>
+                  </div>
+                  <div class="info-item">
+                    <div class="lbl"><i data-lucide="mail"></i> البريد الإلكتروني</div>
+                    <div class="val">${esc(c.email || '—')}</div>
+                  </div>
+                  <div class="info-item">
+                    <div class="lbl"><i data-lucide="map-pin"></i> العنوان</div>
+                    <div class="val">${esc(c.address || '—')}</div>
+                  </div>
+                  <div class="info-item">
+                    <div class="lbl"><i data-lucide="activity"></i> الحالة</div>
+                    <div class="val">
+                      <span class="status-pill ${isActive ? 'active' : 'cancelled'}">${isActive ? 'نشط' : 'موقوف'}</span>
+                    </div>
+                  </div>
+                  ${c.credit_limit ? `
+                    <div class="info-item">
+                      <div class="lbl"><i data-lucide="wallet"></i> حد الائتمان</div>
+                      <div class="val">${fmtMoney(c.credit_limit)}</div>
+                    </div>
+                  ` : ''}
+                  ${c.payment_terms_days ? `
+                    <div class="info-item">
+                      <div class="lbl"><i data-lucide="clock"></i> فترة السداد</div>
+                      <div class="val">${c.payment_terms_days} يوم</div>
+                    </div>
+                  ` : ''}
+                  ${c.notes ? `
+                    <div class="info-item" style="grid-column:1/-1;">
+                      <div class="lbl"><i data-lucide="file-text"></i> ملاحظات</div>
+                      <div class="val" style="font-weight:500;line-height:1.7;">${esc(c.notes)}</div>
+                    </div>
+                  ` : ''}
                 </div>
-              ` : `
-                <div class="empty-state">
-                  <i data-lucide="receipt"></i>
-                  <p>لا توجد فواتير لهذا العميل بعد</p>
-                </div>
-              `}
+              </div>
             </div>
           </div>
 
-          <!-- Orders -->
-          ${state.orders.length ? `
+          <!-- Tab: Invoices -->
+          <div class="tab-panel" data-panel="invoices">
+            <div class="card">
+              <div class="card-header">
+                <h3><i data-lucide="receipt"></i> الفواتير (${state.invoices.length})</h3>
+                <button class="btn btn-primary btn-sm" onclick="location.href='invoices.html?customer=${customerId}'">
+                  <i data-lucide="plus"></i> فاتورة جديدة
+                </button>
+              </div>
+              <div id="invoicesTabBody"></div>
+            </div>
+          </div>
+
+          <!-- Tab: Orders -->
+          <div class="tab-panel" data-panel="orders">
             <div class="card">
               <div class="card-header">
                 <h3><i data-lucide="shopping-cart"></i> طلبات البيع (${state.orders.length})</h3>
               </div>
-              <div class="card-body" style="padding:0;">
-                <div style="overflow-x:auto;">
-                  <table class="data-table">
-                    <thead>
-                      <tr>
-                        <th>رقم الطلب</th>
-                        <th>التاريخ</th>
-                        <th>الصافي</th>
-                        <th>الحالة</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      ${state.orders.slice(0, 20).map(o => `
-                        <tr>
-                          <td><strong>${Refad.escapeHtml(o.order_number)}</strong></td>
-                          <td>${Refad.format.date(o.created_at)}</td>
-                          <td class="money accent">${Refad.format.money(o.total_amount)}</td>
-                          <td>
-                            <span class="badge-tag ${o.status === 'invoiced' ? 'green' : (o.status === 'cancelled' ? 'gray' : 'blue')}">
-                              ${o.status === 'draft' ? 'مسودة' :
-                                o.status === 'confirmed' ? 'مؤكد' :
-                                o.status === 'invoiced' ? 'تم إصدار الفاتورة' :
-                                o.status === 'cancelled' ? 'ملغي' : o.status}
-                            </span>
-                          </td>
-                        </tr>
-                      `).join('')}
-                    </tbody>
-                  </table>
+              <div id="ordersTabBody"></div>
+            </div>
+          </div>
+
+          <!-- Tab: Notes -->
+          <div class="tab-panel" data-panel="notes">
+            <div class="card">
+              <div class="card-header">
+                <h3><i data-lucide="file-text"></i> الإشعارات (${state.notes.length})</h3>
+                <button class="btn btn-gold btn-sm" id="addNoteBtn">
+                  <i data-lucide="plus"></i> إشعار جديد
+                </button>
+              </div>
+              <div id="notesTabBody"></div>
+            </div>
+          </div>
+
+          <!-- Tab: Returns -->
+          <div class="tab-panel" data-panel="returns">
+            <div class="card">
+              <div class="card-header">
+                <h3><i data-lucide="undo-2"></i> المرتجعات (${state.returns.length})</h3>
+              </div>
+              <div id="returnsTabBody"></div>
+            </div>
+          </div>
+
+          <!-- Tab: Statement -->
+          <div class="tab-panel" data-panel="statement">
+            <div class="card">
+              <div class="card-header">
+                <h3><i data-lucide="book-open"></i> كشف حساب مفصّل</h3>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                  <button class="btn btn-outline btn-sm" id="printStatementBtn">
+                    <i data-lucide="printer"></i> طباعة
+                  </button>
+                  <button class="btn btn-outline btn-sm" id="exportStatementBtn">
+                    <i data-lucide="download"></i> تصدير
+                  </button>
                 </div>
               </div>
+              <div id="statementTabBody"></div>
             </div>
-          ` : ''}
+          </div>
+        `;
+
+        // Render sub-tabs
+        renderInvoicesTab();
+        renderOrdersTab();
+        renderNotesTab();
+        renderReturnsTab();
+        renderStatementTab();
+
+        // Setup tabs
+        setupTabs();
+
+        if (window.lucide) lucide.createIcons();
+      }
+
+      // ============================================================
+      // 9) Render Invoices Tab
+      // ============================================================
+      function renderInvoicesTab() {
+        const body = document.getElementById('invoicesTabBody');
+        if (!body) return;
+
+        if (!state.invoices.length) {
+          body.innerHTML = `
+            <div class="empty-state">
+              <i data-lucide="receipt"></i>
+              <h3>لا توجد فواتير بعد</h3>
+              <p>لم يتم إصدار أي فاتورة بيع لهذا العميل</p>
+            </div>`;
+          if (window.lucide) lucide.createIcons();
+          return;
+        }
+
+        body.innerHTML = `
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>رقم الفاتورة</th>
+                  <th>التاريخ</th>
+                  <th>النوع</th>
+                  <th>الإجمالي</th>
+                  <th>المدفوع</th>
+                  <th>المتبقي</th>
+                  <th>الحالة</th>
+                  <th>الأيام</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                ${state.invoices.map(inv => {
+                  const grand = toNum(inv.grand_total);
+                  const paid = toNum(inv.paid_amount);
+                  const due = grand - paid;
+                  const isSale = (inv.invoice_type || 'sale') === 'sale';
+                  const days = daysUntil(inv.invoice_date);
+                  const isOverdue = days !== null && days < -30 && due > 0.01;
+
+                  const statusMap = {
+                    paid: { label: 'مدفوع', cls: 'paid' },
+                    partial: { label: 'جزئي', cls: 'partial' },
+                    unpaid: { label: 'غير مدفوع', cls: 'unpaid' },
+                    cancelled: { label: 'ملغي', cls: 'cancelled' }
+                  };
+                  const s = statusMap[inv.status] || { label: inv.status, cls: 'cancelled' };
+
+                  return `
+                    <tr>
+                      <td>
+                        <a href="invoices.html?id=${inv.id}" class="type-link">
+                          <i data-lucide="external-link"></i>
+                          ${esc(inv.invoice_number)}
+                        </a>
+                      </td>
+                      <td>${Refad.format.date(inv.invoice_date)}</td>
+                      <td>
+                        <span class="status-pill ${isSale ? 'paid' : 'return'}">
+                          ${isSale ? 'بيع' : 'مرتجع'}
+                        </span>
+                      </td>
+                      <td class="money">${fmtMoney(grand)}</td>
+                      <td class="money success">${fmtMoney(paid)}</td>
+                      <td class="money ${due > 0.01 ? 'danger' : ''}">${fmtMoney(due)}</td>
+                      <td><span class="status-pill ${s.cls}">${s.label}</span></td>
+                      <td style="font-size:11px;color:${isOverdue ? 'var(--danger)' : 'var(--text-muted)'};font-weight:${isOverdue ? '700' : '400'};">
+                        ${days !== null ? Math.abs(days) + (days < 0 ? ' يوم' : ' يوم') : '—'}
+                      </td>
+                      <td>
+                        ${due > 0.01 && inv.status !== 'cancelled' ? `
+                          <button class="btn btn-outline btn-sm" data-pay-invoice="${inv.id}" style="padding:4px 10px;font-size:11px;">
+                            <i data-lucide="banknote" style="width:12px;height:12px;"></i> دفع
+                          </button>
+                        ` : ''}
+                      </td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+
+        if (window.lucide) lucide.createIcons();
+
+        body.querySelectorAll('[data-pay-invoice]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const invId = parseInt(btn.dataset.payInvoice, 10);
+            openPaymentModal(invId);
+          });
+        });
+      }
+
+      // ============================================================
+      // 10) Render Orders Tab
+      // ============================================================
+      function renderOrdersTab() {
+        const body = document.getElementById('ordersTabBody');
+        if (!body) return;
+
+        if (!state.orders.length) {
+          body.innerHTML = `
+            <div class="empty-state">
+              <i data-lucide="shopping-cart"></i>
+              <h3>لا توجد طلبات بعد</h3>
+            </div>`;
+          if (window.lucide) lucide.createIcons();
+          return;
+        }
+
+        const statusMap = {
+          draft: { label: 'مسودة', cls: 'draft' },
+          confirmed: { label: 'مؤكد', cls: 'confirmed' },
+          invoiced: { label: 'تم الفاتورة', cls: 'invoiced' },
+          cancelled: { label: 'ملغي', cls: 'cancelled' }
+        };
+
+        body.innerHTML = `
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>رقم الطلب</th>
+                  <th>التاريخ</th>
+                  <th>الإجمالي</th>
+                  <th>الربح المتوقع</th>
+                  <th>الحالة</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                ${state.orders.map(o => {
+                  const s = statusMap[o.status] || { label: o.status, cls: 'draft' };
+                  return `
+                    <tr>
+                      <td><strong>${esc(o.order_number)}</strong></td>
+                      <td>${Refad.format.date(o.created_at)}</td>
+                      <td class="money accent">${fmtMoney(o.total_amount)}</td>
+                      <td class="money success">${fmtMoney(o.total_profit)}</td>
+                      <td><span class="status-pill ${s.cls}">${s.label}</span></td>
+                      <td>
+                        <a href="sales-orders.html?id=${o.id}" class="btn btn-outline btn-sm" style="padding:4px 10px;font-size:11px;">
+                          <i data-lucide="eye" style="width:12px;height:12px;"></i>
+                        </a>
+                      </td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
         `;
 
         if (window.lucide) lucide.createIcons();
       }
 
+      // ============================================================
+      // 11) Render Notes Tab
+      // ============================================================
+      function renderNotesTab() {
+        const body = document.getElementById('notesTabBody');
+        if (!body) return;
+
+        if (!state.notes.length) {
+          body.innerHTML = `
+            <div class="empty-state">
+              <i data-lucide="file-text"></i>
+              <h3>لا توجد إشعارات</h3>
+              <p>اضغط "إشعار جديد" لإضافة إشعار دائن أو مدين</p>
+            </div>`;
+          if (window.lucide) lucide.createIcons();
+          return;
+        }
+
+        body.innerHTML = `
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>رقم الإشعار</th>
+                  <th>النوع</th>
+                  <th>التاريخ</th>
+                  <th>المبلغ</th>
+                  <th>السبب</th>
+                  <th>الحالة</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                ${state.notes.map(n => {
+                  const isCredit = n.note_type === 'credit';
+                  const total = toNum(n.amount) + toNum(n.tax_amount);
+                  const statusMap = {
+                    active: { label: 'نشط', cls: 'active' },
+                    applied: { label: 'مُطبّق', cls: 'applied' },
+                    cancelled: { label: 'ملغي', cls: 'cancelled' }
+                  };
+                  const s = statusMap[n.status] || { label: n.status, cls: 'active' };
+                  return `
+                    <tr>
+                      <td><strong style="font-family:monospace;color:var(--accent);">${esc(n.note_number)}</strong></td>
+                      <td>
+                        <span class="status-pill ${isCredit ? 'credit' : 'debit'}">
+                          ${isCredit ? 'دائن' : 'مدين'}
+                        </span>
+                      </td>
+                      <td>${Refad.format.date(n.note_date)}</td>
+                      <td class="money ${isCredit ? 'success' : 'danger'}">
+                        ${isCredit ? '-' : '+'} ${fmtMoney(total)}
+                      </td>
+                      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(n.reason)}">
+                        ${esc(n.reason || '—')}
+                      </td>
+                      <td><span class="status-pill ${s.cls}">${s.label}</span></td>
+                      <td>
+                        <a href="credit-notes.html?id=${n.id}" class="btn btn-outline btn-sm" style="padding:4px 10px;font-size:11px;">
+                          <i data-lucide="eye" style="width:12px;height:12px;"></i>
+                        </a>
+                      </td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+
+        if (window.lucide) lucide.createIcons();
+      }
+
+      // ============================================================
+      // 12) Render Returns Tab
+      // ============================================================
+      function renderReturnsTab() {
+        const body = document.getElementById('returnsTabBody');
+        if (!body) return;
+
+        if (!state.returns.length) {
+          body.innerHTML = `
+            <div class="empty-state">
+              <i data-lucide="undo-2"></i>
+              <h3>لا توجد مرتجعات</h3>
+            </div>`;
+          if (window.lucide) lucide.createIcons();
+          return;
+        }
+
+        body.innerHTML = `
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>رقم المرتجع</th>
+                  <th>النوع</th>
+                  <th>التاريخ</th>
+                  <th>المبلغ</th>
+                  <th>السبب</th>
+                  <th>الحالة</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${state.returns.map(r => `
+                  <tr>
+                    <td><strong style="font-family:monospace;color:var(--accent);">${esc(r.return_number)}</strong></td>
+                    <td>
+                      <span class="status-pill ${r.return_type === 'sales' ? 'return' : 'partial'}">
+                        ${r.return_type === 'sales' ? 'مرتجع بيع' : 'مرتجع شراء'}
+                      </span>
+                    </td>
+                    <td>${Refad.format.date(r.return_date)}</td>
+                    <td class="money gold">${fmtMoney(r.total_amount)}</td>
+                    <td>${esc(r.reason || '—')}</td>
+                    <td><span class="status-pill active">${r.status || 'مكتمل'}</span></td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+
+        if (window.lucide) lucide.createIcons();
+      }
+
+      // ============================================================
+      // 13) Render Statement Tab
+      // ============================================================
+      function renderStatementTab() {
+        const body = document.getElementById('statementTabBody');
+        if (!body) return;
+
+        const entries = buildStatement();
+
+        if (!entries.length) {
+          body.innerHTML = `
+            <div class="empty-state">
+              <i data-lucide="book-open"></i>
+              <h3>لا توجد حركات</h3>
+            </div>`;
+          if (window.lucide) lucide.createIcons();
+          return;
+        }
+
+        body.innerHTML = `
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>التاريخ</th>
+                  <th>النوع</th>
+                  <th>المرجع</th>
+                  <th>مدين</th>
+                  <th>دائن</th>
+                  <th>الرصيد</th>
+                  <th>ملاحظات</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${entries.map(e => `
+                  <tr class="${e.rowClass || ''}">
+                    <td>${Refad.format.date(e.date)}</td>
+                    <td>
+                      <span class="status-pill ${e.typeClass}">${esc(e.type)}</span>
+                    </td>
+                    <td>
+                      ${e.link
+                        ? `<a href="${e.link}" class="type-link">${esc(e.reference)}</a>`
+                        : esc(e.reference)}
+                    </td>
+                    <td class="money ${e.debit > 0 ? 'danger' : ''}">
+                      ${e.debit > 0 ? fmtMoney(e.debit) : '—'}
+                    </td>
+                    <td class="money ${e.credit > 0 ? 'success' : ''}">
+                      ${e.credit > 0 ? fmtMoney(e.credit) : '—'}
+                    </td>
+                    <td><strong>${fmtMoney(e.balance)}</strong></td>
+                    <td style="font-size:12px;color:var(--text-muted);">${esc(e.notes || '')}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+
+        if (window.lucide) lucide.createIcons();
+      }
+
+      // ============================================================
+      // 14) Build Statement
+      // ============================================================
+      function buildStatement() {
+        const entries = [];
+
+        // Invoices → debit (الفاتورة مدينة للعميل)
+        state.invoices.forEach(inv => {
+          if (inv.status === 'cancelled') return;
+          const isSale = (inv.invoice_type || 'sale') === 'sale';
+          const grand = toNum(inv.grand_total);
+          if (grand <= 0) return;
+
+          entries.push({
+            date: inv.invoice_date,
+            type: isSale ? 'فاتورة بيع' : 'مرتجع بيع',
+            typeClass: isSale ? 'unpaid' : 'return',
+            reference: inv.invoice_number,
+            link: `invoices.html?id=${inv.id}`,
+            debit: isSale ? grand : 0,
+            credit: isSale ? 0 : grand,
+            notes: inv.notes || ''
+          });
+        });
+
+        // Payments (from paid_amount) → credit
+        state.invoices.forEach(inv => {
+          if (inv.status === 'cancelled') return;
+          const isSale = (inv.invoice_type || 'sale') === 'sale';
+          if (!isSale) return;
+          const paid = toNum(inv.paid_amount);
+          if (paid <= 0) return;
+
+          entries.push({
+            date: inv.invoice_date,
+            type: 'تحصيل',
+            typeClass: 'paid',
+            reference: `دفعة على ${inv.invoice_number}`,
+            link: `invoices.html?id=${inv.id}`,
+            debit: 0,
+            credit: paid,
+            notes: ''
+          });
+        });
+
+        // Credit/Debit notes
+        state.notes.forEach(n => {
+          if (n.status === 'cancelled') return;
+          const isCredit = n.note_type === 'credit';
+          const total = toNum(n.amount) + toNum(n.tax_amount);
+          if (total <= 0) return;
+
+          entries.push({
+            date: n.note_date,
+            type: isCredit ? 'إشعار دائن' : 'إشعار مدين',
+            typeClass: isCredit ? 'credit' : 'debit',
+            reference: n.note_number,
+            link: `credit-notes.html?id=${n.id}`,
+            debit: isCredit ? 0 : total,
+            credit: isCredit ? total : 0,
+            notes: n.reason || ''
+          });
+        });
+
+        // Sort by date
+        entries.sort((a, b) => String(a.date).localeCompare(String(b.date)));
+
+        // Add opening balance + running balance
+        let balance = 0;
+        const finalEntries = [];
+
+        // Opening
+        finalEntries.push({
+          date: state.customer.created_at ? String(state.customer.created_at).slice(0, 10) : '—',
+          type: 'رصيد افتتاحي',
+          typeClass: 'cancelled',
+          reference: '—',
+          link: null,
+          debit: 0,
+          credit: 0,
+          balance: 0,
+          notes: 'بداية كشف الحساب',
+          rowClass: 'statement-row-opening'
+        });
+
+        entries.forEach(e => {
+          // debit يزيد المديونية (علينا له)
+          // credit يقللها
+          balance = balance + e.debit - e.credit;
+          finalEntries.push({
+            ...e,
+            balance,
+            rowClass: e.debit > 0 ? 'statement-row-out' : 'statement-row-in'
+          });
+        });
+
+        return finalEntries;
+      }
+
+      // ============================================================
+      // 15) Print / Export
+      // ============================================================
       function printStatement() {
         const c = state.customer;
         if (!c) return;
 
-        const totalSales = state.invoices.reduce((s, i) => s + (parseFloat(i.grand_total) || 0), 0);
-        const totalPaid = state.invoices.reduce((s, i) => s + (parseFloat(i.paid_amount) || 0), 0);
-        const balance = parseFloat(c.balance) || 0;
+        const entries = buildStatement();
+        const activeInvoices = state.invoices.filter(i => i.status !== 'cancelled');
+        const totalSales = activeInvoices
+          .filter(i => (i.invoice_type || 'sale') === 'sale')
+          .reduce((s, i) => s + toNum(i.grand_total), 0);
+        const totalPaid = activeInvoices
+          .filter(i => (i.invoice_type || 'sale') === 'sale')
+          .reduce((s, i) => s + toNum(i.paid_amount), 0);
+        const balance = toNum(c.balance);
 
         if (Refad.Print && Refad.Print.html) {
           Refad.Print.html(`
             <div style="text-align:center;margin-bottom:20px;">
               <h1 style="color:#0B2C4D;font-size:22px;">كشف حساب عميل</h1>
-              <div style="color:#64748b;font-size:13px;margin-top:4px;">${Refad.format.date(new Date())}</div>
+              <div style="color:#64748b;font-size:13px;margin-top:4px;">
+                ${Refad.format.date(new Date())}
+              </div>
             </div>
 
             <div style="background:#F1F5F9;padding:12px 16px;border-radius:8px;margin-bottom:16px;">
               <div style="display:flex;gap:20px;flex-wrap:wrap;font-size:13px;">
-                <div><strong>العميل:</strong> ${Refad.escapeHtml(c.name)}</div>
-                ${c.phone ? `<div><strong>الهاتف:</strong> ${Refad.escapeHtml(c.phone)}</div>` : ''}
-                ${c.address ? `<div><strong>العنوان:</strong> ${Refad.escapeHtml(c.address)}</div>` : ''}
+                <div><strong>العميل:</strong> ${esc(c.name)}</div>
+                ${c.phone ? `<div><strong>الهاتف:</strong> ${esc(c.phone)}</div>` : ''}
+                ${c.address ? `<div><strong>العنوان:</strong> ${esc(c.address)}</div>` : ''}
               </div>
             </div>
 
-            <table>
+            <table style="width:100%;border-collapse:collapse;font-size:12px;">
               <thead>
-                <tr>
-                  <th>التاريخ</th>
-                  <th>رقم الفاتورة</th>
-                  <th>الإجمالي</th>
-                  <th>المدفوع</th>
-                  <th>المتبقي</th>
-                  <th>الحالة</th>
+                <tr style="background:#0B2C4D;color:white;">
+                  <th style="padding:8px;text-align:right;">التاريخ</th>
+                  <th style="padding:8px;text-align:right;">النوع</th>
+                  <th style="padding:8px;text-align:right;">المرجع</th>
+                  <th style="padding:8px;text-align:right;">مدين</th>
+                  <th style="padding:8px;text-align:right;">دائن</th>
+                  <th style="padding:8px;text-align:right;">الرصيد</th>
                 </tr>
               </thead>
               <tbody>
-                ${state.invoices.map(inv => {
-                  const grand = parseFloat(inv.grand_total) || 0;
-                  const paid = parseFloat(inv.paid_amount) || 0;
-                  const due = grand - paid;
-                  return `<tr>
-                    <td>${Refad.format.date(inv.invoice_date)}</td>
-                    <td>${Refad.escapeHtml(inv.invoice_number)}</td>
-                    <td>${Refad.format.money(grand)}</td>
-                    <td>${Refad.format.money(paid)}</td>
-                    <td>${Refad.format.money(due)}</td>
-                    <td>${inv.status === 'paid' ? 'مدفوع' : (inv.status === 'partial' ? 'جزئي' : 'غير مدفوع')}</td>
-                  </tr>`;
-                }).join('')}
+                ${entries.map(e => `
+                  <tr style="border-bottom:1px solid #e2e8f0;">
+                    <td style="padding:6px;">${Refad.format.date(e.date)}</td>
+                    <td style="padding:6px;">${esc(e.type)}</td>
+                    <td style="padding:6px;">${esc(e.reference)}</td>
+                    <td style="padding:6px;color:#ef4444;">${e.debit > 0 ? fmtMoney(e.debit) : '—'}</td>
+                    <td style="padding:6px;color:#10b981;">${e.credit > 0 ? fmtMoney(e.credit) : '—'}</td>
+                    <td style="padding:6px;font-weight:700;">${fmtMoney(e.balance)}</td>
+                  </tr>
+                `).join('')}
               </tbody>
             </table>
 
-            <div style="margin-top:20px;text-align:left;font-size:14px;">
-              <div>إجمالي المبيعات: <strong>${Refad.format.money(totalSales)}</strong></div>
-              <div>إجمالي المدفوع: <strong>${Refad.format.money(totalPaid)}</strong></div>
+            <div style="margin-top:20px;text-align:left;font-size:13px;line-height:1.9;">
+              <div>إجمالي المبيعات: <strong>${fmtMoney(totalSales)}</strong></div>
+              <div>إجمالي المدفوع: <strong>${fmtMoney(totalPaid)}</strong></div>
               <div style="font-size:16px;margin-top:8px;padding-top:8px;border-top:2px solid #0B2C4D;">
-                الرصيد الحالي: <strong style="color:${balance < 0 ? '#ef4444' : '#14B8A6'};">${Refad.format.money(balance)}</strong>
+                الرصيد الحالي: <strong style="color:${balance > 0 ? '#ef4444' : '#14B8A6'};">${fmtMoney(balance)}</strong>
               </div>
             </div>
           `, { title: 'كشف حساب - ' + c.name });
         } else {
-          Refad.toast.warning('مكتبة الطباعة غير محمّلة');
+          Refad.toast.warning('مكتبة الطباعة غير متوفرة');
         }
       }
 
+      function exportExcel() {
+        const c = state.customer;
+        if (!c) return;
+
+        const entries = buildStatement();
+
+        const data = entries.map(e => ({
+          'التاريخ': e.date,
+          'النوع': e.type,
+          'المرجع': e.reference,
+          'مدين': e.debit || 0,
+          'دائن': e.credit || 0,
+          'الرصيد': e.balance || 0,
+          'ملاحظات': e.notes || ''
+        }));
+
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'كشف الحساب');
+        XLSX.writeFile(wb, `statement-${c.name}-${today()}.xlsx`);
+        Refad.toast.success('تم التصدير');
+      }
+
+      // ============================================================
+      // 16) Tabs Setup
+      // ============================================================
+      function setupTabs() {
+        document.querySelectorAll('.tab').forEach(tab => {
+          tab.addEventListener('click', () => {
+            const name = tab.dataset.tab;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            tab.classList.add('active');
+            const panel = document.querySelector(`.tab-panel[data-panel="${name}"]`);
+            if (panel) panel.classList.add('active');
+            if (window.lucide) lucide.createIcons();
+          });
+        });
+      }
+
+      // ============================================================
+      // 17) Payment Modal
+      // ============================================================
+      function populatePaymentInvoices() {
+        const sel = document.getElementById('paymentInvoice');
+        if (!sel) return;
+
+        sel.innerHTML = '<option value="">— دفعة عامة (FIFO على الفواتير) —</option>';
+
+        const unpaidInvoices = state.invoices
+          .filter(inv =>
+            inv.status !== 'cancelled' &&
+            (inv.invoice_type || 'sale') === 'sale' &&
+            (toNum(inv.grand_total) - toNum(inv.paid_amount)) > 0.01
+          )
+          .sort((a, b) => String(a.invoice_date).localeCompare(String(b.invoice_date)));
+
+        unpaidInvoices.forEach(inv => {
+          const due = toNum(inv.grand_total) - toNum(inv.paid_amount);
+          const opt = document.createElement('option');
+          opt.value = inv.id;
+          opt.textContent = `${inv.invoice_number} — متبقي: ${fmtMoney(due)}`;
+          opt.dataset.due = due;
+          sel.appendChild(opt);
+        });
+      }
+
+      function openPaymentModal(invoiceId) {
+        if (!state.customer) return;
+
+        document.getElementById('paymentForm').reset();
+        document.getElementById('paymentDate').value = today();
+        document.getElementById('paymentCustomerName').textContent = state.customer.name;
+        document.getElementById('paymentAmount').value = '';
+
+        populatePaymentInvoices();
+
+        if (invoiceId) {
+          const sel = document.getElementById('paymentInvoice');
+          sel.value = invoiceId;
+          const opt = sel.selectedOptions[0];
+          if (opt?.dataset.due) {
+            document.getElementById('paymentAmount').value = opt.dataset.due;
+          }
+        }
+
+        document.getElementById('paymentModal').classList.add('show');
+        if (window.lucide) lucide.createIcons();
+      }
+
+      async function submitPayment(e) {
+        e.preventDefault();
+        const btn = document.getElementById('paymentSaveBtn');
+        btn.disabled = true;
+
+        try {
+          const invoiceId = parseInt(document.getElementById('paymentInvoice').value, 10) || null;
+          const amountVal = Refad.toNum(document.getElementById('paymentAmount').value);
+          const dateVal = document.getElementById('paymentDate').value || today();
+          const method = document.getElementById('paymentMethod').value;
+          const reference = document.getElementById('paymentReference').value.trim();
+          const notes = document.getElementById('paymentNotes').value.trim();
+
+          if (amountVal <= 0) {
+            Refad.toast.warning('أدخل مبلغاً صحيحاً');
+            btn.disabled = false;
+            return;
+          }
+
+          const customer = state.customer;
+
+          if (invoiceId) {
+            // Pay specific invoice
+            const inv = state.invoices.find(i => i.id === invoiceId);
+            if (!inv) throw new Error('الفاتورة غير موجودة');
+
+            const due = toNum(inv.grand_total) - toNum(inv.paid_amount);
+            if (amountVal > due + 0.01) {
+              Refad.toast.warning(`المبلغ أكبر من المتبقي (${fmtMoney(due)})`);
+              btn.disabled = false;
+              return;
+            }
+
+            const newPaid = toNum(inv.paid_amount) + amountVal;
+            const newStatus = newPaid >= toNum(inv.grand_total) ? 'paid' : 'partial';
+
+            await Refad.db.update('sales_invoices', inv.id, {
+              paid_amount: newPaid,
+              status: newStatus
+            });
+
+            inv.paid_amount = newPaid;
+            inv.status = newStatus;
+          } else {
+            // General payment (FIFO)
+            let remaining = amountVal;
+            const unpaid = state.invoices
+              .filter(inv =>
+                inv.status !== 'cancelled' &&
+                (inv.invoice_type || 'sale') === 'sale' &&
+                (toNum(inv.grand_total) - toNum(inv.paid_amount)) > 0.01
+              )
+              .sort((a, b) => String(a.invoice_date).localeCompare(String(b.invoice_date)));
+
+            for (const inv of unpaid) {
+              if (remaining <= 0) break;
+              const due = toNum(inv.grand_total) - toNum(inv.paid_amount);
+              const applied = Math.min(remaining, due);
+              const newPaid = toNum(inv.paid_amount) + applied;
+              const newStatus = newPaid >= toNum(inv.grand_total) ? 'paid' : 'partial';
+
+              await Refad.db.update('sales_invoices', inv.id, {
+                paid_amount: newPaid,
+                status: newStatus
+              });
+
+              inv.paid_amount = newPaid;
+              inv.status = newStatus;
+              remaining -= applied;
+            }
+          }
+
+          // Update customer balance (decrease)
+          const newBalance = Math.max(0, toNum(customer.balance) - amountVal);
+          await Refad.db.update('customers', customer.id, { balance: newBalance });
+          customer.balance = newBalance;
+
+          await Refad.logActivity('register_payment', 'customers',
+            `تسجيل دفعة ${fmtMoney(amountVal)} من ${customer.name}`, customer.id);
+
+          Refad.toast.success(`تم تسجيل دفعة ${fmtMoney(amountVal)}`);
+          document.getElementById('paymentModal').classList.remove('show');
+
+          await loadData();
+        } catch (err) {
+          console.error('[CustomerDetails] Payment failed:', err);
+          Refad.toast.error('فشل تسجيل الدفعة: ' + err.message);
+        } finally {
+          btn.disabled = false;
+        }
+      }
+
+      // ============================================================
+      // 18) Note Modal
+      // ============================================================
+      function setNoteType(type) {
+        document.getElementById('noteType').value = type;
+        document.querySelectorAll('#noteTypePicker .type-option').forEach(opt => {
+          opt.classList.toggle('selected', opt.dataset.type === type);
+        });
+      }
+
+      function populateNoteInvoices() {
+        const sel = document.getElementById('noteInvoice');
+        if (!sel) return;
+        sel.innerHTML = '<option value="">— بدون فاتورة —</option>';
+        state.invoices
+          .filter(i => i.status !== 'cancelled')
+          .slice(0, 100)
+          .forEach(inv => {
+            const opt = document.createElement('option');
+            opt.value = inv.id;
+            opt.textContent = `${inv.invoice_number} — ${fmtMoney(inv.grand_total)}`;
+            sel.appendChild(opt);
+          });
+      }
+
+      function openNoteModal() {
+        if (!state.customer) return;
+        document.getElementById('noteForm').reset();
+        document.getElementById('noteDate').value = today();
+        setNoteType('credit');
+        populateNoteInvoices();
+        document.getElementById('noteModal').classList.add('show');
+        if (window.lucide) lucide.createIcons();
+      }
+
+      async function submitNote(e) {
+        e.preventDefault();
+        const btn = document.getElementById('noteSaveBtn');
+        btn.disabled = true;
+
+        try {
+          const noteType = document.getElementById('noteType').value;
+          const amountVal = Refad.toNum(document.getElementById('noteAmount').value);
+          const dateVal = document.getElementById('noteDate').value || today();
+          const reason = document.getElementById('noteReason').value.trim();
+          const invoiceId = parseInt(document.getElementById('noteInvoice').value, 10) || null;
+          const notes = document.getElementById('noteNotes').value.trim() || null;
+
+          if (amountVal <= 0) { Refad.toast.warning('أدخل مبلغاً صحيحاً'); btn.disabled = false; return; }
+          if (!reason) { Refad.toast.warning('السبب مطلوب'); btn.disabled = false; return; }
+
+          // Generate note number
+          const prefix = noteType === 'credit' ? 'CN' : 'DN';
+          const year = new Date().getFullYear();
+          const count = await Refad.db.count('credit_notes', {
+            eq: { company_id: session.company_id }
+          });
+          const noteNumber = `${prefix}-${year}-${String(count + 1).padStart(5, '0')}`;
+
+          const payload = {
+            company_id: session.company_id,
+            note_number: noteNumber,
+            note_type: noteType,
+            party_type: 'customer',
+            customer_id: state.customer.id,
+            reference_invoice_id: invoiceId,
+            amount: amountVal,
+            tax_amount: 0,
+            reason,
+            notes,
+            note_date: dateVal,
+            status: 'active',
+            created_by: session.user_id
+          };
+
+          const created = await Refad.db.insert('credit_notes', payload);
+
+          await Refad.logActivity('create_credit_note', 'customers',
+            `إضافة ${noteType === 'credit' ? 'إشعار دائن' : 'إشعار مدين'} ${noteNumber} بمبلغ ${fmtMoney(amountVal)} للعميل ${state.customer.name}`,
+            created?.id);
+
+          Refad.toast.success(`تم إضافة ${noteType === 'credit' ? 'الإشعار الدائن' : 'الإشعار المدين'}`);
+          document.getElementById('noteModal').classList.remove('show');
+
+          await loadData();
+        } catch (err) {
+          console.error('[CustomerDetails] Note failed:', err);
+          Refad.toast.error('فشل إضافة الإشعار: ' + err.message);
+        } finally {
+          btn.disabled = false;
+        }
+      }
+
+      // ============================================================
+      // 19) Bind Events
+      // ============================================================
+      function bindEvents() {
+        document.getElementById('printBtn').addEventListener('click', printStatement);
+        document.getElementById('exportBtn').addEventListener('click', exportExcel);
+        document.getElementById('paymentBtn').addEventListener('click', () => openPaymentModal());
+        document.getElementById('noteBtn').addEventListener('click', openNoteModal);
+
+        // Modal close
+        document.querySelectorAll('[data-close]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.remove('show'));
+          });
+        });
+
+        document.querySelectorAll('.modal-backdrop').forEach(m => {
+          m.addEventListener('click', e => {
+            if (e.target === m) m.classList.remove('show');
+          });
+        });
+
+        document.addEventListener('keydown', e => {
+          if (e.key === 'Escape') {
+            document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.remove('show'));
+          }
+        });
+
+        // Payment form
+        document.getElementById('paymentForm').addEventListener('submit', submitPayment);
+
+        document.getElementById('paymentInvoice').addEventListener('change', e => {
+          const opt = e.target.selectedOptions[0];
+          if (opt?.dataset.due) {
+            document.getElementById('paymentAmount').value = opt.dataset.due;
+          }
+        });
+
+        // Note form
+        document.getElementById('noteForm').addEventListener('submit', submitNote);
+
+        document.querySelectorAll('#noteTypePicker .type-option').forEach(opt => {
+          opt.addEventListener('click', () => setNoteType(opt.dataset.type));
+        });
+
+        // Statement print/export inside tab
+        document.addEventListener('click', (e) => {
+          if (e.target.closest('#printStatementBtn')) printStatement();
+          if (e.target.closest('#exportStatementBtn')) exportExcel();
+          if (e.target.closest('#addNoteBtn')) openNoteModal();
+        });
+      }
+
+      // ============================================================
+      // 20) Init
+      // ============================================================
       async function init() {
         buildSidebar();
         fillUser();
@@ -708,11 +2513,13 @@
         setupSidebarMobile();
         setupUserMenu();
         setupNotifBtn();
-
-        document.getElementById('printBtn').addEventListener('click', printStatement);
+        bindEvents();
 
         await loadData();
+
         if (Refad.registerServiceWorker) Refad.registerServiceWorker();
+
+        console.log('%c[Refad] Customer Details v2 ready', 'color:#14B8A6;font-weight:bold');
       }
 
       if (document.readyState === 'loading') {
@@ -720,8 +2527,6 @@
       } else {
         init();
       }
-
-      console.log('%c[Refad] Customer details ready', 'color:#14B8A6;font-weight:bold');
 
     })();
   </script>

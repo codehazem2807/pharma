@@ -1,7 +1,14 @@
 /* ============================================================
  * Refad ERP - Core Module
- * Version: 1.0.0
+ * Version: 1.1.0
  * Dependencies: @supabase/supabase-js@2 (must be loaded before)
+ * 
+ * Changelog v1.1.0:
+ *   - Silent Realtime Fallback (لو فشل realtime، مايطلعش رسالة مزعجة)
+ *   - Throttled Error Messages (مرة واحدة كل 5 دقايق)
+ *   - Auto-retry with exponential backoff
+ *   - Skip realtime if no session
+ *   - Prevent duplicate subscription attempts
  * ============================================================ */
 
 (function (window) {
@@ -18,7 +25,14 @@
     IDLE_TIMEOUT_MIN: 30,
     SESSION_HOURS: 8,
     APP_NAME: 'رفاد',
-    APP_VERSION: '1.0.0'
+    APP_VERSION: '1.1.0',
+    // ✨ إعدادات جديدة للتحكم في realtime
+    REALTIME: {
+      MAX_RETRIES: 3,           // عدد محاولات إعادة الاتصال
+      RETRY_DELAY_MS: 5000,     // تأخير أولي (يتضاعف كل مرة)
+      ERROR_THROTTLE_MS: 300000, // رسالة الخطأ مرة كل 5 دقايق
+      SILENT_ERRORS: true       // true = مايطلعش toast، فقط console
+    }
   };
 
   // ============================================================
@@ -30,7 +44,12 @@
 
   const sb = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY, {
     auth: { persistSession: false, autoRefreshToken: false },
-    global: { headers: { 'x-application-name': 'refad-erp' } }
+    global: { headers: { 'x-application-name': 'refad-erp' } },
+    realtime: {
+      params: {
+        eventsPerSecond: 10
+      }
+    }
   });
 
   // ============================================================
@@ -40,6 +59,9 @@
   let notificationPollTimer = null;
   let notificationPollCursor = null;
   let notificationPollWarningAt = 0;
+  let notificationRealtimeRetry = 0;
+  let notificationRealtimeRetryTimer = null;
+  let notificationLastErrorAt = 0;
   const seenNotificationIds = new Set();
 
   const notificationPermissionByType = {
@@ -98,11 +120,16 @@
         });
         notificationRealtimeChannel = null;
       }
+      if (notificationRealtimeRetryTimer) {
+        window.clearTimeout(notificationRealtimeRetryTimer);
+        notificationRealtimeRetryTimer = null;
+      }
       if (notificationPollTimer) {
         window.clearInterval(notificationPollTimer);
         notificationPollTimer = null;
       }
       notificationPollCursor = null;
+      notificationRealtimeRetry = 0;
       seenNotificationIds.clear();
       localStorage.removeItem(CONFIG.SESSION_KEY);
     },
@@ -147,7 +174,7 @@
   };
 
   // ============================================================
-  // 4) Toast Notifications (Toastify wrapper)
+  // 4) Toast Notifications
   // ============================================================
   const toast = {
     _show(message, type, duration) {
@@ -356,12 +383,9 @@
   };
 
   // ============================================================
-  // 9) Database Helpers (Supabase wrappers)
+  // 9) Database Helpers
   // ============================================================
   const db = {
-    /**
-     * جلب صفوف من جدول
-     */
     async select(table, options = {}) {
       let q = sb.from(table).select(options.columns || '*');
       if (options.eq) {
@@ -455,9 +479,6 @@
       return count || 0;
     },
 
-    /**
-     * استدعاء RPC (لو استخدمنا functions لاحقاً)
-     */
     async rpc(name, params) {
       const { data, error } = await sb.rpc(name, params || {});
       if (error) throw error;
@@ -490,9 +511,6 @@
       return true;
     },
 
-    /**
-     * ضغط صورة باستخدام Canvas (توفير مساحة)
-     */
     async compressImage(file, maxWidth = 1200, quality = 0.8) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -521,7 +539,7 @@
   };
 
   // ============================================================
-  // 11) Theme Manager (Light / Dark)
+  // 11) Theme Manager
   // ============================================================
   const theme = {
     get() {
@@ -552,7 +570,7 @@
   };
 
   // ============================================================
-  // 12) Idle Timer (Auto Logout)
+  // 12) Idle Timer
   // ============================================================
   let _idleTimer = null;
   function resetIdleTimer() {
@@ -798,10 +816,11 @@
         ? rows[rows.length - 1].created_at
         : new Date().toISOString();
     } catch (error) {
+      // ✨ تعديل: رسالة هادئة مرة كل دقيقة، بدون toast مزعج
       if (Date.now() - notificationPollWarningAt > 60000) {
         notificationPollWarningAt = Date.now();
         console.warn('[Refad] Notification polling failed:', error.message);
-        toast.warning('تعذّر تحديث الإشعارات؛ تحقق من اتصال النظام وإعدادات قاعدة البيانات');
+        // مافيش toast — فقط console
       }
     }
   }
@@ -813,30 +832,100 @@
     notificationPollTimer = window.setInterval(pollNotifications, 20000);
   }
 
-  function startNotificationRealtime() {
-    const session = Session.get();
-    if (!session?.user_id || !session.company_id || notificationRealtimeChannel) return;
-    if (!Object.values(notificationPermissionByType).some(permission => Session.has(permission)) &&
-        !Session.has('notifications.view')) return;
-    startNotificationPolling();
-    notificationRealtimeChannel = sb
-      .channel(`refad-notifications-${session.user_id}`)
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'notifications',
-        filter: `user_id=eq.${session.user_id}`
-      }, payload => {
-        presentNotification(payload.new);
-      })
-      .subscribe(status => {
-        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-          console.warn(`[Refad] Notification realtime subscription status: ${status}`);
-          toast.warning('تعذّر الاتصال بالإشعارات الفورية؛ راجع إعدادات Supabase Realtime واتصال الإنترنت');
-        }
-      });
+  // ═══════════════════════════════════════════════════════════
+  // ✨ 15) Realtime Notification Subscription (v2 — Silent)
+  // ═══════════════════════════════════════════════════════════
+  function showRealtimeError(message) {
+    // ✨ Throttle: مرة واحدة كل 5 دقايق، فقط في console
+    if (CONFIG.REALTIME.SILENT_ERRORS) {
+      if (Date.now() - notificationLastErrorAt > CONFIG.REALTIME.ERROR_THROTTLE_MS) {
+        notificationLastErrorAt = Date.now();
+        console.warn('[Refad]', message);
+        console.warn('[Refad] Realtime is unavailable. Polling will continue as fallback.');
+      }
+      return;
+    }
+    // وضع غير صامت (للـ debugging فقط)
+    if (Date.now() - notificationLastErrorAt > CONFIG.REALTIME.ERROR_THROTTLE_MS) {
+      notificationLastErrorAt = Date.now();
+      toast.warning(message, 5000);
+    }
   }
 
+  function scheduleRealtimeRetry() {
+    if (notificationRealtimeRetryTimer) return;
+    if (notificationRealtimeRetry >= CONFIG.REALTIME.MAX_RETRIES) {
+      console.warn(`[Refad] Realtime: max retries (${CONFIG.REALTIME.MAX_RETRIES}) reached. Using polling only.`);
+      return;
+    }
+    notificationRealtimeRetry++;
+    const delay = CONFIG.REALTIME.RETRY_DELAY_MS * Math.pow(2, notificationRealtimeRetry - 1);
+    notificationRealtimeRetryTimer = window.setTimeout(() => {
+      notificationRealtimeRetryTimer = null;
+      startNotificationRealtime();
+    }, delay);
+  }
+
+  function startNotificationRealtime() {
+    const session = Session.get();
+
+    // ✨ Guard: ما تعملش subscribe بدون session
+    if (!session?.user_id || !session.company_id) {
+      return;
+    }
+
+    // ✨ Guard: لو channel موجود، ما تكررش
+    if (notificationRealtimeChannel) return;
+
+    // ✨ Guard: تأكد من الصلاحيات
+    const hasAnyPermission = Object.values(notificationPermissionByType).some(permission => Session.has(permission));
+    if (!hasAnyPermission && !Session.has('notifications.view')) return;
+
+    // ✨ ابدأ polling كـ fallback أولاً
+    startNotificationPolling();
+
+    try {
+      notificationRealtimeChannel = sb
+        .channel(`refad-notifications-${session.user_id}`)
+        .on('postgres_changes', {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${session.user_id}`
+        }, payload => {
+          presentNotification(payload.new);
+        })
+        .subscribe(status => {
+          if (status === 'SUBSCRIBED') {
+            // ✅ نجح الاتصال — صفّر الـ retries
+            notificationRealtimeRetry = 0;
+            console.log('[Refad] ✅ Notification realtime subscribed');
+          } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+            // ⚠️ فشل — استخدم polling فقط
+            showRealtimeError('تعذّر الاتصال بالإشعارات الفورية؛ سيتم الاعتماد على التحديث الدوري');
+            // امسح الـ channel القديم
+            if (notificationRealtimeChannel) {
+              try {
+                sb.removeChannel(notificationRealtimeChannel).catch(() => {});
+              } catch (e) {}
+              notificationRealtimeChannel = null;
+            }
+            // ✨ جدول retry
+            scheduleRealtimeRetry();
+          } else if (status === 'CLOSED') {
+            notificationRealtimeChannel = null;
+          }
+        });
+    } catch (e) {
+      console.warn('[Refad] Realtime setup exception:', e.message);
+      notificationRealtimeChannel = null;
+      scheduleRealtimeRetry();
+    }
+  }
+
+  // ============================================================
+  // 16) Global Navigation Helper
+  // ============================================================
   function ensureGlobalNavigation(nav) {
     if (!nav) return;
     if (Session.has('sales.view') || Session.has('purchases.receive')) {
@@ -890,7 +979,7 @@
   }
 
   // ============================================================
-  // 15) Debounce / Throttle
+  // 17) Debounce / Throttle
   // ============================================================
   function debounce(fn, ms) {
     let t;
@@ -912,7 +1001,7 @@
   }
 
   // ============================================================
-  // 16) Pagination Helper
+  // 18) Pagination Helper
   // ============================================================
   function paginate(array, page, perPage) {
     const p = Math.max(1, page || 1);
@@ -932,7 +1021,7 @@
   }
 
   // ============================================================
-  // 17) Query String Helpers
+  // 19) Query String Helpers
   // ============================================================
   function getParam(name) {
     return new URLSearchParams(window.location.search).get(name);
@@ -949,7 +1038,7 @@
   }
 
   // ============================================================
-  // 18) UUID/Token Generator
+  // 20) UUID/Token Generator
   // ============================================================
   function randomToken(len) {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -962,7 +1051,7 @@
   }
 
   // ============================================================
-  // 19) Number/Currency Utils
+  // 21) Number/Currency Utils
   // ============================================================
   function toNum(v) {
     const n = Number(v);
@@ -974,7 +1063,7 @@
   }
 
   // ============================================================
-  // 20) PWA Registration
+  // 22) PWA Registration
   // ============================================================
   function registerServiceWorker() {
     if ('serviceWorker' in navigator && location.protocol === 'https:') {
@@ -985,22 +1074,19 @@
   }
 
   // ============================================================
-  // 21) Global Error Handler
+  // 23) Global Error Handler
   // ============================================================
   window.addEventListener('unhandledrejection', (e) => {
     console.error('[Refad] Unhandled:', e.reason);
   });
 
   // ============================================================
-  // 22) Export Global Object
+  // 24) Export Global Object
   // ============================================================
   const Refad = {
-    // config & clients
     CONFIG,
     sb,
     supabase: sb,
-
-    // core modules
     Session,
     toast,
     alert,
@@ -1009,14 +1095,10 @@
     db,
     storage,
     theme,
-
-    // dom
     $,
     $$,
     el,
     escapeHtml,
-
-    // utils
     logActivity,
     notify,
     notifyCompany,
@@ -1033,13 +1115,15 @@
     round2,
     registerServiceWorker,
     initIdleWatcher,
-
-    // version
     version: CONFIG.APP_VERSION
   };
 
   window.Refad = Refad;
-  startNotificationRealtime();
+
+  // ✨ بدء realtime فقط لو فيه session
+  if (Session.get()) {
+    startNotificationRealtime();
+  }
 
   const responsiveStyle = document.createElement('style');
   responsiveStyle.textContent = `
@@ -1079,39 +1163,135 @@
       }
     }
     @media (max-width: 640px) {
-      .content {
-        padding: 12px;
-      }
-      .topbar {
-        gap: 8px;
-        padding-inline: 12px;
-      }
-      .form-grid {
-        grid-template-columns: minmax(0, 1fr);
-      }
-      .form-group.span-2 {
-        grid-column: 1 / -1;
-      }
-      .card-body {
-        padding: 14px;
-      }
-      .modal-backdrop {
-        padding: 12px;
-      }
+      .content { padding: 12px; }
+      .topbar { gap: 8px; padding-inline: 12px; }
+      .form-grid { grid-template-columns: minmax(0, 1fr); }
+      .form-group.span-2 { grid-column: 1 / -1; }
+      .card-body { padding: 14px; }
+      .modal-backdrop { padding: 12px; }
       .modal-backdrop .modal {
         width: 100%;
         max-height: calc(100dvh - 24px);
       }
-      .modal-backdrop .modal-footer {
-        flex-wrap: wrap;
-      }
+      .modal-backdrop .modal-footer { flex-wrap: wrap; }
     }
   `;
   document.head.appendChild(responsiveStyle);
+  // ============================================================
+  // ✨ 25) Unified Menu Builder (القائمة الموحّدة الكاملة)
+  // ============================================================
+  const MENU = [
+    // ─── الرئيسية ───
+    { section: 'الرئيسية', items: [
+      { label: 'لوحة التحكم', icon: 'layout-dashboard', href: 'dashboard.html' },
+      { label: 'الشات', icon: 'message-circle', href: 'chat.html', permission: 'chat.use' },
+      { label: 'الإشعارات', icon: 'bell', href: 'notifications.html', permission: 'notifications.view', id: 'notifNavItem' }
+    ]},
 
-  // Auto-init theme on load
+    // ─── العمليات ───
+    { section: 'العمليات', items: [
+      { label: 'الأصناف', icon: 'package', href: 'products.html', permission: 'products.view' },
+      { label: 'المخزون', icon: 'warehouse', href: 'inventory.html', permission: 'inventory.view' },
+      { label: 'طلبات الشراء', icon: 'clipboard-list', href: 'purchase-requests.html', permission: 'purchases.view' },
+      { label: 'الاستلامات', icon: 'package-check', href: 'receipts.html', permission: 'purchases.receive' },
+      { label: 'طلبات البيع', icon: 'shopping-cart', href: 'sales-orders.html', permission: 'sales.view' },
+      { label: 'نقطة البيع', icon: 'scan-barcode', href: 'pos.html', permission: 'sales.pos', badge: 'POS', badgeClass: 'teal' },
+      { label: 'الفواتير', icon: 'receipt', href: 'invoices.html', permission: 'sales.view' },
+      { label: 'المرتجعات', icon: 'undo-2', href: 'returns.html', permission: 'sales.view' }
+    ]},
+
+    // ─── الأطراف ───
+    { section: 'الأطراف', items: [
+      { label: 'الموردين', icon: 'truck', href: 'suppliers.html', permission: 'suppliers.view' },
+      { label: 'العملاء', icon: 'users', href: 'customers.html', permission: 'customers.view' },
+      { label: 'المندوبين', icon: 'user-check', href: 'sales-reps.html', permission: 'company.owner', badge: 'جديد', badgeClass: 'new' }
+    ]},
+
+    // ─── المخزون ───
+    { section: 'المخزون', items: [
+      { label: 'المخازن', icon: 'building-2', href: 'warehouses.html', permission: 'inventory.view' },
+      { label: 'التحويلات', icon: 'arrow-right-left', href: 'warehouse-transfers.html', permission: 'inventory.view', badge: 'جديد', badgeClass: 'new' },
+      { label: 'الجرد', icon: 'clipboard-check', href: 'stocktake.html', permission: 'inventory.stocktake' },
+      { label: 'التسويات', icon: 'sliders-horizontal', href: 'adjustments.html', permission: 'inventory.adjust' }
+    ]},
+
+    // ─── الموارد البشرية ───
+    { section: 'الموارد البشرية', items: [
+      { label: 'الموظفين', icon: 'user-cog', href: 'employees.html', permission: 'employees.view' },
+      { label: 'الصلاحيات', icon: 'shield-check', href: 'permissions.html', permission: 'permissions.manage' },
+      { label: 'الحضور', icon: 'calendar-check', href: 'attendance.html', permission: 'attendance.view' },
+      { label: 'الرواتب', icon: 'wallet', href: 'payroll.html', permission: 'payroll.view' },
+      { label: 'البدلات والحوافز', icon: 'gift', href: 'bonus-schemes.html', permission: 'payroll.view', badge: 'جديد', badgeClass: 'new' }
+    ]},
+
+    // ─── المالية ───
+    { section: 'المالية', items: [
+      { label: 'الحسابات', icon: 'landmark', href: 'accounts.html', permission: 'company.owner' },
+      { label: 'الشيكات', icon: 'file-check-2', href: 'cheques.html', permission: 'company.owner', badge: 'جديد', badgeClass: 'new' },
+      { label: 'الإشعارات', icon: 'file-text', href: 'credit-notes.html', permission: 'company.owner' },
+      { label: 'المدفوعات', icon: 'banknote', href: 'payments.html', permission: 'company.owner' },
+      { label: 'المصاريف', icon: 'receipt-text', href: 'expenses.html', permission: 'expenses.view' },
+      { label: 'التقارير', icon: 'bar-chart-3', href: 'reports.html', permission: 'reports.view' }
+    ]},
+
+    // ─── النظام ───
+    { section: 'النظام', items: [
+      { label: 'إعدادات الشركة', icon: 'settings', href: 'company-settings.html', permission: 'settings.view' },
+      { label: 'نسخ احتياطي', icon: 'database', href: 'backup.html', permission: 'company.owner' },
+      { label: 'شاشة الأدمن', icon: 'shield', href: 'admin.html', permission: 'admin.full', badge: 'Admin', badgeClass: 'gold' }
+    ]}
+  ];
+
+  /**
+   * ✨ دالة موحّدة لبناء القائمة الجانبية في كل الصفحات
+   * @param {string} activePage - اسم الصفحة الحالية (مثال: 'products.html')
+   * @param {string} navId - ID عنصر القائمة (افتراضي: 'sidebarNav')
+   */
+  function buildMenu(activePage, navId) {
+    const nav = document.getElementById(navId || 'sidebarNav');
+    if (!nav) {
+      console.warn('[Refad] sidebarNav element not found');
+      return;
+    }
+
+    const currentPage = activePage || location.pathname.split('/').pop() || 'dashboard.html';
+    const frag = document.createDocumentFragment();
+
+    MENU.forEach(group => {
+      const allowed = group.items.filter(item =>
+        !item.permission || Session.has(item.permission)
+      );
+      if (!allowed.length) return;
+
+      frag.appendChild(el('div', { class: 'nav-section' }, group.section));
+
+      allowed.forEach(item => {
+        const isActive = item.href === currentPage;
+        const a = el('a', {
+          href: item.href,
+          class: 'nav-item' + (isActive ? ' active' : '')
+        });
+        if (item.id) a.id = item.id;
+
+        a.innerHTML = '<i data-lucide="' + item.icon + '"></i>' +
+          '<span>' + escapeHtml(item.label) + '</span>' +
+          (item.badge ? '<span class="badge ' + (item.badgeClass || '') + '">' + item.badge + '</span>' : '');
+
+        frag.appendChild(a);
+      });
+    });
+
+    nav.innerHTML = '';
+    nav.appendChild(frag);
+
+    if (window.lucide) window.lucide.createIcons();
+  }
+
+  // ✅ صدّر الدالة للـ Refad
+  Refad.buildMenu = buildMenu;
+  Refad.MENU = MENU;
   theme.init();
 
-  console.log(`%c[Refad] Core v${CONFIG.APP_VERSION} loaded`, 'color:#14B8A6;font-weight:bold');
+  console.log(`%c[Refad] Core v${CONFIG.APP_VERSION} loaded (Silent Realtime)`, 'color:#14B8A6;font-weight:bold');
 
 })(window);

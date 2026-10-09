@@ -1,0 +1,2309 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0B2C4D">
+  <title>التحويلات بين المخازن - رفاد</title>
+
+  <link rel="icon" type="image/png" href="logo.png">
+  <link rel="manifest" href="manifest.json">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --primary: #0B2C4D; --accent: #14B8A6; --accent-dark: #0d9488;
+      --gold: #F59E0B; --bg: #F1F5F9; --card: #ffffff; --text: #0f172a;
+      --text-muted: #64748b; --border: #e2e8f0; --danger: #ef4444;
+      --success: #10b981; --warning: #f59e0b; --info: #3b82f6;
+      --purple: #8b5cf6;
+      --sidebar-bg: #0B2C4D; --sidebar-text: #cbd5e1;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+      --shadow: 0 4px 20px rgba(11,44,77,0.08);
+      --shadow-lg: 0 10px 40px rgba(11,44,77,0.12);
+      --radius: 14px; --radius-sm: 10px;
+      --sidebar-w: 260px; --topbar-h: 64px;
+    }
+    [data-theme="dark"] {
+      --bg: #0a1628; --card: #0f2137; --text: #f1f5f9;
+      --text-muted: #94a3b8; --border: #1e3a5f;
+      --sidebar-bg: #061a2e; --sidebar-text: #94a3b8;
+    }
+    html, body { height: 100%; font-family: 'Cairo', sans-serif; background: var(--bg); color: var(--text); transition: background .3s, color .3s; }
+    body { display: flex; min-height: 100vh; overflow-x: hidden; }
+
+    /* Sidebar */
+    .sidebar { width: var(--sidebar-w); height: 100vh; background: var(--sidebar-bg); color: var(--sidebar-text); position: fixed; top: 0; right: 0; z-index: 100; display: flex; flex-direction: column; transition: transform .3s; box-shadow: -4px 0 20px rgba(0,0,0,.1); }
+    .sidebar-header { padding: 20px 22px; border-bottom: 1px solid rgba(255,255,255,.08); display: flex; align-items: center; gap: 14px; height: var(--topbar-h); box-sizing: border-box; }
+    .sidebar-logo { width: 40px; height: 40px; background: linear-gradient(135deg, var(--accent), var(--accent-dark)); border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 12px rgba(20,184,166,.4); overflow: hidden; }
+    .sidebar-logo img { width: 70%; height: 70%; object-fit: contain; }
+    .sidebar-logo .fallback { color: white; font-weight: 800; font-size: 18px; }
+    .sidebar-brand h2 { color: white; font-size: 20px; font-weight: 800; line-height: 1.2; }
+    .sidebar-brand p { font-size: 10px; opacity: .7; margin-top: 2px; }
+    .sidebar-nav { flex: 1; overflow-y: auto; padding: 12px 0; }
+    .sidebar-nav::-webkit-scrollbar { width: 5px; }
+    .sidebar-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,.15); border-radius: 10px; }
+    .nav-section { padding: 8px 20px 4px; font-size: 10px; font-weight: 700; color: rgba(255,255,255,.35); text-transform: uppercase; letter-spacing: 1px; margin-top: 8px; }
+    .nav-item { display: flex; align-items: center; gap: 12px; padding: 11px 22px; color: var(--sidebar-text); text-decoration: none; font-size: 14px; font-weight: 500; border-right: 3px solid transparent; transition: all .2s; cursor: pointer; }
+    .nav-item:hover { background: rgba(255,255,255,.05); color: white; border-right-color: rgba(20,184,166,.5); }
+    .nav-item.active { background: rgba(20,184,166,.12); color: white; border-right-color: var(--accent); font-weight: 600; }
+    .nav-item i { width: 18px; height: 18px; opacity: .85; flex-shrink: 0; }
+    .nav-item .badge { margin-right: auto; background: var(--danger); color: white; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
+    .nav-item .badge.teal { background: var(--accent); }
+    .nav-item .badge.gold { background: var(--gold); }
+
+    /* Main */
+    .main { flex: 1; margin-right: var(--sidebar-w); min-width: 0; display: flex; flex-direction: column; }
+    .topbar { height: var(--topbar-h); background: var(--card); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 16px; padding: 0 24px; position: sticky; top: 0; z-index: 50; box-shadow: var(--shadow-sm); }
+    .menu-toggle { display: none; background: transparent; border: none; color: var(--text); cursor: pointer; padding: 8px; border-radius: 8px; }
+    .topbar-title { font-size: 18px; font-weight: 700; }
+    .topbar-actions { display: flex; align-items: center; gap: 8px; margin-right: auto; }
+    .icon-btn { width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--border); background: var(--card); color: var(--text); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .icon-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .icon-btn i { width: 18px; height: 18px; }
+    .user-menu { display: flex; align-items: center; gap: 10px; padding: 5px 12px 5px 5px; border-radius: 10px; cursor: pointer; border: 1px solid var(--border); background: var(--card); }
+    .user-avatar { width: 34px; height: 34px; border-radius: 9px; background: linear-gradient(135deg, var(--primary), var(--accent)); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 14px; overflow: hidden; }
+    .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .user-info { display: flex; flex-direction: column; line-height: 1.2; }
+    .user-info .name { font-size: 13px; font-weight: 700; }
+    .user-info .role { font-size: 11px; color: var(--text-muted); }
+    .dropdown { position: absolute; top: calc(100% + 8px); left: 0; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: var(--shadow-lg); min-width: 200px; padding: 6px; opacity: 0; visibility: hidden; transform: translateY(-8px); transition: all .2s; z-index: 100; }
+    .dropdown.show { opacity: 1; visibility: visible; transform: translateY(0); }
+    .dropdown-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; color: var(--text); font-size: 13px; font-weight: 500; text-decoration: none; cursor: pointer; }
+    .dropdown-item:hover { background: var(--bg); }
+    .dropdown-item.danger { color: var(--danger); }
+    .dropdown-divider { height: 1px; background: var(--border); margin: 6px 0; }
+
+    /* Content */
+    .content { padding: 24px; flex: 1; }
+    .page-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+    .page-head h1 { font-size: 24px; font-weight: 800; margin-bottom: 4px; }
+    .page-head p { font-size: 13px; color: var(--text-muted); }
+
+    .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; font-family: inherit; font-size: 14px; font-weight: 600; border-radius: var(--radius-sm); border: none; cursor: pointer; transition: all .2s; text-decoration: none; white-space: nowrap; }
+    .btn:disabled { opacity: .6; cursor: not-allowed; }
+    .btn i { width: 16px; height: 16px; }
+    .btn-primary { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; }
+    .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(20,184,166,.35); }
+    .btn-outline { background: var(--card); color: var(--text); border: 1px solid var(--border); }
+    .btn-outline:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-danger:hover:not(:disabled) { background: #b91c1c; }
+    .btn-success { background: var(--success); color: white; }
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+    /* Stats */
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px; }
+    .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; display: flex; align-items: center; gap: 12px; box-shadow: var(--shadow-sm); }
+    .stat-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .stat-icon i { width: 20px; height: 20px; color: white; }
+    .stat-icon.blue   { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+    .stat-icon.teal   { background: linear-gradient(135deg, #14B8A6, #0d9488); }
+    .stat-icon.gold   { background: linear-gradient(135deg, #F59E0B, #d97706); }
+    .stat-icon.purple { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
+    .stat-body .label { font-size: 11px; color: var(--text-muted); font-weight: 600; }
+    .stat-body .value { font-size: 20px; font-weight: 800; }
+
+    /* Toolbar */
+    .toolbar { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; box-shadow: var(--shadow-sm); }
+    .search-input { position: relative; flex: 1; min-width: 220px; }
+    .search-input input { width: 100%; padding: 10px 42px 10px 14px; font-family: inherit; font-size: 14px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); outline: none; transition: all .2s; }
+    .search-input input:focus { border-color: var(--accent); background: var(--card); }
+    .search-input i { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--text-muted); pointer-events: none; }
+    .select-wrap { position: relative; min-width: 160px; }
+    .select-wrap select { width: 100%; padding: 10px 32px 10px 14px; font-family: inherit; font-size: 14px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); outline: none; cursor: pointer; appearance: none; }
+    .select-wrap select:focus { border-color: var(--accent); }
+    .select-wrap::after { content: ''; position: absolute; left: 12px; top: 50%; transform: translateY(-50%); border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 5px solid var(--text-muted); pointer-events: none; }
+
+    /* Table */
+    .table-wrap { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-sm); overflow: hidden; }
+    .table-scroll { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 1000px; }
+    thead { background: var(--bg); border-bottom: 1px solid var(--border); }
+    th { text-align: right; padding: 14px 16px; font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; white-space: nowrap; }
+    tbody tr { border-bottom: 1px solid var(--border); transition: background .15s; cursor: pointer; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--bg); }
+    td { padding: 14px 16px; vertical-align: middle; }
+    .badge-tag { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; font-size: 11px; font-weight: 600; border-radius: 20px; }
+    .badge-tag.green { background: rgba(16,185,129,.12); color: var(--success); }
+    .badge-tag.red   { background: rgba(239,68,68,.12); color: var(--danger); }
+    .badge-tag.gold  { background: rgba(245,158,11,.12); color: var(--warning); }
+    .badge-tag.blue  { background: rgba(59,130,246,.12); color: var(--info); }
+    .badge-tag.gray  { background: rgba(148,163,184,.15); color: var(--text-muted); }
+    .badge-tag.purple { background: rgba(139,92,246,.12); color: var(--purple); }
+
+    .wh-flow { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+    .wh-flow .wh-name { background: var(--bg); padding: 4px 10px; border-radius: 8px; font-weight: 600; }
+    .wh-flow i { width: 14px; height: 14px; color: var(--accent); }
+
+    .action-btn { width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--text-muted); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: all .2s; }
+    .action-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .action-btn i { width: 15px; height: 15px; }
+
+    .empty-row td { padding: 60px 20px; text-align: center; color: var(--text-muted); cursor: default; }
+    .empty-row i { width: 48px; height: 48px; opacity: .4; margin-bottom: 10px; }
+
+    /* Pagination */
+    .pagination { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-top: 1px solid var(--border); font-size: 13px; color: var(--text-muted); flex-wrap: wrap; gap: 12px; }
+    .pagination .controls { display: flex; gap: 6px; }
+    .page-btn { min-width: 34px; height: 34px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--text); font-weight: 600; cursor: pointer; }
+    .page-btn:hover:not(:disabled):not(.active) { border-color: var(--accent); color: var(--accent); }
+    .page-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+    .page-btn:disabled { opacity: .4; cursor: not-allowed; }
+
+    /* Modal */
+    .modal-backdrop { position: fixed; inset: 0; z-index: 500; display: none; align-items: center; justify-content: center; padding: 18px; background: rgba(15,23,42,.55); animation: fadeIn .2s; }
+    .modal-backdrop.show { display: flex; }
+    .modal { width: min(960px, 100%); max-height: min(92vh, 900px); overflow-y: auto; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-lg); animation: slideUp .25s; display: flex; flex-direction: column; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .modal-header, .modal-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .modal-header h2 { font-size: 17px; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+    .modal-header h2 i { width: 20px; height: 20px; color: var(--accent); }
+    .modal-footer { justify-content: flex-end; border-top: 1px solid var(--border); border-bottom: 0; background: var(--bg); flex-wrap: wrap; }
+    .modal-body { padding: 20px; overflow-y: auto; flex: 1; min-height: 0; }
+    .modal-body::-webkit-scrollbar { width: 8px; }
+    .modal-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+    .close-btn { width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .2s; flex-shrink: 0; }
+    .close-btn:hover { border-color: var(--danger); color: var(--danger); }
+    .close-btn i { width: 16px; height: 16px; }
+
+    .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+    .form-field { display: flex; flex-direction: column; gap: 6px; }
+    .form-field.full { grid-column: 1 / -1; }
+    .form-field label { color: var(--text-muted); font-size: 12px; font-weight: 700; }
+    .form-field label .req { color: var(--danger); }
+    .form-field input, .form-field select, .form-field textarea { width: 100%; min-height: 42px; padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); background: var(--bg); font: inherit; outline: none; transition: all .2s; }
+    .form-field input:focus, .form-field select:focus, .form-field textarea:focus { border-color: var(--accent); background: var(--card); box-shadow: 0 0 0 3px rgba(20,184,166,.1); }
+    .form-field textarea { min-height: 80px; resize: vertical; }
+
+    /* Transfer Type Selector */
+    .transfer-types { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-bottom: 20px; }
+    .transfer-type-btn {
+      background: var(--card);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      cursor: pointer;
+      transition: all .2s;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+    .transfer-type-btn:hover { border-color: var(--accent); transform: translateY(-2px); }
+    .transfer-type-btn.active {
+      border-color: var(--accent);
+      background: rgba(20,184,166,.08);
+      box-shadow: 0 4px 12px rgba(20,184,166,.2);
+    }
+    .transfer-type-btn .icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 11px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .transfer-type-btn .icon i { width: 20px; height: 20px; }
+    .transfer-type-btn .title { font-size: 13px; font-weight: 800; color: var(--text); }
+    .transfer-type-btn .desc { font-size: 10px; color: var(--text-muted); }
+
+    /* Transfer Items List */
+    .transfer-items-list { border: 1px solid var(--border); border-radius: 10px; padding: 8px; background: var(--bg); max-height: 400px; overflow-y: auto; }
+    .transfer-items-list::-webkit-scrollbar { width: 6px; }
+    .transfer-items-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+    .transfer-item-row { display: grid; grid-template-columns: 1fr 100px 40px; gap: 8px; align-items: center; padding: 10px; border-radius: 8px; background: var(--card); margin-bottom: 6px; border: 1px solid var(--border); }
+    .transfer-item-row .info .name { font-weight: 700; font-size: 13px; }
+    .transfer-item-row .info .sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .transfer-item-row input { text-align: center; padding: 6px 8px; border: 1.5px solid var(--border); border-radius: 6px; font-family: inherit; font-size: 13px; font-weight: 600; background: var(--bg); color: var(--text); outline: none; }
+    .transfer-item-row input:focus { border-color: var(--accent); background: var(--card); }
+
+    /* Batch Picker */
+    .batch-picker { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 12px; max-height: 420px; overflow-y: auto; }
+    .batch-picker::-webkit-scrollbar { width: 6px; }
+    .batch-picker::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+    .batch-pick-item { display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 8px; cursor: pointer; transition: background .15s; border: 1px solid transparent; margin-bottom: 4px; }
+    .batch-pick-item:hover { background: var(--card); border-color: var(--border); }
+    .batch-pick-item.selected { background: rgba(20,184,166,.08); border-color: var(--accent); }
+
+    .batch-details {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+      gap: 8px;
+      margin-top: 6px;
+      padding: 8px 10px;
+      background: var(--card);
+      border-radius: 6px;
+      font-size: 11px;
+      border: 1px dashed var(--border);
+    }
+    .batch-details .bd-item { display: flex; flex-direction: column; gap: 2px; }
+    .batch-details .bd-item .lbl { color: var(--text-muted); font-size: 10px; font-weight: 600; }
+    .batch-details .bd-item .val { font-weight: 700; color: var(--text); }
+    .batch-details .bd-item .val.success { color: var(--success); }
+    .batch-details .bd-item .val.danger { color: var(--danger); }
+    .batch-details .bd-item .val.gold { color: var(--gold); }
+
+    .info-box { background: rgba(59,130,246,.06); border: 1.5px solid rgba(59,130,246,.25); border-radius: 10px; padding: 12px 14px; font-size: 12px; line-height: 1.7; display: flex; align-items: flex-start; gap: 8px; margin-bottom: 16px; }
+    .info-box i { width: 16px; height: 16px; color: var(--info); flex-shrink: 0; margin-top: 2px; }
+    .info-box.success { background: rgba(16,185,129,.06); border-color: rgba(16,185,129,.25); }
+    .info-box.success i { color: var(--success); }
+    .info-box.warning { background: rgba(245,158,11,.06); border-color: rgba(245,158,11,.25); }
+    .info-box.warning i { color: var(--gold); }
+    .info-box.purple { background: rgba(139,92,246,.06); border-color: rgba(139,92,246,.25); }
+    .info-box.purple i { color: var(--purple); }
+
+    /* Transfer Detail View */
+    .transfer-detail-header {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+      padding: 16px;
+      background: linear-gradient(135deg, rgba(11,44,77,0.03), rgba(20,184,166,0.05));
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin-bottom: 16px;
+    }
+    .transfer-detail-header .tdh-item { display: flex; flex-direction: column; gap: 4px; }
+    .transfer-detail-header .tdh-item .lbl { font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; }
+    .transfer-detail-header .tdh-item .val { font-size: 14px; font-weight: 700; color: var(--text); }
+    .transfer-detail-header .tdh-item .val.teal { color: var(--accent); }
+    .transfer-detail-header .tdh-item .val.gold { color: var(--gold); }
+    .transfer-detail-header .tdh-item .val.purple { color: var(--purple); }
+
+    .transfer-route {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      padding: 20px;
+      background: var(--bg);
+      border-radius: 12px;
+      margin-bottom: 16px;
+      border: 1px solid var(--border);
+    }
+    .transfer-route .route-wh { flex: 1; text-align: center; padding: 12px; background: var(--card); border-radius: 10px; border: 2px solid var(--border); }
+    .transfer-route .route-wh.from { border-color: var(--info); }
+    .transfer-route .route-wh.to { border-color: var(--success); }
+    .transfer-route .route-wh .wh-label { font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; }
+    .transfer-route .route-wh .wh-name { font-size: 15px; font-weight: 800; color: var(--text); }
+    .transfer-route .route-arrow { font-size: 28px; color: var(--accent); font-weight: 700; flex-shrink: 0; }
+
+    .transfer-items-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 700px; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+    .transfer-items-table thead { background: var(--bg); }
+    .transfer-items-table th { padding: 10px 12px; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; text-align: right; white-space: nowrap; }
+    .transfer-items-table tbody tr { border-top: 1px solid var(--border); }
+    .transfer-items-table tbody tr:hover { background: var(--bg); }
+    .transfer-items-table td { padding: 10px 12px; vertical-align: middle; }
+
+    .transfer-summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      padding: 16px;
+      background: linear-gradient(135deg, rgba(20,184,166,0.05), rgba(139,92,246,0.05));
+      border: 1.5px solid rgba(20,184,166,0.25);
+      border-radius: 12px;
+      margin-top: 16px;
+    }
+    .transfer-summary .ts-item .lbl { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
+    .transfer-summary .ts-item .val { font-size: 20px; font-weight: 800; color: var(--text); margin-top: 4px; }
+    .transfer-summary .ts-item .val.teal { color: var(--accent); }
+    .transfer-summary .ts-item .val.purple { color: var(--purple); }
+    .transfer-summary .ts-item .val.gold { color: var(--gold); }
+
+    /* Invoice Picker */
+    .invoice-picker { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 12px; max-height: 400px; overflow-y: auto; }
+    .invoice-picker::-webkit-scrollbar { width: 6px; }
+    .invoice-picker::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+    .invoice-pick-item { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 8px; cursor: pointer; transition: all .15s; border: 1px solid transparent; margin-bottom: 6px; background: var(--card); }
+    .invoice-pick-item:hover { border-color: var(--accent); }
+    .invoice-pick-item.selected { background: rgba(20,184,166,.08); border-color: var(--accent); }
+
+    /* Transfer Preview */
+    .transfer-preview {
+      background: linear-gradient(135deg, rgba(20,184,166,.06), rgba(139,92,246,.04));
+      border: 2px solid rgba(20,184,166,.3);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .transfer-preview .tp-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px dashed rgba(20,184,166,.3);
+    }
+    .transfer-preview .tp-header .tp-title {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .transfer-preview .tp-header .tp-title i { width: 16px; height: 16px; color: var(--accent); }
+    .transfer-preview .tp-header .tp-count {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--accent);
+      background: rgba(20,184,166,.12);
+      padding: 4px 10px;
+      border-radius: 12px;
+    }
+    .transfer-preview .tp-items {
+      display: grid;
+      gap: 6px;
+      max-height: 240px;
+      overflow-y: auto;
+      padding: 4px;
+    }
+    .transfer-preview .tp-items::-webkit-scrollbar { width: 4px; }
+    .transfer-preview .tp-items::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+    .transfer-preview .tp-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      background: var(--card);
+      border-radius: 8px;
+      font-size: 12px;
+      border: 1px solid var(--border);
+    }
+    .transfer-preview .tp-item .name { font-weight: 700; color: var(--text); }
+    .transfer-preview .tp-item .sub { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+    .transfer-preview .tp-item .qty {
+      background: var(--accent);
+      color: white;
+      padding: 3px 10px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 700;
+      min-width: 40px;
+      text-align: center;
+    }
+
+    .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 99; opacity: 0; transition: opacity .3s; }
+    .overlay.show { display: block; opacity: 1; }
+
+    @media (max-width: 1024px) {
+      .sidebar { transform: translateX(100%); }
+      .sidebar.open { transform: translateX(0); }
+      .main { margin-right: 0; }
+      .menu-toggle { display: flex; }
+      .user-info { display: none; }
+    }
+    @media (max-width: 640px) {
+      .content { padding: 16px; }
+      .topbar { padding: 0 14px; }
+      .form-grid { grid-template-columns: 1fr; }
+      .form-field.full { grid-column: auto; }
+      .transfer-item-row { grid-template-columns: 1fr 80px 40px; }
+      .transfer-route { flex-direction: column; }
+      .transfer-route .route-arrow { transform: rotate(90deg); }
+      .transfer-types { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo" id="sidebarLogo">
+        <img src="logo.png" alt="رفاد" id="sidebarLogoImg" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=fallback>R</span>';">
+      </div>
+      <div class="sidebar-brand">
+        <h2 id="sidebarBrandName">رفاد</h2>
+        <p id="sidebarBrandDesc">نظام إدارة الأدوية</p>
+      </div>
+    </div>
+    <nav class="sidebar-nav" id="sidebarNav"></nav>
+  </aside>
+
+  <div class="overlay" id="overlay"></div>
+
+  <div class="main">
+    <header class="topbar">
+      <button class="menu-toggle" id="menuToggle"><i data-lucide="menu"></i></button>
+      <div class="topbar-title">التحويلات بين المخازن</div>
+      <div class="topbar-actions">
+        <button class="icon-btn" id="themeToggle" title="الوضع الليلي">
+          <i data-lucide="moon" id="themeIcon"></i>
+        </button>
+        <div style="position:relative;">
+          <div class="user-menu" id="userMenu">
+            <div class="user-avatar" id="userAvatar">م</div>
+            <div class="user-info">
+              <span class="name" id="userName">—</span>
+              <span class="role" id="userRole">—</span>
+            </div>
+            <i data-lucide="chevron-down" style="width:14px;height:14px;opacity:.5;"></i>
+          </div>
+          <div class="dropdown" id="userDropdown">
+            <a href="company-settings.html" class="dropdown-item"><i data-lucide="settings"></i> الإعدادات</a>
+            <div class="dropdown-divider"></div>
+            <div class="dropdown-item danger" id="logoutBtn"><i data-lucide="log-out"></i> تسجيل الخروج</div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="content">
+
+      <div class="page-head">
+        <div>
+          <h1>التحويلات بين المخازن</h1>
+          <p>نقل المخزون بين مخازن الشركة</p>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn btn-outline" id="refreshBtn">
+            <i data-lucide="refresh-cw"></i> تحديث
+          </button>
+          <button class="btn btn-primary" id="newTransferBtn">
+            <i data-lucide="plus"></i> تحويل جديد
+          </button>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats">
+        <div class="stat-card">
+          <div class="stat-icon blue"><i data-lucide="repeat"></i></div>
+          <div class="stat-body">
+            <div class="label">إجمالي التحويلات</div>
+            <div class="value" id="statTotal">—</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon teal"><i data-lucide="calendar-check"></i></div>
+          <div class="stat-body">
+            <div class="label">تحويلات الشهر</div>
+            <div class="value" id="statMonth">—</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon gold"><i data-lucide="package"></i></div>
+          <div class="stat-body">
+            <div class="label">إجمالي الأصناف</div>
+            <div class="value" id="statItems">—</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon purple"><i data-lucide="banknote"></i></div>
+          <div class="stat-body">
+            <div class="label">قيمة التحويلات</div>
+            <div class="value" id="statValue">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Toolbar -->
+      <div class="toolbar">
+        <div class="search-input">
+          <input type="text" id="searchInput" placeholder="ابحث برقم التحويل أو الملاحظات...">
+          <i data-lucide="search"></i>
+        </div>
+        <div class="select-wrap">
+          <select id="filterFrom">
+            <option value="">من كل المخازن</option>
+          </select>
+        </div>
+        <div class="select-wrap">
+          <select id="filterTo">
+            <option value="">إلى كل المخازن</option>
+          </select>
+        </div>
+        <div class="select-wrap">
+          <select id="filterType">
+            <option value="">كل الأنواع</option>
+            <option value="manual">يدوي</option>
+            <option value="invoice">فاتورة استلام</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="table-wrap">
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>رقم التحويل</th>
+                <th>النوع</th>
+                <th>التاريخ</th>
+                <th>من مخزن</th>
+                <th>إلى مخزن</th>
+                <th>عدد الأصناف</th>
+                <th>الكمية</th>
+                <th>القيمة</th>
+                <th>بواسطة</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="transfersBody"></tbody>
+          </table>
+        </div>
+        <div class="pagination" id="transfersPagination"></div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Modal: تحويل جديد -->
+  <div class="modal-backdrop" id="newTransferBackdrop" aria-hidden="true">
+    <section class="modal" role="dialog" aria-modal="true">
+      <form id="newTransferForm">
+        <header class="modal-header">
+          <h2>
+            <i data-lucide="repeat"></i>
+            <span>تحويل جديد بين المخازن</span>
+          </h2>
+          <button class="close-btn" type="button" id="closeNewTransferBtn"><i data-lucide="x"></i></button>
+        </header>
+        <div class="modal-body">
+
+          <div style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;margin-bottom:10px;">
+            اختر نوع التحويل
+          </div>
+
+          <!-- نوع التحويل -->
+          <div class="transfer-types" id="transferTypes">
+            <div class="transfer-type-btn active" data-type="manual">
+              <div class="icon"><i data-lucide="hand"></i></div>
+              <div class="title">يدوي</div>
+              <div class="desc">اختر تشغيلات معينة</div>
+            </div>
+            <div class="transfer-type-btn" data-type="invoice">
+              <div class="icon"><i data-lucide="package-check"></i></div>
+              <div class="title">فاتورة استلام</div>
+              <div class="desc">حوّل فاتورة كاملة</div>
+            </div>
+          </div>
+
+          <div class="form-grid">
+
+            <div class="form-field">
+              <label for="fromWarehouse">من المخزن <span class="req">*</span></label>
+              <select id="fromWarehouse" required></select>
+            </div>
+
+            <div class="form-field">
+              <label for="toWarehouse">إلى المخزن <span class="req">*</span></label>
+              <select id="toWarehouse" required></select>
+            </div>
+
+            <div class="form-field full">
+              <label for="transferReason">السبب (اختياري)</label>
+              <input id="transferReason" type="text" maxlength="200" placeholder="مثال: تنظيم مخزون، طلب فرع...">
+            </div>
+
+            <!-- ========== Manual Mode ========== -->
+            <div class="form-field full transfer-mode-panel" data-mode="manual">
+              <label>اختر التشغيلات للتحويل <span class="req">*</span></label>
+              <div class="search-input" style="margin-bottom:8px;">
+                <input type="text" id="batchPickerSearch" placeholder="ابحث برقم التشغيلة، الصنف، أو التصنيف...">
+                <i data-lucide="search"></i>
+              </div>
+              <div class="batch-picker" id="batchPicker">
+                <div style="text-align:center;color:var(--text-muted);padding:20px;font-size:12px;">
+                  اختر المخزن المصدر أولاً
+                </div>
+              </div>
+            </div>
+
+            <!-- ========== Invoice Mode ========== -->
+            <div class="form-field full transfer-mode-panel" data-mode="invoice" style="display:none;">
+              <label>اختر فاتورة الاستلام <span class="req">*</span></label>
+              <div class="invoice-picker" id="invoicePicker">
+                <div style="text-align:center;color:var(--text-muted);padding:20px;font-size:12px;">
+                  اختر المخزن المصدر أولاً
+                </div>
+              </div>
+            </div>
+
+            <!-- Preview -->
+            <div class="form-field full" id="previewPanel" style="display:none;">
+              <div class="transfer-preview">
+                <div class="tp-header">
+                  <div class="tp-title">
+                    <i data-lucide="list-checks"></i>
+                    <span>معاينة التحويل</span>
+                  </div>
+                  <div class="tp-count" id="previewCount">0 صنف</div>
+                </div>
+                <div class="tp-items" id="previewItems"></div>
+              </div>
+            </div>
+
+            <!-- المختارة -->
+            <div class="form-field full" id="selectedPanel">
+              <label>
+                الأصناف المختارة (<span id="selectedCount">0</span>)
+                <button type="button" class="btn btn-outline btn-sm" id="clearSelectionBtn" style="margin-right:auto;display:none;">
+                  <i data-lucide="x"></i> مسح الكل
+                </button>
+              </label>
+              <div class="transfer-items-list" id="transferItemsList">
+                <div style="text-align:center;color:var(--text-muted);padding:20px;font-size:12px;">
+                  لم تختر أصناف بعد
+                </div>
+              </div>
+            </div>
+
+            <div class="form-field full">
+              <label for="transferNotes">ملاحظات</label>
+              <textarea id="transferNotes" maxlength="500" placeholder="ملاحظات إضافية..."></textarea>
+            </div>
+
+          </div>
+        </div>
+        <footer class="modal-footer">
+          <button class="btn btn-outline" type="button" id="cancelNewTransferBtn">إلغاء</button>
+          <button class="btn btn-primary" type="submit" id="saveTransferBtn">
+            <i data-lucide="save"></i> تنفيذ التحويل
+          </button>
+        </footer>
+      </form>
+    </section>
+  </div>
+
+  <!-- Modal: تأكيد التحويل -->
+  <div class="modal-backdrop" id="confirmTransferBackdrop" aria-hidden="true">
+    <section class="modal" style="max-width: 620px;" role="dialog" aria-modal="true">
+      <header class="modal-header">
+        <h2>
+          <i data-lucide="alert-triangle" style="color:var(--gold);"></i>
+          <span>تأكيد التحويل</span>
+        </h2>
+        <button class="close-btn" type="button" id="closeConfirmTransferBtn">
+          <i data-lucide="x"></i>
+        </button>
+      </header>
+      <div class="modal-body">
+        <div class="transfer-route" style="margin-bottom:16px;">
+          <div class="route-wh from">
+            <div class="wh-label">من مخزن</div>
+            <div class="wh-name" id="confirmFromName">—</div>
+          </div>
+          <div class="route-arrow">→</div>
+          <div class="route-wh to">
+            <div class="wh-label">إلى مخزن</div>
+            <div class="wh-name" id="confirmToName">—</div>
+          </div>
+        </div>
+
+        <div class="transfer-summary" style="margin-top:0;">
+          <div class="ts-item">
+            <div class="lbl">عدد الأصناف</div>
+            <div class="val teal" id="confirmItemsCount">0</div>
+          </div>
+          <div class="ts-item">
+            <div class="lbl">إجمالي الكمية</div>
+            <div class="val teal" id="confirmTotalQty">0</div>
+          </div>
+          <div class="ts-item">
+            <div class="lbl">إجمالي القيمة</div>
+            <div class="val purple" id="confirmTotalCost">0.00</div>
+          </div>
+        </div>
+
+        <div class="info-box warning" style="margin-top:16px;margin-bottom:0;">
+          <i data-lucide="alert-triangle"></i>
+          <div>
+            <b>هل أنت متأكد؟</b><br>
+            سيتم تسجيل <b>تحويل واحد</b> يحتوي على جميع الأصناف المختارة.
+          </div>
+        </div>
+      </div>
+      <footer class="modal-footer">
+        <button class="btn btn-outline" type="button" id="cancelConfirmTransferBtn">إلغاء</button>
+        <button class="btn btn-primary" type="button" id="doConfirmTransferBtn">
+          <i data-lucide="check"></i> تأكيد التنفيذ
+        </button>
+      </footer>
+    </section>
+  </div>
+
+  <!-- Modal: تفاصيل التحويل -->
+  <div class="modal-backdrop" id="viewTransferBackdrop" aria-hidden="true">
+    <section class="modal" role="dialog" aria-modal="true">
+      <header class="modal-header">
+        <h2>
+          <i data-lucide="clipboard-list"></i>
+          <span>تفاصيل التحويل #<span id="viewTransferId">—</span></span>
+        </h2>
+        <button class="close-btn" type="button" id="closeViewTransferBtn"><i data-lucide="x"></i></button>
+      </header>
+      <div class="modal-body" id="viewTransferBody"></div>
+      <footer class="modal-footer">
+        <button class="btn btn-outline" type="button" id="printTransferBtn">
+          <i data-lucide="printer"></i> طباعة
+        </button>
+        <button class="btn btn-primary" type="button" id="closeViewTransferFooter">إغلاق</button>
+      </footer>
+    </section>
+  </div>
+  <!-- ============================================================
+       SCRIPTS — الترتيب مهم جداً
+       ============================================================ -->
+  <script src="refad-core.js"></script>
+  <script src="refad-auth.js"></script>
+  <script src="refad-theme-sync.js"></script>
+  <script src="refad-settings.js"></script>
+  <script src="refad-warehouse.js"></script>
+
+  <script>
+    (function () {
+      'use strict';
+
+      // ============================================================
+      // 0) Safe Wrappers
+      // ============================================================
+      const SafeSettings = {
+        locale: {
+          formatMoney: function (v) {
+            try {
+              if (window.RefadSettings?.locale?.formatMoney) {
+                return RefadSettings.locale.formatMoney(v);
+              }
+            } catch (e) {}
+            return Refad.format.money(v);
+          },
+          getCurrencySymbol: function () {
+            try {
+              if (window.RefadSettings?.locale?.getCurrencySymbol) {
+                return RefadSettings.locale.getCurrencySymbol();
+              }
+            } catch (e) {}
+            return 'ج.م';
+          }
+        },
+        identity: {
+          getSystemName: function () {
+            try {
+              if (window.RefadSettings?.identity?.getSystemName) {
+                return RefadSettings.identity.getSystemName();
+              }
+            } catch (e) {}
+            return 'رفاد';
+          },
+          getTagline: function () {
+            try {
+              if (window.RefadSettings?.identity?.getTagline) {
+                return RefadSettings.identity.getTagline();
+              }
+            } catch (e) {}
+            return 'نظام إدارة الأدوية';
+          },
+          getLogoUrl: function () {
+            try {
+              if (window.RefadSettings?.identity?.getLogoUrl) {
+                return RefadSettings.identity.getLogoUrl();
+              }
+            } catch (e) {}
+            return null;
+          }
+        },
+        inventory: {
+          getExpiryAlertDays: function () {
+            try {
+              if (window.RefadSettings?.inventory?.getExpiryAlertDays) {
+                return RefadSettings.inventory.getExpiryAlertDays();
+              }
+            } catch (e) {}
+            return 90;
+          }
+        }
+      };
+
+      // ============================================================
+      // 1) Guard
+      // ============================================================
+      const session = Refad.Auth.guardPage('inventory.view');
+      if (!session) return;
+
+      // ============================================================
+      // 2) Helpers
+      // ============================================================
+      function esc(s) {
+        if (typeof Refad.escapeHtml === 'function') return Refad.escapeHtml(s);
+        if (s === null || s === undefined) return '';
+        return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+      }
+      function fmtMoney(v) {
+        return SafeSettings.locale.formatMoney(v);
+      }
+      function fmtNumber(v) {
+        if (typeof Refad.format?.number === 'function') return Refad.format.number(v);
+        return String(v || 0);
+      }
+      function fmtDate(v) {
+        if (typeof Refad.format?.date === 'function') return Refad.format.date(v);
+        if (!v) return '—';
+        return String(v).slice(0, 10);
+      }
+      function fmtDateTime(v) {
+        if (typeof Refad.format?.datetime === 'function') return Refad.format.datetime(v);
+        if (!v) return '—';
+        return String(v).replace('T', ' ').slice(0, 16);
+      }
+      function daysUntil(dateStr) {
+        if (!dateStr) return null;
+        const today = new Date(); today.setHours(0, 0, 0, 0);
+        const d = new Date(dateStr);
+        if (isNaN(d)) return null;
+        return Math.ceil((d - today) / (1000 * 60 * 60 * 24));
+      }
+
+      // ============================================================
+      // 3) State
+      // ============================================================
+      const state = {
+        transfers: [],
+        transferItemsCache: {},
+        warehouses: [],
+        users: [],
+        availableBatches: [],
+        availableInvoices: [],
+        selectedItems: [],
+        selectedInvoice: null,
+        transferType: 'manual',
+        search: '',
+        filterFrom: '',
+        filterTo: '',
+        filterType: '',
+        page: 1,
+        perPage: 15,
+        pickerSearch: '',
+        currentViewTransferId: null,
+        pendingTransfer: null,
+        expiryAlertDays: 90
+      };
+
+      const TRANSFER_TYPES = {
+        manual: { label: 'يدوي', icon: 'hand', color: 'gray' },
+        invoice: { label: 'فاتورة استلام', icon: 'package-check', color: 'purple' }
+      };
+
+      // ============================================================
+      // 4) Sidebar MENU
+      // ============================================================
+      const MENU = [
+        { section: 'الرئيسية', items: [
+          { label: 'لوحة التحكم', icon: 'layout-dashboard', href: 'dashboard.html' },
+          { label: 'الشات', icon: 'message-circle', href: 'chat.html', permission: 'chat.use' }
+        ]},
+        { section: 'العمليات', items: [
+          { label: 'الأصناف', icon: 'package', href: 'products.html', permission: 'products.view' },
+          { label: 'المخزون', icon: 'warehouse', href: 'inventory.html', permission: 'inventory.view' },
+          { label: 'طلبات الشراء', icon: 'clipboard-list', href: 'purchase-requests.html', permission: 'purchases.view' },
+          { label: 'الاستلامات', icon: 'package-check', href: 'receipts.html', permission: 'purchases.receive' },
+          { label: 'طلبات البيع', icon: 'shopping-cart', href: 'sales-orders.html', permission: 'sales.view' },
+          { label: 'نقطة البيع', icon: 'scan-barcode', href: 'pos.html', permission: 'sales.pos', badge: 'POS', badgeClass: 'teal' },
+          { label: 'الفواتير', icon: 'receipt', href: 'invoices.html', permission: 'sales.view' }
+        ]},
+        { section: 'الأطراف', items: [
+          { label: 'الموردين', icon: 'truck', href: 'suppliers.html', permission: 'suppliers.view' },
+          { label: 'العملاء', icon: 'users', href: 'customers.html', permission: 'customers.view' }
+        ]},
+        { section: 'المخزون', items: [
+          { label: 'المخازن', icon: 'building-2', href: 'warehouses.html' },
+          { label: 'الجرد', icon: 'clipboard-check', href: 'stocktake.html', permission: 'inventory.stocktake' },
+          { label: 'التسويات', icon: 'sliders-horizontal', href: 'adjustments.html', permission: 'inventory.adjust' },
+          { label: 'التحويلات', icon: 'arrow-right-left', href: 'warehouse-transfers.html', permission: 'inventory.view' }
+        ]},
+        { section: 'الموارد البشرية', items: [
+          { label: 'الموظفين', icon: 'user-cog', href: 'employees.html', permission: 'employees.view' },
+          { label: 'الصلاحيات', icon: 'shield-check', href: 'permissions.html', permission: 'permissions.manage' },
+          { label: 'الحضور', icon: 'calendar-check', href: 'attendance.html', permission: 'attendance.view' },
+          { label: 'الرواتب', icon: 'wallet', href: 'payroll.html', permission: 'payroll.view' }
+        ]},
+        { section: 'المالية', items: [
+          { label: 'الحسابات', icon: 'landmark', href: 'accounts.html', permission: 'company.owner' },
+          { label: 'المصاريف', icon: 'receipt-text', href: 'expenses.html', permission: 'expenses.view' },
+          { label: 'التقارير', icon: 'bar-chart-3', href: 'reports.html', permission: 'reports.view' }
+        ]},
+        { section: 'النظام', items: [
+          { label: 'إعدادات الشركة', icon: 'settings', href: 'company-settings.html', permission: 'settings.view' }
+        ]}
+      ];
+
+      function buildSidebar() {
+  Refad.buildMenu('warehouse-transfers.html');
+}
+
+      // ============================================================
+      // 5) UI Helpers
+      // ============================================================
+      function fillUser() {
+        const av = document.getElementById('userAvatar');
+        const initial = (session.full_name || '؟').trim().charAt(0);
+        if (session.avatar_url) av.innerHTML = `<img src="${esc(session.avatar_url)}" alt="">`;
+        else av.textContent = initial;
+        document.getElementById('userName').textContent = session.full_name || '—';
+        document.getElementById('userRole').textContent = Refad.Session.has('company.owner') ? 'صاحب الشركة' : 'موظف';
+      }
+
+      function applyIdentity() {
+        const name = SafeSettings.identity.getSystemName();
+        const tagline = SafeSettings.identity.getTagline();
+        const logoUrl = SafeSettings.identity.getLogoUrl();
+
+        const brandName = document.getElementById('sidebarBrandName');
+        const brandDesc = document.getElementById('sidebarBrandDesc');
+        const logoImg = document.getElementById('sidebarLogoImg');
+
+        if (brandName) brandName.textContent = name;
+        if (brandDesc) brandDesc.textContent = tagline;
+        if (logoImg && logoUrl) {
+          logoImg.src = logoUrl;
+          logoImg.onerror = function () {
+            this.style.display = 'none';
+            const parent = this.parentElement;
+            if (parent) parent.innerHTML = '<span class="fallback">' + (name.charAt(0) || 'R') + '</span>';
+          };
+        }
+      }
+
+      function setupTheme() {
+        const btn = document.getElementById('themeToggle');
+        const icon = document.getElementById('themeIcon');
+        const refresh = () => {
+          const isDark = Refad.theme.get() === 'dark';
+          icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+          if (window.lucide) lucide.createIcons();
+        };
+        refresh();
+        btn.addEventListener('click', () => { Refad.theme.toggle(); refresh(); });
+      }
+
+      function setupSidebarMobile() {
+        const sb = document.getElementById('sidebar');
+        const ov = document.getElementById('overlay');
+        document.getElementById('menuToggle').addEventListener('click', () => {
+          sb.classList.add('open'); ov.classList.add('show');
+        });
+        ov.addEventListener('click', () => {
+          sb.classList.remove('open'); ov.classList.remove('show');
+        });
+      }
+
+      function setupUserMenu() {
+        const m = document.getElementById('userMenu');
+        const d = document.getElementById('userDropdown');
+        m.addEventListener('click', e => { e.stopPropagation(); d.classList.toggle('show'); });
+        document.addEventListener('click', () => d.classList.remove('show'));
+        d.addEventListener('click', e => e.stopPropagation());
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+          if (await Refad.alert.confirm('تسجيل الخروج', 'هل تريد الخروج؟', 'خروج')) {
+            await Refad.Auth.logout();
+          }
+        });
+      }
+
+      function setupRealtimeTheme() {
+        window.addEventListener('refad:theme-changed', () => {
+          applyIdentity();
+        });
+      }
+
+      // ============================================================
+      // 6) Load Data
+      // ============================================================
+      async function loadWarehouses() {
+        try {
+          const rows = await Refad.db.select('warehouses', {
+            columns: 'id, name, type, is_default, is_active',
+            eq: { company_id: session.company_id, is_active: true },
+            order: { column: 'is_default', ascending: false }
+          });
+          state.warehouses = rows || [];
+        } catch (e) { state.warehouses = []; }
+      }
+
+      async function loadUsers() {
+        try {
+          const rows = await Refad.db.select('users', {
+            columns: 'id, full_name, username',
+            eq: { company_id: session.company_id },
+            limit: 500
+          });
+          state.users = rows || [];
+        } catch (e) { state.users = []; }
+      }
+
+      async function loadTransfers() {
+        try {
+          const rows = await Refad.db.select('warehouse_transfers', {
+            columns: 'id, company_id, from_warehouse_id, to_warehouse_id, status, transfer_date, total_items, total_quantity, total_cost, notes, reason, transfer_type, source_receipt_id, source_reference, created_by, created_at',
+            eq: { company_id: session.company_id },
+            order: { column: 'created_at', ascending: false },
+            limit: 500
+          });
+          state.transfers = rows || [];
+        } catch (e) {
+          try {
+            const rows = await Refad.db.select('warehouse_transfers', {
+              columns: 'id, company_id, from_warehouse_id, to_warehouse_id, status, transfer_date, total_items, total_quantity, total_cost, notes, reason, created_by, created_at',
+              eq: { company_id: session.company_id },
+              order: { column: 'created_at', ascending: false },
+              limit: 500
+            });
+            state.transfers = rows || [];
+          } catch (e2) {
+            state.transfers = [];
+          }
+        }
+      }
+
+      async function loadAll() {
+        renderSkeleton();
+        await Promise.all([loadWarehouses(), loadUsers()]);
+        await loadTransfers();
+        renderStats();
+        renderTable();
+        fillFilterOptions();
+      }
+
+      function fillFilterOptions() {
+        const fromSel = document.getElementById('filterFrom');
+        const toSel = document.getElementById('filterTo');
+        const opts = state.warehouses.map(w => `<option value="${w.id}">${esc(w.name)}</option>`).join('');
+        fromSel.innerHTML = '<option value="">من كل المخازن</option>' + opts;
+        toSel.innerHTML = '<option value="">إلى كل المخازن</option>' + opts;
+        fromSel.value = state.filterFrom || '';
+        toSel.value = state.filterTo || '';
+      }
+
+      function getWhName(id) {
+        const w = state.warehouses.find(x => Number(x.id) === Number(id));
+        return w ? w.name : '—';
+      }
+
+      function getUserName(id) {
+        const u = state.users.find(x => Number(x.id) === Number(id));
+        return u ? (u.full_name || u.username) : '—';
+      }
+
+      // ============================================================
+      // 7) Stats & Table
+      // ============================================================
+      function renderStats() {
+        const total = state.transfers.length;
+        const today = new Date();
+        const monthStart = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-01';
+        const month = state.transfers.filter(t => t.created_at && t.created_at.slice(0, 10) >= monthStart).length;
+        const items = state.transfers.reduce((s, t) => s + (Number(t.total_items) || 0), 0);
+        const value = state.transfers.reduce((s, t) => s + (Number(t.total_cost) || 0), 0);
+
+        document.getElementById('statTotal').textContent = fmtNumber(total);
+        document.getElementById('statMonth').textContent = fmtNumber(month);
+        document.getElementById('statItems').textContent = fmtNumber(items);
+        document.getElementById('statValue').textContent = fmtMoney(value);
+      }
+
+      function getFilteredTransfers() {
+        const q = state.search.toLowerCase().trim();
+        return state.transfers.filter(t => {
+          if (state.filterFrom && Number(t.from_warehouse_id) !== Number(state.filterFrom)) return false;
+          if (state.filterTo && Number(t.to_warehouse_id) !== Number(state.filterTo)) return false;
+          if (state.filterType && t.transfer_type !== state.filterType) return false;
+          if (!q) return true;
+          return (
+            String(t.id || '').includes(q) ||
+            String(t.notes || '').toLowerCase().includes(q) ||
+            String(t.reason || '').toLowerCase().includes(q) ||
+            String(t.source_reference || '').toLowerCase().includes(q)
+          );
+        });
+      }
+
+      function renderSkeleton() {
+        const tbody = document.getElementById('transfersBody');
+        tbody.innerHTML = Array(5).fill(0).map(() => `
+          <tr style="cursor:default;">
+            <td><div style="height:14px;background:var(--border);border-radius:6px;width:70px;"></div></td>
+            <td><div style="height:14px;background:var(--border);border-radius:6px;width:70px;"></div></td>
+            <td><div style="height:14px;background:var(--border);border-radius:6px;width:80px;"></div></td>
+            <td><div style="height:14px;background:var(--border);border-radius:6px;width:100px;"></div></td>
+            <td><div style="height:14px;background:var(--border);border-radius:6px;width:100px;"></div></td>
+            <td><div style="height:14px;background:var(--border);border-radius:6px;width:60px;"></div></td>
+            <td><div style="height:14px;background:var(--border);border-radius:6px;width:60px;"></div></td>
+            <td><div style="height:14px;background:var(--border);border-radius:6px;width:80px;"></div></td>
+            <td><div style="height:14px;background:var(--border);border-radius:6px;width:80px;"></div></td>
+            <td></td>
+          </tr>
+        `).join('');
+      }
+
+      function renderTable() {
+        const tbody = document.getElementById('transfersBody');
+        const list = getFilteredTransfers();
+        const pag = Refad.paginate(list, state.page, state.perPage);
+
+        if (list.length === 0) {
+          tbody.innerHTML = `<tr class="empty-row"><td colspan="10"><i data-lucide="repeat"></i><p>لا توجد تحويلات</p></td></tr>`;
+          if (window.lucide) lucide.createIcons();
+          renderPagination(pag);
+          return;
+        }
+
+        tbody.innerHTML = pag.data.map(t => {
+          const type = TRANSFER_TYPES[t.transfer_type] || TRANSFER_TYPES.manual;
+          const sourceRef = t.source_reference ? `<div style="font-size:10px;color:var(--text-muted);margin-top:2px;">${esc(t.source_reference)}</div>` : '';
+          return `
+            <tr data-id="${t.id}" title="اضغط لعرض التفاصيل">
+              <td><strong>#${t.id}</strong>${sourceRef}</td>
+              <td>
+                <span class="badge-tag ${type.color}">
+                  <i data-lucide="${type.icon}" style="width:11px;height:11px;"></i>
+                  ${esc(type.label)}
+                </span>
+              </td>
+              <td>${fmtDate(t.transfer_date || t.created_at)}</td>
+              <td><div class="wh-flow"><span class="wh-name">${esc(getWhName(t.from_warehouse_id))}</span></div></td>
+              <td><div class="wh-flow"><span class="wh-name">${esc(getWhName(t.to_warehouse_id))}</span></div></td>
+              <td><strong>${fmtNumber(t.total_items || 0)}</strong></td>
+              <td>${fmtNumber(t.total_quantity || 0)}</td>
+              <td>${fmtMoney(t.total_cost || 0)}</td>
+              <td>${esc(getUserName(t.created_by))}</td>
+              <td>
+                <button class="action-btn" data-action="view" data-id="${t.id}" title="تفاصيل">
+                  <i data-lucide="eye"></i>
+                </button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+
+        if (window.lucide) lucide.createIcons();
+        renderPagination(pag);
+      }
+
+      function renderPagination(pag) {
+        const el = document.getElementById('transfersPagination');
+        const { page, pages, total, perPage } = pag;
+        if (total === 0) { el.innerHTML = ''; return; }
+
+        const from = (page - 1) * perPage + 1;
+        const to = Math.min(page * perPage, total);
+
+        let nums = [];
+        if (pages <= 5) { for (let i = 1; i <= pages; i++) nums.push(i); }
+        else if (page <= 3) nums = [1, 2, 3, 4, 5];
+        else if (page >= pages - 2) nums = [pages - 4, pages - 3, pages - 2, pages - 1, pages];
+        else nums = [page - 2, page - 1, page, page + 1, page + 2];
+
+        el.innerHTML = `
+          <div>عرض ${from} - ${to} من ${total}</div>
+          <div class="controls">
+            <button class="page-btn" data-page="${page - 1}" ${page === 1 ? 'disabled' : ''}>
+              <i data-lucide="chevron-right" style="width:14px;height:14px;"></i>
+            </button>
+            ${nums.map(n => `<button class="page-btn ${n === page ? 'active' : ''}" data-page="${n}">${n}</button>`).join('')}
+            <button class="page-btn" data-page="${page + 1}" ${page === pages ? 'disabled' : ''}>
+              <i data-lucide="chevron-left" style="width:14px;height:14px;"></i>
+            </button>
+          </div>
+        `;
+
+        el.querySelectorAll('.page-btn:not(:disabled)').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const p = parseInt(btn.dataset.page, 10);
+            if (p >= 1 && p <= pages && p !== page) { state.page = p; renderTable(); }
+          });
+        });
+        if (window.lucide) lucide.createIcons();
+      }
+
+      // ============================================================
+      // 8) New Transfer Modal
+      // ============================================================
+      function openNewTransferModal() {
+        if (state.warehouses.length < 2) {
+          Refad.toast.error('يجب أن يكون هناك مخزنان على الأقل');
+          return;
+        }
+
+        state.selectedItems = [];
+        state.selectedInvoice = null;
+        state.transferType = 'manual';
+        state.pickerSearch = '';
+        document.getElementById('newTransferForm').reset();
+        document.getElementById('batchPickerSearch').value = '';
+
+        document.querySelectorAll('.transfer-type-btn').forEach(btn => {
+          btn.classList.toggle('active', btn.dataset.type === 'manual');
+        });
+        document.querySelectorAll('.transfer-mode-panel').forEach(p => {
+          p.style.display = p.dataset.mode === 'manual' ? 'flex' : 'none';
+        });
+
+        document.getElementById('previewPanel').style.display = 'none';
+        document.getElementById('selectedPanel').style.display = 'flex';
+        renderSelectedItems();
+
+        const fromSel = document.getElementById('fromWarehouse');
+        const toSel = document.getElementById('toWarehouse');
+        const opts = state.warehouses.map(w =>
+          `<option value="${w.id}">${esc(w.name)}${w.is_default ? ' (افتراضي)' : ''}</option>`
+        ).join('');
+        fromSel.innerHTML = '<option value="">اختر المخزن...</option>' + opts;
+        toSel.innerHTML = '<option value="">اختر المخزن...</option>' + opts;
+
+        resetPickers();
+
+        document.getElementById('newTransferBackdrop').classList.add('show');
+        document.getElementById('newTransferBackdrop').setAttribute('aria-hidden', 'false');
+        if (window.lucide) lucide.createIcons();
+      }
+
+      function resetPickers() {
+        const placeholder = '<div style="text-align:center;color:var(--text-muted);padding:20px;font-size:12px;">اختر المخزن المصدر أولاً</div>';
+        document.getElementById('batchPicker').innerHTML = placeholder;
+        document.getElementById('invoicePicker').innerHTML = placeholder;
+      }
+
+      function closeNewTransferModal() {
+        document.getElementById('newTransferBackdrop').classList.remove('show');
+        document.getElementById('newTransferBackdrop').setAttribute('aria-hidden', 'true');
+      }
+
+      // ============================================================
+      // 9) Load Available Data
+      // ============================================================
+      async function loadAvailableForSource(fromWarehouseId) {
+        try {
+          let rows;
+          try {
+            rows = await Refad.db.select('batches', {
+              columns: 'id, product_id, warehouse_id, batch_number, quantity_left, cost_price, sale_price, expiry_date, receipt_id, is_quarantined, products(name, name_en, form, unit, category)',
+              eq: { company_id: session.company_id, warehouse_id: fromWarehouseId },
+              order: { column: 'expiry_date', ascending: true },
+              limit: 2000
+            });
+          } catch (err) {
+            rows = await Refad.db.select('batches', {
+              columns: 'id, product_id, warehouse_id, batch_number, quantity_left, cost_price, sale_price, expiry_date, receipt_id, products(name, name_en, form, unit, category)',
+              eq: { company_id: session.company_id, warehouse_id: fromWarehouseId },
+              order: { column: 'expiry_date', ascending: true },
+              limit: 2000
+            });
+          }
+
+          state.availableBatches = (rows || []).filter(b => {
+            if ((Number(b.quantity_left) || 0) <= 0) return false;
+            if (b.is_quarantined === true) return false;
+            return true;
+          });
+
+          const receiptIds = [...new Set(state.availableBatches.map(b => b.receipt_id).filter(Boolean))];
+          if (receiptIds.length) {
+            try {
+              const invoices = await Refad.db.select('receipts', {
+                columns: 'id, receipt_number, invoice_number, receipt_date, supplier_id, total_amount, notes',
+                in: { id: receiptIds },
+                order: { column: 'created_at', ascending: false },
+                limit: 200
+              });
+
+              state.availableInvoices = (invoices || []).map(inv => {
+                const batches = state.availableBatches.filter(b => Number(b.receipt_id) === Number(inv.id));
+                return {
+                  ...inv,
+                  batches,
+                  totalQty: batches.reduce((s, b) => s + (Number(b.quantity_left) || 0), 0),
+                  totalCost: batches.reduce((s, b) => s + ((Number(b.quantity_left) || 0) * (Number(b.cost_price) || 0)), 0)
+                };
+              }).filter(inv => inv.batches.length > 0);
+            } catch (e) {
+              state.availableInvoices = [];
+            }
+          } else {
+            state.availableInvoices = [];
+          }
+
+          renderCurrentPicker();
+        } catch (e) {
+          console.error('[Transfers] load failed:', e);
+          state.availableBatches = [];
+          state.availableInvoices = [];
+        }
+      }
+
+      function renderCurrentPicker() {
+        if (state.transferType === 'manual') renderBatchPicker();
+        else if (state.transferType === 'invoice') renderInvoicePicker();
+      }
+
+      // ============================================================
+      // 10) Render Pickers
+      // ============================================================
+      function renderBatchPicker() {
+        const el = document.getElementById('batchPicker');
+        const q = state.pickerSearch.toLowerCase().trim();
+
+        const filtered = state.availableBatches.filter(b => {
+          if (!q) return true;
+          return (
+            String(b.batch_number || '').toLowerCase().includes(q) ||
+            String(b.products?.name || '').toLowerCase().includes(q) ||
+            String(b.products?.name_en || '').toLowerCase().includes(q) ||
+            String(b.products?.category || '').toLowerCase().includes(q)
+          );
+        }).slice(0, 100);
+
+        if (filtered.length === 0) {
+          el.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:20px;font-size:12px;">لا توجد تشغيلات متاحة</div>';
+          return;
+        }
+
+        el.innerHTML = filtered.map(b => {
+          const isSelected = state.selectedItems.some(s => Number(s.batchId) === Number(b.id));
+          const days = daysUntil(b.expiry_date);
+          let expClass = 'success', expText = '—';
+          if (days !== null) {
+            if (days < 0) { expClass = 'danger'; expText = `منتهي (${Math.abs(days)} يوم)`; }
+            else if (days <= 30) { expClass = 'danger'; expText = `${days} يوم`; }
+            else if (days <= state.expiryAlertDays) { expClass = 'gold'; expText = `${days} يوم`; }
+            else { expText = `${days} يوم`; }
+          }
+
+          return `
+            <div class="batch-pick-item ${isSelected ? 'selected' : ''}" data-batch-id="${b.id}">
+              <div style="width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,var(--primary),var(--accent));color:white;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;font-size:16px;">
+                ${esc((b.products?.name || '؟').charAt(0))}
+              </div>
+              <div style="flex:1;min-width:0;">
+                <div style="font-weight:700;font-size:14px;">${esc(b.products?.name || '—')}</div>
+                <div style="font-size:11px;color:var(--text-muted);">
+                  ${esc([b.products?.form, b.products?.unit].filter(Boolean).join(' • ') || '')}
+                  ${b.products?.category ? ' • ' + esc(b.products.category) : ''}
+                </div>
+                <div class="batch-details">
+                  <div class="bd-item">
+                    <div class="lbl">رقم التشغيلة</div>
+                    <div class="val" style="font-family:monospace;">${esc(b.batch_number || '—')}</div>
+                  </div>
+                  <div class="bd-item">
+                    <div class="lbl">المتاح</div>
+                    <div class="val success">${fmtNumber(b.quantity_left)}</div>
+                  </div>
+                  <div class="bd-item">
+                    <div class="lbl">الصلاحية</div>
+                    <div class="val ${expClass}">${fmtDate(b.expiry_date)}</div>
+                  </div>
+                  <div class="bd-item">
+                    <div class="lbl">سعر الشراء</div>
+                    <div class="val">${fmtMoney(b.cost_price)}</div>
+                  </div>
+                </div>
+              </div>
+              <button type="button" class="btn btn-sm ${isSelected ? 'btn-outline' : 'btn-primary'}" style="padding:6px 12px;font-size:11px;flex-shrink:0;">
+                ${isSelected ? '✓ مُختار' : '+ اختيار'}
+              </button>
+            </div>
+          `;
+        }).join('');
+
+        el.querySelectorAll('[data-batch-id]').forEach(item => {
+          const btn = item.querySelector('button');
+          const id = Number(item.dataset.batchId);
+          item.addEventListener('click', e => { if (e.target.tagName !== 'BUTTON') toggleBatchSelection(id); });
+          if (btn) btn.addEventListener('click', e => { e.stopPropagation(); toggleBatchSelection(id); });
+        });
+      }
+
+      function renderInvoicePicker() {
+        const el = document.getElementById('invoicePicker');
+
+        if (state.availableInvoices.length === 0) {
+          el.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:20px;font-size:12px;">لا توجد فواتير استلام متاحة في هذا المخزن</div>';
+          return;
+        }
+
+        el.innerHTML = state.availableInvoices.map(inv => {
+          const isSelected = state.selectedInvoice && Number(state.selectedInvoice.id) === Number(inv.id);
+          return `
+            <div class="invoice-pick-item ${isSelected ? 'selected' : ''}" data-invoice-id="${inv.id}">
+              <div style="width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,#8b5cf6,#6d28d9);color:white;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <i data-lucide="package-check" style="width:20px;height:20px;"></i>
+              </div>
+              <div style="flex:1;min-width:0;">
+                <div style="font-weight:700;font-size:13px;">فاتورة ${esc(inv.receipt_number || '#' + inv.id)}</div>
+                <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">
+                  ${inv.invoice_number ? 'رقم المورد: ' + esc(inv.invoice_number) + ' • ' : ''}
+                  ${fmtDate(inv.receipt_date)}
+                </div>
+                <div class="batch-details">
+                  <div class="bd-item">
+                    <div class="lbl">عدد الأصناف</div>
+                    <div class="val">${inv.batches.length}</div>
+                  </div>
+                  <div class="bd-item">
+                    <div class="lbl">إجمالي الكمية</div>
+                    <div class="val success">${fmtNumber(inv.totalQty)}</div>
+                  </div>
+                  <div class="bd-item">
+                    <div class="lbl">القيمة</div>
+                    <div class="val gold">${fmtMoney(inv.totalCost)}</div>
+                  </div>
+                </div>
+              </div>
+              <button type="button" class="btn btn-sm ${isSelected ? 'btn-outline' : 'btn-primary'}" style="padding:6px 12px;font-size:11px;flex-shrink:0;">
+                ${isSelected ? '✓ مُختار' : '+ اختيار'}
+              </button>
+            </div>
+          `;
+        }).join('');
+
+        if (window.lucide) lucide.createIcons();
+
+        el.querySelectorAll('[data-invoice-id]').forEach(item => {
+          const btn = item.querySelector('button');
+          const id = Number(item.dataset.invoiceId);
+          item.addEventListener('click', e => { if (e.target.tagName !== 'BUTTON') selectInvoice(id); });
+          if (btn) btn.addEventListener('click', e => { e.stopPropagation(); selectInvoice(id); });
+        });
+      }
+
+      // ============================================================
+      // 11) Selection
+      // ============================================================
+      function toggleBatchSelection(batchId) {
+        const existing = state.selectedItems.findIndex(s => Number(s.batchId) === Number(batchId));
+        if (existing !== -1) {
+          state.selectedItems.splice(existing, 1);
+        } else {
+          const b = state.availableBatches.find(x => Number(x.id) === Number(batchId));
+          if (!b) return;
+          state.selectedItems.push({
+            batchId: b.id,
+            productId: b.product_id,
+            product: b.products?.name || '—',
+            batch_number: b.batch_number || '—',
+            expiry_date: b.expiry_date || null,
+            qty: Number(b.quantity_left) || 0,
+            available: Number(b.quantity_left) || 0,
+            cost_price: Number(b.cost_price) || 0,
+            sale_price: Number(b.sale_price) || 0
+          });
+        }
+        renderCurrentPicker();
+        renderSelectedItems();
+      }
+
+      function selectInvoice(invoiceId) {
+        if (state.selectedInvoice && Number(state.selectedInvoice.id) === Number(invoiceId)) {
+          state.selectedInvoice = null;
+          state.selectedItems = [];
+        } else {
+          const inv = state.availableInvoices.find(x => Number(x.id) === Number(invoiceId));
+          if (!inv) return;
+
+          state.selectedInvoice = inv;
+          state.selectedItems = inv.batches.map(b => ({
+            batchId: b.id,
+            productId: b.product_id,
+            product: b.products?.name || '—',
+            batch_number: b.batch_number || '—',
+            expiry_date: b.expiry_date || null,
+            qty: Number(b.quantity_left) || 0,
+            available: Number(b.quantity_left) || 0,
+            cost_price: Number(b.cost_price) || 0,
+            sale_price: Number(b.sale_price) || 0
+          }));
+        }
+        renderCurrentPicker();
+        renderSelectedItems();
+      }
+
+      // ============================================================
+      // 12) Render Selected Items
+      // ============================================================
+      function renderSelectedItems() {
+        const el = document.getElementById('transferItemsList');
+        const previewPanel = document.getElementById('previewPanel');
+        const selectedPanel = document.getElementById('selectedPanel');
+        const clearBtn = document.getElementById('clearSelectionBtn');
+
+        document.getElementById('selectedCount').textContent = state.selectedItems.length;
+        clearBtn.style.display = state.selectedItems.length > 0 ? 'inline-flex' : 'none';
+
+        if (state.transferType === 'invoice') {
+          previewPanel.style.display = 'block';
+          selectedPanel.style.display = 'none';
+
+          if (!state.selectedItems.length) {
+            document.getElementById('previewCount').textContent = '0 صنف';
+            document.getElementById('previewItems').innerHTML = `
+              <div style="text-align:center;color:var(--text-muted);padding:20px;font-size:12px;">
+                اختر فاتورة لعرض أصنافها
+              </div>
+            `;
+            return;
+          }
+
+          document.getElementById('previewCount').textContent = `${state.selectedItems.length} صنف`;
+          document.getElementById('previewItems').innerHTML = state.selectedItems.map(s => `
+            <div class="tp-item">
+              <div style="flex:1;min-width:0;">
+                <div class="name">${esc(s.product)}</div>
+                <div class="sub">
+                  تشغيلة: <b style="font-family:monospace;">${esc(s.batch_number)}</b> •
+                  ${fmtMoney(s.cost_price)} •
+                  صلاحية: ${fmtDate(s.expiry_date)}
+                </div>
+              </div>
+              <div class="qty">${fmtNumber(s.qty)}</div>
+            </div>
+          `).join('');
+          return;
+        }
+
+        previewPanel.style.display = 'none';
+        selectedPanel.style.display = 'flex';
+
+        if (state.selectedItems.length === 0) {
+          el.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:20px;font-size:12px;">لم تختر أصناف بعد</div>';
+          return;
+        }
+
+        el.innerHTML = state.selectedItems.map((s, idx) => {
+          const totalCost = (Number(s.qty) || 0) * (Number(s.cost_price) || 0);
+          return `
+            <div class="transfer-item-row">
+              <div class="info">
+                <div class="name">${esc(s.product)}</div>
+                <div class="sub">
+                  تشغيلة: <b style="font-family:monospace;">${esc(s.batch_number)}</b> •
+                  متاح: ${fmtNumber(s.available)} •
+                  صلاحية: ${fmtDate(s.expiry_date)}
+                </div>
+                <div class="sub" style="margin-top:4px;color:var(--accent);font-weight:700;">
+                  الإجمالي: ${fmtMoney(totalCost)}
+                </div>
+              </div>
+              <input type="number" min="1" max="${s.available}" value="${s.qty}" data-idx="${idx}" data-field="qty">
+              <button type="button" class="action-btn" data-remove="${idx}" title="حذف">
+                <i data-lucide="x"></i>
+              </button>
+            </div>
+          `;
+        }).join('');
+
+        el.querySelectorAll('input[data-field="qty"]').forEach(inp => {
+          inp.addEventListener('input', e => {
+            const idx = Number(inp.dataset.idx);
+            let v = Number(e.target.value);
+            if (!isFinite(v) || v < 1) v = 1;
+            if (v > state.selectedItems[idx].available) v = state.selectedItems[idx].available;
+            state.selectedItems[idx].qty = v;
+            e.target.value = v;
+            renderSelectedItems();
+          });
+        });
+
+        el.querySelectorAll('[data-remove]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const idx = Number(btn.dataset.remove);
+            state.selectedItems.splice(idx, 1);
+            renderCurrentPicker();
+            renderSelectedItems();
+          });
+        });
+
+        if (window.lucide) lucide.createIcons();
+      }
+
+      // ============================================================
+      // 13) Execute Transfer (One record with multiple items)
+      // ============================================================
+      async function executeTransfer() {
+        if (!state.selectedItems.length) {
+          throw new Error('لا توجد أصناف');
+        }
+
+        const fromWarehouseId = Number(document.getElementById('fromWarehouse').value);
+        const toWarehouseId = Number(document.getElementById('toWarehouse').value);
+        const notes = document.getElementById('transferNotes').value.trim();
+        const reason = document.getElementById('transferReason').value.trim();
+
+        const totalQty = state.selectedItems.reduce((s, it) => s + (Number(it.qty) || 0), 0);
+        const totalCost = state.selectedItems.reduce((s, it) => s + ((Number(it.qty) || 0) * (Number(it.cost_price) || 0)), 0);
+
+        const transferPayload = {
+          company_id: session.company_id,
+          from_warehouse_id: fromWarehouseId,
+          to_warehouse_id: toWarehouseId,
+          status: 'completed',
+          transfer_date: new Date().toISOString().slice(0, 10),
+          total_items: state.selectedItems.length,
+          total_quantity: totalQty,
+          total_cost: totalCost,
+          notes: notes || null,
+          reason: reason || null,
+          transfer_type: state.transferType,
+          created_by: session.user_id
+        };
+
+        if (state.transferType === 'invoice' && state.selectedInvoice) {
+          transferPayload.source_receipt_id = state.selectedInvoice.id;
+          transferPayload.source_reference = `فاتورة ${state.selectedInvoice.receipt_number}`;
+        }
+
+        let transfer;
+        try {
+          transfer = await Refad.db.insert('warehouse_transfers', transferPayload);
+        } catch (e) {
+          console.warn('[Transfers] Full columns failed, using fallback');
+          const fallbackPayload = {
+            company_id: session.company_id,
+            from_warehouse_id: fromWarehouseId,
+            to_warehouse_id: toWarehouseId,
+            status: 'completed',
+            transfer_date: new Date().toISOString().slice(0, 10),
+            total_items: state.selectedItems.length,
+            total_quantity: totalQty,
+            total_cost: totalCost,
+            notes: notes || null,
+            reason: reason || null,
+            created_by: session.user_id
+          };
+          transfer = await Refad.db.insert('warehouse_transfers', fallbackPayload);
+        }
+
+        if (!transfer || !transfer.id) throw new Error('فشل إنشاء سجل التحويل');
+
+        const transferId = transfer.id;
+        const errors = [];
+
+        for (const item of state.selectedItems) {
+          try {
+            const batchId = Number(item.batchId);
+            const qty = Number(item.qty);
+
+            const batch = await Refad.db.selectOne('batches', {
+              columns: 'id, company_id, product_id, warehouse_id, batch_number, quantity_left, cost_price, sale_price, expiry_date, supplier_id, purchase_discount',
+              eq: { id: batchId }
+            });
+            if (!batch) throw new Error('التشغيلة غير موجودة');
+            if (Number(batch.quantity_left) < qty) throw new Error('الكمية غير كافية');
+
+            const remaining = Number(batch.quantity_left) - qty;
+
+            await Refad.db.insert('warehouse_transfer_items', {
+              transfer_id: transferId,
+              batch_id: batch.id,
+              product_id: batch.product_id,
+              batch_number: batch.batch_number,
+              quantity: qty,
+              unit_cost: Number(batch.cost_price) || 0,
+              total: qty * (Number(batch.cost_price) || 0),
+              notes: notes || null
+            });
+
+            await Refad.db.update('batches', batch.id, { quantity_left: remaining });
+
+            const newBatch = await Refad.db.insert('batches', {
+              company_id: batch.company_id,
+              product_id: batch.product_id,
+              warehouse_id: toWarehouseId,
+              supplier_id: batch.supplier_id || null,
+              batch_number: batch.batch_number,
+              quantity_in: qty,
+              quantity_left: qty,
+              cost_price: Number(batch.cost_price) || 0,
+              sale_price: Number(batch.sale_price) || 0,
+              purchase_discount: Number(batch.purchase_discount) || 0,
+              expiry_date: batch.expiry_date || null,
+              receipt_id: null,
+              is_quarantined: false
+            });
+
+            await Refad.db.insert('inventory_movements', {
+              company_id: batch.company_id,
+              warehouse_id: fromWarehouseId,
+              product_id: batch.product_id,
+              batch_id: batch.id,
+              movement_type: 'out',
+              reference_type: 'transfer',
+              reference_id: transferId,
+              quantity: -qty,
+              unit_cost: Number(batch.cost_price) || 0,
+              balance_after: remaining,
+              notes: `تحويل #${transferId}`,
+              user_id: session.user_id
+            });
+
+            await Refad.db.insert('inventory_movements', {
+              company_id: batch.company_id,
+              warehouse_id: toWarehouseId,
+              product_id: batch.product_id,
+              batch_id: newBatch.id,
+              movement_type: 'in',
+              reference_type: 'transfer',
+              reference_id: transferId,
+              quantity: qty,
+              unit_cost: Number(batch.cost_price) || 0,
+              balance_after: qty,
+              notes: `استلام من تحويل #${transferId}`,
+              user_id: session.user_id
+            });
+          } catch (e) {
+            errors.push(`${item.product} (${item.batch_number}): ${e.message}`);
+            console.error('[Transfer item failed]:', e);
+          }
+        }
+
+        return { transfer, errors };
+      }
+
+      // ============================================================
+      // 14) Save Transfer
+      // ============================================================
+      async function saveTransfer(e) {
+        e.preventDefault();
+
+        const fromId = Number(document.getElementById('fromWarehouse').value);
+        const toId = Number(document.getElementById('toWarehouse').value);
+
+        if (!fromId) { Refad.toast.warning('اختر المخزن المصدر'); return; }
+        if (!toId) { Refad.toast.warning('اختر المخزن الهدف'); return; }
+        if (fromId === toId) { Refad.toast.warning('لا يمكن التحويل لنفس المخزن'); return; }
+        if (state.selectedItems.length === 0) { Refad.toast.warning('اختر صنفاً واحداً على الأقل'); return; }
+
+        for (const s of state.selectedItems) {
+          if (!s.qty || s.qty < 1) { Refad.toast.warning(`الكمية غير صحيحة: ${s.product}`); return; }
+          if (s.qty > s.available) { Refad.toast.warning(`الكمية أكبر من المتاح: ${s.product}`); return; }
+        }
+
+        const fromName = getWhName(fromId);
+        const toName = getWhName(toId);
+        const totalQty = state.selectedItems.reduce((s, it) => s + (Number(it.qty) || 0), 0);
+        const totalCost = state.selectedItems.reduce((s, it) => s + ((Number(it.qty) || 0) * (Number(it.cost_price) || 0)), 0);
+
+        state.pendingTransfer = {
+          fromId, toId, fromName, toName,
+          items: [...state.selectedItems],
+          totalQty, totalCost
+        };
+
+        document.getElementById('confirmFromName').textContent = fromName;
+        document.getElementById('confirmToName').textContent = toName;
+        document.getElementById('confirmItemsCount').textContent = state.selectedItems.length;
+        document.getElementById('confirmTotalQty').textContent = fmtNumber(totalQty);
+        document.getElementById('confirmTotalCost').textContent = fmtMoney(totalCost);
+
+        document.getElementById('confirmTransferBackdrop').classList.add('show');
+        document.getElementById('confirmTransferBackdrop').setAttribute('aria-hidden', 'false');
+        if (window.lucide) lucide.createIcons();
+      }
+
+      // ============================================================
+      // 15) Confirm → Execute
+      // ============================================================
+      function setupConfirmTransferModal() {
+        const backdrop = document.getElementById('confirmTransferBackdrop');
+        const doBtn = document.getElementById('doConfirmTransferBtn');
+        const cancelBtn = document.getElementById('cancelConfirmTransferBtn');
+        const closeBtn = document.getElementById('closeConfirmTransferBtn');
+
+        function closeModal() {
+          backdrop.classList.remove('show');
+          backdrop.setAttribute('aria-hidden', 'true');
+        }
+
+        async function execute() {
+          if (!state.pendingTransfer) return;
+          closeModal();
+
+          const btn = document.getElementById('saveTransferBtn');
+          const original = btn.innerHTML;
+          btn.disabled = true;
+          btn.innerHTML = '<i data-lucide="loader-2"></i> جارٍ التنفيذ...';
+          if (window.lucide) lucide.createIcons();
+
+          try {
+            const { transfer, errors } = await executeTransfer();
+            const { fromName, toName } = state.pendingTransfer;
+
+            if (errors.length === 0) {
+              await Refad.logActivity('warehouse_transfer', 'inventory',
+                `تحويل #${transfer.id} من "${fromName}" إلى "${toName}" (${state.selectedItems.length} صنف)`, transfer.id);
+
+              try {
+                await Refad.notifyCompany(session.company_id,
+                  '🔄 تحويل بين المخازن',
+                  `تحويل #${transfer.id} من "${fromName}" إلى "${toName}" (${state.selectedItems.length} صنف)`,
+                  'info', transfer.id, session.user_id);
+              } catch (e) {}
+
+              closeNewTransferModal();
+              await loadAll();
+              Refad.toast.success('✅ تم التحويل بنجاح');
+            } else {
+              Refad.toast.warning(`تم التحويل جزئياً. ${errors.length} خطأ`);
+              console.warn('Transfer errors:', errors);
+              closeNewTransferModal();
+              await loadAll();
+            }
+          } catch (err) {
+            console.error('[Transfers] save failed:', err);
+            Refad.toast.error('تعذّر التحويل: ' + err.message);
+          } finally {
+            btn.disabled = false;
+            btn.innerHTML = original;
+            if (window.lucide) lucide.createIcons();
+          }
+        }
+
+        doBtn.addEventListener('click', execute);
+        cancelBtn.addEventListener('click', closeModal);
+        closeBtn.addEventListener('click', closeModal);
+        backdrop.addEventListener('click', e => {
+          if (e.target === backdrop) closeModal();
+        });
+      }
+      // ============================================================
+      // 16) View Transfer Details
+      // ============================================================
+      async function openViewTransferModal(transferId) {
+        const transfer = state.transfers.find(t => Number(t.id) === Number(transferId));
+        if (!transfer) { Refad.toast.error('التحويل غير موجود'); return; }
+
+        state.currentViewTransferId = transferId;
+        document.getElementById('viewTransferId').textContent = transfer.id;
+
+        const body = document.getElementById('viewTransferBody');
+        body.innerHTML = `
+          <div style="text-align:center;padding:40px;color:var(--text-muted);">
+            <i data-lucide="loader-2" style="width:32px;height:32px;opacity:0.5;"></i>
+            <p style="margin-top:10px;">جارٍ التحميل...</p>
+          </div>
+        `;
+        if (window.lucide) lucide.createIcons();
+
+        document.getElementById('viewTransferBackdrop').classList.add('show');
+        document.getElementById('viewTransferBackdrop').setAttribute('aria-hidden', 'false');
+
+        let items = state.transferItemsCache[transferId];
+        if (!items) {
+          try {
+            items = await Refad.db.select('warehouse_transfer_items', {
+              columns: 'id, transfer_id, batch_id, product_id, batch_number, quantity, unit_cost, total, notes',
+              eq: { transfer_id: transferId },
+              order: { column: 'id', ascending: true }
+            });
+
+            const productIds = [...new Set((items || []).map(i => i.product_id).filter(Boolean))];
+            let productsMap = {};
+            if (productIds.length) {
+              const products = await Refad.db.select('products', {
+                columns: 'id, name, name_en, form, unit',
+                in: { id: productIds }
+              });
+              products.forEach(p => { productsMap[p.id] = p; });
+            }
+            items = (items || []).map(it => ({
+              ...it,
+              product: productsMap[it.product_id] || null
+            }));
+
+            state.transferItemsCache[transferId] = items;
+          } catch (e) {
+            console.error('Load items failed:', e);
+            items = [];
+          }
+        }
+
+        renderViewTransfer(transfer, items);
+      }
+
+      function renderViewTransfer(transfer, items) {
+        const body = document.getElementById('viewTransferBody');
+
+        const totalQty = items.reduce((s, it) => s + (Number(it.quantity) || 0), 0);
+        const totalCost = items.reduce((s, it) => s + (Number(it.total) || 0), 0);
+        const type = TRANSFER_TYPES[transfer.transfer_type] || TRANSFER_TYPES.manual;
+
+        const itemsRows = items.length
+          ? items.map((it, idx) => `
+              <tr>
+                <td style="text-align:center;color:var(--text-muted);font-weight:700;">${idx + 1}</td>
+                <td>
+                  <div style="font-weight:700;font-size:13px;">${esc(it.product?.name || '—')}</div>
+                  ${it.product?.form ? `<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">${esc(it.product.form)}</div>` : ''}
+                </td>
+                <td style="font-family:monospace;font-weight:700;">${esc(it.batch_number || '—')}</td>
+                <td style="text-align:center;font-weight:800;color:var(--accent);">${fmtNumber(it.quantity)}</td>
+                <td style="text-align:center;">${fmtMoney(it.unit_cost)}</td>
+                <td style="text-align:center;font-weight:800;color:var(--success);">${fmtMoney(it.total)}</td>
+              </tr>
+            `).join('')
+          : `<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-muted);">لا توجد بنود محفوظة</td></tr>`;
+
+        body.innerHTML = `
+          <div class="transfer-route">
+            <div class="route-wh from">
+              <div class="wh-label">من مخزن</div>
+              <div class="wh-name">${esc(getWhName(transfer.from_warehouse_id))}</div>
+            </div>
+            <div class="route-arrow">→</div>
+            <div class="route-wh to">
+              <div class="wh-label">إلى مخزن</div>
+              <div class="wh-name">${esc(getWhName(transfer.to_warehouse_id))}</div>
+            </div>
+          </div>
+
+          <div class="transfer-detail-header">
+            <div class="tdh-item">
+              <span class="lbl">رقم التحويل</span>
+              <span class="val teal">#${transfer.id}</span>
+            </div>
+            <div class="tdh-item">
+              <span class="lbl">النوع</span>
+              <span class="val">
+                <span class="badge-tag ${type.color}">${esc(type.label)}</span>
+              </span>
+            </div>
+            <div class="tdh-item">
+              <span class="lbl">التاريخ</span>
+              <span class="val">${fmtDate(transfer.transfer_date || transfer.created_at)}</span>
+            </div>
+            <div class="tdh-item">
+              <span class="lbl">الحالة</span>
+              <span class="val">
+                <span class="badge-tag green">${transfer.status === 'completed' ? 'مكتمل' : esc(transfer.status || '—')}</span>
+              </span>
+            </div>
+            <div class="tdh-item">
+              <span class="lbl">بواسطة</span>
+              <span class="val">${esc(getUserName(transfer.created_by))}</span>
+            </div>
+            <div class="tdh-item">
+              <span class="lbl">وقت الإنشاء</span>
+              <span class="val" style="font-size:12px;">${fmtDateTime(transfer.created_at)}</span>
+            </div>
+          </div>
+
+          ${transfer.source_reference ? `
+            <div class="info-box purple" style="margin-bottom:16px;">
+              <i data-lucide="package-check"></i>
+              <div>
+                <b>المرجع:</b> ${esc(transfer.source_reference)}
+              </div>
+            </div>
+          ` : ''}
+
+          ${(transfer.reason || transfer.notes) ? `
+            <div class="info-box" style="margin-bottom:16px;">
+              <i data-lucide="info"></i>
+              <div>
+                ${transfer.reason ? `<div><b>السبب:</b> ${esc(transfer.reason)}</div>` : ''}
+                ${transfer.notes ? `<div style="margin-top:6px;"><b>ملاحظات:</b> ${esc(transfer.notes)}</div>` : ''}
+              </div>
+            </div>
+          ` : ''}
+
+          <h3 style="font-size:14px;font-weight:800;margin-bottom:10px;display:flex;align-items:center;gap:8px;">
+            <i data-lucide="package" style="width:16px;height:16px;color:var(--accent);"></i>
+            الأصناف المحوّلة (${items.length})
+          </h3>
+
+          <div style="overflow-x:auto;border:1px solid var(--border);border-radius:10px;">
+            <table class="transfer-items-table" style="min-width:600px;">
+              <thead>
+                <tr>
+                  <th style="width:40px;">#</th>
+                  <th>الصنف</th>
+                  <th>رقم التشغيلة</th>
+                  <th style="text-align:center;">الكمية</th>
+                  <th style="text-align:center;">سعر الوحدة</th>
+                  <th style="text-align:center;">الإجمالي</th>
+                </tr>
+              </thead>
+              <tbody>${itemsRows}</tbody>
+            </table>
+          </div>
+
+          <div class="transfer-summary">
+            <div class="ts-item">
+              <div class="lbl">عدد الأصناف</div>
+              <div class="val teal">${fmtNumber(items.length)}</div>
+            </div>
+            <div class="ts-item">
+              <div class="lbl">إجمالي الكمية</div>
+              <div class="val teal">${fmtNumber(totalQty)}</div>
+            </div>
+            <div class="ts-item">
+              <div class="lbl">إجمالي القيمة</div>
+              <div class="val purple">${fmtMoney(totalCost)}</div>
+            </div>
+          </div>
+        `;
+
+        if (window.lucide) lucide.createIcons();
+      }
+
+      function closeViewTransferModal() {
+        document.getElementById('viewTransferBackdrop').classList.remove('show');
+        document.getElementById('viewTransferBackdrop').setAttribute('aria-hidden', 'true');
+        state.currentViewTransferId = null;
+      }
+
+      // ============================================================
+      // 17) Print Transfer
+      // ============================================================
+      function printCurrentTransfer() {
+        const id = state.currentViewTransferId;
+        if (!id) return;
+        const transfer = state.transfers.find(t => Number(t.id) === Number(id));
+        if (!transfer) return;
+
+        const items = state.transferItemsCache[id] || [];
+        const totalQty = items.reduce((s, it) => s + (Number(it.quantity) || 0), 0);
+        const totalCost = items.reduce((s, it) => s + (Number(it.total) || 0), 0);
+
+        const rows = items.map((it, i) => `
+          <tr>
+            <td>${i + 1}</td>
+            <td>${esc(it.product?.name || '—')}</td>
+            <td>${esc(it.batch_number || '—')}</td>
+            <td>${fmtNumber(it.quantity)}</td>
+            <td>${fmtMoney(it.unit_cost)}</td>
+            <td>${fmtMoney(it.total)}</td>
+          </tr>
+        `).join('');
+
+        const w = window.open('', '_blank');
+        if (!w) { Refad.toast.warning('اسمح بالنوافذ المنبثقة'); return; }
+
+        const sysName = SafeSettings.identity.getSystemName();
+
+        w.document.write(`<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">
+          <title>تحويل #${id}</title>
+          <style>
+            body { font-family: 'Cairo', Arial, sans-serif; padding: 20px; color: #0f172a; }
+            .header { display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #0B2C4D;padding-bottom:14px;margin-bottom:20px; }
+            .header h1 { color:#0B2C4D;font-size:22px;margin:0; }
+            .header .meta { text-align:left;font-size:12px;color:#64748b; }
+            .route { display:flex;justify-content:space-around;padding:16px;background:#F1F5F9;border-radius:10px;margin-bottom:20px; }
+            .route .wh { text-align:center; }
+            .route .wh .lbl { font-size:11px;color:#64748b;font-weight:700; }
+            .route .wh .name { font-size:16px;font-weight:800;color:#0B2C4D;margin-top:4px; }
+            table { width:100%; border-collapse:collapse; font-size:12px; }
+            th { background:#0B2C4D;color:#fff;padding:10px;text-align:right; }
+            td { padding:8px 10px; border-bottom:1px solid #e2e8f0; }
+            tbody tr:nth-child(even) { background:#f8fafc; }
+            .totals { margin-top:20px;width:300px;margin-right:auto; }
+            .totals .row { display:flex;justify-content:space-between;padding:6px 0;font-size:13px; }
+            .totals .row.grand { border-top:2px solid #0B2C4D;padding-top:10px;font-size:16px;color:#14B8A6;font-weight:800; }
+            .footer { margin-top:30px;text-align:center;color:#94a3b8;font-size:10px;border-top:1px solid #cbd5e1;padding-top:10px; }
+          </style></head><body>
+          <div class="header">
+            <h1>إذن تحويل بين المخازن</h1>
+            <div class="meta">
+              <div><b>رقم التحويل:</b> #${id}</div>
+              <div><b>التاريخ:</b> ${fmtDate(transfer.transfer_date || transfer.created_at)}</div>
+              <div><b>بواسطة:</b> ${esc(getUserName(transfer.created_by))}</div>
+            </div>
+          </div>
+          <div class="route">
+            <div class="wh">
+              <div class="lbl">من مخزن</div>
+              <div class="name">${esc(getWhName(transfer.from_warehouse_id))}</div>
+            </div>
+            <div style="font-size:32px;color:#14B8A6;align-self:center;">→</div>
+            <div class="wh">
+              <div class="lbl">إلى مخزن</div>
+              <div class="name">${esc(getWhName(transfer.to_warehouse_id))}</div>
+            </div>
+          </div>
+          ${transfer.source_reference ? `<div style="background:#F1F5F9;padding:10px 14px;border-radius:8px;font-size:12px;margin-bottom:16px;"><b>المرجع:</b> ${esc(transfer.source_reference)}</div>` : ''}
+          <table>
+            <thead><tr><th>#</th><th>الصنف</th><th>رقم التشغيلة</th><th>الكمية</th><th>سعر الوحدة</th><th>الإجمالي</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+          <div class="totals">
+            <div class="row"><span>عدد الأصناف</span><b>${fmtNumber(items.length)}</b></div>
+            <div class="row"><span>إجمالي الكمية</span><b>${fmtNumber(totalQty)}</b></div>
+            <div class="row grand"><span>إجمالي القيمة</span><b>${fmtMoney(totalCost)}</b></div>
+          </div>
+          <div class="footer">تم إنشاء المستند من نظام ${esc(sysName)}</div>
+          <script>window.onload=()=>setTimeout(()=>window.print(),300);<\/script>
+          </body></html>`);
+        w.document.close();
+      }
+
+      // ============================================================
+      // 18) Transfer Type Selector
+      // ============================================================
+      function setupTransferTypeSelector() {
+        document.querySelectorAll('.transfer-type-btn').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const type = btn.dataset.type;
+            state.transferType = type;
+            state.selectedItems = [];
+            state.selectedInvoice = null;
+            renderSelectedItems();
+
+            document.querySelectorAll('.transfer-type-btn').forEach(b => b.classList.toggle('active', b.dataset.type === type));
+            document.querySelectorAll('.transfer-mode-panel').forEach(p => {
+              p.style.display = p.dataset.mode === type ? 'flex' : 'none';
+            });
+
+            const fromId = Number(document.getElementById('fromWarehouse').value);
+            if (fromId) {
+              await loadAvailableForSource(fromId);
+            }
+          });
+        });
+      }
+
+      // ============================================================
+      // 19) Events
+      // ============================================================
+      function bindEvents() {
+        const search = Refad.debounce(v => { state.search = v; state.page = 1; renderTable(); }, 250);
+        document.getElementById('searchInput').addEventListener('input', e => search(e.target.value));
+
+        document.getElementById('filterFrom').addEventListener('change', e => { state.filterFrom = e.target.value; state.page = 1; renderTable(); });
+        document.getElementById('filterTo').addEventListener('change', e => { state.filterTo = e.target.value; state.page = 1; renderTable(); });
+        document.getElementById('filterType').addEventListener('change', e => { state.filterType = e.target.value; state.page = 1; renderTable(); });
+
+        document.getElementById('newTransferBtn').addEventListener('click', openNewTransferModal);
+        document.getElementById('closeNewTransferBtn').addEventListener('click', closeNewTransferModal);
+        document.getElementById('cancelNewTransferBtn').addEventListener('click', closeNewTransferModal);
+        document.getElementById('newTransferBackdrop').addEventListener('click', e => {
+          if (e.target.id === 'newTransferBackdrop') closeNewTransferModal();
+        });
+
+        document.getElementById('fromWarehouse').addEventListener('change', async e => {
+          const id = Number(e.target.value);
+          state.selectedItems = [];
+          state.selectedInvoice = null;
+          renderSelectedItems();
+          if (!id) { resetPickers(); return; }
+          await loadAvailableForSource(id);
+        });
+
+        const pickerSearch = Refad.debounce(v => { state.pickerSearch = v; renderBatchPicker(); }, 250);
+        document.getElementById('batchPickerSearch').addEventListener('input', e => pickerSearch(e.target.value));
+
+        document.getElementById('clearSelectionBtn').addEventListener('click', () => {
+          state.selectedItems = [];
+          state.selectedInvoice = null;
+          renderCurrentPicker();
+          renderSelectedItems();
+        });
+
+        document.getElementById('newTransferForm').addEventListener('submit', saveTransfer);
+
+        document.getElementById('refreshBtn').addEventListener('click', async () => {
+          Refad.toast.info('جارٍ التحديث...');
+          state.transferItemsCache = {};
+          await loadAll();
+          Refad.toast.success('تم التحديث');
+        });
+
+        document.getElementById('transfersBody').addEventListener('click', e => {
+          const btn = e.target.closest('[data-action="view"]');
+          const row = e.target.closest('tr[data-id]');
+          if (btn) openViewTransferModal(Number(btn.dataset.id));
+          else if (row && !e.target.closest('button')) openViewTransferModal(Number(row.dataset.id));
+        });
+
+        document.getElementById('closeViewTransferBtn').addEventListener('click', closeViewTransferModal);
+        document.getElementById('closeViewTransferFooter').addEventListener('click', closeViewTransferModal);
+        document.getElementById('viewTransferBackdrop').addEventListener('click', e => {
+          if (e.target.id === 'viewTransferBackdrop') closeViewTransferModal();
+        });
+        document.getElementById('printTransferBtn').addEventListener('click', printCurrentTransfer);
+
+        document.addEventListener('keydown', e => {
+          if (e.key === 'Escape') {
+            closeNewTransferModal();
+            closeViewTransferModal();
+            document.getElementById('confirmTransferBackdrop').classList.remove('show');
+          }
+        });
+      }
+
+      // ============================================================
+      // 20) Load Settings
+      // ============================================================
+      function loadSettings() {
+        try {
+          if (window.RefadSettings) {
+            state.expiryAlertDays = SafeSettings.inventory.getExpiryAlertDays();
+          }
+        } catch (e) { console.warn('[loadSettings]', e); }
+      }
+
+      // ============================================================
+      // 21) Init
+      // ============================================================
+      async function init() {
+        loadSettings();
+        buildSidebar();
+        fillUser();
+        applyIdentity();
+        setupTheme();
+        setupSidebarMobile();
+        setupUserMenu();
+        setupTransferTypeSelector();
+        setupConfirmTransferModal();
+        setupRealtimeTheme();
+        bindEvents();
+
+        try {
+          if (window.Refad?.Warehouse) {
+            if (typeof Refad.Warehouse.ensureLoaded === 'function') {
+              await Refad.Warehouse.ensureLoaded();
+            }
+            if (typeof Refad.Warehouse.injectSelector === 'function') {
+              Refad.Warehouse.injectSelector();
+            }
+          }
+        } catch (e) { console.warn('[Warehouse] init failed:', e.message); }
+
+        await loadAll();
+
+        try { Refad.registerServiceWorker(); } catch (e) {}
+
+        console.log('%c[Refad] Warehouse Transfers v5 ready (Theme Sync + Settings)', 'color:#14B8A6;font-weight:bold');
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+
+    })();
+  </script>
+
+</body>
+</html>

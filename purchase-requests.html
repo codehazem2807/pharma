@@ -20,6 +20,7 @@
   <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -71,58 +72,49 @@
 
     body { display: flex; min-height: 100vh; overflow-x: hidden; }
 
-    /* Sidebar */
+    /* ============ Sidebar ============ */
     .sidebar {
       width: var(--sidebar-w);
       height: 100vh;
       background: var(--sidebar-bg);
       color: var(--sidebar-text);
       position: fixed;
-      top: 0;
-      right: 0;
+      top: 0; right: 0;
       z-index: 100;
-      display: flex;
-      flex-direction: column;
+      display: flex; flex-direction: column;
       transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       box-shadow: -4px 0 20px rgba(0,0,0,0.1);
     }
     .sidebar-header {
       padding: 20px 22px;
       border-bottom: 1px solid rgba(255,255,255,0.08);
-      display: flex;
-      align-items: center;
-      gap: 14px;
+      display: flex; align-items: center; gap: 14px;
       height: var(--topbar-h);
       box-sizing: border-box;
     }
     .sidebar-logo {
-      width: 40px;
-      height: 40px;
+      width: 40px; height: 40px;
       background: linear-gradient(135deg, var(--accent), var(--accent-dark));
       border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: flex; align-items: center; justify-content: center;
       flex-shrink: 0;
       box-shadow: 0 4px 12px rgba(20,184,166,0.4);
+      overflow: hidden;
     }
     .sidebar-logo img { width: 70%; height: 70%; object-fit: contain; }
     .sidebar-logo .fallback { color: white; font-weight: 800; font-size: 18px; }
-    .sidebar-brand h2 { color: white; font-size: 20px; font-weight: 800; letter-spacing: -0.5px; line-height: 1.2; }
+    .sidebar-brand h2 { color: white; font-size: 20px; font-weight: 800; line-height: 1.2; }
     .sidebar-brand p { font-size: 10px; color: var(--sidebar-text); opacity: 0.7; font-weight: 500; margin-top: 2px; }
     .sidebar-nav { flex: 1; overflow-y: auto; padding: 12px 0; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.15) transparent; }
     .sidebar-nav::-webkit-scrollbar { width: 5px; }
     .sidebar-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 10px; }
     .nav-section { padding: 8px 20px 4px; font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 1px; margin-top: 8px; }
     .nav-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
+      display: flex; align-items: center; gap: 12px;
       padding: 11px 22px;
       color: var(--sidebar-text);
       text-decoration: none;
-      font-size: 14px;
-      font-weight: 500;
+      font-size: 14px; font-weight: 500;
       border-right: 3px solid transparent;
       transition: all 0.2s;
       position: relative;
@@ -135,19 +127,17 @@
     .nav-item .badge { margin-right: auto; background: var(--danger); color: white; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
     .nav-item .badge.teal { background: var(--accent); }
     .nav-item .badge.gold { background: var(--gold); }
+    .nav-item .badge.new { background: var(--purple); }
 
-    /* Main */
+    /* ============ Main ============ */
     .main { flex: 1; margin-right: var(--sidebar-w); min-width: 0; display: flex; flex-direction: column; }
     .topbar {
       height: var(--topbar-h);
       background: var(--card);
       border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      gap: 16px;
+      display: flex; align-items: center; gap: 16px;
       padding: 0 24px;
-      position: sticky;
-      top: 0;
+      position: sticky; top: 0;
       z-index: 50;
       box-shadow: var(--shadow-sm);
     }
@@ -156,16 +146,13 @@
     .topbar-title { font-size: 18px; font-weight: 700; color: var(--text); flex-shrink: 0; }
     .topbar-actions { display: flex; align-items: center; gap: 8px; margin-right: auto; }
     .icon-btn {
-      width: 40px;
-      height: 40px;
+      width: 40px; height: 40px;
       border-radius: 10px;
       border: 1px solid var(--border);
       background: var(--card);
       color: var(--text);
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: flex; align-items: center; justify-content: center;
       position: relative;
       transition: all 0.2s;
     }
@@ -173,9 +160,7 @@
     .icon-btn i, .icon-btn svg { width: 18px; height: 18px; }
     .icon-btn .dot { position: absolute; top: 8px; left: 8px; width: 8px; height: 8px; background: var(--danger); border-radius: 50%; border: 2px solid var(--card); }
     .user-menu {
-      display: flex;
-      align-items: center;
-      gap: 10px;
+      display: flex; align-items: center; gap: 10px;
       padding: 5px 12px 5px 5px;
       border-radius: 10px;
       cursor: pointer;
@@ -185,18 +170,12 @@
     }
     .user-menu:hover { background: var(--bg); }
     .user-avatar {
-      width: 34px;
-      height: 34px;
+      width: 34px; height: 34px;
       border-radius: 9px;
       background: linear-gradient(135deg, var(--primary), var(--accent));
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-weight: 700;
-      font-size: 14px;
-      flex-shrink: 0;
-      overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-weight: 700; font-size: 14px;
+      flex-shrink: 0; overflow: hidden;
     }
     .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
     .user-info { display: flex; flex-direction: column; line-height: 1.2; }
@@ -211,12 +190,10 @@
     .dropdown-item i { width: 16px; height: 16px; }
     .dropdown-divider { height: 1px; background: var(--border); margin: 6px 0; }
 
-    /* Content */
+    /* ============ Content ============ */
     .content { padding: 24px; flex: 1; }
     .page-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      display: flex; align-items: center; justify-content: space-between;
       gap: 16px;
       margin-bottom: 20px;
       flex-wrap: wrap;
@@ -225,13 +202,10 @@
     .page-head p { font-size: 13px; color: var(--text-muted); }
 
     .btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
+      display: inline-flex; align-items: center; gap: 8px;
       padding: 10px 18px;
       font-family: inherit;
-      font-size: 14px;
-      font-weight: 600;
+      font-size: 14px; font-weight: 600;
       border-radius: var(--radius-sm);
       border: none;
       cursor: pointer;
@@ -245,108 +219,159 @@
     .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(20,184,166,0.35); }
     .btn-outline { background: var(--card); color: var(--text); border: 1px solid var(--border); }
     .btn-outline:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-danger:hover:not(:disabled) { background: #b91c1c; }
     .btn-sm { padding: 6px 12px; font-size: 12px; }
 
-    /* Mini stats */
-    .mini-stats {
+    /* ============ Stats ============ */
+    .stats-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 14px;
       margin-bottom: 20px;
     }
-    .mini-card {
+    .stat-card {
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 14px 16px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      transition: all 0.2s;
+      padding: 18px;
+      display: flex; align-items: center; gap: 14px;
       box-shadow: var(--shadow-sm);
+      position: relative;
+      overflow: hidden;
+      transition: all 0.2s;
     }
-    .mini-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: var(--shadow); }
-    .mini-icon {
-      width: 42px;
-      height: 42px;
+    .stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+    .stat-card::before { content: ''; position: absolute; top: 0; right: 0; width: 4px; height: 100%; background: var(--accent); }
+    .stat-card.success::before { background: var(--success); }
+    .stat-card.danger::before { background: var(--danger); }
+    .stat-card.gold::before { background: var(--gold); }
+    .stat-card.info::before { background: var(--info); }
+    .stat-card.purple::before { background: var(--purple); }
+    .stat-icon {
+      width: 48px; height: 48px;
       border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      background: rgba(20,184,166,0.12);
+      color: var(--accent);
+    }
+    .stat-icon.success { background: rgba(16,185,129,0.12); color: var(--success); }
+    .stat-icon.danger { background: rgba(239,68,68,0.12); color: var(--danger); }
+    .stat-icon.gold { background: rgba(245,158,11,0.12); color: var(--gold); }
+    .stat-icon.info { background: rgba(59,130,246,0.12); color: var(--info); }
+    .stat-icon.purple { background: rgba(139,92,246,0.12); color: var(--purple); }
+    .stat-icon i { width: 22px; height: 22px; }
+    .stat-body { flex: 1; min-width: 0; }
+    .stat-body .label { font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px; }
+    .stat-body .value { font-size: 20px; font-weight: 800; color: var(--text); line-height: 1.2; overflow-wrap: anywhere; }
+    .stat-body .value.success { color: var(--success); }
+    .stat-body .value.danger { color: var(--danger); }
+    .stat-body .value.gold { color: var(--gold); }
+    .stat-body .value.info { color: var(--info); }
+    .stat-body .sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+    /* ============ Charts Grid ============ */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    @media (max-width: 1024px) {
+      .charts-grid { grid-template-columns: 1fr; }
+    }
+
+    .chart-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      padding: 18px;
+    }
+    .chart-card h3 {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 14px;
       display: flex;
       align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
+      gap: 8px;
     }
-    .mini-icon i { width: 20px; height: 20px; color: white; }
-    .mini-icon.blue   { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
-    .mini-icon.teal   { background: linear-gradient(135deg, #14B8A6, #0d9488); }
-    .mini-icon.gold   { background: linear-gradient(135deg, #F59E0B, #d97706); }
-    .mini-icon.green  { background: linear-gradient(135deg, #10b981, #047857); }
-    .mini-icon.gray   { background: linear-gradient(135deg, #94a3b8, #64748b); }
-    .mini-icon.purple { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
-    .mini-icon.red    { background: linear-gradient(135deg, #ef4444, #b91c1c); }
-    .mini-body { flex: 1; min-width: 0; }
-    .mini-body .label { font-size: 11px; color: var(--text-muted); font-weight: 600; margin-bottom: 2px; }
-    .mini-body .value { font-size: 18px; font-weight: 800; color: var(--text); line-height: 1; }
-    .mini-body .sub { font-size: 10px; color: var(--text-muted); margin-top: 3px; }
+    .chart-card h3 i { width: 18px; height: 18px; color: var(--accent); }
+    .chart-wrap { position: relative; height: 220px; }
 
-    /* Toolbar */
+    /* ============ Toolbar ============ */
     .toolbar {
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 14px 16px;
+      padding: 14px 18px;
       margin-bottom: 16px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
+      display: flex; gap: 12px;
       flex-wrap: wrap;
+      align-items: center;
       box-shadow: var(--shadow-sm);
     }
-    .search-input { position: relative; flex: 1; min-width: 220px; }
-    .search-input input {
+    .search-box { position: relative; flex: 1; min-width: 220px; }
+    .search-box input {
       width: 100%;
       padding: 10px 42px 10px 14px;
       font-family: inherit;
       font-size: 14px;
       background: var(--bg);
-      border: 1px solid var(--border);
+      border: 1.5px solid var(--border);
       border-radius: var(--radius-sm);
       color: var(--text);
       outline: none;
       transition: all 0.2s;
     }
-    .search-input input:focus { border-color: var(--accent); background: var(--card); box-shadow: 0 0 0 3px rgba(20,184,166,0.1); }
-    .search-input i { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--text-muted); pointer-events: none; }
-    .select-wrap { position: relative; min-width: 150px; }
-    .select-wrap select {
-      width: 100%;
-      padding: 10px 14px 10px 32px;
+    .search-box input:focus { border-color: var(--accent); background: var(--card); box-shadow: 0 0 0 3px rgba(20,184,166,0.1); }
+    .search-box i { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--text-muted); pointer-events: none; }
+    .search-box kbd {
+      position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+      font-family: 'Courier New', monospace; font-size: 10px;
+      padding: 2px 6px; background: var(--border); color: var(--text-muted);
+      border-radius: 4px; font-weight: 700; pointer-events: none;
+    }
+    .filter-select {
+      padding: 10px 14px;
       font-family: inherit;
-      font-size: 14px;
+      font-size: 13px; font-weight: 600;
       background: var(--bg);
-      border: 1px solid var(--border);
+      border: 1.5px solid var(--border);
       border-radius: var(--radius-sm);
       color: var(--text);
       outline: none;
       cursor: pointer;
-      appearance: none;
+      min-width: 140px;
+    }
+    .filter-select:focus { border-color: var(--accent); background: var(--card); }
+
+    /* View toggle */
+    .view-toggle {
+      display: flex;
+      gap: 2px;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 3px;
+    }
+    .view-btn {
+      width: 34px; height: 34px;
+      border-radius: 7px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
       transition: all 0.2s;
     }
-    .select-wrap select:focus { border-color: var(--accent); background: var(--card); }
-    .select-wrap::after {
-      content: '';
-      position: absolute;
-      left: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 0;
-      height: 0;
-      border-left: 5px solid transparent;
-      border-right: 5px solid transparent;
-      border-top: 5px solid var(--text-muted);
-      pointer-events: none;
-    }
+    .view-btn:hover { color: var(--text); }
+    .view-btn.active { background: var(--card); color: var(--accent); box-shadow: var(--shadow-sm); }
+    .view-btn i { width: 16px; height: 16px; }
 
-    /* Quick filters */
+    /* Quick Filters */
     .quick-filters {
       display: flex;
       gap: 6px;
@@ -368,7 +393,7 @@
     .quick-filter-btn:hover { border-color: var(--accent); color: var(--accent); }
     .quick-filter-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
 
-    /* Table */
+    /* ============ Table ============ */
     .table-wrap {
       background: var(--card);
       border: 1px solid var(--border);
@@ -377,38 +402,73 @@
       overflow: hidden;
     }
     .table-scroll { overflow-x: auto; }
-    table {
+    table.data-table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 14px;
-      min-width: 1000px;
+      font-size: 13px;
+      min-width: 1100px;
     }
-    thead { background: var(--bg); border-bottom: 1px solid var(--border); }
-    th {
+    table.data-table thead { background: var(--bg); border-bottom: 1px solid var(--border); }
+    table.data-table th {
       text-align: right;
-      padding: 14px 16px;
-      font-size: 12px;
-      font-weight: 700;
+      padding: 12px 14px;
+      font-size: 11px; font-weight: 700;
       color: var(--text-muted);
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.3px;
       white-space: nowrap;
     }
-    tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
-    tbody tr:last-child { border-bottom: none; }
-    tbody tr:hover { background: var(--bg); }
-    tbody tr.request-clickable-row { cursor: pointer; }
-    tbody tr.request-clickable-row:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
-    td { padding: 14px 16px; color: var(--text); vertical-align: middle; }
+    table.data-table tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+      cursor: pointer;
+    }
+    table.data-table tbody tr:hover { background: var(--bg); }
+    table.data-table tbody tr:last-child { border-bottom: none; }
+    table.data-table td { padding: 12px 14px; color: var(--text); vertical-align: middle; }
 
     .req-number {
       font-weight: 800;
       color: var(--accent);
       font-family: 'Courier New', monospace;
       letter-spacing: 0.5px;
+      font-size: 13px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
     }
-    .supplier-name-cell { font-weight: 600; color: var(--text); }
+
+    .copy-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 22px; height: 22px; border-radius: 6px;
+      border: none; background: transparent; color: var(--text-muted);
+      cursor: pointer; transition: all 0.2s;
+      vertical-align: middle;
+    }
+    .copy-btn:hover { background: var(--accent); color: white; }
+    .copy-btn i { width: 12px; height: 12px; }
+    .copy-btn.copied { background: var(--success); color: white; }
+
+    .supplier-name-cell { font-weight: 700; color: var(--text); font-size: 13px; }
     .supplier-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+    .warehouse-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      background: rgba(11,44,77,0.08);
+      color: var(--primary);
+      white-space: nowrap;
+    }
+    [data-theme="dark"] .warehouse-pill {
+      background: rgba(20,184,166,0.15);
+      color: var(--accent);
+    }
+    .warehouse-pill i { width: 11px; height: 11px; }
 
     .badge-tag {
       display: inline-flex;
@@ -416,7 +476,7 @@
       gap: 4px;
       padding: 4px 10px;
       font-size: 11px;
-      font-weight: 600;
+      font-weight: 700;
       border-radius: 20px;
       white-space: nowrap;
     }
@@ -427,47 +487,138 @@
     .badge-tag.blue   { background: rgba(59,130,246,0.12); color: var(--info); }
     .badge-tag.purple { background: rgba(139,92,246,0.12); color: var(--purple); }
 
-    .actions-cell { display: flex; gap: 6px; justify-content: flex-end; }
     .action-btn {
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
+      width: 30px; height: 30px;
+      border-radius: 7px;
       border: 1px solid var(--border);
       background: var(--card);
       color: var(--text-muted);
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: inline-flex; align-items: center; justify-content: center;
       transition: all 0.2s;
+      margin: 0 1px;
+      text-decoration: none;
     }
-    .action-btn:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
+    .action-btn:hover { border-color: var(--accent); color: var(--accent); }
     .action-btn.danger:hover { border-color: var(--danger); color: var(--danger); background: rgba(239,68,68,0.06); }
-    .action-btn.share:hover { border-color: var(--info); color: var(--info); background: rgba(59,130,246,0.06); }
-    .action-btn i { width: 15px; height: 15px; }
+    .action-btn i { width: 14px; height: 14px; }
 
-    .empty-row td { padding: 60px 20px; text-align: center; color: var(--text-muted); }
-    .empty-row i { width: 48px; height: 48px; opacity: 0.4; margin-bottom: 10px; }
-    .empty-row p { font-size: 14px; font-weight: 500; }
-
-    .skeleton-row td { padding: 18px 16px; }
-    .skeleton-bar {
-      height: 14px;
-      background: linear-gradient(90deg, var(--border) 25%, var(--bg) 50%, var(--border) 75%);
-      background-size: 200% 100%;
-      animation: shimmer 1.4s infinite;
-      border-radius: 6px;
+    /* ============ Cards Grid ============ */
+    .requests-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 14px;
     }
-    @keyframes shimmer {
-      0% { background-position: 200% 0; }
-      100% { background-position: -200% 0; }
+    .request-card {
+      background: var(--card);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.25s;
+      cursor: pointer;
+    }
+    .request-card::before {
+      content: '';
+      position: absolute;
+      top: 0; right: 0; bottom: 0;
+      width: 5px;
+      background: var(--rc-color, var(--accent));
+    }
+    .request-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-lg);
+      border-color: var(--rc-color, var(--accent));
     }
 
-    /* Pagination */
-    .pagination {
+    .rc-header {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+      padding-right: 8px;
+    }
+    .rc-number {
+      font-family: 'Courier New', monospace;
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--accent);
+    }
+    .rc-supplier {
+      margin-bottom: 10px;
+      padding-right: 8px;
+    }
+    .rc-supplier .name {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--text);
+    }
+    .rc-supplier .sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .rc-info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 10px;
+      padding-right: 8px;
+    }
+    .rc-info-item { font-size: 11px; }
+    .rc-info-item .lbl { color: var(--text-muted); font-weight: 600; margin-bottom: 2px; }
+    .rc-info-item .val { color: var(--text); font-weight: 700; font-size: 13px; }
+    .rc-info-item .val.accent { color: var(--accent); }
+
+    .rc-amount-wrap {
+      padding: 12px 8px 12px 0;
+      margin-bottom: 10px;
+      border-top: 1px dashed var(--border);
+      border-bottom: 1px dashed var(--border);
+    }
+    .rc-amount-label { font-size: 10px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; }
+    .rc-amount { font-size: 22px; font-weight: 800; line-height: 1.1; margin-top: 2px; color: var(--accent); }
+    .rc-amount.estimated { color: var(--gold); }
+    .rc-amount.estimated::after {
+      content: ' (تقديري)';
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .rc-actions {
       display: flex;
-      align-items: center;
-      justify-content: space-between;
+      gap: 6px;
+      padding-right: 8px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+    }
+    .rc-actions .btn {
+      flex: 1;
+      justify-content: center;
+      padding: 6px 10px;
+      font-size: 11px;
+    }
+
+    /* ============ Empty / Loader ============ */
+    .empty-state {
+      padding: 60px 20px;
+      text-align: center;
+      color: var(--text-muted);
+    }
+    .empty-state i { width: 52px; height: 52px; opacity: 0.3; margin-bottom: 14px; }
+    .empty-state h3 { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+    .empty-state p { font-size: 13px; }
+
+    .loader { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+    .loader i { width: 40px; height: 40px; animation: spin 1s linear infinite; color: var(--accent); margin-bottom: 12px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+    /* ============ Pagination ============ */
+    .pagination {
+      display: flex; align-items: center; justify-content: space-between;
       padding: 14px 20px;
       border-top: 1px solid var(--border);
       font-size: 13px;
@@ -477,16 +628,14 @@
     }
     .pagination .controls { display: flex; gap: 6px; align-items: center; }
     .page-btn {
-      min-width: 34px;
-      height: 34px;
+      min-width: 34px; height: 34px;
       padding: 0 10px;
       border-radius: 8px;
       border: 1px solid var(--border);
       background: var(--card);
       color: var(--text);
       font-family: inherit;
-      font-size: 13px;
-      font-weight: 600;
+      font-size: 13px; font-weight: 600;
       cursor: pointer;
       transition: all 0.2s;
     }
@@ -494,7 +643,7 @@
     .page-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
     .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
-    /* Modal */
+    /* ============ Modal ============ */
     .modal-backdrop {
       position: fixed;
       inset: 0;
@@ -502,8 +651,7 @@
       backdrop-filter: blur(4px);
       z-index: 200;
       display: none;
-      align-items: center;
-      justify-content: center;
+      align-items: center; justify-content: center;
       padding: 20px;
       opacity: 0;
       transition: opacity 0.2s;
@@ -516,8 +664,7 @@
       width: 100%;
       max-width: 620px;
       max-height: 90vh;
-      display: flex;
-      flex-direction: column;
+      display: flex; flex-direction: column;
       transform: scale(0.95);
       transition: transform 0.2s;
       overflow: hidden;
@@ -527,50 +674,36 @@
     .modal-header {
       padding: 16px 20px;
       border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      display: flex; align-items: center; justify-content: space-between;
       gap: 12px;
       flex-shrink: 0;
     }
-    .modal-header h3 { font-size: 16px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px; }
+    .modal-header h3 { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
     .modal-header h3 i { width: 18px; height: 18px; color: var(--accent); }
     .modal-close {
-      width: 32px;
-      height: 32px;
+      width: 32px; height: 32px;
       border-radius: 8px;
       border: none;
       background: transparent;
       color: var(--text-muted);
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.2s;
+      display: flex; align-items: center; justify-content: center;
     }
     .modal-close:hover { background: var(--bg); color: var(--danger); }
     .modal-close i { width: 18px; height: 18px; }
-    .modal-body {
-      padding: 20px;
-      overflow-y: auto;
-      flex: 1;
-      min-height: 0;
-      scrollbar-width: thin;
-      scrollbar-color: var(--border) transparent;
-    }
+    .modal-body { padding: 20px; overflow-y: auto; flex: 1; min-height: 0; }
     .modal-body::-webkit-scrollbar { width: 8px; }
     .modal-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
     .modal-footer {
       padding: 14px 20px;
       border-top: 1px solid var(--border);
-      display: flex;
-      gap: 10px;
-      justify-content: flex-end;
+      display: flex; gap: 10px; justify-content: flex-end;
       background: var(--bg);
       flex-shrink: 0;
+      flex-wrap: wrap;
     }
 
-    /* Detail Panel */
+    /* Detail sections */
     .detail-section { margin-bottom: 20px; }
     .detail-section-title {
       font-size: 11px;
@@ -585,6 +718,8 @@
       align-items: center;
       gap: 6px;
     }
+    .detail-section-title i { width: 14px; height: 14px; }
+
     .detail-row {
       display: flex;
       justify-content: space-between;
@@ -671,11 +806,11 @@
       min-width: 0;
     }
 
-    /* Overlay */
+    /* ============ Overlay ============ */
     .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; opacity: 0; transition: opacity 0.3s; }
     .overlay.show { display: block; opacity: 1; }
 
-    /* Responsive */
+    /* ============ Responsive ============ */
     @media (max-width: 1024px) {
       .sidebar { transform: translateX(100%); }
       .sidebar.open { transform: translateX(0); }
@@ -689,10 +824,14 @@
       .topbar-title { font-size: 15px; }
       .page-head { flex-direction: column; align-items: stretch; }
       .page-head h1 { font-size: 20px; }
-      .toolbar { padding: 12px; }
-      .search-input { min-width: 100%; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .stat-card { padding: 14px; }
+      .stat-icon { width: 40px; height: 40px; }
+      .stat-body .value { font-size: 16px; }
       .modal-footer { flex-direction: column-reverse; }
       .modal-footer .btn { width: 100%; justify-content: center; }
+      .requests-grid { grid-template-columns: 1fr; }
+      .panel-summary-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -701,12 +840,12 @@
   <!-- Sidebar -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
-      <div class="sidebar-logo">
-        <img src="logo.png" alt="رفاد" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=fallback>R</span>';">
+      <div class="sidebar-logo" id="sidebarLogo">
+        <img src="logo.png" alt="رفاد" id="sidebarLogoImg" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=fallback>R</span>';">
       </div>
       <div class="sidebar-brand">
-        <h2>رفاد</h2>
-        <p>نظام إدارة الأدوية</p>
+        <h2 id="sidebarBrandName">رفاد</h2>
+        <p id="sidebarBrandDesc">نظام إدارة الأدوية</p>
       </div>
     </div>
     <nav class="sidebar-nav" id="sidebarNav"></nav>
@@ -716,7 +855,6 @@
 
   <!-- Main -->
   <div class="main">
-
     <header class="topbar">
       <button class="menu-toggle" id="menuToggle"><i data-lucide="menu"></i></button>
       <div class="topbar-title">طلبات الشراء</div>
@@ -752,14 +890,14 @@
       <div class="page-head">
         <div>
           <h1>طلبات الشراء</h1>
-          <p>إدارة طلبات الشراء من الموردين مع التتبع الكامل</p>
+          <p>إدارة طلبات الشراء من الموردين مع التتبع الكامل والمخازن</p>
         </div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;">
-          <button class="btn btn-outline" id="refreshBtn">
+          <button class="btn btn-outline btn-sm" id="refreshBtn">
             <i data-lucide="refresh-cw"></i> تحديث
           </button>
-          <button class="btn btn-outline" id="exportBtn">
-            <i data-lucide="download"></i> تصدير
+          <button class="btn btn-outline btn-sm" id="exportBtn">
+            <i data-lucide="download"></i> تصدير Excel
           </button>
           <button class="btn btn-primary" id="addBtn">
             <i data-lucide="plus"></i> طلب جديد
@@ -767,78 +905,102 @@
         </div>
       </div>
 
-      <!-- Mini stats -->
-      <div class="mini-stats">
-        <div class="mini-card">
-          <div class="mini-icon blue"><i data-lucide="clipboard-list"></i></div>
-          <div class="mini-body">
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card info">
+          <div class="stat-icon info"><i data-lucide="clipboard-list"></i></div>
+          <div class="stat-body">
             <div class="label">إجمالي الطلبات</div>
-            <div class="value" id="statTotal">—</div>
+            <div class="value info" id="statTotal">0</div>
             <div class="sub" id="statTotalSub">—</div>
           </div>
         </div>
-        <div class="mini-card">
-          <div class="mini-icon gray"><i data-lucide="file-edit"></i></div>
-          <div class="mini-body">
+        <div class="stat-card">
+          <div class="stat-icon"><i data-lucide="file-edit"></i></div>
+          <div class="stat-body">
             <div class="label">مسودات</div>
-            <div class="value" id="statDraft">—</div>
+            <div class="value" id="statDraft">0</div>
             <div class="sub" id="statDraftSub">—</div>
           </div>
         </div>
-        <div class="mini-card">
-          <div class="mini-icon teal"><i data-lucide="send"></i></div>
-          <div class="mini-body">
+        <div class="stat-card purple">
+          <div class="stat-icon purple"><i data-lucide="send"></i></div>
+          <div class="stat-body">
             <div class="label">مُرسل</div>
-            <div class="value" id="statSent">—</div>
+            <div class="value info" id="statSent">0</div>
             <div class="sub" id="statSentSub">—</div>
           </div>
         </div>
-        <div class="mini-card">
-          <div class="mini-icon green"><i data-lucide="check-circle-2"></i></div>
-          <div class="mini-body">
+        <div class="stat-card success">
+          <div class="stat-icon success"><i data-lucide="check-circle-2"></i></div>
+          <div class="stat-body">
             <div class="label">مستلم</div>
-            <div class="value" id="statReceived">—</div>
+            <div class="value success" id="statReceived">0</div>
             <div class="sub" id="statReceivedSub">—</div>
           </div>
         </div>
-        <div class="mini-card">
-          <div class="mini-icon gold"><i data-lucide="banknote"></i></div>
-          <div class="mini-body">
+        <div class="stat-card gold">
+          <div class="stat-icon gold"><i data-lucide="banknote"></i></div>
+          <div class="stat-body">
             <div class="label">إجمالي القيمة</div>
-            <div class="value" id="statValue">—</div>
+            <div class="value gold" id="statValue">0.00</div>
             <div class="sub" id="statValueSub">—</div>
           </div>
         </div>
-        <div class="mini-card">
-          <div class="mini-icon purple"><i data-lucide="clock"></i></div>
-          <div class="mini-body">
-            <div class="label">هذا الشهر</div>
-            <div class="value" id="statMonth">—</div>
-            <div class="sub" id="statMonthSub">—</div>
+        <div class="stat-card danger">
+          <div class="stat-icon danger"><i data-lucide="clock"></i></div>
+          <div class="stat-body">
+            <div class="label">تحتاج متابعة</div>
+            <div class="value danger" id="statPending">0</div>
+            <div class="sub" id="statPendingSub">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts -->
+      <div class="charts-grid">
+        <div class="chart-card">
+          <h3><i data-lucide="pie-chart"></i> توزيع حالات الطلبات</h3>
+          <div class="chart-wrap">
+            <canvas id="statusChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3><i data-lucide="bar-chart-3"></i> أفضل 5 موردين (بالقيمة)</h3>
+          <div class="chart-wrap">
+            <canvas id="suppliersChart"></canvas>
           </div>
         </div>
       </div>
 
       <!-- Toolbar -->
       <div class="toolbar">
-        <div class="search-input">
-          <input type="text" id="searchInput" placeholder="ابحث برقم الطلب أو اسم المورد...">
+        <div class="search-box">
+          <input type="text" id="searchInput" placeholder="ابحث برقم الطلب أو اسم المورد أو الملاحظات...">
           <i data-lucide="search"></i>
+          <kbd>Ctrl+K</kbd>
         </div>
-        <div class="select-wrap">
-          <select id="filterStatus">
-            <option value="">كل الحالات</option>
-            <option value="draft">مسودة</option>
-            <option value="sent">مُرسل</option>
-            <option value="partial">جزئي</option>
-            <option value="received">مستلم</option>
-            <option value="cancelled">ملغي</option>
-          </select>
-        </div>
-        <div class="select-wrap">
-          <select id="filterSupplier">
-            <option value="">كل الموردين</option>
-          </select>
+        <select class="filter-select" id="filterStatus">
+          <option value="">كل الحالات</option>
+          <option value="draft">مسودة</option>
+          <option value="sent">مُرسل</option>
+          <option value="partial">جزئي</option>
+          <option value="received">مستلم</option>
+          <option value="cancelled">ملغي</option>
+        </select>
+        <select class="filter-select" id="filterSupplier">
+          <option value="">كل الموردين</option>
+        </select>
+        <select class="filter-select" id="filterWarehouse">
+          <option value="">كل المخازن</option>
+        </select>
+        <div class="view-toggle">
+          <button class="view-btn active" data-view="table" title="جدول">
+            <i data-lucide="list"></i>
+          </button>
+          <button class="view-btn" data-view="cards" title="بطاقات">
+            <i data-lucide="grid-3x3"></i>
+          </button>
         </div>
       </div>
 
@@ -851,19 +1013,20 @@
         <button type="button" class="quick-filter-btn" data-quick="pending">تحتاج متابعة</button>
       </div>
 
-      <!-- Table -->
-      <div class="table-wrap">
+      <!-- Table View -->
+      <div class="table-wrap" id="tableView">
         <div class="table-scroll">
-          <table>
+          <table class="data-table">
             <thead>
               <tr>
                 <th>رقم الطلب</th>
                 <th>المورد</th>
+                <th>المخزن</th>
                 <th>التاريخ</th>
                 <th>الأصناف</th>
                 <th>الحالة</th>
                 <th>القيمة التقديرية</th>
-                <th></th>
+                <th style="width:120px;">إجراءات</th>
               </tr>
             </thead>
             <tbody id="tableBody"></tbody>
@@ -872,10 +1035,13 @@
         <div class="pagination" id="pagination"></div>
       </div>
 
+      <!-- Cards View -->
+      <div class="requests-grid" id="cardsView" style="display:none;"></div>
+
     </main>
   </div>
 
-  <!-- Modal: Share Link -->
+  <!-- ========== Modal: Share Link ========== -->
   <div class="modal-backdrop" id="shareModal">
     <div class="modal">
       <div class="modal-header">
@@ -907,7 +1073,7 @@
     </div>
   </div>
 
-  <!-- Modal: Request Details -->
+  <!-- ========== Modal: Request Details ========== -->
   <div class="modal-backdrop" id="detailModal">
     <div class="modal modal-lg">
       <div class="modal-header">
@@ -924,11 +1090,59 @@
     </div>
   </div>
 
+  <!-- ============================================================
+       SCRIPTS — الترتيب مهم جداً
+       ============================================================ -->
   <script src="refad-core.js"></script>
   <script src="refad-auth.js"></script>
-    <script>
+  <script src="refad-theme-sync.js"></script>
+  <script src="refad-settings.js"></script>
+
+  <script>
     (function () {
       'use strict';
+
+      // ============================================================
+      // 0) Safe Settings Wrapper
+      // ============================================================
+      const SafeSettings = {
+        locale: {
+          formatMoney: function (v) {
+            try {
+              if (window.RefadSettings?.locale?.formatMoney) {
+                return RefadSettings.locale.formatMoney(v);
+              }
+            } catch (e) {}
+            return Refad.format.money(v);
+          }
+        },
+        identity: {
+          getSystemName: function () {
+            try {
+              if (window.RefadSettings?.identity?.getSystemName) {
+                return RefadSettings.identity.getSystemName();
+              }
+            } catch (e) {}
+            return 'رفاد';
+          },
+          getTagline: function () {
+            try {
+              if (window.RefadSettings?.identity?.getTagline) {
+                return RefadSettings.identity.getTagline();
+              }
+            } catch (e) {}
+            return 'نظام إدارة الأدوية';
+          },
+          getLogoUrl: function () {
+            try {
+              if (window.RefadSettings?.identity?.getLogoUrl) {
+                return RefadSettings.identity.getLogoUrl();
+              }
+            } catch (e) {}
+            return null;
+          }
+        }
+      };
 
       // ============================================================
       // 1) Guard
@@ -936,134 +1150,46 @@
       const session = Refad.Auth.guardPage('purchases.view');
       if (!session) return;
 
-      const canCreate = Refad.Session.has('purchases.create');
-      const canEdit   = Refad.Session.has('purchases.edit');
+      const canCreate = Refad.Session.has('purchases.create') || Refad.Session.has('company.owner');
+      const canEdit = Refad.Session.has('purchases.edit') || Refad.Session.has('company.owner');
 
       // ============================================================
-      // 2) Sidebar MENU
+      // 2) Helpers
       // ============================================================
-      const MENU = [
-        { section: 'الرئيسية', items: [
-          { label: 'لوحة التحكم', icon: 'layout-dashboard', href: 'dashboard.html' },
-          { label: 'الشات', icon: 'message-circle', href: 'chat.html', permission: 'chat.use' },
-          { label: 'الإشعارات', icon: 'bell', href: 'notifications.html', permission: 'notifications.view' }
-        ]},
-        { section: 'العمليات', items: [
-          { label: 'الأصناف', icon: 'package', href: 'products.html', permission: 'products.view' },
-          { label: 'المخزون', icon: 'warehouse', href: 'inventory.html', permission: 'inventory.view' },
-          { label: 'طلبات الشراء', icon: 'clipboard-list', href: 'purchase-requests.html', permission: 'purchases.view' },
-          { label: 'الاستلامات', icon: 'package-check', href: 'receipts.html', permission: 'purchases.receive' },
-          { label: 'طلبات البيع', icon: 'shopping-cart', href: 'sales-orders.html', permission: 'sales.view' },
-          { label: 'نقطة البيع', icon: 'scan-barcode', href: 'pos.html', permission: 'sales.pos', badge: 'POS', badgeClass: 'teal' },
-          { label: 'الفواتير', icon: 'receipt', href: 'invoices.html', permission: 'sales.view' }
-        ]},
-        { section: 'الأطراف', items: [
-          { label: 'الموردين', icon: 'truck', href: 'suppliers.html', permission: 'suppliers.view' },
-          { label: 'العملاء', icon: 'users', href: 'customers.html', permission: 'customers.view' }
-        ]},
-        { section: 'المخزون', items: [
-          { label: 'الجرد', icon: 'clipboard-check', href: 'stocktake.html', permission: 'inventory.stocktake' },
-          { label: 'التسويات', icon: 'sliders-horizontal', href: 'adjustments.html', permission: 'inventory.adjust' }
-        ]},
-        { section: 'الموارد البشرية', items: [
-          { label: 'الموظفين', icon: 'user-cog', href: 'employees.html', permission: 'employees.view' },
-          { label: 'الصلاحيات', icon: 'shield-check', href: 'permissions.html', permission: 'permissions.manage' },
-          { label: 'الحضور', icon: 'calendar-check', href: 'attendance.html', permission: 'attendance.view' },
-          { label: 'الرواتب', icon: 'wallet', href: 'payroll.html', permission: 'payroll.view' }
-        ]},
-        { section: 'المالية', items: [
-          { label: 'المصاريف', icon: 'banknote', href: 'expenses.html', permission: 'expenses.view' },
-          { label: 'التقارير', icon: 'bar-chart-3', href: 'reports.html', permission: 'reports.view' }
-        ]},
-        { section: 'النظام', items: [
-          { label: 'إعدادات الشركة', icon: 'settings', href: 'company-settings.html', permission: 'settings.view' },
-          { label: 'شاشة الأدمن', icon: 'shield', href: 'admin.html', permission: 'admin.full', badge: 'Admin', badgeClass: 'gold' }
-        ]}
-      ];
+      function esc(s) { return Refad.escapeHtml(s); }
+      function fmtMoney(v) { return SafeSettings.locale.formatMoney(v); }
+      function fmtNumber(v) { return Refad.format.number(v); }
+      function toNum(v) { return Number(v) || 0; }
 
-      function buildSidebar() {
-        const nav = document.getElementById('sidebarNav');
-        const currentPage = 'purchase-requests.html';
-        const frag = document.createDocumentFragment();
-        MENU.forEach(group => {
-          const allowed = group.items.filter(it => !it.permission || Refad.Session.has(it.permission));
-          if (!allowed.length) return;
-          frag.appendChild(Refad.el('div', { class: 'nav-section' }, group.section));
-          allowed.forEach(item => {
-            const a = Refad.el('a', {
-              href: item.href,
-              class: 'nav-item' + (item.href === currentPage ? ' active' : '')
-            });
-            a.innerHTML = `<i data-lucide="${item.icon}"></i><span>${Refad.escapeHtml(item.label)}</span>${item.badge ? `<span class="badge ${item.badgeClass || ''}">${item.badge}</span>` : ''}`;
-            frag.appendChild(a);
-          });
-        });
-        nav.innerHTML = '';
-        nav.appendChild(frag);
-        if (window.lucide) lucide.createIcons();
-      }
-
-      // ============================================================
-      // 3) UI helpers
-      // ============================================================
-      function fillUser() {
-        const av = document.getElementById('userAvatar');
-        const initial = (session.full_name || '؟').trim().charAt(0);
-        if (session.avatar_url) av.innerHTML = `<img src="${Refad.escapeHtml(session.avatar_url)}" alt="">`;
-        else av.textContent = initial;
-        document.getElementById('userName').textContent = session.full_name;
-        document.getElementById('userRole').textContent = Refad.Session.has('company.owner') ? 'صاحب الشركة' : 'موظف';
-      }
-
-      function setupTheme() {
-        const btn = document.getElementById('themeToggle');
-        const icon = document.getElementById('themeIcon');
-        const refresh = () => {
-          const isDark = Refad.theme.get() === 'dark';
-          icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
-          if (window.lucide) lucide.createIcons();
-        };
-        refresh();
-        btn.addEventListener('click', () => { Refad.theme.toggle(); refresh(); });
-      }
-
-      function setupSidebarMobile() {
-        const sb = document.getElementById('sidebar');
-        const ov = document.getElementById('overlay');
-        document.getElementById('menuToggle').addEventListener('click', () => {
-          sb.classList.add('open'); ov.classList.add('show');
-        });
-        ov.addEventListener('click', () => {
-          sb.classList.remove('open'); ov.classList.remove('show');
-        });
-      }
-
-      function setupUserMenu() {
-        const m = document.getElementById('userMenu');
-        const d = document.getElementById('userDropdown');
-        m.addEventListener('click', e => { e.stopPropagation(); d.classList.toggle('show'); });
-        document.addEventListener('click', () => d.classList.remove('show'));
-        d.addEventListener('click', e => e.stopPropagation());
-        document.getElementById('logoutBtn').addEventListener('click', async () => {
-          if (await Refad.alert.confirm('تسجيل الخروج', 'هل تريد الخروج؟', 'خروج')) {
-            await Refad.Auth.logout();
+      // ✨ Copy to clipboard
+      async function copyText(text, btn) {
+        try {
+          await navigator.clipboard.writeText(text);
+          if (btn) {
+            btn.classList.add('copied');
+            const icon = btn.querySelector('i');
+            if (icon) icon.setAttribute('data-lucide', 'check');
+            if (window.lucide) lucide.createIcons();
+            setTimeout(() => {
+              btn.classList.remove('copied');
+              if (icon) icon.setAttribute('data-lucide', 'copy');
+              if (window.lucide) lucide.createIcons();
+            }, 1200);
           }
-        });
-      }
-
-      function setupNotifBtn() {
-        document.getElementById('notifBtn').addEventListener('click', () => {
-          window.location.href = 'notifications.html';
-        });
+          Refad.toast.success('تم النسخ');
+        } catch (e) {
+          Refad.toast.error('فشل النسخ');
+        }
       }
 
       // ============================================================
-      // 4) State
+      // 3) State
       // ============================================================
       const state = {
         all: [],
         filtered: [],
         suppliers: [],
+        warehouses: [],
         productsMap: {},
         purchaseBenchmarks: {},
         page: 1,
@@ -1071,13 +1197,109 @@
         search: '',
         filterStatus: '',
         filterSupplier: '',
+        filterWarehouse: '',
         quickFilter: 'all',
+        viewMode: 'table',
         shareRequestId: null,
-        detailRequestId: null
+        detailRequestId: null,
+        statusChart: null,
+        suppliersChart: null
       };
 
       // ============================================================
-      // 5) Load suppliers filter
+      // 4) UI Helpers
+      // ============================================================
+      function fillUser() {
+        const av = document.getElementById('userAvatar');
+        const initial = (session.full_name || '؟').trim().charAt(0);
+        if (session.avatar_url) av.innerHTML = '<img src="' + esc(session.avatar_url) + '" alt="">';
+        else av.textContent = initial;
+        document.getElementById('userName').textContent = session.full_name;
+        document.getElementById('userRole').textContent = Refad.Session.has('company.owner') ? 'صاحب الشركة' : 'موظف';
+      }
+
+      function applyIdentity() {
+        const name = SafeSettings.identity.getSystemName();
+        const tagline = SafeSettings.identity.getTagline();
+        const logoUrl = SafeSettings.identity.getLogoUrl();
+
+        const brandName = document.getElementById('sidebarBrandName');
+        const brandDesc = document.getElementById('sidebarBrandDesc');
+        const logoImg = document.getElementById('sidebarLogoImg');
+
+        if (brandName) brandName.textContent = name;
+        if (brandDesc) brandDesc.textContent = tagline;
+        if (logoImg && logoUrl) {
+          logoImg.src = logoUrl;
+          logoImg.onerror = function () {
+            this.style.display = 'none';
+            const parent = this.parentElement;
+            if (parent) parent.innerHTML = '<span class="fallback">' + (name.charAt(0) || 'R') + '</span>';
+          };
+        }
+      }
+
+      function setupTheme() {
+        const btn = document.getElementById('themeToggle');
+        const icon = document.getElementById('themeIcon');
+        const refresh = function () {
+          const isDark = Refad.theme.get() === 'dark';
+          icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+          if (window.lucide) lucide.createIcons();
+        };
+        refresh();
+        btn.addEventListener('click', function () {
+          Refad.theme.toggle();
+          refresh();
+          setTimeout(function () {
+            renderStatusChart();
+            renderSuppliersChart();
+          }, 100);
+        });
+      }
+
+      function setupSidebarMobile() {
+        const sb = document.getElementById('sidebar');
+        const ov = document.getElementById('overlay');
+        document.getElementById('menuToggle').addEventListener('click', function () {
+          sb.classList.add('open'); ov.classList.add('show');
+        });
+        ov.addEventListener('click', function () {
+          sb.classList.remove('open'); ov.classList.remove('show');
+        });
+      }
+
+      function setupUserMenu() {
+        const m = document.getElementById('userMenu');
+        const d = document.getElementById('userDropdown');
+        m.addEventListener('click', function (e) { e.stopPropagation(); d.classList.toggle('show'); });
+        document.addEventListener('click', function () { d.classList.remove('show'); });
+        d.addEventListener('click', function (e) { e.stopPropagation(); });
+        document.getElementById('logoutBtn').addEventListener('click', async function () {
+          if (await Refad.alert.confirm('تسجيل الخروج', 'هل تريد الخروج؟', 'خروج')) {
+            await Refad.Auth.logout();
+          }
+        });
+      }
+
+      function setupNotifBtn() {
+        document.getElementById('notifBtn').addEventListener('click', function () {
+          window.location.href = 'notifications.html';
+        });
+      }
+
+      function setupRealtimeTheme() {
+        window.addEventListener('refad:theme-changed', () => {
+          applyIdentity();
+          setTimeout(function () {
+            renderStatusChart();
+            renderSuppliersChart();
+          }, 100);
+        });
+      }
+
+      // ============================================================
+      // 5) Load Suppliers
       // ============================================================
       async function loadSuppliersFilter() {
         try {
@@ -1086,47 +1308,76 @@
             eq: { company_id: session.company_id, is_active: true },
             order: { column: 'name', ascending: true }
           });
-          state.suppliers = rows;
+          state.suppliers = rows || [];
           const sel = document.getElementById('filterSupplier');
-          rows.forEach(s => {
-            const opt = document.createElement('option');
-            opt.value = s.id;
-            opt.textContent = s.name;
-            sel.appendChild(opt);
-          });
+          sel.innerHTML = '<option value="">كل الموردين</option>' +
+            state.suppliers.map(function (s) {
+              return '<option value="' + s.id + '">' + esc(s.name) + '</option>';
+            }).join('');
         } catch (e) {
           console.warn('Suppliers filter failed:', e.message);
         }
       }
 
       // ============================================================
-      // 6) Load Products Map (للأسعار والمقارنة)
+      // 6) Load Warehouses
+      // ============================================================
+      async function loadWarehouses() {
+        try {
+          const rows = await Refad.db.select('warehouses', {
+            columns: 'id, name, is_default, is_active',
+            eq: { company_id: session.company_id },
+            order: { column: 'is_default', ascending: false }
+          });
+          state.warehouses = (rows || []).filter(function (w) { return w.is_active !== false; });
+
+          const sel = document.getElementById('filterWarehouse');
+          sel.innerHTML = '<option value="">كل المخازن</option>' +
+            state.warehouses.map(function (w) {
+              const def = w.is_default ? ' ⭐' : '';
+              return '<option value="' + w.id + '">' + esc(w.name) + def + '</option>';
+            }).join('');
+
+          console.log('[Warehouses] Loaded:', state.warehouses.length);
+        } catch (e) {
+          console.warn('Warehouses load failed:', e.message);
+          state.warehouses = [];
+        }
+      }
+
+      function warehouseName(id) {
+        if (!id) return '—';
+        const w = state.warehouses.find(function (x) { return String(x.id) === String(id); });
+        return w ? w.name : '—';
+      }
+
+      // ============================================================
+      // 7) Load Products Map & Benchmarks
       // ============================================================
       async function loadProductsMap() {
         try {
           const products = await Refad.db.select('products', {
             columns: 'id, name, form, unit, default_price',
             eq: { company_id: session.company_id }
-          }).catch(() => []);
+          }).catch(function () { return []; });
 
           state.productsMap = {};
-          products.forEach(p => { state.productsMap[p.id] = p; });
+          products.forEach(function (p) { state.productsMap[p.id] = p; });
 
-          // تحميل benchmarks آخر 180 يوم
           const purchaseSince = Refad.date.addDays(Refad.date.today(), -180);
           const purchases = await Refad.db.select('receipt_items', {
             columns: 'product_id, unit_price, purchase_discount, receipts!inner(company_id, supplier_id, receipt_date, status, suppliers(id, name))',
-            in: { product_id: products.map(p => p.id) },
+            in: { product_id: products.map(function (p) { return p.id; }) },
             gte: { 'receipts.receipt_date': purchaseSince },
             eq: { 'receipts.company_id': session.company_id },
             neq: { 'receipts.status': 'cancelled' },
             limit: 10000
-          }).catch(() => []);
+          }).catch(function () { return []; });
 
           state.purchaseBenchmarks = {};
-          purchases.forEach(row => {
+          purchases.forEach(function (row) {
             const receipt = row.receipts;
-            const supplier = receipt?.suppliers;
+            const supplier = receipt && receipt.suppliers;
             const unitPrice = Number(row.unit_price);
             if (!receipt || !supplier || !Number.isFinite(unitPrice) || unitPrice < 0) return;
 
@@ -1137,10 +1388,10 @@
             const purchase = {
               supplierId: receipt.supplier_id,
               supplierName: supplier.name,
-              netPrice,
-              discount,
+              netPrice: netPrice,
+              discount: discount,
               date: receipt.receipt_date,
-              unitPrice
+              unitPrice: unitPrice
             };
 
             if (!benchmark.best || netPrice < benchmark.best.netPrice) benchmark.best = purchase;
@@ -1153,15 +1404,13 @@
       }
 
       // ============================================================
-      // 7) Load Requests (مع Fallback لحساب الإجمالي)
+      // 8) Load Requests
       // ============================================================
       async function loadRequests(silent) {
         if (!silent) renderSkeleton();
         try {
-          // جلب الطلبات أولاً
           const requests = await Refad.db.select('purchase_requests', {
-            columns: `id, request_number, status, total_amount, notes, share_token, created_at, updated_at,
-                      supplier_id, created_by`,
+            columns: 'id, request_number, status, total_amount, notes, share_token, created_at, updated_at, supplier_id, warehouse_id, created_by',
             eq: { company_id: session.company_id },
             order: { column: 'created_at', ascending: false },
             limit: 500
@@ -1171,53 +1420,60 @@
             state.all = [];
             applyFilters();
             renderStats();
+            renderCharts();
             return;
           }
 
-          // جلب الموردين
-          const supplierIds = [...new Set(requests.map(r => r.supplier_id).filter(Boolean))];
-          const suppliers = supplierIds.length ? await Refad.db.select('suppliers', {
-            columns: 'id, name, phone, balance',
-            in: { id: supplierIds }
-          }).catch(() => []) : [];
-          const supplierById = new Map(suppliers.map(s => [String(s.id), s]));
+          const supplierIds = [];
+          const seen = {};
+          requests.forEach(function (r) {
+            if (r.supplier_id && !seen[String(r.supplier_id)]) {
+              seen[String(r.supplier_id)] = true;
+              supplierIds.push(r.supplier_id);
+            }
+          });
 
-          // جلب أصناف الطلبات مع المنتجات
-          const requestIds = requests.map(r => r.id);
+          let suppliers = [];
+          if (supplierIds.length) {
+            suppliers = await Refad.db.select('suppliers', {
+              columns: 'id, name, phone, balance',
+              in: { id: supplierIds }
+            }).catch(function () { return []; });
+          }
+          const supplierById = new Map(suppliers.map(function (s) { return [String(s.id), s]; }));
+
+          const requestIds = requests.map(function (r) { return r.id; });
           const items = await Refad.db.select('purchase_request_items', {
             columns: 'id, request_id, product_id, requested_qty, requested_discount, supplier_price, supplier_discount, supplier_response_at, products(id, name, form, unit, default_price)',
             in: { request_id: requestIds },
             order: { column: 'id', ascending: true }
-          }).catch(() => []);
+          }).catch(function () { return []; });
 
           const itemsByRequest = new Map();
-          items.forEach(item => {
+          items.forEach(function (item) {
             const key = String(item.request_id);
             if (!itemsByRequest.has(key)) itemsByRequest.set(key, []);
             itemsByRequest.get(key).push(item);
           });
 
-          // ربط كل شيء + حساب الإجمالي الفعلي
-          state.all = requests.map(r => {
+          state.all = requests.map(function (r) {
             const rItems = itemsByRequest.get(String(r.id)) || [];
 
-            // حساب الإجمالي الفعلي من الأصناف
             let computedTotal = 0;
             let hasEstimatedPrices = false;
 
-            rItems.forEach(item => {
+            rItems.forEach(function (item) {
               const qty = Number(item.requested_qty) || 0;
-
-              // أولوية: سعر المورد → آخر سعر شراء → السعر الافتراضي
               let unitPrice = null;
+
               if (item.supplier_price !== null && item.supplier_price !== undefined) {
                 unitPrice = Number(item.supplier_price);
               } else {
                 const benchmark = state.purchaseBenchmarks[item.product_id];
-                if (benchmark?.best?.netPrice) {
+                if (benchmark && benchmark.best && benchmark.best.netPrice) {
                   unitPrice = Number(benchmark.best.netPrice);
                   hasEstimatedPrices = true;
-                } else if (item.products?.default_price) {
+                } else if (item.products && item.products.default_price) {
                   unitPrice = Number(item.products.default_price);
                   hasEstimatedPrices = true;
                 }
@@ -1229,22 +1485,22 @@
               }
             });
 
-            // استخدم total_amount المخزن، وإلا المحسوب
             const storedTotal = Number(r.total_amount) || 0;
             const finalTotal = storedTotal > 0 ? storedTotal : computedTotal;
 
-            return {
-              ...r,
+            return Object.assign({}, r, {
               suppliers: supplierById.get(String(r.supplier_id)) || null,
+              warehouse_name: warehouseName(r.warehouse_id),
               purchase_request_items: rItems,
               computed_total: computedTotal,
               final_total: finalTotal,
               has_estimated_prices: hasEstimatedPrices
-            };
+            });
           });
 
           applyFilters();
           renderStats();
+          renderCharts();
         } catch (e) {
           console.error('[PurchaseRequests] load failed:', e);
           Refad.toast.error('تعذّر التحميل: ' + e.message);
@@ -1255,56 +1511,197 @@
       }
 
       // ============================================================
-      // 8) Render Stats
+      // 9) Render Stats
       // ============================================================
       function renderStats() {
         const total = state.all.length;
-        const draft = state.all.filter(r => r.status === 'draft').length;
-        const sent = state.all.filter(r => r.status === 'sent').length;
-        const received = state.all.filter(r => r.status === 'received').length;
-
-        const totalValue = state.all.reduce((s, r) => s + (r.final_total || 0), 0);
-
-        const monthStart = Refad.date.startOfMonth();
-        const monthCount = state.all.filter(r => {
-          const date = (r.created_at || '').slice(0, 10);
-          return date >= monthStart;
+        const draft = state.all.filter(function (r) { return r.status === 'draft'; }).length;
+        const sent = state.all.filter(function (r) { return r.status === 'sent'; }).length;
+        const received = state.all.filter(function (r) { return r.status === 'received'; }).length;
+        const pending = state.all.filter(function (r) {
+          return r.status === 'draft' || r.status === 'sent' || r.status === 'partial';
         }).length;
 
-        document.getElementById('statTotal').textContent = Refad.format.number(total);
-        document.getElementById('statTotalSub').textContent = `إجمالي الطلبات`;
+        const totalValue = state.all.reduce(function (s, r) { return s + (r.final_total || 0); }, 0);
 
-        document.getElementById('statDraft').textContent = Refad.format.number(draft);
+        document.getElementById('statTotal').textContent = fmtNumber(total);
+        document.getElementById('statTotalSub').textContent = 'إجمالي الطلبات';
+
+        document.getElementById('statDraft').textContent = fmtNumber(draft);
         document.getElementById('statDraftSub').textContent = total ? Math.round((draft / total) * 100) + '%' : '—';
 
-        document.getElementById('statSent').textContent = Refad.format.number(sent);
+        document.getElementById('statSent').textContent = fmtNumber(sent);
         document.getElementById('statSentSub').textContent = total ? Math.round((sent / total) * 100) + '%' : '—';
 
-        document.getElementById('statReceived').textContent = Refad.format.number(received);
+        document.getElementById('statReceived').textContent = fmtNumber(received);
         document.getElementById('statReceivedSub').textContent = total ? Math.round((received / total) * 100) + '%' : '—';
 
-        document.getElementById('statValue').textContent = Refad.format.money(totalValue);
-        document.getElementById('statValueSub').textContent = total ? `متوسط: ${Refad.format.money(totalValue / total)}` : '—';
+        document.getElementById('statValue').textContent = fmtMoney(totalValue);
+        document.getElementById('statValueSub').textContent = total ? 'متوسط: ' + fmtMoney(totalValue / total) : '—';
 
-        document.getElementById('statMonth').textContent = Refad.format.number(monthCount);
-        document.getElementById('statMonthSub').textContent = `هذا الشهر`;
+        document.getElementById('statPending').textContent = fmtNumber(pending);
+        document.getElementById('statPendingSub').textContent = total ? Math.round((pending / total) * 100) + '%' : '—';
       }
 
       // ============================================================
-      // 9) Apply Filters
+      // 10) Render Charts
+      // ============================================================
+      function renderCharts() {
+        renderStatusChart();
+        renderSuppliersChart();
+      }
+
+      function renderStatusChart() {
+        const canvas = document.getElementById('statusChart');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const isDark = Refad.theme.get() === 'dark';
+
+        const counts = {
+          draft: state.all.filter(function (r) { return r.status === 'draft'; }).length,
+          sent: state.all.filter(function (r) { return r.status === 'sent'; }).length,
+          partial: state.all.filter(function (r) { return r.status === 'partial'; }).length,
+          received: state.all.filter(function (r) { return r.status === 'received'; }).length,
+          cancelled: state.all.filter(function (r) { return r.status === 'cancelled'; }).length
+        };
+
+        const labels = ['مسودة', 'مُرسل', 'جزئي', 'مستلم', 'ملغي'];
+        const data = [counts.draft, counts.sent, counts.partial, counts.received, counts.cancelled];
+        const colors = ['#94a3b8', '#3b82f6', '#f59e0b', '#10b981', '#ef4444'];
+
+        if (state.statusChart) state.statusChart.destroy();
+
+        if (data.every(function (v) { return v === 0; })) {
+          ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+          ctx.fillStyle = isDark ? '#94a3b8' : '#64748b';
+          ctx.font = '14px Cairo, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText('لا توجد بيانات', ctx.canvas.width / 2, ctx.canvas.height / 2);
+          return;
+        }
+
+        state.statusChart = new Chart(ctx, {
+          type: 'doughnut',
+          data: {
+            labels: labels,
+            datasets: [{
+              data: data,
+              backgroundColor: colors,
+              borderWidth: 2,
+              borderColor: isDark ? '#0f2137' : '#ffffff'
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: 'bottom',
+                labels: {
+                  font: { family: 'Cairo', size: 11, weight: '600' },
+                  color: isDark ? '#f1f5f9' : '#0f172a',
+                  usePointStyle: true,
+                  padding: 10,
+                  boxWidth: 10
+                }
+              }
+            },
+            cutout: '60%'
+          }
+        });
+      }
+
+      function renderSuppliersChart() {
+        const canvas = document.getElementById('suppliersChart');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const isDark = Refad.theme.get() === 'dark';
+
+        const bySupplier = {};
+        state.all.forEach(function (r) {
+          if (!r.suppliers) return;
+          const key = r.suppliers.name;
+          bySupplier[key] = (bySupplier[key] || 0) + (r.final_total || 0);
+        });
+
+        const sorted = Object.entries(bySupplier)
+          .sort(function (a, b) { return b[1] - a[1]; })
+          .slice(0, 5);
+
+        if (state.suppliersChart) state.suppliersChart.destroy();
+
+        if (!sorted.length) {
+          ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+          ctx.fillStyle = isDark ? '#94a3b8' : '#64748b';
+          ctx.font = '14px Cairo, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText('لا توجد بيانات', ctx.canvas.width / 2, ctx.canvas.height / 2);
+          return;
+        }
+
+        state.suppliersChart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: sorted.map(function (s) { return s[0]; }),
+            datasets: [{
+              label: 'إجمالي القيمة',
+              data: sorted.map(function (s) { return s[1]; }),
+              backgroundColor: 'rgba(20,184,166,0.8)',
+              borderColor: '#14B8A6',
+              borderWidth: 2,
+              borderRadius: 8
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: 'y',
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                rtl: true,
+                textDirection: 'rtl',
+                backgroundColor: isDark ? '#0f2137' : '#0B2C4D',
+                padding: 10,
+                callbacks: {
+                  label: function (ctx) { return ' ' + fmtMoney(ctx.parsed.x); }
+                }
+              }
+            },
+            scales: {
+              x: {
+                beginAtZero: true,
+                grid: { color: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' },
+                ticks: {
+                  color: isDark ? '#94a3b8' : '#64748b',
+                  font: { family: 'Cairo', size: 10 },
+                  callback: function (v) { return Refad.format.number(v); }
+                }
+              },
+              y: {
+                grid: { display: false },
+                ticks: {
+                  color: isDark ? '#f1f5f9' : '#0f172a',
+                  font: { family: 'Cairo', size: 11, weight: '600' }
+                }
+              }
+            }
+          }
+        });
+      }
+
+      // ============================================================
+      // 11) Apply Filters
       // ============================================================
       function applyFilters() {
         const q = state.search.toLowerCase().trim();
         const today = Refad.date.today();
 
-        state.filtered = state.all.filter(r => {
-          // Status filter
+        state.filtered = state.all.filter(function (r) {
           if (state.filterStatus && r.status !== state.filterStatus) return false;
+          if (state.filterSupplier && String(r.suppliers && r.suppliers.id) !== String(state.filterSupplier)) return false;
+          if (state.filterWarehouse && String(r.warehouse_id) !== String(state.filterWarehouse)) return false;
 
-          // Supplier filter
-          if (state.filterSupplier && String(r.suppliers?.id) !== String(state.filterSupplier)) return false;
-
-          // Quick filters
           const date = (r.created_at || '').slice(0, 10);
           if (state.quickFilter === 'today' && date !== today) return false;
           if (state.quickFilter === 'week') {
@@ -1319,38 +1716,38 @@
             if (r.status !== 'draft' && r.status !== 'sent' && r.status !== 'partial') return false;
           }
 
-          // Search
           if (!q) return true;
-          return (
-            (r.request_number || '').toLowerCase().includes(q) ||
-            (r.suppliers?.name || '').toLowerCase().includes(q) ||
-            (r.notes || '').toLowerCase().includes(q)
-          );
+          return (r.request_number || '').toLowerCase().includes(q) ||
+                 (r.suppliers && r.suppliers.name ? r.suppliers.name.toLowerCase().includes(q) : false) ||
+                 (r.notes || '').toLowerCase().includes(q) ||
+                 (r.warehouse_name || '').toLowerCase().includes(q);
         });
         state.page = 1;
-        renderTable();
+        if (state.viewMode === 'table') renderTable();
+        else renderCards();
       }
 
       // ============================================================
-      // 10) Skeleton
+      // 12) Skeleton
       // ============================================================
       function renderSkeleton() {
         const tbody = document.getElementById('tableBody');
-        tbody.innerHTML = Array(6).fill(0).map(() => `
-          <tr class="skeleton-row">
-            <td><div class="skeleton-bar" style="width:90px"></div></td>
-            <td><div class="skeleton-bar" style="width:60%"></div></td>
-            <td><div class="skeleton-bar" style="width:80px"></div></td>
-            <td><div class="skeleton-bar" style="width:50px"></div></td>
-            <td><div class="skeleton-bar" style="width:70px"></div></td>
-            <td><div class="skeleton-bar" style="width:80px"></div></td>
-            <td><div class="skeleton-bar" style="width:100px"></div></td>
-          </tr>
-        `).join('');
+        tbody.innerHTML = Array(6).fill(0).map(function () {
+          return '<tr>' +
+            '<td><div style="height:14px;background:linear-gradient(90deg,var(--border) 25%,var(--bg) 50%,var(--border) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:6px;width:90px;"></div></td>' +
+            '<td><div style="height:14px;background:linear-gradient(90deg,var(--border) 25%,var(--bg) 50%,var(--border) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:6px;width:60%;"></div></td>' +
+            '<td><div style="height:14px;background:linear-gradient(90deg,var(--border) 25%,var(--bg) 50%,var(--border) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:6px;width:80px;"></div></td>' +
+            '<td><div style="height:14px;background:linear-gradient(90deg,var(--border) 25%,var(--bg) 50%,var(--border) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:6px;width:80px;"></div></td>' +
+            '<td><div style="height:14px;background:linear-gradient(90deg,var(--border) 25%,var(--bg) 50%,var(--border) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:6px;width:50px;"></div></td>' +
+            '<td><div style="height:14px;background:linear-gradient(90deg,var(--border) 25%,var(--bg) 50%,var(--border) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:6px;width:70px;"></div></td>' +
+            '<td><div style="height:14px;background:linear-gradient(90deg,var(--border) 25%,var(--bg) 50%,var(--border) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:6px;width:80px;"></div></td>' +
+            '<td><div style="height:14px;background:linear-gradient(90deg,var(--border) 25%,var(--bg) 50%,var(--border) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:6px;width:100px;"></div></td>' +
+          '</tr>';
+        }).join('');
       }
 
       // ============================================================
-      // 11) Render Table
+      // 13) Render Table
       // ============================================================
       function renderTable() {
         const tbody = document.getElementById('tableBody');
@@ -1360,14 +1757,11 @@
           const msg = state.all.length === 0
             ? 'لا توجد طلبات شراء بعد. ابدأ بإنشاء طلب جديد.'
             : 'لا توجد نتائج مطابقة للفلاتر الحالية.';
-          tbody.innerHTML = `
-            <tr class="empty-row">
-              <td colspan="7">
-                <i data-lucide="clipboard-list"></i>
-                <p>${msg}</p>
-              </td>
-            </tr>
-          `;
+          tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state">' +
+            '<i data-lucide="clipboard-list"></i>' +
+            '<h3>' + (state.all.length === 0 ? 'لا توجد طلبات' : 'لا توجد نتائج') + '</h3>' +
+            '<p>' + msg + '</p>' +
+            '</div></td></tr>';
           if (window.lucide) lucide.createIcons();
           renderPagination(pag);
           return;
@@ -1381,67 +1775,219 @@
           'cancelled': { label: 'ملغي',   cls: 'red', icon: 'x-circle' }
         };
 
-        tbody.innerHTML = pag.data.map(r => {
+        tbody.innerHTML = pag.data.map(function (r) {
           const st = STATUS[r.status] || { label: r.status, cls: 'gray', icon: 'circle' };
-          const itemCount = r.purchase_request_items?.length || 0;
-          const totalQty = r.purchase_request_items?.reduce((s, it) => s + (Number(it.requested_qty) || 0), 0) || 0;
+          const itemCount = r.purchase_request_items ? r.purchase_request_items.length : 0;
+          const totalQty = r.purchase_request_items ? r.purchase_request_items.reduce(function (s, it) {
+            return s + (Number(it.requested_qty) || 0);
+          }, 0) : 0;
           const finalTotal = r.final_total || 0;
-          const hasResponses = r.purchase_request_items?.some(it => it.supplier_response_at);
+          const hasResponses = r.purchase_request_items && r.purchase_request_items.some(function (it) {
+            return it.supplier_response_at;
+          });
+          const reqNumEsc = esc(r.request_number || '—');
 
-          return `
-            <tr class="request-clickable-row" data-open-request="${r.id}" tabindex="0" aria-label="فتح الطلب ${Refad.escapeHtml(r.request_number)}">
-              <td>
-                <span class="req-number">${Refad.escapeHtml(r.request_number)}</span>
-                ${hasResponses ? '<div class="supplier-sub"><span class="badge-tag green" style="padding:1px 6px;font-size:9px;">رد المورد</span></div>' : ''}
-              </td>
-              <td>
-                ${r.suppliers ? `
-                  <div class="supplier-name-cell">${Refad.escapeHtml(r.suppliers.name)}</div>
-                  ${r.suppliers.phone ? `<div class="supplier-sub">${Refad.escapeHtml(r.suppliers.phone)}</div>` : ''}
-                ` : '<span style="color:var(--text-muted);">—</span>'}
-              </td>
-              <td>${Refad.format.date(r.created_at)}</td>
-              <td>
-                <strong>${Refad.format.number(itemCount)} صنف</strong>
-                <div class="supplier-sub">${Refad.format.number(totalQty)} وحدة</div>
-              </td>
-              <td>
-                <span class="badge-tag ${st.cls}">
-                  <i data-lucide="${st.icon}" style="width:10px;height:10px;"></i>
-                  ${Refad.escapeHtml(st.label)}
-                </span>
-              </td>
-              <td>
-                <strong style="color:${finalTotal > 0 ? 'var(--accent)' : 'var(--text-muted)'};">
-                  ${finalTotal > 0 ? Refad.format.money(finalTotal) : '—'}
-                </strong>
-                ${r.has_estimated_prices && finalTotal > 0 ? '<div class="supplier-sub">تقديري</div>' : ''}
-              </td>
-              <td>
-                <div class="actions-cell">
-                  <button class="action-btn" data-action="view" data-id="${r.id}" title="عرض التفاصيل">
-                    <i data-lucide="eye"></i>
-                  </button>
-                  <button class="action-btn share" data-action="share" data-id="${r.id}" title="مشاركة">
-                    <i data-lucide="share-2"></i>
-                  </button>
-                  ${canEdit && r.status !== 'received' ? `<button class="action-btn danger" data-action="delete" data-id="${r.id}" title="حذف"><i data-lucide="trash-2"></i></button>` : ''}
-                </div>
-              </td>
-            </tr>
-          `;
+          return '<tr data-id="' + r.id + '" tabindex="0">' +
+            '<td>' +
+              '<span class="req-number">' +
+                '<button class="copy-btn" data-copy="' + reqNumEsc + '" title="نسخ رقم الطلب"><i data-lucide="copy"></i></button>' +
+                reqNumEsc +
+              '</span>' +
+              (hasResponses ? '<div class="supplier-sub"><span class="badge-tag green" style="padding:1px 6px;font-size:9px;">رد المورد</span></div>' : '') +
+            '</td>' +
+            '<td>' +
+              (r.suppliers ?
+                '<div class="supplier-name-cell">' + esc(r.suppliers.name) + '</div>' +
+                (r.suppliers.phone ? '<div class="supplier-sub">' + esc(r.suppliers.phone) + '</div>' : '')
+              : '<span style="color:var(--text-muted);">—</span>') +
+            '</td>' +
+            '<td>' +
+              (r.warehouse_name && r.warehouse_name !== '—' ?
+                '<span class="warehouse-pill"><i data-lucide="warehouse"></i>' + esc(r.warehouse_name) + '</span>'
+              : '<span style="color:var(--text-muted);">—</span>') +
+            '</td>' +
+            '<td>' + Refad.format.date(r.created_at) + '</td>' +
+            '<td>' +
+              '<strong>' + fmtNumber(itemCount) + ' صنف</strong>' +
+              '<div class="supplier-sub">' + fmtNumber(totalQty) + ' وحدة</div>' +
+            '</td>' +
+            '<td>' +
+              '<span class="badge-tag ' + st.cls + '">' +
+                '<i data-lucide="' + st.icon + '" style="width:10px;height:10px;"></i>' +
+                esc(st.label) +
+              '</span>' +
+            '</td>' +
+            '<td>' +
+              '<strong style="color:' + (finalTotal > 0 ? 'var(--accent)' : 'var(--text-muted)') + ';">' +
+                (finalTotal > 0 ? fmtMoney(finalTotal) : '—') +
+              '</strong>' +
+              (r.has_estimated_prices && finalTotal > 0 ? '<div class="supplier-sub">تقديري</div>' : '') +
+            '</td>' +
+            '<td>' +
+              '<button class="action-btn" data-action="view" data-id="' + r.id + '" title="عرض التفاصيل">' +
+                '<i data-lucide="eye"></i>' +
+              '</button>' +
+              '<button class="action-btn" data-action="share" data-id="' + r.id + '" title="مشاركة">' +
+                '<i data-lucide="share-2"></i>' +
+              '</button>' +
+              (canEdit && r.status !== 'received' ?
+                '<button class="action-btn danger" data-action="delete" data-id="' + r.id + '" title="حذف">' +
+                  '<i data-lucide="trash-2"></i>' +
+                '</button>'
+              : '') +
+            '</td>' +
+          '</tr>';
         }).join('');
 
         if (window.lucide) lucide.createIcons();
+
+        tbody.querySelectorAll('[data-copy]').forEach(function (btn) {
+          btn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            copyText(btn.dataset.copy, btn);
+          });
+        });
+
+        tbody.querySelectorAll('tr[data-id]').forEach(function (tr) {
+          tr.addEventListener('click', function (e) {
+            if (e.target.closest('[data-action]') || e.target.closest('[data-copy]')) return;
+            openDetailModal(parseInt(tr.dataset.id, 10));
+          });
+          tr.addEventListener('keydown', function (e) {
+            if (e.target === tr && (e.key === 'Enter' || e.key === ' ')) {
+              e.preventDefault();
+              openDetailModal(parseInt(tr.dataset.id, 10));
+            }
+          });
+        });
+
+        tbody.querySelectorAll('[data-action]').forEach(function (btn) {
+          btn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            const id = parseInt(btn.dataset.id, 10);
+            const r = state.all.find(function (x) { return x.id === id; });
+            if (!r) return;
+
+            if (btn.dataset.action === 'view') openDetailModal(id);
+            else if (btn.dataset.action === 'share') openShareModal(id);
+            else if (btn.dataset.action === 'delete') deleteRequest(id, r.request_number);
+          });
+        });
+
         renderPagination(pag);
       }
 
       // ============================================================
-      // 12) Pagination
+      // 14) Render Cards
+      // ============================================================
+      function renderCards() {
+        const grid = document.getElementById('cardsView');
+        const list = state.filtered;
+
+        if (!list.length) {
+          grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;">' +
+            '<i data-lucide="clipboard-list"></i>' +
+            '<h3>' + (state.all.length === 0 ? 'لا توجد طلبات' : 'لا توجد نتائج') + '</h3>' +
+            '<p>' + (state.all.length === 0 ? 'ابدأ بإنشاء طلب شراء جديد' : 'جرّب تعديل الفلاتر') + '</p>' +
+            '</div>';
+          if (window.lucide) lucide.createIcons();
+          return;
+        }
+
+        const STATUS = {
+          'draft':     { label: 'مسودة',  cls: 'gray', color: '#94a3b8' },
+          'sent':      { label: 'مُرسل',  cls: 'blue', color: '#3b82f6' },
+          'partial':   { label: 'جزئي',   cls: 'gold', color: '#f59e0b' },
+          'received':  { label: 'مستلم',  cls: 'green', color: '#10b981' },
+          'cancelled': { label: 'ملغي',   cls: 'red', color: '#ef4444' }
+        };
+
+        grid.innerHTML = list.map(function (r) {
+          const st = STATUS[r.status] || { label: r.status, cls: 'gray', color: '#94a3b8' };
+          const itemCount = r.purchase_request_items ? r.purchase_request_items.length : 0;
+          const finalTotal = r.final_total || 0;
+          const hasResponses = r.purchase_request_items && r.purchase_request_items.some(function (it) {
+            return it.supplier_response_at;
+          });
+
+          return '<div class="request-card" data-id="' + r.id + '" style="--rc-color:' + st.color + ';">' +
+            '<div class="rc-header">' +
+              '<div class="rc-number">' + esc(r.request_number) + '</div>' +
+              '<span class="badge-tag ' + st.cls + '">' + esc(st.label) + '</span>' +
+            '</div>' +
+
+            (r.suppliers ?
+              '<div class="rc-supplier">' +
+                '<div class="name">' + esc(r.suppliers.name) + '</div>' +
+                (r.suppliers.phone ? '<div class="sub">' + esc(r.suppliers.phone) + '</div>' : '') +
+              '</div>'
+            : '') +
+
+            '<div class="rc-info-grid">' +
+              '<div class="rc-info-item">' +
+                '<div class="lbl">المخزن</div>' +
+                '<div class="val">' + esc(r.warehouse_name || '—') + '</div>' +
+              '</div>' +
+              '<div class="rc-info-item">' +
+                '<div class="lbl">التاريخ</div>' +
+                '<div class="val">' + Refad.format.date(r.created_at) + '</div>' +
+              '</div>' +
+              '<div class="rc-info-item">' +
+                '<div class="lbl">الأصناف</div>' +
+                '<div class="val accent">' + fmtNumber(itemCount) + '</div>' +
+              '</div>' +
+              '<div class="rc-info-item">' +
+                '<div class="lbl">رد المورد</div>' +
+                '<div class="val">' + (hasResponses ? '✓' : '—') + '</div>' +
+              '</div>' +
+            '</div>' +
+
+            '<div class="rc-amount-wrap">' +
+              '<div class="rc-amount-label">القيمة التقديرية</div>' +
+              '<div class="rc-amount' + (r.has_estimated_prices ? ' estimated' : '') + '">' +
+                (finalTotal > 0 ? fmtMoney(finalTotal) : '—') +
+              '</div>' +
+            '</div>' +
+
+            '<div class="rc-actions">' +
+              '<button class="btn btn-outline" data-action="view" data-id="' + r.id + '" onclick="event.stopPropagation();">' +
+                '<i data-lucide="eye"></i> تفاصيل' +
+              '</button>' +
+              '<button class="btn btn-outline" data-action="share" data-id="' + r.id + '" onclick="event.stopPropagation();">' +
+                '<i data-lucide="share-2"></i>' +
+              '</button>' +
+            '</div>' +
+          '</div>';
+        }).join('');
+
+        if (window.lucide) lucide.createIcons();
+
+        grid.querySelectorAll('.request-card').forEach(function (card) {
+          card.addEventListener('click', function (e) {
+            if (e.target.closest('[data-action]')) return;
+            openDetailModal(parseInt(card.dataset.id, 10));
+          });
+        });
+
+        grid.querySelectorAll('[data-action]').forEach(function (btn) {
+          btn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            const id = parseInt(btn.dataset.id, 10);
+            if (btn.dataset.action === 'view') openDetailModal(id);
+            else if (btn.dataset.action === 'share') openShareModal(id);
+          });
+        });
+      }
+
+      // ============================================================
+      // 15) Pagination
       // ============================================================
       function renderPagination(pag) {
         const el = document.getElementById('pagination');
-        const { page, pages, total, perPage } = pag;
+        const page = pag.page || 1;
+        const pages = pag.pages || 1;
+        const total = pag.total || 0;
+        const perPage = pag.perPage || state.perPage;
 
         if (total === 0) { el.innerHTML = ''; return; }
 
@@ -1459,21 +2005,22 @@
           pageNums = [page - 2, page - 1, page, page + 1, page + 2];
         }
 
-        el.innerHTML = `
-          <div>عرض ${from} - ${to} من ${total}</div>
-          <div class="controls">
-            <button class="page-btn" data-page="${page - 1}" ${page === 1 ? 'disabled' : ''}>
-              <i data-lucide="chevron-right" style="width:14px;height:14px;"></i>
-            </button>
-            ${pageNums.map(n => `<button class="page-btn ${n === page ? 'active' : ''}" data-page="${n}">${n}</button>`).join('')}
-            <button class="page-btn" data-page="${page + 1}" ${page === pages ? 'disabled' : ''}>
-              <i data-lucide="chevron-left" style="width:14px;height:14px;"></i>
-            </button>
-          </div>
-        `;
+        el.innerHTML =
+          '<div>عرض ' + from + ' - ' + to + ' من ' + total + '</div>' +
+          '<div class="controls">' +
+            '<button class="page-btn" data-page="' + (page - 1) + '" ' + (page === 1 ? 'disabled' : '') + '>' +
+              '<i data-lucide="chevron-right" style="width:14px;height:14px;"></i>' +
+            '</button>' +
+            pageNums.map(function (n) {
+              return '<button class="page-btn ' + (n === page ? 'active' : '') + '" data-page="' + n + '">' + n + '</button>';
+            }).join('') +
+            '<button class="page-btn" data-page="' + (page + 1) + '" ' + (page === pages ? 'disabled' : '') + '>' +
+              '<i data-lucide="chevron-left" style="width:14px;height:14px;"></i>' +
+            '</button>' +
+          '</div>';
 
-        el.querySelectorAll('.page-btn:not(:disabled)').forEach(btn => {
-          btn.addEventListener('click', () => {
+        el.querySelectorAll('.page-btn:not(:disabled)').forEach(function (btn) {
+          btn.addEventListener('click', function () {
             const p = parseInt(btn.dataset.page, 10);
             if (p >= 1 && p <= pages && p !== page) {
               state.page = p;
@@ -1485,26 +2032,47 @@
 
         if (window.lucide) lucide.createIcons();
       }
-            // ============================================================
-      // 13) Detail Modal
+
+      // ============================================================
+      // 16) View Toggle
+      // ============================================================
+      function setupViewToggle() {
+        document.querySelectorAll('.view-btn').forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            document.querySelectorAll('.view-btn').forEach(function (b) { b.classList.remove('active'); });
+            btn.classList.add('active');
+            state.viewMode = btn.dataset.view;
+
+            if (state.viewMode === 'table') {
+              document.getElementById('tableView').style.display = 'block';
+              document.getElementById('cardsView').style.display = 'none';
+              renderTable();
+            } else {
+              document.getElementById('tableView').style.display = 'none';
+              document.getElementById('cardsView').style.display = 'grid';
+              renderCards();
+            }
+          });
+        });
+      }
+
+      // ============================================================
+      // 17) Detail Modal
       // ============================================================
       async function openDetailModal(id) {
-        const r = state.all.find(x => x.id === id);
+        const r = state.all.find(function (x) { return x.id === id; });
         if (!r) return;
 
         state.detailRequestId = id;
         const body = document.getElementById('detailModalBody');
 
-        body.innerHTML = `
-          <div style="text-align:center;padding:40px;color:var(--text-muted);">
-            <i data-lucide="loader" style="width:32px;height:32px;animation:spin 1s linear infinite;"></i>
-            <p style="margin-top:10px;">جارٍ التحميل...</p>
-          </div>
-        `;
+        body.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);">' +
+          '<i data-lucide="loader" style="width:32px;height:32px;animation:spin 1s linear infinite;"></i>' +
+          '<p style="margin-top:10px;">جارٍ التحميل...</p>' +
+          '</div>';
         document.getElementById('detailModal').classList.add('show');
         if (window.lucide) lucide.createIcons();
 
-        // جلب بيانات الردود الكاملة
         let supplierResponses = [];
         try {
           supplierResponses = await Refad.db.select('purchase_request_responses', {
@@ -1512,7 +2080,7 @@
             eq: { request_id: id },
             order: { column: 'submitted_at', ascending: false },
             limit: 100
-          }).catch(() => []);
+          }).catch(function () { return []; });
         } catch (e) {
           console.warn('Responses fetch failed:', e);
         }
@@ -1527,123 +2095,116 @@
         const st = STATUS[r.status] || { label: r.status, cls: 'gray' };
 
         const items = r.purchase_request_items || [];
-        const totalQty = items.reduce((s, it) => s + (Number(it.requested_qty) || 0), 0);
+        const totalQty = items.reduce(function (s, it) { return s + (Number(it.requested_qty) || 0); }, 0);
         const finalTotal = r.final_total || 0;
+        const responseCount = items.filter(function (it) { return it.supplier_response_at; }).length;
 
-        const responseCount = items.filter(it => it.supplier_response_at).length;
+        body.innerHTML =
+          '<div class="panel-summary-grid">' +
+            '<div class="panel-summary-card">' +
+              '<div class="label">عدد الأصناف</div>' +
+              '<div class="value accent">' + fmtNumber(items.length) + '</div>' +
+            '</div>' +
+            '<div class="panel-summary-card">' +
+              '<div class="label">إجمالي الكميات</div>' +
+              '<div class="value">' + fmtNumber(totalQty) + '</div>' +
+            '</div>' +
+            '<div class="panel-summary-card">' +
+              '<div class="label">القيمة التقديرية</div>' +
+              '<div class="value gold">' + (finalTotal > 0 ? fmtMoney(finalTotal) : '—') + '</div>' +
+            '</div>' +
+            '<div class="panel-summary-card">' +
+              '<div class="label">ردود المورد</div>' +
+              '<div class="value success">' + fmtNumber(responseCount) + ' / ' + fmtNumber(items.length) + '</div>' +
+            '</div>' +
+          '</div>' +
 
-        body.innerHTML = `
-          <!-- Summary Cards -->
-          <div class="panel-summary-grid">
-            <div class="panel-summary-card">
-              <div class="label">عدد الأصناف</div>
-              <div class="value accent">${Refad.format.number(items.length)}</div>
-            </div>
-            <div class="panel-summary-card">
-              <div class="label">إجمالي الكميات</div>
-              <div class="value">${Refad.format.number(totalQty)}</div>
-            </div>
-            <div class="panel-summary-card">
-              <div class="label">القيمة التقديرية</div>
-              <div class="value gold">${finalTotal > 0 ? Refad.format.money(finalTotal) : '—'}</div>
-            </div>
-            <div class="panel-summary-card">
-              <div class="label">ردود المورد</div>
-              <div class="value success">${Refad.format.number(responseCount)} / ${Refad.format.number(items.length)}</div>
-            </div>
-          </div>
+          '<div class="detail-section">' +
+            '<div class="detail-section-title"><i data-lucide="info" style="width:14px;height:14px;"></i> معلومات أساسية</div>' +
+            '<div class="detail-row"><span class="lbl">رقم الطلب</span><span class="val accent">' + esc(r.request_number) + '</span></div>' +
+            '<div class="detail-row"><span class="lbl">التاريخ</span><span class="val">' + Refad.format.date(r.created_at) + '</span></div>' +
+            '<div class="detail-row"><span class="lbl">الحالة</span><span class="val"><span class="badge-tag ' + st.cls + '">' + esc(st.label) + '</span></span></div>' +
+            '<div class="detail-row"><span class="lbl">المخزن المستهدف</span><span class="val">' +
+              (r.warehouse_name && r.warehouse_name !== '—'
+                ? '<span class="warehouse-pill"><i data-lucide="warehouse"></i>' + esc(r.warehouse_name) + '</span>'
+                : 'غير محدد')
+            + '</span></div>' +
+            (r.updated_at ? '<div class="detail-row"><span class="lbl">آخر تحديث</span><span class="val">' + Refad.format.datetime(r.updated_at) + '</span></div>' : '') +
+          '</div>' +
 
-          <!-- Info -->
-          <div class="detail-section">
-            <div class="detail-section-title"><i data-lucide="info" style="width:14px;height:14px;"></i> معلومات أساسية</div>
-            <div class="detail-row"><span class="lbl">رقم الطلب</span><span class="val accent">${Refad.escapeHtml(r.request_number)}</span></div>
-            <div class="detail-row"><span class="lbl">التاريخ</span><span class="val">${Refad.format.date(r.created_at)}</span></div>
-            <div class="detail-row"><span class="lbl">الحالة</span><span class="val"><span class="badge-tag ${st.cls}">${Refad.escapeHtml(st.label)}</span></span></div>
-            ${r.updated_at ? `<div class="detail-row"><span class="lbl">آخر تحديث</span><span class="val">${Refad.format.datetime(r.updated_at)}</span></div>` : ''}
-          </div>
+          (r.suppliers ?
+            '<div class="detail-section">' +
+              '<div class="detail-section-title"><i data-lucide="truck" style="width:14px;height:14px;"></i> المورد</div>' +
+              '<div class="detail-row"><span class="lbl">الاسم</span><span class="val">' + esc(r.suppliers.name) + '</span></div>' +
+              (r.suppliers.phone ? '<div class="detail-row"><span class="lbl">الهاتف</span><span class="val">' + esc(r.suppliers.phone) + '</span></div>' : '') +
+              (r.suppliers.balance !== undefined ?
+                '<div class="detail-row"><span class="lbl">الرصيد</span><span class="val ' + (r.suppliers.balance > 0 ? 'danger' : 'success') + '">' + fmtMoney(r.suppliers.balance) + '</span></div>'
+              : '') +
+            '</div>'
+          : '') +
 
-          <!-- Supplier -->
-          ${r.suppliers ? `
-            <div class="detail-section">
-              <div class="detail-section-title"><i data-lucide="truck" style="width:14px;height:14px;"></i> المورد</div>
-              <div class="detail-row"><span class="lbl">الاسم</span><span class="val">${Refad.escapeHtml(r.suppliers.name)}</span></div>
-              ${r.suppliers.phone ? `<div class="detail-row"><span class="lbl">الهاتف</span><span class="val">${Refad.escapeHtml(r.suppliers.phone)}</span></div>` : ''}
-              ${r.suppliers.balance !== undefined ? `<div class="detail-row"><span class="lbl">الرصيد</span><span class="val ${r.suppliers.balance > 0 ? 'danger' : 'success'}">${Refad.format.money(r.suppliers.balance)}</span></div>` : ''}
-            </div>
-          ` : ''}
+          (r.notes ?
+            '<div class="detail-section">' +
+              '<div class="detail-section-title"><i data-lucide="file-text" style="width:14px;height:14px;"></i> ملاحظات</div>' +
+              '<div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;font-size:13px;line-height:1.7;">' + esc(r.notes) + '</div>' +
+            '</div>'
+          : '') +
 
-          <!-- Notes -->
-          ${r.notes ? `
-            <div class="detail-section">
-              <div class="detail-section-title"><i data-lucide="file-text" style="width:14px;height:14px;"></i> ملاحظات</div>
-              <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;font-size:13px;line-height:1.7;">${Refad.escapeHtml(r.notes)}</div>
-            </div>
-          ` : ''}
-
-          <!-- Items -->
-          <div class="detail-section">
-            <div class="detail-section-title"><i data-lucide="package" style="width:14px;height:14px;"></i> الأصناف (${items.length})</div>
-            ${items.length ? `
-              <div class="detail-items-list">
-                ${items.map(it => {
+          '<div class="detail-section">' +
+            '<div class="detail-section-title"><i data-lucide="package" style="width:14px;height:14px;"></i> الأصناف (' + items.length + ')</div>' +
+            (items.length ?
+              '<div class="detail-items-list">' +
+                items.map(function (it) {
                   const p = it.products || state.productsMap[it.product_id] || {};
                   const hasResponse = it.supplier_response_at;
                   const benchmark = state.purchaseBenchmarks[it.product_id];
 
-                  return `
-                    <div class="detail-item-row">
-                      <div style="flex:1;min-width:0;">
-                        <div class="item-name">${Refad.escapeHtml(p.name || 'صنف')}</div>
-                        <div class="item-sub">
-                          ${[p.form, p.unit].filter(Boolean).join(' • ') || ''}
-                          ${benchmark?.best ? ` • أفضل سعر سابق: ${Refad.format.money(benchmark.best.netPrice)}` : ''}
-                          ${hasResponse ? ` • <span style="color:var(--success);font-weight:700;">رد المورد: ${Refad.format.money(it.supplier_price || 0)} (خصم ${Refad.format.number(it.supplier_discount || 0, 1)}%)</span>` : ''}
-                        </div>
-                      </div>
-                      <div class="item-qty">${Refad.format.number(it.requested_qty)}</div>
-                    </div>
-                  `;
-                }).join('')}
-              </div>
-            ` : '<div style="text-align:center;padding:20px;color:var(--text-muted);font-size:13px;">لا توجد أصناف</div>'}
-          </div>
+                  return '<div class="detail-item-row">' +
+                    '<div style="flex:1;min-width:0;">' +
+                      '<div class="item-name">' + esc(p.name || 'صنف') + '</div>' +
+                      '<div class="item-sub">' +
+                        ([p.form, p.unit].filter(Boolean).join(' • ') || '') +
+                        (benchmark && benchmark.best ? ' • أفضل سعر سابق: ' + fmtMoney(benchmark.best.netPrice) : '') +
+                        (hasResponse ? ' • <span style="color:var(--success);font-weight:700;">رد المورد: ' + fmtMoney(it.supplier_price || 0) + ' (خصم ' + Refad.format.number(it.supplier_discount || 0, 1) + '%)</span>' : '') +
+                      '</div>' +
+                    '</div>' +
+                    '<div class="item-qty">' + fmtNumber(it.requested_qty) + '</div>' +
+                  '</div>';
+                }).join('') +
+              '</div>'
+            : '<div style="text-align:center;padding:20px;color:var(--text-muted);font-size:13px;">لا توجد أصناف</div>') +
+          '</div>' +
 
-          <!-- Supplier Responses History -->
-          ${supplierResponses.length ? `
-            <div class="detail-section">
-              <div class="detail-section-title"><i data-lucide="history" style="width:14px;height:14px;"></i> سجل ردود المورد (${supplierResponses.length})</div>
-              <div class="detail-items-list" style="max-height:240px;">
-                ${supplierResponses.map(resp => {
+          (supplierResponses.length ?
+            '<div class="detail-section">' +
+              '<div class="detail-section-title"><i data-lucide="history" style="width:14px;height:14px;"></i> سجل ردود المورد (' + supplierResponses.length + ')</div>' +
+              '<div class="detail-items-list" style="max-height:240px;">' +
+                supplierResponses.map(function (resp) {
                   const p = state.productsMap[resp.product_id] || {};
-                  return `
-                    <div class="detail-item-row">
-                      <div style="flex:1;min-width:0;">
-                        <div class="item-name">${Refad.escapeHtml(p.name || 'صنف محذوف')}</div>
-                        <div class="item-sub">${Refad.format.datetime(resp.submitted_at)}</div>
-                      </div>
-                      <div style="text-align:left;">
-                        <div style="font-weight:700;color:var(--accent);">${Refad.format.money(resp.supplier_price || 0)}</div>
-                        <div style="font-size:10px;color:var(--success);font-weight:700;">خصم ${Refad.format.number(resp.supplier_discount || 0, 1)}%</div>
-                      </div>
-                    </div>
-                  `;
-                }).join('')}
-              </div>
-            </div>
-          ` : ''}
-        `;
+                  return '<div class="detail-item-row">' +
+                    '<div style="flex:1;min-width:0;">' +
+                      '<div class="item-name">' + esc(p.name || 'صنف محذوف') + '</div>' +
+                      '<div class="item-sub">' + Refad.format.datetime(resp.submitted_at) + '</div>' +
+                    '</div>' +
+                    '<div style="text-align:left;">' +
+                      '<div style="font-weight:700;color:var(--accent);">' + fmtMoney(resp.supplier_price || 0) + '</div>' +
+                      '<div style="font-size:10px;color:var(--success);font-weight:700;">خصم ' + Refad.format.number(resp.supplier_discount || 0, 1) + '%</div>' +
+                    '</div>' +
+                  '</div>';
+                }).join('') +
+              '</div>' +
+            '</div>'
+          : '');
 
-        // تحديث زر التعديل
-        document.getElementById('editFromModalBtn').href = `purchase-request-form.html?id=${id}`;
-
+        document.getElementById('editFromModalBtn').href = 'purchase-request-form.html?id=' + id;
         if (window.lucide) lucide.createIcons();
       }
 
       // ============================================================
-      // 14) Share Modal
+      // 18) Share Modal
       // ============================================================
       async function openShareModal(id) {
-        const r = state.all.find(x => x.id === id);
+        const r = state.all.find(function (x) { return x.id === id; });
         if (!r) return;
 
         state.shareRequestId = id;
@@ -1657,12 +2218,12 @@
 
             await Refad.db.insert('share_links', {
               company_id: session.company_id,
-              token,
+              token: token,
               resource_type: 'purchase_request',
               resource_id: id,
               created_by: session.user_id,
               expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
-            }).catch(() => {});
+            }).catch(function () {});
           } catch (e) {
             console.error('Share token failed:', e);
             Refad.toast.error('تعذّر توليد الرابط');
@@ -1670,14 +2231,14 @@
           }
         }
 
-        const url = `${location.origin}${location.pathname.replace('purchase-requests.html', '')}shared-request.html?token=${token}`;
+        const url = location.origin + location.pathname.replace('purchase-requests.html', '') + 'shared-request.html?token=' + token;
         document.getElementById('shareLinkInput').value = url;
         document.getElementById('shareModal').classList.add('show');
         if (window.lucide) lucide.createIcons();
       }
 
       function setupShareModal() {
-        document.getElementById('copyLinkBtn').addEventListener('click', async () => {
+        document.getElementById('copyLinkBtn').addEventListener('click', async function () {
           const input = document.getElementById('shareLinkInput');
           try {
             await navigator.clipboard.writeText(input.value);
@@ -1689,34 +2250,34 @@
           }
         });
 
-        document.getElementById('whatsappBtn').addEventListener('click', () => {
+        document.getElementById('whatsappBtn').addEventListener('click', function () {
           const url = document.getElementById('shareLinkInput').value;
-          const r = state.all.find(x => x.id === state.shareRequestId);
-          const text = `طلب شراء رقم ${r?.request_number || ''}\n${url}`;
-          window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+          const r = state.all.find(function (x) { return x.id === state.shareRequestId; });
+          const text = 'طلب شراء رقم ' + (r ? r.request_number : '') + '\n' + url;
+          window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
         });
 
-        document.getElementById('openLinkBtn').addEventListener('click', () => {
+        document.getElementById('openLinkBtn').addEventListener('click', function () {
           window.open(document.getElementById('shareLinkInput').value, '_blank');
         });
       }
 
       // ============================================================
-      // 15) Delete Request
+      // 19) Delete Request
       // ============================================================
       async function deleteRequest(id, num) {
         const ok = await Refad.alert.confirm(
           'حذف الطلب',
-          `هل أنت متأكد من حذف الطلب "${num}"؟ سيتم حذف كل الأصناف المرتبطة.`,
+          'هل أنت متأكد من حذف الطلب "' + num + '"؟ سيتم حذف كل الأصناف المرتبطة.',
           'حذف'
         );
         if (!ok) return;
 
         try {
           await Refad.db.removeWhere('purchase_request_items', { request_id: id });
-          await Refad.db.removeWhere('purchase_request_responses', { request_id: id }).catch(() => {});
+          await Refad.db.removeWhere('purchase_request_responses', { request_id: id }).catch(function () {});
           await Refad.db.remove('purchase_requests', id);
-          await Refad.logActivity('delete_purchase_request', 'purchases', `حذف طلب: ${num}`, id);
+          await Refad.logActivity('delete_purchase_request', 'purchases', 'حذف طلب: ' + num, id);
           Refad.toast.success('تم الحذف');
           await loadRequests(true);
         } catch (err) {
@@ -1726,7 +2287,7 @@
       }
 
       // ============================================================
-      // 16) Export
+      // 20) Export Excel (with fallback)
       // ============================================================
       function exportExcel() {
         if (!state.filtered.length) {
@@ -1734,75 +2295,88 @@
           return;
         }
 
-        const rows = state.filtered.map(r => ({
-          'رقم الطلب': r.request_number,
-          'المورد': r.suppliers?.name || '',
-          'الهاتف': r.suppliers?.phone || '',
-          'التاريخ': Refad.format.date(r.created_at),
-          'الحالة': r.status,
-          'عدد الأصناف': r.purchase_request_items?.length || 0,
-          'إجمالي الوحدات': r.purchase_request_items?.reduce((s, it) => s + (Number(it.requested_qty) || 0), 0) || 0,
-          'القيمة التقديرية': r.final_total || 0,
-          'ملاحظات': r.notes || ''
-        }));
+        if (typeof XLSX === 'undefined') {
+          Refad.toast.error('مكتبة Excel لم تُحمّل بعد');
+          return;
+        }
+
+        const rows = state.filtered.map(function (r) {
+          return {
+            'رقم الطلب': r.request_number,
+            'المورد': r.suppliers ? r.suppliers.name : '',
+            'الهاتف': r.suppliers ? r.suppliers.phone : '',
+            'المخزن': r.warehouse_name || '',
+            'التاريخ': Refad.format.date(r.created_at),
+            'الحالة': r.status,
+            'عدد الأصناف': r.purchase_request_items ? r.purchase_request_items.length : 0,
+            'إجمالي الوحدات': r.purchase_request_items ? r.purchase_request_items.reduce(function (s, it) {
+              return s + (Number(it.requested_qty) || 0);
+            }, 0) : 0,
+            'القيمة التقديرية': r.final_total || 0,
+            'ملاحظات': r.notes || ''
+          };
+        });
 
         const ws = XLSX.utils.json_to_sheet(rows);
         ws['!cols'] = [
-          { wch: 15 }, { wch: 25 }, { wch: 15 }, { wch: 12 }, { wch: 10 },
-          { wch: 10 }, { wch: 12 }, { wch: 15 }, { wch: 30 }
+          { wch: 15 }, { wch: 25 }, { wch: 15 }, { wch: 20 }, { wch: 12 },
+          { wch: 10 }, { wch: 10 }, { wch: 12 }, { wch: 15 }, { wch: 30 }
         ];
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'PurchaseRequests');
-        XLSX.writeFile(wb, `purchase-requests-${Refad.date.today()}.xlsx`);
-        Refad.toast.success(`تم تصدير ${rows.length} طلب`);
+        XLSX.writeFile(wb, 'purchase-requests-' + Refad.date.today() + '.xlsx');
+        Refad.toast.success('تم تصدير ' + rows.length + ' طلب');
       }
 
       // ============================================================
-      // 17) Events
+      // 21) Events
       // ============================================================
       function bindEvents() {
-        const searchHandler = Refad.debounce(v => {
-          state.search = v;
+        document.getElementById('searchInput').addEventListener('input', Refad.debounce(function (e) {
+          state.search = e.target.value.trim();
           applyFilters();
-        }, 250);
-        document.getElementById('searchInput').addEventListener('input', e => searchHandler(e.target.value));
+        }, 250));
 
-        document.getElementById('filterStatus').addEventListener('change', e => {
+        document.getElementById('filterStatus').addEventListener('change', function (e) {
           state.filterStatus = e.target.value;
           applyFilters();
         });
 
-        document.getElementById('filterSupplier').addEventListener('change', e => {
+        document.getElementById('filterSupplier').addEventListener('change', function (e) {
           state.filterSupplier = e.target.value;
           applyFilters();
         });
 
-        // Quick filters
-        document.querySelectorAll('.quick-filter-btn').forEach(btn => {
-          btn.addEventListener('click', () => {
-            document.querySelectorAll('.quick-filter-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('filterWarehouse').addEventListener('change', function (e) {
+          state.filterWarehouse = e.target.value;
+          applyFilters();
+        });
+
+        document.querySelectorAll('.quick-filter-btn').forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            document.querySelectorAll('.quick-filter-btn').forEach(function (b) { b.classList.remove('active'); });
             btn.classList.add('active');
             state.quickFilter = btn.dataset.quick;
             applyFilters();
           });
         });
 
-        // Refresh
-        document.getElementById('refreshBtn').addEventListener('click', async () => {
+        document.getElementById('refreshBtn').addEventListener('click', async function () {
           const btn = document.getElementById('refreshBtn');
           btn.disabled = true;
           try {
+            await loadSuppliersFilter();
+            await loadWarehouses();
             await loadProductsMap();
-            await loadRequests();
+            await loadRequests(true);
             Refad.toast.success('تم التحديث');
           } finally {
             btn.disabled = false;
           }
         });
 
-        // Add
         if (canCreate) {
-          document.getElementById('addBtn').addEventListener('click', () => {
+          document.getElementById('addBtn').addEventListener('click', function () {
             location.href = 'purchase-request-form.html';
           });
         } else {
@@ -1811,61 +2385,25 @@
           b.title = 'ليس لديك صلاحية';
         }
 
-        // Export
         document.getElementById('exportBtn').addEventListener('click', exportExcel);
 
-        // Table click
-        document.getElementById('tableBody').addEventListener('click', e => {
-          const btn = e.target.closest('[data-action]');
-          if (btn) {
-            e.stopPropagation();
-            const action = btn.dataset.action;
-            const id = parseInt(btn.dataset.id, 10);
-            const r = state.all.find(x => x.id === id);
-            if (!r) return;
-
-            if (action === 'view') openDetailModal(id);
-            else if (action === 'share') openShareModal(id);
-            else if (action === 'delete') deleteRequest(id, r.request_number);
-            return;
-          }
-
-          const row = e.target.closest('[data-open-request]');
-          if (row) {
-            const id = parseInt(row.dataset.openRequest, 10);
-            openDetailModal(id);
-          }
-        });
-
-        document.getElementById('tableBody').addEventListener('keydown', e => {
-          const row = e.target.closest('[data-open-request]');
-          if (row && e.target === row && (e.key === 'Enter' || e.key === ' ')) {
-            e.preventDefault();
-            openDetailModal(parseInt(row.dataset.openRequest, 10));
-          }
-        });
-
-        // Modal closes
-        document.querySelectorAll('[data-close]').forEach(b => {
-          b.addEventListener('click', () => {
-            document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.remove('show'));
+        document.querySelectorAll('[data-close]').forEach(function (b) {
+          b.addEventListener('click', function () {
+            document.querySelectorAll('.modal-backdrop').forEach(function (m) { m.classList.remove('show'); });
           });
         });
 
-        document.addEventListener('keydown', e => {
-          if (e.key === 'Escape') {
-            document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.remove('show'));
-          }
-        });
-
-        document.querySelectorAll('.modal-backdrop').forEach(m => {
-          m.addEventListener('click', e => {
+        document.querySelectorAll('.modal-backdrop').forEach(function (m) {
+          m.addEventListener('click', function (e) {
             if (e.target === m) m.classList.remove('show');
           });
         });
 
         // Keyboard shortcuts
-        document.addEventListener('keydown', e => {
+        document.addEventListener('keydown', function (e) {
+          if (e.key === 'Escape') {
+            document.querySelectorAll('.modal-backdrop').forEach(function (m) { m.classList.remove('show'); });
+          }
           if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
             e.preventDefault();
             const search = document.getElementById('searchInput');
@@ -1886,23 +2424,31 @@
       }
 
       // ============================================================
-      // 18) Init
+      // 22) Init
       // ============================================================
       async function init() {
-        buildSidebar();
+        // ✨ 1) Menu + Identity
+        Refad.buildMenu('purchase-requests.html');
         fillUser();
+        applyIdentity();
         setupTheme();
         setupSidebarMobile();
         setupUserMenu();
         setupNotifBtn();
+        setupRealtimeTheme();
+        setupViewToggle();
         bindEvents();
         setupShareModal();
 
+        // ✨ 2) Data
         await loadSuppliersFilter();
+        await loadWarehouses();
         await loadProductsMap();
         await loadRequests();
 
-        Refad.registerServiceWorker();
+        if (Refad.registerServiceWorker) Refad.registerServiceWorker();
+
+        console.log('%c[Refad] Purchase Requests v4 ready (Theme Sync + Settings + Quick Search)', 'color:#14B8A6;font-weight:bold;font-size:14px');
       }
 
       if (document.readyState === 'loading') {
@@ -1910,13 +2456,6 @@
       } else {
         init();
       }
-
-      // Spinner animation
-      const spinnerStyle = document.createElement('style');
-      spinnerStyle.textContent = '@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }';
-      document.head.appendChild(spinnerStyle);
-
-      console.log('%c[Refad] Purchase requests ready (PRO v2)', 'color:#14B8A6;font-weight:bold');
 
     })();
   </script>

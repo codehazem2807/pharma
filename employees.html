@@ -19,6 +19,7 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -38,6 +39,7 @@
       --success: #10b981;
       --warning: #f59e0b;
       --info: #3b82f6;
+      --purple: #8b5cf6;
       --sidebar-bg: #0B2C4D;
       --sidebar-text: #cbd5e1;
       --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
@@ -59,6 +61,14 @@
       --sidebar-text: #94a3b8;
     }
 
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
     html, body {
       height: 100%;
       font-family: 'Cairo', sans-serif;
@@ -69,66 +79,49 @@
 
     body { display: flex; min-height: 100vh; overflow-x: hidden; }
 
-    /* ============================================================
-       Sidebar
-       ============================================================ */
+    /* ============ Sidebar ============ */
     .sidebar {
       width: var(--sidebar-w);
       height: 100vh;
       background: var(--sidebar-bg);
       color: var(--sidebar-text);
       position: fixed;
-      top: 0;
-      right: 0;
+      top: 0; right: 0;
       z-index: 100;
-      display: flex;
-      flex-direction: column;
+      display: flex; flex-direction: column;
       transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       box-shadow: -4px 0 20px rgba(0,0,0,0.1);
     }
-
     .sidebar-header {
       padding: 20px 22px;
       border-bottom: 1px solid rgba(255,255,255,0.08);
-      display: flex;
-      align-items: center;
-      gap: 14px;
+      display: flex; align-items: center; gap: 14px;
       height: var(--topbar-h);
       box-sizing: border-box;
     }
-
     .sidebar-logo {
-      width: 40px;
-      height: 40px;
+      width: 40px; height: 40px;
       background: linear-gradient(135deg, var(--accent), var(--accent-dark));
       border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: flex; align-items: center; justify-content: center;
       flex-shrink: 0;
       box-shadow: 0 4px 12px rgba(20,184,166,0.4);
+      overflow: hidden;
     }
     .sidebar-logo img { width: 70%; height: 70%; object-fit: contain; }
     .sidebar-logo .fallback { color: white; font-weight: 800; font-size: 18px; }
-
-    .sidebar-brand h2 { color: white; font-size: 20px; font-weight: 800; letter-spacing: -0.5px; line-height: 1.2; }
+    .sidebar-brand h2 { color: white; font-size: 20px; font-weight: 800; line-height: 1.2; }
     .sidebar-brand p { font-size: 10px; color: var(--sidebar-text); opacity: 0.7; font-weight: 500; margin-top: 2px; }
-
     .sidebar-nav { flex: 1; overflow-y: auto; padding: 12px 0; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.15) transparent; }
     .sidebar-nav::-webkit-scrollbar { width: 5px; }
     .sidebar-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 10px; }
-
     .nav-section { padding: 8px 20px 4px; font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 1px; margin-top: 8px; }
-
     .nav-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
+      display: flex; align-items: center; gap: 12px;
       padding: 11px 22px;
       color: var(--sidebar-text);
       text-decoration: none;
-      font-size: 14px;
-      font-weight: 500;
+      font-size: 14px; font-weight: 500;
       border-right: 3px solid transparent;
       transition: all 0.2s;
       position: relative;
@@ -141,54 +134,40 @@
     .nav-item .badge { margin-right: auto; background: var(--danger); color: white; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
     .nav-item .badge.teal { background: var(--accent); }
     .nav-item .badge.gold { background: var(--gold); }
+    .nav-item .badge.new { background: var(--purple); }
 
-    /* ============================================================
-       Main
-       ============================================================ */
+    /* ============ Main ============ */
     .main { flex: 1; margin-right: var(--sidebar-w); min-width: 0; display: flex; flex-direction: column; }
-
     .topbar {
       height: var(--topbar-h);
       background: var(--card);
       border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      gap: 16px;
+      display: flex; align-items: center; gap: 16px;
       padding: 0 24px;
-      position: sticky;
-      top: 0;
+      position: sticky; top: 0;
       z-index: 50;
       box-shadow: var(--shadow-sm);
     }
-
     .menu-toggle { display: none; background: transparent; border: none; color: var(--text); cursor: pointer; padding: 8px; border-radius: 8px; }
     .menu-toggle:hover { background: var(--bg); }
-
     .topbar-title { font-size: 18px; font-weight: 700; color: var(--text); flex-shrink: 0; }
     .topbar-actions { display: flex; align-items: center; gap: 8px; margin-right: auto; }
-
     .icon-btn {
-      width: 40px;
-      height: 40px;
+      width: 40px; height: 40px;
       border-radius: 10px;
       border: 1px solid var(--border);
       background: var(--card);
       color: var(--text);
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: flex; align-items: center; justify-content: center;
       position: relative;
       transition: all 0.2s;
     }
     .icon-btn:hover { border-color: var(--accent); color: var(--accent); }
     .icon-btn i, .icon-btn svg { width: 18px; height: 18px; }
     .icon-btn .dot { position: absolute; top: 8px; left: 8px; width: 8px; height: 8px; background: var(--danger); border-radius: 50%; border: 2px solid var(--card); }
-
     .user-menu {
-      display: flex;
-      align-items: center;
-      gap: 10px;
+      display: flex; align-items: center; gap: 10px;
       padding: 5px 12px 5px 5px;
       border-radius: 10px;
       cursor: pointer;
@@ -197,26 +176,18 @@
       background: var(--card);
     }
     .user-menu:hover { background: var(--bg); }
-
     .user-avatar {
-      width: 34px;
-      height: 34px;
+      width: 34px; height: 34px;
       border-radius: 9px;
       background: linear-gradient(135deg, var(--primary), var(--accent));
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-weight: 700;
-      font-size: 14px;
-      flex-shrink: 0;
-      overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-weight: 700; font-size: 14px;
+      flex-shrink: 0; overflow: hidden;
     }
     .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
     .user-info { display: flex; flex-direction: column; line-height: 1.2; }
     .user-info .name { font-size: 13px; font-weight: 700; color: var(--text); }
     .user-info .role { font-size: 11px; color: var(--text-muted); }
-
     .dropdown { position: absolute; top: calc(100% + 8px); left: 0; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: var(--shadow-lg); min-width: 200px; padding: 6px; opacity: 0; visibility: hidden; transform: translateY(-8px); transition: all 0.2s; z-index: 100; }
     .dropdown.show { opacity: 1; visibility: visible; transform: translateY(0); }
     .dropdown-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; color: var(--text); font-size: 13px; font-weight: 500; cursor: pointer; transition: background 0.15s; text-decoration: none; }
@@ -226,31 +197,22 @@
     .dropdown-item i { width: 16px; height: 16px; }
     .dropdown-divider { height: 1px; background: var(--border); margin: 6px 0; }
 
-    /* ============================================================
-       Content
-       ============================================================ */
+    /* ============ Content ============ */
     .content { padding: 24px; flex: 1; }
-
     .page-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      display: flex; align-items: center; justify-content: space-between;
       gap: 16px;
       margin-bottom: 20px;
       flex-wrap: wrap;
     }
-
     .page-head h1 { font-size: 24px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
     .page-head p { font-size: 13px; color: var(--text-muted); }
 
     .btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
+      display: inline-flex; align-items: center; gap: 8px;
       padding: 10px 18px;
       font-family: inherit;
-      font-size: 14px;
-      font-weight: 600;
+      font-size: 14px; font-weight: 600;
       border-radius: var(--radius-sm);
       border: none;
       cursor: pointer;
@@ -260,123 +222,151 @@
     }
     .btn:disabled { opacity: 0.6; cursor: not-allowed; }
     .btn i { width: 16px; height: 16px; }
-
     .btn-primary { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; }
     .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(20,184,166,0.35); }
-
     .btn-outline { background: var(--card); color: var(--text); border: 1px solid var(--border); }
     .btn-outline:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
-
     .btn-danger { background: var(--danger); color: white; }
     .btn-danger:hover:not(:disabled) { background: #b91c1c; }
-
     .btn-success { background: var(--success); color: white; }
     .btn-success:hover:not(:disabled) { background: #047857; }
-
     .btn-sm { padding: 6px 12px; font-size: 12px; }
 
-    /* Mini stats */
-    .mini-stats {
+    /* ============ Stats ============ */
+    .stats-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 14px;
       margin-bottom: 20px;
     }
-
-    .mini-card {
+    .stat-card {
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 14px 16px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      transition: all 0.2s;
+      padding: 18px;
+      display: flex; align-items: center; gap: 14px;
       box-shadow: var(--shadow-sm);
+      position: relative;
+      overflow: hidden;
+      transition: all 0.2s;
+      cursor: pointer;
     }
-    .mini-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: var(--shadow); }
-
-    .mini-icon {
-      width: 42px;
-      height: 42px;
+    .stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); border-color: var(--accent); }
+    .stat-card.active { border-color: var(--accent); background: linear-gradient(135deg, rgba(20,184,166,0.06), rgba(20,184,166,0.02)); }
+    .stat-card::before { content: ''; position: absolute; top: 0; right: 0; width: 4px; height: 100%; background: var(--accent); }
+    .stat-card.success::before { background: var(--success); }
+    .stat-card.danger::before { background: var(--danger); }
+    .stat-card.gold::before { background: var(--gold); }
+    .stat-card.info::before { background: var(--info); }
+    .stat-card.purple::before { background: var(--purple); }
+    .stat-icon {
+      width: 48px; height: 48px;
       border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: flex; align-items: center; justify-content: center;
       flex-shrink: 0;
+      background: rgba(20,184,166,0.12);
+      color: var(--accent);
     }
-    .mini-icon i { width: 20px; height: 20px; color: white; }
-    .mini-icon.blue   { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
-    .mini-icon.teal   { background: linear-gradient(135deg, #14B8A6, #0d9488); }
-    .mini-icon.gold   { background: linear-gradient(135deg, #F59E0B, #d97706); }
-    .mini-icon.green  { background: linear-gradient(135deg, #10b981, #047857); }
-    .mini-icon.purple { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
+    .stat-icon.success { background: rgba(16,185,129,0.12); color: var(--success); }
+    .stat-icon.danger { background: rgba(239,68,68,0.12); color: var(--danger); }
+    .stat-icon.gold { background: rgba(245,158,11,0.12); color: var(--gold); }
+    .stat-icon.info { background: rgba(59,130,246,0.12); color: var(--info); }
+    .stat-icon.purple { background: rgba(139,92,246,0.12); color: var(--purple); }
+    .stat-icon i { width: 22px; height: 22px; }
+    .stat-body { flex: 1; min-width: 0; }
+    .stat-body .label { font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px; }
+    .stat-body .value { font-size: 20px; font-weight: 800; color: var(--text); line-height: 1.2; overflow-wrap: anywhere; }
+    .stat-body .sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
 
-    .mini-body { flex: 1; min-width: 0; }
-    .mini-body .label { font-size: 11px; color: var(--text-muted); font-weight: 600; margin-bottom: 2px; }
-    .mini-body .value { font-size: 18px; font-weight: 800; color: var(--text); line-height: 1; }
-
-    /* Toolbar */
+    /* ============ Toolbar ============ */
     .toolbar {
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 14px 16px;
+      padding: 14px 18px;
       margin-bottom: 16px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
+      display: flex; gap: 12px;
       flex-wrap: wrap;
+      align-items: center;
       box-shadow: var(--shadow-sm);
     }
-
-    .search-input { position: relative; flex: 1; min-width: 220px; }
-    .search-input input {
+    .search-box { position: relative; flex: 1; min-width: 220px; }
+    .search-box input {
       width: 100%;
       padding: 10px 42px 10px 14px;
       font-family: inherit;
       font-size: 14px;
       background: var(--bg);
-      border: 1px solid var(--border);
+      border: 1.5px solid var(--border);
       border-radius: var(--radius-sm);
       color: var(--text);
       outline: none;
       transition: all 0.2s;
     }
-    .search-input input:focus { border-color: var(--accent); background: var(--card); box-shadow: 0 0 0 3px rgba(20,184,166,0.1); }
-    .search-input i { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--text-muted); pointer-events: none; }
-
-    .select-wrap { position: relative; min-width: 150px; }
-    .select-wrap select {
-      width: 100%;
-      padding: 10px 14px 10px 32px;
+    .search-box input:focus { border-color: var(--accent); background: var(--card); box-shadow: 0 0 0 3px rgba(20,184,166,0.1); }
+    .search-box i { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--text-muted); pointer-events: none; }
+    .search-box kbd {
+      position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+      font-family: 'Courier New', monospace; font-size: 10px;
+      padding: 2px 6px; background: var(--border); color: var(--text-muted);
+      border-radius: 4px; font-weight: 700; pointer-events: none;
+    }
+    .filter-select {
+      padding: 10px 14px;
       font-family: inherit;
-      font-size: 14px;
+      font-size: 13px; font-weight: 600;
       background: var(--bg);
-      border: 1px solid var(--border);
+      border: 1.5px solid var(--border);
       border-radius: var(--radius-sm);
       color: var(--text);
       outline: none;
       cursor: pointer;
-      appearance: none;
+      min-width: 140px;
+    }
+    .filter-select:focus { border-color: var(--accent); background: var(--card); }
+
+    /* View Toggle */
+    .view-toggle {
+      display: flex;
+      gap: 2px;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 3px;
+    }
+    .view-btn {
+      width: 34px; height: 34px;
+      border-radius: 7px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
       transition: all 0.2s;
     }
-    .select-wrap select:focus { border-color: var(--accent); background: var(--card); }
-    .select-wrap::after {
-      content: '';
-      position: absolute;
-      left: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 0;
-      height: 0;
-      border-left: 5px solid transparent;
-      border-right: 5px solid transparent;
-      border-top: 5px solid var(--text-muted);
-      pointer-events: none;
-    }
+    .view-btn:hover { color: var(--text); }
+    .view-btn.active { background: var(--card); color: var(--accent); box-shadow: var(--shadow-sm); }
+    .view-btn i { width: 16px; height: 16px; }
 
-    /* Table */
+    /* Pass toggle */
+    .pass-toggle-btn {
+      padding: 10px 14px;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 13px; font-weight: 600;
+      display: inline-flex; align-items: center; gap: 6px;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .pass-toggle-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .pass-toggle-btn.active { background: rgba(20,184,166,0.1); border-color: var(--accent); color: var(--accent); }
+    .pass-toggle-btn i { width: 16px; height: 16px; }
+
+    /* ============ Table ============ */
     .table-wrap {
       background: var(--card);
       border: 1px solid var(--border);
@@ -384,47 +374,40 @@
       box-shadow: var(--shadow-sm);
       overflow: hidden;
     }
-
     .table-scroll { overflow-x: auto; }
-
-    table {
+    table.data-table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 14px;
-      min-width: 900px;
+      font-size: 13px;
+      min-width: 1000px;
     }
-
-    thead { background: var(--bg); border-bottom: 1px solid var(--border); }
-
-    th {
+    table.data-table thead { background: var(--bg); border-bottom: 1px solid var(--border); }
+    table.data-table th {
       text-align: right;
-      padding: 14px 16px;
-      font-size: 12px;
-      font-weight: 700;
+      padding: 12px 14px;
+      font-size: 11px; font-weight: 700;
       color: var(--text-muted);
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.3px;
       white-space: nowrap;
     }
+    table.data-table tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+      cursor: pointer;
+    }
+    table.data-table tbody tr:hover { background: var(--bg); }
+    table.data-table tbody tr:last-child { border-bottom: none; }
+    table.data-table td { padding: 12px 14px; color: var(--text); vertical-align: middle; }
 
-    tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
-    tbody tr:last-child { border-bottom: none; }
-    tbody tr:hover { background: var(--bg); }
-
-    td { padding: 14px 16px; color: var(--text); vertical-align: middle; }
-
-    .emp-cell { display: flex; align-items: center; gap: 12px; }
+    .emp-cell { display: flex; align-items: center; gap: 10px; }
     .emp-avatar {
-      width: 42px;
-      height: 42px;
-      border-radius: 11px;
+      width: 38px; height: 38px;
+      border-radius: 10px;
       background: linear-gradient(135deg, var(--primary), var(--accent));
       color: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
-      font-size: 16px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 14px;
       flex-shrink: 0;
       overflow: hidden;
       position: relative;
@@ -432,58 +415,32 @@
     .emp-avatar img { width: 100%; height: 100%; object-fit: cover; }
     .emp-avatar .lock-badge {
       position: absolute;
-      bottom: -2px;
-      left: -2px;
-      width: 18px;
-      height: 18px;
+      bottom: -3px;
+      left: -3px;
+      width: 16px; height: 16px;
       background: var(--danger);
       border-radius: 50%;
       border: 2px solid var(--card);
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: flex; align-items: center; justify-content: center;
     }
-    .emp-avatar .lock-badge i { width: 9px; height: 9px; color: white; }
+    .emp-avatar .lock-badge i { width: 8px; height: 8px; color: white; }
+    .emp-info { min-width: 0; }
+    .emp-info .name { font-weight: 700; color: var(--text); font-size: 13px; }
+    .emp-info .sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
 
-    .emp-name { font-weight: 700; color: var(--text); }
-    .emp-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; font-family: monospace; }
+    .money { font-weight: 700; color: var(--success); }
+    .money.muted { color: var(--text-muted); font-weight: 500; }
 
-    .role-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      padding: 4px 10px;
-      font-size: 11px;
-      font-weight: 600;
-      border-radius: 20px;
-      background: rgba(59,130,246,0.12);
-      color: var(--info);
-      white-space: nowrap;
+    .username-tag {
+      font-family: 'Courier New', monospace;
+      font-weight: 800;
+      color: var(--accent);
+      font-size: 13px;
     }
-    .role-badge.admin {
-      background: rgba(245,158,11,0.15);
-      color: var(--warning);
-    }
-
-    .badge-tag {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      padding: 4px 10px;
-      font-size: 11px;
-      font-weight: 600;
-      border-radius: 20px;
-      white-space: nowrap;
-    }
-    .badge-tag.green  { background: rgba(16,185,129,0.12); color: var(--success); }
-    .badge-tag.red    { background: rgba(239,68,68,0.12); color: var(--danger); }
-    .badge-tag.gold   { background: rgba(245,158,11,0.12); color: var(--warning); }
-    .badge-tag.gray   { background: rgba(148,163,184,0.15); color: var(--text-muted); }
-    .badge-tag.blue   { background: rgba(59,130,246,0.12); color: var(--info); }
 
     .password-cell {
       font-family: 'Courier New', monospace;
-      font-size: 13px;
+      font-size: 12px;
       background: var(--bg);
       padding: 4px 10px;
       border-radius: 6px;
@@ -491,62 +448,157 @@
       color: var(--text);
       cursor: pointer;
       transition: all 0.2s;
-      user-select: all;
+      display: inline-block;
+      max-width: 140px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
     .password-cell:hover { border-color: var(--accent); color: var(--accent); }
+    .password-hidden { letter-spacing: 2px; color: var(--text-muted); }
 
-    .password-hidden {
-      letter-spacing: 2px;
-      color: var(--text-muted);
+    .role-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 4px 10px;
+      font-size: 11px; font-weight: 700;
+      border-radius: 20px;
+      background: rgba(59,130,246,0.12);
+      color: var(--info);
+      white-space: nowrap;
     }
+    .role-badge.admin { background: rgba(245,158,11,0.15); color: var(--warning); }
 
-    .salary-cell {
-      font-weight: 800;
-      color: var(--success);
+    .status-pill {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px; font-weight: 700;
+      white-space: nowrap;
     }
+    .status-pill.active { background: rgba(16,185,129,0.12); color: var(--success); }
+    .status-pill.inactive { background: rgba(239,68,68,0.12); color: var(--danger); }
+    .status-pill.locked { background: rgba(245,158,11,0.15); color: var(--warning); }
 
-    .actions-cell { display: flex; gap: 6px; justify-content: flex-end; }
+    .device-badge {
+      display: inline-flex; align-items: center; gap: 3px;
+      padding: 3px 8px;
+      border-radius: 10px;
+      font-size: 10px; font-weight: 700;
+    }
+    .device-badge.has { background: rgba(16,185,129,0.12); color: var(--success); }
+    .device-badge.no { background: rgba(148,163,184,0.15); color: var(--text-muted); }
 
     .action-btn {
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
+      width: 30px; height: 30px;
+      border-radius: 7px;
       border: 1px solid var(--border);
       background: var(--card);
       color: var(--text-muted);
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: inline-flex; align-items: center; justify-content: center;
       transition: all 0.2s;
+      margin: 0 1px;
     }
-    .action-btn:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
+    .action-btn:hover { border-color: var(--accent); color: var(--accent); }
     .action-btn.danger:hover { border-color: var(--danger); color: var(--danger); background: rgba(239,68,68,0.06); }
-    .action-btn.warning:hover { border-color: var(--warning); color: var(--warning); background: rgba(245,158,11,0.06); }
-    .action-btn i { width: 15px; height: 15px; }
+    .action-btn.warning:hover { border-color: var(--warning); color: var(--warning); }
+    .action-btn i { width: 14px; height: 14px; }
 
-    .empty-row td { padding: 60px 20px; text-align: center; color: var(--text-muted); }
-    .empty-row i { width: 48px; height: 48px; opacity: 0.4; margin-bottom: 10px; }
-    .empty-row p { font-size: 14px; font-weight: 500; }
-
-    .skeleton-row td { padding: 18px 16px; }
-    .skeleton-bar {
-      height: 14px;
-      background: linear-gradient(90deg, var(--border) 25%, var(--bg) 50%, var(--border) 75%);
-      background-size: 200% 100%;
-      animation: shimmer 1.4s infinite;
-      border-radius: 6px;
+    /* ============ Cards Grid ============ */
+    .employees-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 14px;
     }
-    @keyframes shimmer {
-      0% { background-position: 200% 0; }
-      100% { background-position: -200% 0; }
+    .emp-card {
+      background: var(--card);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.25s;
+      cursor: pointer;
     }
+    .emp-card::before {
+      content: '';
+      position: absolute;
+      top: 0; right: 0; bottom: 0;
+      width: 5px;
+      background: var(--ec-color, var(--accent));
+    }
+    .emp-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-lg);
+      border-color: var(--ec-color, var(--accent));
+    }
+    .emp-card.inactive { --ec-color: #94a3b8; opacity: 0.7; }
+    .emp-card.locked { --ec-color: #ef4444; }
+    .emp-card.admin { --ec-color: #F59E0B; }
 
-    /* Pagination */
-    .pagination {
+    .ec-header {
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 12px;
+      padding-right: 8px;
+    }
+    .ec-avatar {
+      width: 52px; height: 52px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: white;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 20px;
+      flex-shrink: 0;
+      overflow: hidden;
+      position: relative;
+    }
+    .ec-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .ec-info { flex: 1; min-width: 0; }
+    .ec-name { font-size: 15px; font-weight: 800; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .ec-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; font-family: monospace; }
+
+    .ec-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 10px;
+      padding-right: 8px;
+    }
+    .ec-stat { font-size: 11px; }
+    .ec-stat .lbl { color: var(--text-muted); font-weight: 600; margin-bottom: 2px; }
+    .ec-stat .val { color: var(--text); font-weight: 700; font-size: 13px; }
+
+    .ec-actions {
       display: flex;
-      align-items: center;
-      justify-content: space-between;
+      gap: 6px;
+      padding-right: 8px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+    }
+    .ec-actions .btn {
+      flex: 1;
+      justify-content: center;
+      padding: 6px 10px;
+      font-size: 11px;
+    }
+
+    /* ============ Empty / Loader ============ */
+    .empty-state {
+      padding: 60px 20px;
+      text-align: center;
+      color: var(--text-muted);
+    }
+    .empty-state i { width: 52px; height: 52px; opacity: 0.3; margin-bottom: 14px; }
+    .empty-state h3 { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+    .empty-state p { font-size: 13px; }
+
+    .loader { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+    .loader i { width: 40px; height: 40px; animation: spin 1s linear infinite; color: var(--accent); margin-bottom: 12px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ============ Pagination ============ */
+    .pagination {
+      display: flex; align-items: center; justify-content: space-between;
       padding: 14px 20px;
       border-top: 1px solid var(--border);
       font-size: 13px;
@@ -555,18 +607,15 @@
       flex-wrap: wrap;
     }
     .pagination .controls { display: flex; gap: 6px; align-items: center; }
-
     .page-btn {
-      min-width: 34px;
-      height: 34px;
+      min-width: 34px; height: 34px;
       padding: 0 10px;
       border-radius: 8px;
       border: 1px solid var(--border);
       background: var(--card);
       color: var(--text);
       font-family: inherit;
-      font-size: 13px;
-      font-weight: 600;
+      font-size: 13px; font-weight: 600;
       cursor: pointer;
       transition: all 0.2s;
     }
@@ -574,7 +623,7 @@
     .page-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
     .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
-    /* Modal */
+    /* ============ Modal ============ */
     .modal-backdrop {
       position: fixed;
       inset: 0;
@@ -582,101 +631,71 @@
       backdrop-filter: blur(4px);
       z-index: 200;
       display: none;
-      align-items: center;
-      justify-content: center;
+      align-items: center; justify-content: center;
       padding: 20px;
       opacity: 0;
       transition: opacity 0.2s;
     }
     .modal-backdrop.show { display: flex; opacity: 1; }
-
     .modal {
       background: var(--card);
       border-radius: var(--radius);
       box-shadow: var(--shadow-lg);
       width: 100%;
-      max-width: 620px;
+      max-width: 720px;
       max-height: 90vh;
-      display: flex;
-      flex-direction: column;
+      display: flex; flex-direction: column;
       transform: scale(0.95);
       transition: transform 0.2s;
       overflow: hidden;
     }
+    .modal.modal-lg { max-width: 900px; }
     .modal-backdrop.show .modal { transform: scale(1); }
-
     .modal-header {
       padding: 16px 20px;
       border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      display: flex; align-items: center; justify-content: space-between;
       gap: 12px;
       flex-shrink: 0;
     }
     .modal-header h3 { font-size: 16px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px; }
     .modal-header h3 i { width: 18px; height: 18px; color: var(--accent); }
-
     .modal-close {
-      width: 32px;
-      height: 32px;
+      width: 32px; height: 32px;
       border-radius: 8px;
       border: none;
       background: transparent;
       color: var(--text-muted);
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.2s;
+      display: flex; align-items: center; justify-content: center;
     }
     .modal-close:hover { background: var(--bg); color: var(--danger); }
     .modal-close i { width: 18px; height: 18px; }
-
-    .modal-body {
-      padding: 20px;
-      overflow-y: auto;
-      flex: 1;
-      min-height: 0;
-      scrollbar-width: thin;
-      scrollbar-color: var(--border) transparent;
-    }
+    .modal-body { padding: 20px; overflow-y: auto; flex: 1; min-height: 0; }
     .modal-body::-webkit-scrollbar { width: 8px; }
-    .modal-body::-webkit-scrollbar-track { background: transparent; }
     .modal-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
-    .modal-body::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
-
     .modal-footer {
       padding: 14px 20px;
       border-top: 1px solid var(--border);
-      display: flex;
-      gap: 10px;
-      justify-content: flex-end;
+      display: flex; gap: 10px; justify-content: flex-end;
       background: var(--bg);
       flex-shrink: 0;
+      flex-wrap: wrap;
     }
 
     /* Form */
-    .form-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 14px;
-    }
+    .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
     .form-group { display: flex; flex-direction: column; }
     .form-group.full { grid-column: 1 / -1; }
     .form-group label {
-      font-size: 12px;
-      font-weight: 700;
+      font-size: 12px; font-weight: 700;
       color: var(--text);
       margin-bottom: 6px;
-      display: flex;
-      align-items: center;
-      gap: 4px;
+      display: flex; align-items: center; gap: 4px;
     }
     .form-group label .req { color: var(--danger); }
-    .form-group input,
-    .form-group select,
-    .form-group textarea {
+    .form-group label .hint { color: var(--text-muted); font-weight: 500; font-size: 11px; margin-right: auto; }
+    .form-group input, .form-group select, .form-group textarea {
       padding: 10px 14px;
       font-family: inherit;
       font-size: 14px;
@@ -689,52 +708,50 @@
       width: 100%;
     }
     .form-group textarea { resize: vertical; min-height: 70px; }
-    .form-group input:focus,
-    .form-group select:focus,
-    .form-group textarea:focus {
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
       border-color: var(--accent);
       background: var(--card);
       box-shadow: 0 0 0 3px rgba(20,184,166,0.1);
     }
+    .form-group input:disabled { opacity: 0.6; cursor: not-allowed; }
 
-    .help-text {
+    .form-section-title {
       font-size: 11px;
-      color: var(--text-muted);
-      margin-top: 4px;
+      font-weight: 800;
+      color: var(--purple);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 10px 0 6px;
+      border-bottom: 1px solid var(--border);
+      margin: 6px 0 12px;
+      display: flex; align-items: center; gap: 6px;
+      grid-column: 1 / -1;
     }
+    .form-section-title i { width: 14px; height: 14px; }
 
-    .password-input-wrap {
-      position: relative;
-      display: flex;
-      align-items: center;
-    }
+    .password-input-wrap { position: relative; display: flex; align-items: center; }
     .password-input-wrap input { padding-left: 42px; }
     .toggle-password {
       position: absolute;
       left: 8px;
-      width: 30px;
-      height: 30px;
+      width: 30px; height: 30px;
       border: none;
       background: transparent;
       color: var(--text-muted);
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: flex; align-items: center; justify-content: center;
       border-radius: 6px;
-      transition: all 0.2s;
     }
     .toggle-password:hover { background: var(--bg); color: var(--accent); }
     .toggle-password i { width: 16px; height: 16px; }
 
     .switch-row {
-      display: flex;
-      align-items: center;
-      gap: 12px;
+      display: flex; align-items: center; gap: 12px;
       padding: 12px 14px;
       background: var(--bg);
       border: 1.5px solid var(--border);
       border-radius: var(--radius-sm);
+      grid-column: 1 / -1;
     }
     .switch { position: relative; display: inline-block; width: 42px; height: 24px; flex-shrink: 0; }
     .switch input { opacity: 0; width: 0; height: 0; }
@@ -747,7 +764,7 @@
     /* Locked banner */
     .locked-banner {
       background: rgba(239,68,68,0.08);
-      border: 1px solid rgba(239,68,68,0.3);
+      border: 1.5px solid rgba(239,68,68,0.25);
       border-radius: var(--radius-sm);
       padding: 12px 14px;
       margin-bottom: 16px;
@@ -760,9 +777,145 @@
     }
     .locked-banner i { width: 18px; height: 18px; flex-shrink: 0; }
 
-    /* Overlay (mobile) */
+    /* Detail Hero */
+    .detail-hero {
+      display: flex; align-items: center; gap: 16px;
+      padding: 16px;
+      background: linear-gradient(135deg, rgba(11,44,77,0.04), rgba(20,184,166,0.06));
+      border-radius: 12px;
+      margin-bottom: 20px;
+    }
+    .detail-hero-avatar {
+      width: 72px; height: 72px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: white;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 28px;
+      flex-shrink: 0;
+      overflow: hidden;
+      position: relative;
+    }
+    .detail-hero-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .detail-hero-info { flex: 1; min-width: 0; }
+    .detail-hero-name { font-size: 22px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+    .detail-hero-sub { font-size: 13px; color: var(--text-muted); }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .detail-item {
+      background: var(--bg);
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+    .detail-item .lbl { font-size: 10px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 4px; display: flex; align-items: center; gap: 4px; }
+    .detail-item .lbl i { width: 11px; height: 11px; }
+    .detail-item .val { font-size: 14px; font-weight: 800; color: var(--text); word-break: break-word; }
+    .detail-item .val.accent { color: var(--accent); }
+    .detail-item .val.danger { color: var(--danger); }
+    .detail-item .val.success { color: var(--success); }
+    .detail-item .val.gold { color: var(--gold); }
+    .detail-item .val.mono { font-family: 'Courier New', monospace; }
+
+    /* Overlay */
     .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; opacity: 0; transition: opacity 0.3s; }
     .overlay.show { display: block; opacity: 1; }
+
+    /* ✨ Quick Search */
+    .quick-search-overlay {
+      position: fixed; inset: 0;
+      z-index: 600;
+      display: none;
+      align-items: flex-start; justify-content: center;
+      padding: 80px 20px 20px;
+      background: rgba(15,23,42,0.6);
+      backdrop-filter: blur(6px);
+      animation: qsFadeIn 0.2s;
+    }
+    .quick-search-overlay.show { display: flex; }
+    @keyframes qsFadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes qsSlideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .quick-search-box {
+      width: min(600px, 100%);
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+      animation: qsSlideUp 0.25s;
+    }
+    .quick-search-input-wrap { position: relative; }
+    .quick-search-input {
+      width: 100%;
+      padding: 18px 60px 18px 18px;
+      font-family: inherit;
+      font-size: 16px; font-weight: 600;
+      background: var(--card);
+      border: none;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+      outline: none;
+    }
+    .quick-search-input-wrap > i {
+      position: absolute; right: 20px; top: 50%;
+      transform: translateY(-50%);
+      width: 22px; height: 22px;
+      color: var(--accent);
+      pointer-events: none;
+    }
+    .quick-search-kbd {
+      position: absolute; left: 18px; top: 50%;
+      transform: translateY(-50%);
+      font-size: 10px;
+      padding: 3px 8px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-muted);
+      font-family: 'Courier New', monospace;
+      font-weight: 700;
+    }
+    .quick-search-results { max-height: 400px; overflow-y: auto; padding: 8px; }
+    .quick-search-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .quick-search-item:hover, .quick-search-item.selected { background: rgba(20,184,166,0.1); }
+    .quick-search-item .qs-icon {
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: white;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 15px;
+      flex-shrink: 0;
+    }
+    .quick-search-item .qs-body { flex: 1; min-width: 0; }
+    .quick-search-item .qs-name { font-weight: 700; font-size: 14px; color: var(--text); }
+    .quick-search-item .qs-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .quick-search-empty { text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 13px; }
+    .quick-search-footer {
+      padding: 10px 16px;
+      border-top: 1px solid var(--border);
+      background: var(--bg);
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 11px; color: var(--text-muted);
+    }
+    .quick-search-footer kbd {
+      font-family: 'Courier New', monospace;
+      padding: 2px 6px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-weight: 700;
+    }
 
     /* Responsive */
     @media (max-width: 1024px) {
@@ -772,18 +925,22 @@
       .menu-toggle { display: flex; }
       .user-info { display: none; }
     }
-
     @media (max-width: 640px) {
       .content { padding: 16px; }
       .topbar { padding: 0 14px; gap: 10px; }
       .topbar-title { font-size: 15px; }
       .page-head { flex-direction: column; align-items: stretch; }
       .page-head h1 { font-size: 20px; }
-      .toolbar { padding: 12px; }
-      .search-input { min-width: 100%; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .stat-card { padding: 14px; }
+      .stat-icon { width: 40px; height: 40px; }
+      .stat-body .value { font-size: 16px; }
       .form-grid { grid-template-columns: 1fr; }
       .modal-footer { flex-direction: column-reverse; }
       .modal-footer .btn { width: 100%; justify-content: center; }
+      .employees-grid { grid-template-columns: 1fr; }
+      .search-box kbd { display: none; }
+      .quick-search-overlay { padding: 20px 10px; }
     }
   </style>
 </head>
@@ -792,12 +949,12 @@
   <!-- Sidebar -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
-      <div class="sidebar-logo">
-        <img src="logo.png" alt="رفاد" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=fallback>R</span>';">
+      <div class="sidebar-logo" id="sidebarLogo">
+        <img src="logo.png" alt="رفاد" id="sidebarLogoImg" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=fallback>R</span>';">
       </div>
       <div class="sidebar-brand">
-        <h2>رفاد</h2>
-        <p>نظام إدارة الأدوية</p>
+        <h2 id="sidebarBrandName">رفاد</h2>
+        <p id="sidebarBrandDesc">نظام إدارة الأدوية</p>
       </div>
     </div>
     <nav class="sidebar-nav" id="sidebarNav"></nav>
@@ -807,7 +964,6 @@
 
   <!-- Main -->
   <div class="main">
-
     <header class="topbar">
       <button class="menu-toggle" id="menuToggle"><i data-lucide="menu"></i></button>
       <div class="topbar-title">الموظفين</div>
@@ -846,8 +1002,11 @@
           <p>إضافة وتعديل الموظفين والأدوار والرواتب</p>
         </div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;">
-          <button class="btn btn-outline" id="exportBtn">
-            <i data-lucide="download"></i> تصدير
+          <button class="btn btn-outline btn-sm" id="refreshBtn">
+            <i data-lucide="refresh-cw"></i> تحديث
+          </button>
+          <button class="btn btn-outline btn-sm" id="exportBtn">
+            <i data-lucide="download"></i> تصدير Excel
           </button>
           <button class="btn btn-primary" id="addBtn">
             <i data-lucide="plus"></i> موظف جديد
@@ -855,63 +1014,104 @@
         </div>
       </div>
 
-      <!-- Mini stats -->
-      <div class="mini-stats">
-        <div class="mini-card">
-          <div class="mini-icon blue"><i data-lucide="users"></i></div>
-          <div class="mini-body">
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card active" data-stat-filter="all">
+          <div class="stat-icon"><i data-lucide="users"></i></div>
+          <div class="stat-body">
             <div class="label">إجمالي الموظفين</div>
-            <div class="value" id="statTotal">—</div>
+            <div class="value" id="statTotal">0</div>
+            <div class="sub" id="statTotalSub">—</div>
           </div>
         </div>
-        <div class="mini-card">
-          <div class="mini-icon green"><i data-lucide="check-circle-2"></i></div>
-          <div class="mini-body">
+        <div class="stat-card success" data-stat-filter="active">
+          <div class="stat-icon success"><i data-lucide="check-circle-2"></i></div>
+          <div class="stat-body">
             <div class="label">نشط</div>
-            <div class="value" id="statActive">—</div>
+            <div class="value" id="statActive">0</div>
+            <div class="sub" id="statActiveSub">—</div>
           </div>
         </div>
-        <div class="mini-card">
-          <div class="mini-icon gold"><i data-lucide="wallet"></i></div>
-          <div class="mini-body">
+        <div class="stat-card danger" data-stat-filter="locked">
+          <div class="stat-icon danger"><i data-lucide="lock"></i></div>
+          <div class="stat-body">
+            <div class="label">مقفل</div>
+            <div class="value" id="statLocked">0</div>
+            <div class="sub">يحتاج فتح</div>
+          </div>
+        </div>
+        <div class="stat-card info">
+          <div class="stat-icon info"><i data-lucide="smartphone"></i></div>
+          <div class="stat-body">
+            <div class="label">بأجهزة</div>
+            <div class="value" id="statDevice">0</div>
+            <div class="sub">يسجّل دخول</div>
+          </div>
+        </div>
+        <div class="stat-card gold">
+          <div class="stat-icon gold"><i data-lucide="wallet"></i></div>
+          <div class="stat-body">
             <div class="label">إجمالي الرواتب</div>
-            <div class="value" id="statSalaries">—</div>
+            <div class="value" id="statSalaries">0.00</div>
+            <div class="sub" id="statSalariesSub">—</div>
           </div>
         </div>
-        <div class="mini-card">
-          <div class="mini-icon purple"><i data-lucide="smartphone"></i></div>
-          <div class="mini-body">
-            <div class="label">موظفين بأجهزة</div>
-            <div class="value" id="statDevice">—</div>
+        <div class="stat-card purple">
+          <div class="stat-icon purple"><i data-lucide="trending-up"></i></div>
+          <div class="stat-body">
+            <div class="label">متوسط الراتب</div>
+            <div class="value" id="statAvg">0.00</div>
+            <div class="sub">لكل موظف نشط</div>
           </div>
         </div>
       </div>
 
       <!-- Toolbar -->
       <div class="toolbar">
-        <div class="search-input">
+        <div class="search-box">
           <input type="text" id="searchInput" placeholder="ابحث بالاسم أو اسم المستخدم أو الهاتف...">
           <i data-lucide="search"></i>
+          <kbd>Ctrl+K</kbd>
         </div>
-        <div class="select-wrap">
-          <select id="filterStatus">
-            <option value="">كل الحالات</option>
-            <option value="active">نشط</option>
-            <option value="inactive">غير نشط</option>
-            <option value="locked">مقفل</option>
-          </select>
-        </div>
-        <div class="select-wrap">
-          <select id="filterRole">
-            <option value="">كل الأدوار</option>
-          </select>
+        <select class="filter-select" id="filterStatus">
+          <option value="">كل الحالات</option>
+          <option value="active">نشط</option>
+          <option value="inactive">غير نشط</option>
+          <option value="locked">مقفل</option>
+        </select>
+        <select class="filter-select" id="filterRole">
+          <option value="">كل الأدوار</option>
+        </select>
+        <select class="filter-select" id="filterDevice">
+          <option value="">الجهاز</option>
+          <option value="has">بجهاز</option>
+          <option value="no">بدون جهاز</option>
+        </select>
+        <select class="filter-select" id="sortBy">
+          <option value="name">ترتيب: الاسم</option>
+          <option value="salary_desc">الأعلى راتباً</option>
+          <option value="salary_asc">الأقل راتباً</option>
+          <option value="hire_desc">الأحدث تعييناً</option>
+          <option value="hire_asc">الأقدم تعييناً</option>
+        </select>
+        <button class="pass-toggle-btn" id="togglePasswordsBtn" title="إظهار/إخفاء كلمات المرور">
+          <i data-lucide="eye" id="passToggleIcon"></i>
+          <span id="passToggleText">إظهار كلمات المرور</span>
+        </button>
+        <div class="view-toggle">
+          <button class="view-btn active" data-view="table" title="جدول">
+            <i data-lucide="list"></i>
+          </button>
+          <button class="view-btn" data-view="cards" title="بطاقات">
+            <i data-lucide="grid-3x3"></i>
+          </button>
         </div>
       </div>
 
-      <!-- Table -->
-      <div class="table-wrap">
+      <!-- Table View -->
+      <div class="table-wrap" id="tableView">
         <div class="table-scroll">
-          <table>
+          <table class="data-table">
             <thead>
               <tr>
                 <th>الموظف</th>
@@ -919,8 +1119,9 @@
                 <th>كلمة المرور</th>
                 <th>الدور</th>
                 <th>الراتب</th>
+                <th>الجهاز</th>
                 <th>الحالة</th>
-                <th></th>
+                <th style="width:130px;">إجراءات</th>
               </tr>
             </thead>
             <tbody id="tableBody"></tbody>
@@ -929,12 +1130,15 @@
         <div class="pagination" id="pagination"></div>
       </div>
 
+      <!-- Cards View -->
+      <div class="employees-grid" id="cardsView" style="display:none;"></div>
+
     </main>
   </div>
 
-  <!-- Modal: Add/Edit Employee -->
+  <!-- ========== Modal: Add/Edit Employee ========== -->
   <div class="modal-backdrop" id="employeeModal">
-    <div class="modal">
+    <div class="modal modal-lg">
       <div class="modal-header">
         <h3><i data-lucide="user-plus" id="modalIcon"></i> <span id="modalTitle">موظف جديد</span></h3>
         <button class="modal-close" data-close><i data-lucide="x"></i></button>
@@ -953,75 +1157,74 @@
 
           <div class="form-grid">
 
+            <div class="form-section-title"><i data-lucide="user"></i> البيانات الأساسية</div>
+
             <div class="form-group full">
               <label>الاسم الكامل <span class="req">*</span></label>
-              <input type="text" name="full_name" required maxlength="120" placeholder="مثال: أحمد محمد">
+              <input type="text" id="eFullName" required maxlength="120" placeholder="مثال: أحمد محمد">
             </div>
 
             <div class="form-group">
               <label>اسم المستخدم <span class="req">*</span></label>
-              <input type="text" name="username" required maxlength="50" placeholder="ahmed" dir="ltr">
-              <div class="help-text">يُستخدم لتسجيل الدخول</div>
+              <input type="text" id="eUsername" required maxlength="50" placeholder="ahmed" dir="ltr">
+              <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">يُستخدم لتسجيل الدخول</div>
             </div>
 
             <div class="form-group">
               <label>كلمة المرور <span class="req">*</span></label>
               <div class="password-input-wrap">
-                <input type="text" name="password" required maxlength="100" placeholder="4 أحرف على الأقل" dir="ltr">
+                <input type="text" id="ePassword" required maxlength="100" placeholder="4 أحرف على الأقل" dir="ltr">
                 <button type="button" class="toggle-password" id="togglePassword" title="إظهار/إخفاء">
                   <i data-lucide="eye" id="eyeIcon"></i>
                 </button>
               </div>
-              <div class="help-text">تُخزَّن كنص عادي (يمكنك رؤيتها وتعديلها في أي وقت)</div>
             </div>
 
             <div class="form-group">
               <label>الهاتف</label>
-              <input type="tel" name="phone" maxlength="30" placeholder="01000000000" dir="ltr">
+              <input type="tel" id="ePhone" maxlength="30" placeholder="01000000000" dir="ltr">
             </div>
 
             <div class="form-group">
               <label>البريد الإلكتروني</label>
-              <input type="email" name="email" maxlength="120" placeholder="email@example.com" dir="ltr">
+              <input type="email" id="eEmail" maxlength="120" placeholder="email@example.com" dir="ltr">
             </div>
+
+            <div class="form-section-title"><i data-lucide="shield"></i> الدور والراتب</div>
 
             <div class="form-group">
               <label>الدور <span class="req">*</span></label>
-              <select name="role_id" id="roleSelect" required>
+              <select id="eRoleId" required>
                 <option value="">اختر الدور...</option>
               </select>
-              <div class="help-text">يحدد الصلاحيات</div>
             </div>
 
             <div class="form-group">
-              <label>الراتب الشهري</label>
-              <input type="number" name="salary" min="0" step="0.01" value="0" placeholder="0.00">
+              <label>الراتب الشهري <span class="hint">ج.م</span></label>
+              <input type="number" id="eSalary" min="0" step="0.01" value="0" placeholder="0.00">
             </div>
 
             <div class="form-group">
               <label>تاريخ التعيين</label>
-              <input type="date" name="hire_date">
+              <input type="date" id="eHireDate">
             </div>
 
             <div class="form-group">
-              <label>نوع الموظف</label>
-              <div class="switch-row" style="margin-top:0;">
-                <label class="switch">
-                  <input type="checkbox" name="has_device" checked>
-                  <span class="slider"></span>
-                </label>
-                <span class="switch-label" style="font-size:12px;">موظف بجهاز (يسجّل دخول)</span>
-              </div>
+              <label>الحالة</label>
+              <select id="eIsActive">
+                <option value="true">نشط</option>
+                <option value="false">غير نشط</option>
+              </select>
             </div>
 
-            <div class="form-group full">
-              <div class="switch-row">
-                <label class="switch">
-                  <input type="checkbox" name="is_active" checked>
-                  <span class="slider"></span>
-                </label>
-                <span class="switch-label">الحساب نشط</span>
-              </div>
+            <div class="form-section-title"><i data-lucide="settings-2"></i> إعدادات إضافية</div>
+
+            <div class="switch-row">
+              <label class="switch">
+                <input type="checkbox" id="eHasDevice" checked>
+                <span class="slider"></span>
+              </label>
+              <span class="switch-label">موظف بجهاز (يسجّل دخول من التطبيق)</span>
             </div>
 
           </div>
@@ -1037,11 +1240,97 @@
     </div>
   </div>
 
+  <!-- ========== Modal: Employee Details ========== -->
+  <div class="modal-backdrop" id="detailsModal">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <h3><i data-lucide="user"></i> تفاصيل الموظف</h3>
+        <button class="modal-close" data-close><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body" id="detailsModalBody"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" id="printEmpBtn">
+          <i data-lucide="printer"></i> طباعة
+        </button>
+        <button type="button" class="btn btn-outline" data-close>إغلاق</button>
+        <button type="button" class="btn btn-primary" id="editFromDetailsBtn">
+          <i data-lucide="edit"></i> تعديل
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ✨ Quick Search Overlay -->
+  <div class="quick-search-overlay" id="quickSearchOverlay">
+    <div class="quick-search-box">
+      <div class="quick-search-input-wrap">
+        <input type="text" class="quick-search-input" id="quickSearchInput" placeholder="ابحث بالاسم أو اسم المستخدم..." autocomplete="off">
+        <i data-lucide="search"></i>
+        <span class="quick-search-kbd">ESC</span>
+      </div>
+      <div class="quick-search-results" id="quickSearchResults">
+        <div class="quick-search-empty">اكتب للبحث السريع...</div>
+      </div>
+      <div class="quick-search-footer">
+        <span><kbd>↑</kbd> <kbd>↓</kbd> للتنقل</span>
+        <span><kbd>Enter</kbd> للفتح</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       SCRIPTS — الترتيب مهم جداً
+       ============================================================ -->
   <script src="refad-core.js"></script>
   <script src="refad-auth.js"></script>
+  <script src="refad-theme-sync.js"></script>
+  <script src="refad-settings.js"></script>
+
   <script>
     (function () {
       'use strict';
+
+      // ============================================================
+      // 0) Safe Settings Wrapper
+      // ============================================================
+      const SafeSettings = {
+        locale: {
+          formatMoney: function (v) {
+            try {
+              if (window.RefadSettings?.locale?.formatMoney) {
+                return RefadSettings.locale.formatMoney(v);
+              }
+            } catch (e) {}
+            return Refad.format.money(v);
+          }
+        },
+        identity: {
+          getSystemName: function () {
+            try {
+              if (window.RefadSettings?.identity?.getSystemName) {
+                return RefadSettings.identity.getSystemName();
+              }
+            } catch (e) {}
+            return 'رفاد';
+          },
+          getTagline: function () {
+            try {
+              if (window.RefadSettings?.identity?.getTagline) {
+                return RefadSettings.identity.getTagline();
+              }
+            } catch (e) {}
+            return 'نظام إدارة الأدوية';
+          },
+          getLogoUrl: function () {
+            try {
+              if (window.RefadSettings?.identity?.getLogoUrl) {
+                return RefadSettings.identity.getLogoUrl();
+              }
+            } catch (e) {}
+            return null;
+          }
+        }
+      };
 
       // ============================================================
       // 1) Guard
@@ -1049,12 +1338,15 @@
       const session = Refad.Auth.guardPage('employees.view');
       if (!session) return;
 
-      const canCreate = Refad.Session.has('employees.create');
-      const canEdit   = Refad.Session.has('employees.edit');
+      const canCreate = Refad.Session.has('employees.create') || Refad.Session.has('company.owner');
+      const canEdit = Refad.Session.has('employees.edit') || Refad.Session.has('company.owner');
+      const canDelete = Refad.Session.has('employees.delete') || Refad.Session.has('company.owner');
 
       // ============================================================
       // 2) State
       // ============================================================
+      const PASS_VIS_KEY = 'refad_employees_show_passwords';
+
       const state = {
         all: [],
         filtered: [],
@@ -1064,105 +1356,79 @@
         search: '',
         filterStatus: '',
         filterRole: '',
+        filterDevice: '',
+        sortBy: 'name',
         editingId: null,
-        showPasswords: false
+        currentDetailsId: null,
+        showPasswords: localStorage.getItem(PASS_VIS_KEY) === 'true',
+        viewMode: 'table',
+        quickSearchIndex: -1,
+        quickSearchResults: []
       };
 
       // ============================================================
-      // 3) Sidebar
+      // 3) Helpers
       // ============================================================
-      const MENU = [
-        { section: 'الرئيسية', items: [
-          { label: 'لوحة التحكم', icon: 'layout-dashboard', href: 'dashboard.html' },
-          { label: 'الشات', icon: 'message-circle', href: 'chat.html', permission: 'chat.use' },
-          { label: 'الإشعارات', icon: 'bell', href: 'notifications.html', permission: 'notifications.view' }
-        ]},
-        { section: 'العمليات', items: [
-          { label: 'الأصناف', icon: 'package', href: 'products.html', permission: 'products.view' },
-          { label: 'المخزون', icon: 'warehouse', href: 'inventory.html', permission: 'inventory.view' },
-          { label: 'طلبات الشراء', icon: 'clipboard-list', href: 'purchase-requests.html', permission: 'purchases.view' },
-          { label: 'الاستلامات', icon: 'package-check', href: 'receipts.html', permission: 'purchases.receive' },
-          { label: 'طلبات البيع', icon: 'shopping-cart', href: 'sales-orders.html', permission: 'sales.view' },
-          { label: 'نقطة البيع', icon: 'scan-barcode', href: 'pos.html', permission: 'sales.pos', badge: 'POS', badgeClass: 'teal' },
-          { label: 'الفواتير', icon: 'receipt', href: 'invoices.html', permission: 'sales.view' }
-        ]},
-        { section: 'الأطراف', items: [
-          { label: 'الموردين', icon: 'truck', href: 'suppliers.html', permission: 'suppliers.view' },
-          { label: 'العملاء', icon: 'users', href: 'customers.html', permission: 'customers.view' }
-        ]},
-        { section: 'المخزون', items: [
-          { label: 'الجرد', icon: 'clipboard-check', href: 'stocktake.html', permission: 'inventory.stocktake' },
-          { label: 'التسويات', icon: 'sliders-horizontal', href: 'adjustments.html', permission: 'inventory.adjust' }
-        ]},
-        { section: 'الموارد البشرية', items: [
-          { label: 'الموظفين', icon: 'user-cog', href: 'employees.html', permission: 'employees.view' },
-          { label: 'الصلاحيات', icon: 'shield-check', href: 'permissions.html', permission: 'permissions.manage' },
-          { label: 'الحضور', icon: 'calendar-check', href: 'attendance.html', permission: 'attendance.view' },
-          { label: 'الرواتب', icon: 'wallet', href: 'payroll.html', permission: 'payroll.view' }
-        ]},
-        { section: 'المالية', items: [
-          { label: 'المصاريف', icon: 'banknote', href: 'expenses.html', permission: 'expenses.view' },
-          { label: 'التقارير', icon: 'bar-chart-3', href: 'reports.html', permission: 'reports.view' }
-        ]},
-        { section: 'النظام', items: [
-          { label: 'إعدادات الشركة', icon: 'settings', href: 'company-settings.html', permission: 'settings.view' },
-          { label: 'شاشة الأدمن', icon: 'shield', href: 'admin.html', permission: 'admin.full', badge: 'Admin', badgeClass: 'gold' }
-        ]}
-      ];
+      function esc(s) { return Refad.escapeHtml(s); }
+      function fmtMoney(v) { return SafeSettings.locale.formatMoney(v); }
+      function fmtNumber(v) { return Refad.format.number(v); }
+      function toNum(v) { return Number(v) || 0; }
 
-      function buildSidebar() {
-        const nav = document.getElementById('sidebarNav');
-        const currentPage = 'employees.html';
-        const frag = document.createDocumentFragment();
-        MENU.forEach(group => {
-          const allowed = group.items.filter(it => !it.permission || Refad.Session.has(it.permission));
-          if (!allowed.length) return;
-          frag.appendChild(Refad.el('div', { class: 'nav-section' }, group.section));
-          allowed.forEach(item => {
-            const a = Refad.el('a', {
-              href: item.href,
-              class: 'nav-item' + (item.href === currentPage ? ' active' : '')
-            });
-            a.innerHTML = `<i data-lucide="${item.icon}"></i><span>${Refad.escapeHtml(item.label)}</span>${item.badge ? `<span class="badge ${item.badgeClass || ''}">${item.badge}</span>` : ''}`;
-            frag.appendChild(a);
-          });
-        });
-        nav.innerHTML = '';
-        nav.appendChild(frag);
-        if (window.lucide) lucide.createIcons();
+      function isLocked(emp) {
+        if (!emp || !emp.locked_until) return false;
+        return new Date(emp.locked_until).getTime() > Date.now();
       }
 
       // ============================================================
-      // 4) UI helpers
+      // 4) UI Setup
       // ============================================================
       function fillUser() {
         const av = document.getElementById('userAvatar');
         const initial = (session.full_name || '؟').trim().charAt(0);
-        if (session.avatar_url) av.innerHTML = `<img src="${Refad.escapeHtml(session.avatar_url)}" alt="">`;
+        if (session.avatar_url) av.innerHTML = '<img src="' + esc(session.avatar_url) + '" alt="">';
         else av.textContent = initial;
         document.getElementById('userName').textContent = session.full_name;
         document.getElementById('userRole').textContent = Refad.Session.has('company.owner') ? 'صاحب الشركة' : 'موظف';
       }
 
+      function applyIdentity() {
+        const name = SafeSettings.identity.getSystemName();
+        const tagline = SafeSettings.identity.getTagline();
+        const logoUrl = SafeSettings.identity.getLogoUrl();
+        const brandName = document.getElementById('sidebarBrandName');
+        const brandDesc = document.getElementById('sidebarBrandDesc');
+        const logoImg = document.getElementById('sidebarLogoImg');
+        if (brandName) brandName.textContent = name;
+        if (brandDesc) brandDesc.textContent = tagline;
+        if (logoImg && logoUrl) {
+          logoImg.src = logoUrl;
+          logoImg.onerror = function () {
+            this.style.display = 'none';
+            const parent = this.parentElement;
+            if (parent) parent.innerHTML = '<span class="fallback">' + (name.charAt(0) || 'R') + '</span>';
+          };
+        }
+      }
+
       function setupTheme() {
         const btn = document.getElementById('themeToggle');
         const icon = document.getElementById('themeIcon');
-        const refresh = () => {
+        const refresh = function () {
           const isDark = Refad.theme.get() === 'dark';
           icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
           if (window.lucide) lucide.createIcons();
         };
         refresh();
-        btn.addEventListener('click', () => { Refad.theme.toggle(); refresh(); });
+        btn.addEventListener('click', function () { Refad.theme.toggle(); refresh(); });
       }
 
       function setupSidebarMobile() {
         const sb = document.getElementById('sidebar');
         const ov = document.getElementById('overlay');
-        document.getElementById('menuToggle').addEventListener('click', () => {
+        document.getElementById('menuToggle').addEventListener('click', function () {
           sb.classList.add('open'); ov.classList.add('show');
         });
-        ov.addEventListener('click', () => {
+        ov.addEventListener('click', function () {
           sb.classList.remove('open'); ov.classList.remove('show');
         });
       }
@@ -1170,10 +1436,10 @@
       function setupUserMenu() {
         const m = document.getElementById('userMenu');
         const d = document.getElementById('userDropdown');
-        m.addEventListener('click', e => { e.stopPropagation(); d.classList.toggle('show'); });
-        document.addEventListener('click', () => d.classList.remove('show'));
-        d.addEventListener('click', e => e.stopPropagation());
-        document.getElementById('logoutBtn').addEventListener('click', async () => {
+        m.addEventListener('click', function (e) { e.stopPropagation(); d.classList.toggle('show'); });
+        document.addEventListener('click', function () { d.classList.remove('show'); });
+        d.addEventListener('click', function (e) { e.stopPropagation(); });
+        document.getElementById('logoutBtn').addEventListener('click', async function () {
           if (await Refad.alert.confirm('تسجيل الخروج', 'هل تريد الخروج؟', 'خروج')) {
             await Refad.Auth.logout();
           }
@@ -1181,13 +1447,19 @@
       }
 
       function setupNotifBtn() {
-        document.getElementById('notifBtn').addEventListener('click', () => {
+        document.getElementById('notifBtn').addEventListener('click', function () {
           window.location.href = 'notifications.html';
         });
       }
 
+      function setupRealtimeTheme() {
+        window.addEventListener('refad:theme-changed', () => {
+          applyIdentity();
+        });
+      }
+
       // ============================================================
-      // 5) Load roles
+      // 5) Load Roles
       // ============================================================
       async function loadRoles() {
         try {
@@ -1196,22 +1468,20 @@
             eq: { company_id: session.company_id },
             order: { column: 'name', ascending: true }
           });
-          state.roles = rows;
+          state.roles = rows || [];
 
-          // املأ select في المودال
-          const roleSelect = document.getElementById('roleSelect');
+          const roleSelect = document.getElementById('eRoleId');
           roleSelect.innerHTML = '<option value="">اختر الدور...</option>';
-          rows.forEach(r => {
+          state.roles.forEach(function (r) {
             const opt = document.createElement('option');
             opt.value = r.id;
             opt.textContent = r.name_ar || r.name;
             roleSelect.appendChild(opt);
           });
 
-          // املأ فلتر
           const filterRole = document.getElementById('filterRole');
           filterRole.innerHTML = '<option value="">كل الأدوار</option>';
-          rows.forEach(r => {
+          state.roles.forEach(function (r) {
             const opt = document.createElement('option');
             opt.value = r.id;
             opt.textContent = r.name_ar || r.name;
@@ -1223,22 +1493,24 @@
       }
 
       // ============================================================
-      // 6) Load employees
+      // 6) Load Employees
       // ============================================================
       async function loadEmployees(silent) {
-        if (!silent) renderSkeleton();
+        const tbody = document.getElementById('tableBody');
+        if (!silent) {
+          tbody.innerHTML = '<tr><td colspan="8"><div class="loader"><i data-lucide="loader-2"></i><p>جارٍ التحميل...</p></div></td></tr>';
+          if (window.lucide) lucide.createIcons();
+        }
+
         try {
           const rows = await Refad.db.select('users', {
-            columns: `id, username, password, full_name, phone, email, avatar_url,
-                      is_active, has_device, salary, hire_date, last_login,
-                      failed_attempts, locked_until, created_at,
-                      roles(id, name, name_ar)`,
+            columns: 'id, username, password, full_name, phone, email, avatar_url, is_active, has_device, salary, hire_date, last_login, failed_attempts, locked_until, created_at, roles(id, name, name_ar)',
             eq: { company_id: session.company_id },
             order: { column: 'full_name', ascending: true }
           });
-          state.all = rows;
-          applyFilters();
+          state.all = rows || [];
           renderStats();
+          applyFilters();
         } catch (e) {
           console.error('[Employees] load failed:', e);
           Refad.toast.error('تعذّر التحميل: ' + e.message);
@@ -1247,60 +1519,103 @@
         }
       }
 
-      function isLocked(emp) {
-        if (!emp.locked_until) return false;
-        return new Date(emp.locked_until).getTime() > Date.now();
-      }
-
+      // ============================================================
+      // 7) Render Stats
+      // ============================================================
       function renderStats() {
         const total = state.all.length;
-        const active = state.all.filter(e => e.is_active).length;
-        const salaries = state.all.filter(e => e.is_active).reduce((s, e) => s + (Number(e.salary) || 0), 0);
-        const device = state.all.filter(e => e.has_device).length;
+        const active = state.all.filter(function (e) { return e.is_active !== false; }).length;
+        const locked = state.all.filter(function (e) { return isLocked(e); }).length;
+        const device = state.all.filter(function (e) { return e.has_device !== false; }).length;
+        const totalSalaries = state.all
+          .filter(function (e) { return e.is_active !== false; })
+          .reduce(function (s, e) { return s + toNum(e.salary); }, 0);
+        const avgSalary = active > 0 ? totalSalaries / active : 0;
 
-        document.getElementById('statTotal').textContent = Refad.format.number(total);
-        document.getElementById('statActive').textContent = Refad.format.number(active);
-        document.getElementById('statSalaries').textContent = Refad.format.money(salaries);
-        document.getElementById('statDevice').textContent = Refad.format.number(device);
+        document.getElementById('statTotal').textContent = fmtNumber(total);
+        document.getElementById('statTotalSub').textContent = active + ' نشط';
+
+        document.getElementById('statActive').textContent = fmtNumber(active);
+        document.getElementById('statActiveSub').textContent = total > 0
+          ? Math.round((active / total) * 100) + '%'
+          : '—';
+
+        document.getElementById('statLocked').textContent = fmtNumber(locked);
+        document.getElementById('statDevice').textContent = fmtNumber(device);
+        document.getElementById('statSalaries').textContent = fmtMoney(totalSalaries);
+        document.getElementById('statSalariesSub').textContent = active + ' موظف';
+        document.getElementById('statAvg').textContent = fmtMoney(avgSalary);
       }
 
       // ============================================================
-      // 7) Filters + Pagination
+      // 8) Apply Filters
       // ============================================================
       function applyFilters() {
         const q = state.search.toLowerCase().trim();
-        state.filtered = state.all.filter(e => {
-          if (state.filterStatus === 'active' && !e.is_active) return false;
-          if (state.filterStatus === 'inactive' && e.is_active) return false;
-          if (state.filterStatus === 'locked' && !isLocked(e)) return false;
-          if (state.filterRole && String(e.roles?.id) !== String(state.filterRole)) return false;
-          if (!q) return true;
-          return (
-            (e.full_name || '').toLowerCase().includes(q) ||
-            (e.username || '').toLowerCase().includes(q) ||
-            (e.phone || '').toLowerCase().includes(q) ||
-            (e.email || '').toLowerCase().includes(q)
-          );
-        });
+        let list = state.all.slice();
+
+        if (state.filterStatus === 'active') {
+          list = list.filter(function (e) { return e.is_active !== false && !isLocked(e); });
+        } else if (state.filterStatus === 'inactive') {
+          list = list.filter(function (e) { return e.is_active === false; });
+        } else if (state.filterStatus === 'locked') {
+          list = list.filter(function (e) { return isLocked(e); });
+        }
+
+        if (state.filterRole) {
+          list = list.filter(function (e) {
+            return String(e.roles && e.roles.id) === String(state.filterRole);
+          });
+        }
+
+        if (state.filterDevice === 'has') {
+          list = list.filter(function (e) { return e.has_device !== false; });
+        } else if (state.filterDevice === 'no') {
+          list = list.filter(function (e) { return e.has_device === false; });
+        }
+
+        if (q) {
+          list = list.filter(function (e) {
+            return (e.full_name || '').toLowerCase().includes(q) ||
+                   (e.username || '').toLowerCase().includes(q) ||
+                   (e.phone || '').toLowerCase().includes(q) ||
+                   (e.email || '').toLowerCase().includes(q);
+          });
+        }
+
+        switch (state.sortBy) {
+          case 'salary_desc':
+            list.sort(function (a, b) { return toNum(b.salary) - toNum(a.salary); });
+            break;
+          case 'salary_asc':
+            list.sort(function (a, b) { return toNum(a.salary) - toNum(b.salary); });
+            break;
+          case 'hire_desc':
+            list.sort(function (a, b) {
+              return String(b.hire_date || b.created_at || '').localeCompare(String(a.hire_date || a.created_at || ''));
+            });
+            break;
+          case 'hire_asc':
+            list.sort(function (a, b) {
+              return String(a.hire_date || a.created_at || '').localeCompare(String(b.hire_date || b.created_at || ''));
+            });
+            break;
+          default:
+            list.sort(function (a, b) {
+              return String(a.full_name || '').localeCompare(String(b.full_name || ''), 'ar');
+            });
+        }
+
+        state.filtered = list;
         state.page = 1;
-        renderTable();
+
+        if (state.viewMode === 'table') renderTable();
+        else renderCards();
       }
 
-      function renderSkeleton() {
-        const tbody = document.getElementById('tableBody');
-        tbody.innerHTML = Array(6).fill(0).map(() => `
-          <tr class="skeleton-row">
-            <td><div class="skeleton-bar" style="width:60%"></div></td>
-            <td><div class="skeleton-bar" style="width:80px"></div></td>
-            <td><div class="skeleton-bar" style="width:90px"></div></td>
-            <td><div class="skeleton-bar" style="width:80px"></div></td>
-            <td><div class="skeleton-bar" style="width:70px"></div></td>
-            <td><div class="skeleton-bar" style="width:70px"></div></td>
-            <td><div class="skeleton-bar" style="width:100px"></div></td>
-          </tr>
-        `).join('');
-      }
-
+      // ============================================================
+      // 9) Render Table
+      // ============================================================
       function renderTable() {
         const tbody = document.getElementById('tableBody');
         const pag = Refad.paginate(state.filtered, state.page, state.perPage);
@@ -1308,95 +1623,121 @@
         if (state.filtered.length === 0) {
           const msg = state.all.length === 0
             ? 'لا يوجد موظفين بعد. ابدأ بإضافة موظف جديد.'
-            : 'لا توجد نتائج مطابقة.';
-          tbody.innerHTML = `
-            <tr class="empty-row">
-              <td colspan="7">
-                <i data-lucide="user-cog"></i>
-                <p>${msg}</p>
-              </td>
-            </tr>
-          `;
+            : 'لا توجد نتائج مطابقة. جرّب تعديل الفلاتر.';
+          tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state">' +
+            '<i data-lucide="user-cog"></i>' +
+            '<h3>' + (state.all.length === 0 ? 'لا يوجد موظفين' : 'لا توجد نتائج') + '</h3>' +
+            '<p>' + msg + '</p>' +
+            '</div></td></tr>';
           if (window.lucide) lucide.createIcons();
           renderPagination(pag);
           return;
         }
 
-        tbody.innerHTML = pag.data.map(e => {
-          const initial = (e.full_name || '؟').trim().charAt(0);
-          const isAdmin = e.roles?.name === 'admin';
-          const roleName = e.roles?.name_ar || e.roles?.name || 'بدون دور';
-
-          // Locked?
+        tbody.innerHTML = pag.data.map(function (e) {
+          const initial = esc((e.full_name || '؟').trim().charAt(0));
+          const isAdmin = e.roles && e.roles.name === 'admin';
+          const roleName = (e.roles && (e.roles.name_ar || e.roles.name)) || 'بدون دور';
           const locked = isLocked(e);
+          const isActive = e.is_active !== false;
 
-          // Status
-          let statusTag;
-          if (!e.is_active) {
-            statusTag = '<span class="badge-tag gray">غير نشط</span>';
+          let statusHtml;
+          if (!isActive) {
+            statusHtml = '<span class="status-pill inactive"><i data-lucide="x-circle" style="width:11px;height:11px;"></i> غير نشط</span>';
           } else if (locked) {
-            statusTag = '<span class="badge-tag red">مقفل</span>';
+            statusHtml = '<span class="status-pill locked"><i data-lucide="lock" style="width:11px;height:11px;"></i> مقفل</span>';
           } else {
-            statusTag = '<span class="badge-tag green">نشط</span>';
+            statusHtml = '<span class="status-pill active"><i data-lucide="check-circle" style="width:11px;height:11px;"></i> نشط</span>';
           }
 
-          // Password display
           const passwordDisplay = state.showPasswords
-            ? Refad.escapeHtml(e.password || '—')
+            ? esc(e.password || '—')
             : '<span class="password-hidden">••••••••</span>';
 
-          return `
-            <tr>
-              <td>
-                <div class="emp-cell">
-                  <div class="emp-avatar">
-                    ${e.avatar_url ? `<img src="${Refad.escapeHtml(e.avatar_url)}" alt="">` : Refad.escapeHtml(initial)}
-                    ${locked ? `<span class="lock-badge"><i data-lucide="lock"></i></span>` : ''}
-                  </div>
-                  <div>
-                    <div class="emp-name">${Refad.escapeHtml(e.full_name)}</div>
-                    ${e.phone ? `<div class="emp-sub">${Refad.escapeHtml(e.phone)}</div>` : ''}
-                  </div>
-                </div>
-              </td>
-              <td>
-                <span style="font-family:monospace;font-weight:700;">${Refad.escapeHtml(e.username)}</span>
-                ${!e.has_device ? `<div style="font-size:10px;color:var(--text-muted);margin-top:2px;">بدون جهاز</div>` : ''}
-              </td>
-              <td>
-                <span class="password-cell" data-password="${Refad.escapeHtml(e.password || '')}">
-                  ${passwordDisplay}
-                </span>
-              </td>
-              <td>
-                <span class="role-badge ${isAdmin ? 'admin' : ''}">
-                  <i data-lucide="${isAdmin ? 'shield' : 'user'}" style="width:11px;height:11px;"></i>
-                  ${Refad.escapeHtml(roleName)}
-                </span>
-              </td>
-              <td class="salary-cell">${Refad.format.money(e.salary || 0)}</td>
-              <td>${statusTag}</td>
-              <td>
-                <div class="actions-cell">
-                  ${locked ? `<button class="action-btn warning" data-action="unlock" data-id="${e.id}" title="فتح القفل"><i data-lucide="unlock"></i></button>` : ''}
-                  ${canEdit ? `<button class="action-btn" data-action="edit" data-id="${e.id}" title="تعديل"><i data-lucide="pencil"></i></button>` : ''}
-                  ${e.username !== 'admin' && canEdit ? `<button class="action-btn danger" data-action="delete" data-id="${e.id}" title="حذف"><i data-lucide="trash-2"></i></button>` : ''}
-                </div>
-              </td>
-            </tr>
-          `;
+          const deviceHtml = e.has_device !== false
+            ? '<span class="device-badge has"><i data-lucide="smartphone" style="width:10px;height:10px;"></i> بجهاز</span>'
+            : '<span class="device-badge no"><i data-lucide="smartphone" style="width:10px;height:10px;"></i> بدون</span>';
+
+          return '<tr data-id="' + e.id + '" tabindex="0">' +
+            '<td>' +
+              '<div class="emp-cell">' +
+                '<div class="emp-avatar">' +
+                  (e.avatar_url ? '<img src="' + esc(e.avatar_url) + '" alt="">' : initial) +
+                  (locked ? '<span class="lock-badge"><i data-lucide="lock"></i></span>' : '') +
+                '</div>' +
+                '<div class="emp-info">' +
+                  '<div class="name">' + esc(e.full_name) + '</div>' +
+                  (e.phone ? '<div class="sub">' + esc(e.phone) + '</div>' : '') +
+                '</div>' +
+              '</div>' +
+            '</td>' +
+            '<td><span class="username-tag">' + esc(e.username) + '</span></td>' +
+            '<td>' +
+              '<span class="password-cell" data-password="' + esc(e.password || '') + '" title="اضغط للنسخ">' +
+                passwordDisplay +
+              '</span>' +
+            '</td>' +
+            '<td>' +
+              '<span class="role-badge ' + (isAdmin ? 'admin' : '') + '">' +
+                '<i data-lucide="' + (isAdmin ? 'shield' : 'user') + '" style="width:11px;height:11px;"></i> ' +
+                esc(roleName) +
+              '</span>' +
+            '</td>' +
+            '<td class="money">' + fmtMoney(e.salary || 0) + '</td>' +
+            '<td>' + deviceHtml + '</td>' +
+            '<td>' + statusHtml + '</td>' +
+            '<td>' +
+              (locked && canEdit ?
+                '<button class="action-btn warning" data-action="unlock" data-id="' + e.id + '" title="فتح القفل">' +
+                  '<i data-lucide="unlock"></i>' +
+                '</button>'
+              : '') +
+              '<button class="action-btn" data-action="view" data-id="' + e.id + '" title="تفاصيل">' +
+                '<i data-lucide="eye"></i>' +
+              '</button>' +
+              (canEdit ?
+                '<button class="action-btn" data-action="edit" data-id="' + e.id + '" title="تعديل">' +
+                  '<i data-lucide="edit"></i>' +
+                '</button>'
+              : '') +
+              (canDelete && e.username !== 'admin' ?
+                '<button class="action-btn danger" data-action="delete" data-id="' + e.id + '" title="حذف">' +
+                  '<i data-lucide="trash-2"></i>' +
+                '</button>'
+              : '') +
+            '</td>' +
+          '</tr>';
         }).join('');
 
         if (window.lucide) lucide.createIcons();
 
-        // Password reveal on click
-        tbody.querySelectorAll('.password-cell').forEach(cell => {
-          cell.addEventListener('click', () => {
+        tbody.querySelectorAll('tr[data-id]').forEach(function (tr) {
+          tr.addEventListener('click', function (e) {
+            if (e.target.closest('[data-action]') || e.target.closest('a') || e.target.closest('.password-cell')) return;
+            openDetails(parseInt(tr.dataset.id, 10));
+          });
+        });
+
+        tbody.querySelectorAll('[data-action]').forEach(function (btn) {
+          btn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            const id = parseInt(btn.dataset.id, 10);
+            const action = btn.dataset.action;
+            if (action === 'view') openDetails(id);
+            else if (action === 'edit') openEdit(id);
+            else if (action === 'delete') deleteEmployee(id);
+            else if (action === 'unlock') unlockUser(id);
+          });
+        });
+
+        tbody.querySelectorAll('.password-cell').forEach(function (cell) {
+          cell.addEventListener('click', function (e) {
+            e.stopPropagation();
             const pwd = cell.dataset.password;
             if (!pwd) return;
-            navigator.clipboard.writeText(pwd).then(() => {
-              Refad.toast.success('تم نسخ كلمة المرور');
-            }).catch(() => {
+            navigator.clipboard.writeText(pwd).then(function () {
+              Refad.toast.success('🔑 تم نسخ كلمة المرور');
+            }).catch(function () {
               Refad.toast.info('كلمة المرور: ' + pwd);
             });
           });
@@ -1405,9 +1746,104 @@
         renderPagination(pag);
       }
 
+      // ============================================================
+      // 10) Render Cards
+      // ============================================================
+      function renderCards() {
+        const grid = document.getElementById('cardsView');
+        const list = state.filtered;
+
+        if (!list.length) {
+          grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;">' +
+            '<i data-lucide="user-cog"></i>' +
+            '<h3>' + (state.all.length === 0 ? 'لا يوجد موظفين' : 'لا توجد نتائج') + '</h3>' +
+            '<p>' + (state.all.length === 0 ? 'ابدأ بإضافة موظف جديد' : 'جرّب تعديل الفلاتر') + '</p>' +
+            '</div>';
+          if (window.lucide) lucide.createIcons();
+          return;
+        }
+
+        grid.innerHTML = list.map(function (e) {
+          const initial = esc((e.full_name || '؟').trim().charAt(0));
+          const isAdmin = e.roles && e.roles.name === 'admin';
+          const roleName = (e.roles && (e.roles.name_ar || e.roles.name)) || 'بدون دور';
+          const locked = isLocked(e);
+          const isActive = e.is_active !== false;
+
+          let cardClass = '';
+          if (isAdmin) cardClass = 'admin';
+          if (locked) cardClass += ' locked';
+          if (!isActive) cardClass += ' inactive';
+
+          return '<div class="emp-card ' + cardClass + '" data-id="' + e.id + '">' +
+            '<div class="ec-header">' +
+              '<div class="ec-avatar">' +
+                (e.avatar_url ? '<img src="' + esc(e.avatar_url) + '" alt="">' : initial) +
+              '</div>' +
+              '<div class="ec-info">' +
+                '<div class="ec-name">' + esc(e.full_name) + '</div>' +
+                '<div class="ec-sub">@' + esc(e.username) + '</div>' +
+              '</div>' +
+            '</div>' +
+            '<div class="ec-stats">' +
+              '<div class="ec-stat">' +
+                '<div class="lbl">الدور</div>' +
+                '<div class="val">' + esc(roleName) + '</div>' +
+              '</div>' +
+              '<div class="ec-stat">' +
+                '<div class="lbl">الراتب</div>' +
+                '<div class="val money">' + fmtMoney(e.salary || 0) + '</div>' +
+              '</div>' +
+              '<div class="ec-stat">' +
+                '<div class="lbl">الهاتف</div>' +
+                '<div class="val">' + esc(e.phone || '—') + '</div>' +
+              '</div>' +
+              '<div class="ec-stat">' +
+                '<div class="lbl">الحالة</div>' +
+                '<div class="val">' + (locked ? 'مقفل' : (isActive ? 'نشط' : 'موقوف')) + '</div>' +
+              '</div>' +
+            '</div>' +
+            '<div class="ec-actions">' +
+              '<button class="btn btn-outline" data-action="view" data-id="' + e.id + '" onclick="event.stopPropagation();">' +
+                '<i data-lucide="eye"></i> تفاصيل' +
+              '</button>' +
+              (canEdit ?
+                '<button class="btn btn-primary" data-action="edit" data-id="' + e.id + '" onclick="event.stopPropagation();">' +
+                  '<i data-lucide="edit"></i> تعديل' +
+                '</button>'
+              : '') +
+            '</div>' +
+          '</div>';
+        }).join('');
+
+        if (window.lucide) lucide.createIcons();
+
+        grid.querySelectorAll('.emp-card').forEach(function (card) {
+          card.addEventListener('click', function (ev) {
+            if (ev.target.closest('[data-action]')) return;
+            openDetails(parseInt(card.dataset.id, 10));
+          });
+        });
+
+        grid.querySelectorAll('[data-action]').forEach(function (btn) {
+          btn.addEventListener('click', function (ev) {
+            ev.stopPropagation();
+            const id = parseInt(btn.dataset.id, 10);
+            if (btn.dataset.action === 'view') openDetails(id);
+            else if (btn.dataset.action === 'edit') openEdit(id);
+          });
+        });
+      }
+
+      // ============================================================
+      // 11) Pagination
+      // ============================================================
       function renderPagination(pag) {
         const el = document.getElementById('pagination');
-        const { page, pages, total, perPage } = pag;
+        const page = pag.page || 1;
+        const pages = pag.pages || 1;
+        const total = pag.total || 0;
+        const perPage = pag.perPage || state.perPage;
 
         if (total === 0) { el.innerHTML = ''; return; }
 
@@ -1425,21 +1861,22 @@
           pageNums = [page - 2, page - 1, page, page + 1, page + 2];
         }
 
-        el.innerHTML = `
-          <div>عرض ${from} - ${to} من ${total}</div>
-          <div class="controls">
-            <button class="page-btn" data-page="${page - 1}" ${page === 1 ? 'disabled' : ''}>
-              <i data-lucide="chevron-right" style="width:14px;height:14px;"></i>
-            </button>
-            ${pageNums.map(n => `<button class="page-btn ${n === page ? 'active' : ''}" data-page="${n}">${n}</button>`).join('')}
-            <button class="page-btn" data-page="${page + 1}" ${page === pages ? 'disabled' : ''}>
-              <i data-lucide="chevron-left" style="width:14px;height:14px;"></i>
-            </button>
-          </div>
-        `;
+        el.innerHTML =
+          '<div>عرض ' + from + ' - ' + to + ' من ' + total + '</div>' +
+          '<div class="controls">' +
+            '<button class="page-btn" data-page="' + (page - 1) + '" ' + (page === 1 ? 'disabled' : '') + '>' +
+              '<i data-lucide="chevron-right" style="width:14px;height:14px;"></i>' +
+            '</button>' +
+            pageNums.map(function (n) {
+              return '<button class="page-btn ' + (n === page ? 'active' : '') + '" data-page="' + n + '">' + n + '</button>';
+            }).join('') +
+            '<button class="page-btn" data-page="' + (page + 1) + '" ' + (page === pages ? 'disabled' : '') + '>' +
+              '<i data-lucide="chevron-left" style="width:14px;height:14px;"></i>' +
+            '</button>' +
+          '</div>';
 
-        el.querySelectorAll('.page-btn:not(:disabled)').forEach(btn => {
-          btn.addEventListener('click', () => {
+        el.querySelectorAll('.page-btn:not(:disabled)').forEach(function (btn) {
+          btn.addEventListener('click', function () {
             const p = parseInt(btn.dataset.page, 10);
             if (p >= 1 && p <= pages && p !== page) {
               state.page = p;
@@ -1453,57 +1890,113 @@
       }
 
       // ============================================================
-      // 8) Modal: Add/Edit Employee
+      // 12) View Toggle
       // ============================================================
-      function openModal(emp) {
-        state.editingId = emp ? emp.id : null;
-        document.getElementById('modalTitle').textContent = emp ? 'تعديل موظف' : 'موظف جديد';
-        document.getElementById('saveBtnText').textContent = emp ? 'تحديث' : 'حفظ';
-        document.getElementById('modalIcon').setAttribute('data-lucide', emp ? 'user-check' : 'user-plus');
+      function setupViewToggle() {
+        document.querySelectorAll('.view-btn').forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            document.querySelectorAll('.view-btn').forEach(function (b) { b.classList.remove('active'); });
+            btn.classList.add('active');
+            state.viewMode = btn.dataset.view;
+
+            if (state.viewMode === 'table') {
+              document.getElementById('tableView').style.display = 'block';
+              document.getElementById('cardsView').style.display = 'none';
+              renderTable();
+            } else {
+              document.getElementById('tableView').style.display = 'none';
+              document.getElementById('cardsView').style.display = 'grid';
+              renderCards();
+            }
+          });
+        });
+      }
+
+      // ============================================================
+      // 13) Password Toggle (with persist)
+      // ============================================================
+      function setupPasswordToggle() {
+        const btn = document.getElementById('togglePasswordsBtn');
+        const icon = document.getElementById('passToggleIcon');
+        const text = document.getElementById('passToggleText');
+
+        // Initialize from state
+        function refresh() {
+          icon.setAttribute('data-lucide', state.showPasswords ? 'eye-off' : 'eye');
+          text.textContent = state.showPasswords ? 'إخفاء كلمات المرور' : 'إظهار كلمات المرور';
+          btn.classList.toggle('active', state.showPasswords);
+          if (window.lucide) lucide.createIcons();
+        }
+
+        refresh();
+
+        btn.addEventListener('click', function () {
+          state.showPasswords = !state.showPasswords;
+          localStorage.setItem(PASS_VIS_KEY, state.showPasswords ? 'true' : 'false');
+          refresh();
+          if (state.viewMode === 'table') renderTable();
+        });
+      }
+
+      // ============================================================
+      // 14) Modal: Add/Edit
+      // ============================================================
+      function openAdd() {
+        if (!canCreate) { Refad.toast.warning('ليس لديك صلاحية'); return; }
+        state.editingId = null;
+        document.getElementById('modalTitle').textContent = 'موظف جديد';
+        document.getElementById('saveBtnText').textContent = 'إضافة الموظف';
+        document.getElementById('modalIcon').setAttribute('data-lucide', 'user-plus');
 
         const form = document.getElementById('employeeForm');
         form.reset();
-
-        const lockedBanner = document.getElementById('lockedBanner');
-        lockedBanner.style.display = 'none';
-
-        if (emp) {
-          form.full_name.value = emp.full_name || '';
-          form.username.value = emp.username || '';
-          form.password.value = emp.password || '';
-          form.phone.value = emp.phone || '';
-          form.email.value = emp.email || '';
-          form.role_id.value = emp.roles?.id || '';
-          form.salary.value = emp.salary || 0;
-          form.hire_date.value = emp.hire_date || '';
-          form.has_device.checked = emp.has_device !== false;
-          form.is_active.checked = emp.is_active !== false;
-
-          // Show lock banner if locked
-          if (isLocked(emp)) {
-            lockedBanner.style.display = 'flex';
-            document.getElementById('unlockBtn').dataset.id = emp.id;
-          }
-
-          // Disable username change for admin
-          if (emp.username === 'admin') {
-            form.username.disabled = true;
-            form.username.title = 'لا يمكن تغيير اسم المستخدم للمدير';
-          } else {
-            form.username.disabled = false;
-          }
-        } else {
-          form.password.value = '';
-          form.salary.value = '0';
-          form.hire_date.value = Refad.date.today();
-          form.has_device.checked = true;
-          form.is_active.checked = true;
-          form.username.disabled = false;
-        }
+        document.getElementById('ePassword').value = '';
+        document.getElementById('eSalary').value = '0';
+        document.getElementById('eHireDate').value = Refad.date.today();
+        document.getElementById('eHasDevice').checked = true;
+        document.getElementById('eIsActive').value = 'true';
+        document.getElementById('eUsername').disabled = false;
+        document.getElementById('lockedBanner').style.display = 'none';
 
         document.getElementById('employeeModal').classList.add('show');
         if (window.lucide) lucide.createIcons();
-        setTimeout(() => form.full_name.focus(), 100);
+        setTimeout(function () { document.getElementById('eFullName').focus(); }, 150);
+      }
+
+      function openEdit(id) {
+        if (!canEdit) { Refad.toast.warning('ليس لديك صلاحية'); return; }
+        const emp = state.all.find(function (x) { return x.id === id; });
+        if (!emp) return;
+
+        state.editingId = id;
+        document.getElementById('modalTitle').textContent = 'تعديل: ' + emp.full_name;
+        document.getElementById('saveBtnText').textContent = 'حفظ التعديلات';
+        document.getElementById('modalIcon').setAttribute('data-lucide', 'user-check');
+
+        document.getElementById('eFullName').value = emp.full_name || '';
+        document.getElementById('eUsername').value = emp.username || '';
+        document.getElementById('ePassword').value = emp.password || '';
+        document.getElementById('ePhone').value = emp.phone || '';
+        document.getElementById('eEmail').value = emp.email || '';
+        document.getElementById('eRoleId').value = (emp.roles && emp.roles.id) || '';
+        document.getElementById('eSalary').value = emp.salary || 0;
+        document.getElementById('eHireDate').value = emp.hire_date || '';
+        document.getElementById('eHasDevice').checked = emp.has_device !== false;
+        document.getElementById('eIsActive').value = emp.is_active !== false ? 'true' : 'false';
+
+        const lockedBanner = document.getElementById('lockedBanner');
+        if (isLocked(emp)) {
+          lockedBanner.style.display = 'flex';
+          document.getElementById('unlockBtn').dataset.id = emp.id;
+        } else {
+          lockedBanner.style.display = 'none';
+        }
+
+        document.getElementById('eUsername').disabled = (emp.username === 'admin');
+
+        document.getElementById('employeeModal').classList.add('show');
+        if (window.lucide) lucide.createIcons();
+        setTimeout(function () { document.getElementById('eFullName').focus(); }, 150);
       }
 
       function closeModal() {
@@ -1512,67 +2005,63 @@
       }
 
       // ============================================================
-      // 9) Save employee
+      // 15) Save Employee
       // ============================================================
       async function saveEmployee(e) {
         e.preventDefault();
-        const form = e.target;
+
+        const fullName = document.getElementById('eFullName').value.trim();
+        const username = document.getElementById('eUsername').value.trim();
+        const password = document.getElementById('ePassword').value.trim();
+        const phone = document.getElementById('ePhone').value.trim() || null;
+        const email = document.getElementById('eEmail').value.trim() || null;
+        const roleId = parseInt(document.getElementById('eRoleId').value, 10) || null;
+        const salary = toNum(document.getElementById('eSalary').value);
+        const hireDate = document.getElementById('eHireDate').value || null;
+        const hasDevice = document.getElementById('eHasDevice').checked;
+        const isActive = document.getElementById('eIsActive').value === 'true';
+
+        if (!fullName) { Refad.toast.warning('الاسم الكامل مطلوب'); document.getElementById('eFullName').focus(); return; }
+        if (!username) { Refad.toast.warning('اسم المستخدم مطلوب'); document.getElementById('eUsername').focus(); return; }
+        if (!password) { Refad.toast.warning('كلمة المرور مطلوبة'); document.getElementById('ePassword').focus(); return; }
+        if (password.length < 4) { Refad.toast.warning('كلمة المرور 4 أحرف على الأقل'); return; }
+        if (!roleId) { Refad.toast.warning('اختر الدور'); document.getElementById('eRoleId').focus(); return; }
+
         const btn = document.getElementById('saveBtn');
-        const originalText = document.getElementById('saveBtnText').textContent;
-
-        const payload = {
-          company_id: session.company_id,
-          full_name: form.full_name.value.trim(),
-          username: form.username.value.trim(),
-          password: form.password.value.trim(),
-          phone: form.phone.value.trim() || null,
-          email: form.email.value.trim() || null,
-          role_id: parseInt(form.role_id.value, 10) || null,
-          salary: Refad.toNum(form.salary.value),
-          hire_date: form.hire_date.value || null,
-          has_device: form.has_device.checked,
-          is_active: form.is_active.checked
-        };
-
-        // Validate
-        if (!payload.full_name || !payload.username || !payload.password) {
-          Refad.toast.warning('الاسم، اسم المستخدم، وكلمة المرور مطلوبة');
-          return;
-        }
-        if (payload.password.length < 4) {
-          Refad.toast.warning('كلمة المرور 4 أحرف على الأقل');
-          return;
-        }
-        if (!payload.role_id) {
-          Refad.toast.warning('يجب اختيار الدور');
-          return;
-        }
-
         btn.disabled = true;
+        const originalText = document.getElementById('saveBtnText').textContent;
         document.getElementById('saveBtnText').textContent = 'جارٍ الحفظ...';
 
         try {
+          const payload = {
+            company_id: session.company_id,
+            full_name: fullName,
+            username: username,
+            password: password,
+            phone: phone,
+            email: email,
+            role_id: roleId,
+            salary: salary,
+            hire_date: hireDate,
+            has_device: hasDevice,
+            is_active: isActive
+          };
+
+          const existing = await Refad.db.selectOne('users', {
+            eq: { username: username }
+          }).catch(function () { return null; });
+
           if (state.editingId) {
-            // Check username uniqueness (if changed)
-            const existing = await Refad.db.selectOne('users', {
-              eq: { username: payload.username }
-            }).catch(() => null);
             if (existing && existing.id !== state.editingId) {
               throw new Error('اسم المستخدم مستخدم بالفعل');
             }
-
             await Refad.db.update('users', state.editingId, payload);
-            await Refad.logActivity('update_employee', 'employees', `تعديل موظف: ${payload.username}`, state.editingId);
+            await Refad.logActivity('update_employee', 'employees', 'تعديل موظف: ' + username, state.editingId);
             Refad.toast.success('تم تحديث الموظف');
           } else {
-            // Check username uniqueness
-            const existing = await Refad.db.selectOne('users', {
-              eq: { username: payload.username }
-            });
             if (existing) throw new Error('اسم المستخدم مستخدم بالفعل');
-
             const created = await Refad.db.insert('users', payload);
-            await Refad.logActivity('create_employee', 'employees', `إضافة موظف: ${payload.username}`, created.id);
+            await Refad.logActivity('create_employee', 'employees', 'إضافة موظف: ' + username, created.id);
             Refad.toast.success('تم إضافة الموظف');
           }
 
@@ -1588,28 +2077,37 @@
       }
 
       // ============================================================
-      // 10) Delete employee
+      // 16) Delete
       // ============================================================
-      async function deleteEmployee(id, name) {
+      async function deleteEmployee(id) {
+        const emp = state.all.find(function (x) { return x.id === id; });
+        if (!emp) return;
+
+        if (emp.username === 'admin') {
+          Refad.toast.error('لا يمكن حذف حساب المدير');
+          return;
+        }
+
         const ok = await Refad.alert.confirm(
           'حذف الموظف',
-          `هل أنت متأكد من حذف "${name}"؟ لا يمكن التراجع.`,
+          'سيتم حذف "' + emp.full_name + '" نهائياً. متابعة؟',
           'حذف'
         );
         if (!ok) return;
 
         try {
           await Refad.db.remove('users', id);
-          await Refad.logActivity('delete_employee', 'employees', `حذف موظف: ${name}`, id);
+          await Refad.logActivity('delete_employee', 'employees', 'حذف موظف: ' + emp.username, id);
           Refad.toast.success('تم الحذف');
           await loadEmployees(true);
         } catch (err) {
+          console.error('[Employees] delete failed:', err);
           Refad.toast.error('فشل الحذف: ' + err.message);
         }
       }
 
       // ============================================================
-      // 11) Unlock user
+      // 17) Unlock
       // ============================================================
       async function unlockUser(id) {
         try {
@@ -1619,6 +2117,7 @@
           });
           await Refad.logActivity('unlock_user', 'employees', 'فتح قفل مستخدم', id);
           Refad.toast.success('تم فتح القفل');
+          document.getElementById('lockedBanner').style.display = 'none';
           await loadEmployees(true);
         } catch (e) {
           Refad.toast.error('فشل فتح القفل: ' + e.message);
@@ -1626,52 +2125,340 @@
       }
 
       // ============================================================
-      // 12) Events
+      // 18) Open Details
+      // ============================================================
+      function openDetails(id) {
+        const emp = state.all.find(function (x) { return x.id === id; });
+        if (!emp) return;
+
+        state.currentDetailsId = id;
+        const initial = esc((emp.full_name || '؟').charAt(0));
+        const isAdmin = emp.roles && emp.roles.name === 'admin';
+        const roleName = (emp.roles && (emp.roles.name_ar || emp.roles.name)) || 'بدون دور';
+        const locked = isLocked(emp);
+        const isActive = emp.is_active !== false;
+
+        document.getElementById('detailsModalBody').innerHTML =
+          '<div class="detail-hero">' +
+            '<div class="detail-hero-avatar">' +
+              (emp.avatar_url ? '<img src="' + esc(emp.avatar_url) + '" alt="">' : initial) +
+            '</div>' +
+            '<div class="detail-hero-info">' +
+              '<div class="detail-hero-name">' + esc(emp.full_name) + '</div>' +
+              '<div class="detail-hero-sub">' +
+                (isAdmin ? '🛡️ مدير النظام' : esc(roleName)) +
+                ' • @' + esc(emp.username) +
+              '</div>' +
+            '</div>' +
+            '<span class="status-pill ' + (locked ? 'locked' : (isActive ? 'active' : 'inactive')) + '">' +
+              (locked ? 'مقفل' : (isActive ? 'نشط' : 'غير نشط')) +
+            '</span>' +
+          '</div>' +
+
+          '<div class="detail-grid">' +
+            '<div class="detail-item">' +
+              '<div class="lbl"><i data-lucide="user"></i> اسم المستخدم</div>' +
+              '<div class="val mono accent">' + esc(emp.username) + '</div>' +
+            '</div>' +
+            '<div class="detail-item">' +
+              '<div class="lbl"><i data-lucide="key"></i> كلمة المرور</div>' +
+              '<div class="val mono">' + esc(emp.password || '—') + '</div>' +
+            '</div>' +
+            '<div class="detail-item">' +
+              '<div class="lbl"><i data-lucide="phone"></i> الهاتف</div>' +
+              '<div class="val">' + esc(emp.phone || '—') + '</div>' +
+            '</div>' +
+            '<div class="detail-item">' +
+              '<div class="lbl"><i data-lucide="mail"></i> البريد</div>' +
+              '<div class="val">' + esc(emp.email || '—') + '</div>' +
+            '</div>' +
+            '<div class="detail-item">' +
+              '<div class="lbl"><i data-lucide="shield"></i> الدور</div>' +
+              '<div class="val">' + esc(roleName) + '</div>' +
+            '</div>' +
+            '<div class="detail-item">' +
+              '<div class="lbl"><i data-lucide="wallet"></i> الراتب</div>' +
+              '<div class="val success">' + fmtMoney(emp.salary || 0) + '</div>' +
+            '</div>' +
+            '<div class="detail-item">' +
+              '<div class="lbl"><i data-lucide="calendar"></i> تاريخ التعيين</div>' +
+              '<div class="val">' + (emp.hire_date ? Refad.format.date(emp.hire_date) : '—') + '</div>' +
+            '</div>' +
+            '<div class="detail-item">' +
+              '<div class="lbl"><i data-lucide="smartphone"></i> الجهاز</div>' +
+              '<div class="val">' + (emp.has_device !== false ? 'مرتبط بجهاز' : 'بدون جهاز') + '</div>' +
+            '</div>' +
+            '<div class="detail-item">' +
+              '<div class="lbl"><i data-lucide="log-in"></i> آخر دخول</div>' +
+              '<div class="val">' + (emp.last_login ? Refad.format.datetime(emp.last_login) : 'لم يسجّل بعد') + '</div>' +
+            '</div>' +
+          '</div>';
+
+        document.getElementById('detailsModal').classList.add('show');
+        document.getElementById('editFromDetailsBtn').onclick = function () {
+          document.getElementById('detailsModal').classList.remove('show');
+          setTimeout(function () { openEdit(id); }, 200);
+        };
+        if (window.lucide) lucide.createIcons();
+      }
+
+      // ============================================================
+      // 19) Print Employee
+      // ============================================================
+      function printEmployee() {
+        const id = state.currentDetailsId;
+        if (!id) return;
+        const emp = state.all.find(function (x) { return x.id === id; });
+        if (!emp) return;
+
+        const roleName = (emp.roles && (emp.roles.name_ar || emp.roles.name)) || '—';
+
+        if (Refad.Print && Refad.Print.html) {
+          Refad.Print.html(
+            '<div style="text-align:center;margin-bottom:20px;">' +
+              '<h1 style="color:#0B2C4D;font-size:22px;">بطاقة بيانات موظف</h1>' +
+              '<div style="color:#64748b;font-size:13px;margin-top:4px;">' +
+                Refad.format.date(new Date()) +
+              '</div>' +
+            '</div>' +
+            '<div style="border:2px solid #0B2C4D;border-radius:12px;padding:20px;">' +
+              '<div style="text-align:center;margin-bottom:20px;padding-bottom:16px;border-bottom:1px dashed #e2e8f0;">' +
+                '<div style="width:80px;height:80px;margin:0 auto 12px;background:linear-gradient(135deg,#0B2C4D,#14B8A6);border-radius:20px;display:flex;align-items:center;justify-content:center;color:white;font-weight:800;font-size:32px;">' +
+                  esc((emp.full_name || '؟').charAt(0)) +
+                '</div>' +
+                '<div style="font-size:22px;font-weight:800;color:#0B2C4D;">' + esc(emp.full_name) + '</div>' +
+                '<div style="font-size:13px;color:#64748b;margin-top:4px;">' + esc(roleName) + '</div>' +
+              '</div>' +
+              '<table style="width:100%;font-size:14px;">' +
+                '<tr><td style="padding:8px 0;color:#64748b;width:150px;">اسم المستخدم:</td><td style="padding:8px 0;font-weight:700;font-family:monospace;">' + esc(emp.username) + '</td></tr>' +
+                '<tr><td style="padding:8px 0;color:#64748b;">كلمة المرور:</td><td style="padding:8px 0;font-weight:700;font-family:monospace;">' + esc(emp.password || '—') + '</td></tr>' +
+                '<tr><td style="padding:8px 0;color:#64748b;">الهاتف:</td><td style="padding:8px 0;font-weight:700;">' + esc(emp.phone || '—') + '</td></tr>' +
+                '<tr><td style="padding:8px 0;color:#64748b;">البريد:</td><td style="padding:8px 0;font-weight:700;">' + esc(emp.email || '—') + '</td></tr>' +
+                '<tr><td style="padding:8px 0;color:#64748b;">الراتب:</td><td style="padding:8px 0;font-weight:700;color:#10b981;">' + fmtMoney(emp.salary || 0) + '</td></tr>' +
+                '<tr><td style="padding:8px 0;color:#64748b;">تاريخ التعيين:</td><td style="padding:8px 0;font-weight:700;">' + (emp.hire_date ? Refad.format.date(emp.hire_date) : '—') + '</td></tr>' +
+              '</table>' +
+            '</div>',
+            { title: 'بطاقة موظف - ' + emp.full_name }
+          );
+        } else {
+          Refad.toast.warning('مكتبة الطباعة غير متوفرة');
+        }
+      }
+
+      // ============================================================
+      // 20) Export Excel
+      // ============================================================
+      function exportExcel() {
+        const list = state.filtered.length ? state.filtered : state.all;
+        if (!list.length) { Refad.toast.warning('لا توجد بيانات'); return; }
+
+        if (typeof XLSX === 'undefined') {
+          Refad.toast.error('مكتبة Excel غير محمّلة');
+          return;
+        }
+
+        const data = list.map(function (e, i) {
+          return {
+            '#': i + 1,
+            'الاسم': e.full_name,
+            'اسم المستخدم': e.username,
+            'كلمة المرور': e.password || '',
+            'الهاتف': e.phone || '',
+            'البريد': e.email || '',
+            'الدور': (e.roles && (e.roles.name_ar || e.roles.name)) || '',
+            'الراتب': toNum(e.salary),
+            'تاريخ التعيين': e.hire_date || '',
+            'بجهاز': e.has_device !== false ? 'نعم' : 'لا',
+            'الحالة': e.is_active !== false ? 'نشط' : 'غير نشط',
+            'مقفل': isLocked(e) ? 'نعم' : 'لا'
+          };
+        });
+
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'الموظفين');
+        XLSX.writeFile(wb, 'employees-' + Refad.date.today() + '.xlsx');
+        Refad.toast.success('تم التصدير');
+      }
+
+      // ============================================================
+      // 21) Quick Search
+      // ============================================================
+      function openQuickSearch() {
+        const overlay = document.getElementById('quickSearchOverlay');
+        overlay.classList.add('show');
+        const input = document.getElementById('quickSearchInput');
+        input.value = '';
+        input.focus();
+        state.quickSearchIndex = -1;
+        state.quickSearchResults = [];
+        renderQuickSearchResults('');
+      }
+
+      function closeQuickSearch() {
+        document.getElementById('quickSearchOverlay').classList.remove('show');
+      }
+
+      function renderQuickSearchResults(query) {
+        const container = document.getElementById('quickSearchResults');
+        const q = (query || '').toLowerCase().trim();
+
+        if (!q) {
+          container.innerHTML = '<div class="quick-search-empty">اكتب للبحث السريع...</div>';
+          state.quickSearchResults = [];
+          return;
+        }
+
+        const results = state.all.filter(e =>
+          (e.full_name || '').toLowerCase().includes(q) ||
+          (e.username || '').toLowerCase().includes(q) ||
+          (e.phone || '').toLowerCase().includes(q) ||
+          (e.email || '').toLowerCase().includes(q)
+        ).slice(0, 10).map(e => ({
+          type: 'employee',
+          id: e.id,
+          name: e.full_name,
+          sub: `@${e.username} • ${fmtMoney(e.salary || 0)}${e.phone ? ' • ' + e.phone : ''}`,
+          initial: (e.full_name || '?').charAt(0)
+        }));
+
+        state.quickSearchResults = results;
+        state.quickSearchIndex = results.length ? 0 : -1;
+
+        if (!results.length) {
+          container.innerHTML = '<div class="quick-search-empty">لا توجد نتائج</div>';
+          return;
+        }
+
+        container.innerHTML = results.map((r, i) => `
+          <div class="quick-search-item ${i === 0 ? 'selected' : ''}" data-idx="${i}">
+            <div class="qs-icon">${esc(r.initial)}</div>
+            <div class="qs-body">
+              <div class="qs-name">${esc(r.name)}</div>
+              <div class="qs-sub">${esc(r.sub)}</div>
+            </div>
+            <i data-lucide="arrow-left" style="width:16px;height:16px;color:var(--text-muted);"></i>
+          </div>
+        `).join('');
+
+        if (window.lucide) lucide.createIcons();
+
+        container.querySelectorAll('.quick-search-item').forEach(el => {
+          el.addEventListener('click', () => {
+            const idx = Number(el.dataset.idx);
+            navigateQuickSearch(idx);
+          });
+        });
+      }
+
+      function navigateQuickSearch(idx) {
+        const r = state.quickSearchResults[idx];
+        if (!r) return;
+        closeQuickSearch();
+        openDetails(r.id);
+      }
+
+      function updateQuickSearchSelection() {
+        const container = document.getElementById('quickSearchResults');
+        container.querySelectorAll('.quick-search-item').forEach((el, i) => {
+          el.classList.toggle('selected', i === state.quickSearchIndex);
+        });
+        const selected = container.querySelector('.quick-search-item.selected');
+        if (selected) selected.scrollIntoView({ block: 'nearest' });
+      }
+
+      function setupQuickSearch() {
+        const overlay = document.getElementById('quickSearchOverlay');
+        const input = document.getElementById('quickSearchInput');
+
+        overlay.addEventListener('click', e => {
+          if (e.target === overlay) closeQuickSearch();
+        });
+
+        input.addEventListener('input', e => renderQuickSearchResults(e.target.value));
+
+        input.addEventListener('keydown', e => {
+          if (e.key === 'Escape') {
+            e.preventDefault();
+            closeQuickSearch();
+          } else if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            if (state.quickSearchResults.length) {
+              state.quickSearchIndex = Math.min(state.quickSearchIndex + 1, state.quickSearchResults.length - 1);
+              updateQuickSearchSelection();
+            }
+          } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            if (state.quickSearchResults.length) {
+              state.quickSearchIndex = Math.max(state.quickSearchIndex - 1, 0);
+              updateQuickSearchSelection();
+            }
+          } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (state.quickSearchIndex >= 0) navigateQuickSearch(state.quickSearchIndex);
+            else if (state.quickSearchResults.length) navigateQuickSearch(0);
+          }
+        });
+      }
+
+      // ============================================================
+      // 22) Bind Events
       // ============================================================
       function bindEvents() {
-        // Search
-        const searchHandler = Refad.debounce(v => {
-          state.search = v;
-          applyFilters();
-        }, 250);
-        document.getElementById('searchInput').addEventListener('input', e => searchHandler(e.target.value));
+        document.getElementById('addBtn').addEventListener('click', openAdd);
+        document.getElementById('refreshBtn').addEventListener('click', async function () {
+          Refad.toast.info('جارٍ التحديث...');
+          await loadEmployees(true);
+          Refad.toast.success('تم التحديث');
+        });
+        document.getElementById('exportBtn').addEventListener('click', exportExcel);
 
-        // Filters
-        document.getElementById('filterStatus').addEventListener('change', e => {
+        document.getElementById('employeeForm').addEventListener('submit', saveEmployee);
+
+        document.getElementById('searchInput').addEventListener('input', Refad.debounce(function (e) {
+          state.search = e.target.value.trim();
+          applyFilters();
+        }, 200));
+
+        document.getElementById('filterStatus').addEventListener('change', function (e) {
           state.filterStatus = e.target.value;
           applyFilters();
         });
-        document.getElementById('filterRole').addEventListener('change', e => {
+        document.getElementById('filterRole').addEventListener('change', function (e) {
           state.filterRole = e.target.value;
           applyFilters();
         });
-
-        // Add
-        if (canCreate) {
-          document.getElementById('addBtn').addEventListener('click', () => openModal(null));
-        } else {
-          const b = document.getElementById('addBtn');
-          b.disabled = true;
-          b.title = 'ليس لديك صلاحية';
-        }
-
-        // Modal close
-        document.querySelectorAll('[data-close]').forEach(b => {
-          b.addEventListener('click', closeModal);
+        document.getElementById('filterDevice').addEventListener('change', function (e) {
+          state.filterDevice = e.target.value;
+          applyFilters();
         });
-        document.getElementById('employeeModal').addEventListener('click', e => {
-          if (e.target.id === 'employeeModal') closeModal();
-        });
-        document.addEventListener('keydown', e => {
-          if (e.key === 'Escape') closeModal();
+        document.getElementById('sortBy').addEventListener('change', function (e) {
+          state.sortBy = e.target.value;
+          applyFilters();
         });
 
-        // Form submit
-        document.getElementById('employeeForm').addEventListener('submit', saveEmployee);
+        // Stat cards click → filter
+        document.querySelectorAll('.stat-card').forEach(card => {
+          card.addEventListener('click', () => {
+            const filter = card.dataset.statFilter;
+            if (!filter) return;
+            document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
+            card.classList.add('active');
+
+            state.filterStatus = '';
+            document.getElementById('filterStatus').value = '';
+
+            if (filter === 'active' || filter === 'locked') {
+              state.filterStatus = filter;
+              document.getElementById('filterStatus').value = filter;
+            }
+            applyFilters();
+          });
+        });
 
         // Toggle password visibility in form
-        document.getElementById('togglePassword').addEventListener('click', () => {
-          const input = document.querySelector('#employeeForm [name="password"]');
+        document.getElementById('togglePassword').addEventListener('click', function () {
+          const input = document.getElementById('ePassword');
           const icon = document.getElementById('eyeIcon');
           const isPwd = input.type === 'password';
           input.type = isPwd ? 'text' : 'password';
@@ -1679,69 +2466,65 @@
           if (window.lucide) lucide.createIcons();
         });
 
-        // Unlock from banner
-        document.getElementById('unlockBtn').addEventListener('click', async () => {
-          const id = parseInt(document.getElementById('unlockBtn').dataset.id, 10);
+        document.getElementById('unlockBtn').addEventListener('click', async function () {
+          const id = parseInt(this.dataset.id, 10);
           if (!id) return;
           await unlockUser(id);
-          document.getElementById('lockedBanner').style.display = 'none';
         });
 
-        // Table actions
-        document.getElementById('tableBody').addEventListener('click', e => {
-          const btn = e.target.closest('[data-action]');
-          if (!btn) return;
-          const action = btn.dataset.action;
-          const id = parseInt(btn.dataset.id, 10);
-          const emp = state.all.find(x => x.id === id);
-          if (!emp) return;
+        document.getElementById('printEmpBtn').addEventListener('click', printEmployee);
 
-          if (action === 'edit') openModal(emp);
-          else if (action === 'delete') deleteEmployee(id, emp.full_name);
-          else if (action === 'unlock') unlockUser(id);
+        document.querySelectorAll('[data-close]').forEach(function (b) {
+          b.addEventListener('click', function () {
+            document.querySelectorAll('.modal-backdrop').forEach(function (m) { m.classList.remove('show'); });
+          });
         });
 
-        // Export
-        document.getElementById('exportBtn').addEventListener('click', () => {
-          if (!state.filtered.length) {
-            Refad.toast.warning('لا توجد بيانات للتصدير');
-            return;
+        document.querySelectorAll('.modal-backdrop').forEach(function (m) {
+          m.addEventListener('click', function (e) {
+            if (e.target === m) m.classList.remove('show');
+          });
+        });
+
+        document.addEventListener('keydown', function (e) {
+          if (e.key === 'Escape') {
+            if (document.getElementById('quickSearchOverlay').classList.contains('show')) {
+              closeQuickSearch();
+              return;
+            }
+            document.querySelectorAll('.modal-backdrop').forEach(function (m) { m.classList.remove('show'); });
           }
-          const rows = state.filtered.map(e => ({
-            'الاسم': e.full_name,
-            'اسم المستخدم': e.username,
-            'كلمة المرور': e.password || '',
-            'الهاتف': e.phone || '',
-            'البريد': e.email || '',
-            'الدور': e.roles?.name_ar || e.roles?.name || '',
-            'الراتب': e.salary || 0,
-            'الحالة': e.is_active ? 'نشط' : 'غير نشط',
-            'بجهاز': e.has_device ? 'نعم' : 'لا'
-          }));
-          const ws = XLSX.utils.json_to_sheet(rows);
-          const wb = XLSX.utils.book_new();
-          XLSX.utils.book_append_sheet(wb, ws, 'Employees');
-          XLSX.writeFile(wb, `employees-${Refad.date.today()}.xlsx`);
-          Refad.toast.success('تم التصدير');
+          if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+            e.preventDefault();
+            openQuickSearch();
+          }
         });
+
+        setupQuickSearch();
       }
 
       // ============================================================
-      // 13) Init
+      // 23) Init
       // ============================================================
       async function init() {
-        buildSidebar();
+        Refad.buildMenu('employees.html');
         fillUser();
+        applyIdentity();
         setupTheme();
         setupSidebarMobile();
         setupUserMenu();
         setupNotifBtn();
+        setupRealtimeTheme();
+        setupViewToggle();
+        setupPasswordToggle();
         bindEvents();
 
         await loadRoles();
         await loadEmployees();
 
-        Refad.registerServiceWorker();
+        if (Refad.registerServiceWorker) Refad.registerServiceWorker();
+
+        console.log('%c[Refad] Employees v3 ready (Theme Sync + Settings + Quick Search)', 'color:#14B8A6;font-weight:bold;font-size:14px');
       }
 
       if (document.readyState === 'loading') {
@@ -1750,12 +2533,8 @@
         init();
       }
 
-      console.log('%c[Refad] Employees ready', 'color:#14B8A6;font-weight:bold');
-
     })();
   </script>
-
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 </body>
 </html>

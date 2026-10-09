@@ -20,6 +20,7 @@
   <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -39,6 +40,7 @@
       --success: #10b981;
       --warning: #f59e0b;
       --info: #3b82f6;
+      --purple: #8b5cf6;
       --sidebar-bg: #0B2C4D;
       --sidebar-text: #cbd5e1;
       --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
@@ -106,6 +108,7 @@
       justify-content: center;
       flex-shrink: 0;
       box-shadow: 0 4px 12px rgba(20,184,166,0.4);
+      overflow: hidden;
     }
     .sidebar-logo img { width: 70%; height: 70%; object-fit: contain; }
     .sidebar-logo .fallback { color: white; font-weight: 800; font-size: 18px; }
@@ -140,6 +143,7 @@
     .nav-item .badge { margin-right: auto; background: var(--danger); color: white; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
     .nav-item .badge.teal { background: var(--accent); }
     .nav-item .badge.gold { background: var(--gold); }
+    .nav-item .badge.new { background: var(--purple); }
 
     /* Main */
     .main { flex: 1; margin-right: var(--sidebar-w); min-width: 0; display: flex; flex-direction: column; }
@@ -573,18 +577,17 @@
       .summary-body .value { font-size: 18px; }
     }
   </style>
-</head>
-<body>
+</head><body>
 
   <!-- Sidebar -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
-      <div class="sidebar-logo">
-        <img src="logo.png" alt="رفاد" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=fallback>R</span>';">
+      <div class="sidebar-logo" id="sidebarLogo">
+        <img src="logo.png" alt="رفاد" id="sidebarLogoImg" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=fallback>R</span>';">
       </div>
       <div class="sidebar-brand">
-        <h2>رفاد</h2>
-        <p>نظام إدارة الأدوية</p>
+        <h2 id="sidebarBrandName">رفاد</h2>
+        <p id="sidebarBrandDesc">نظام إدارة الأدوية</p>
       </div>
     </div>
     <nav class="sidebar-nav" id="sidebarNav"></nav>
@@ -711,11 +714,69 @@
     </main>
   </div>
 
+  <!-- ⏭️ الـ JavaScript هيتم إضافته في الجزء 3 -->
+   
+  <!-- ============================================================
+       SCRIPTS — الترتيب مهم جداً
+       ============================================================ -->
   <script src="refad-core.js"></script>
   <script src="refad-auth.js"></script>
+  <script src="refad-theme-sync.js"></script>
+  <script src="refad-settings.js"></script>
+
   <script>
     (function () {
       'use strict';
+
+      // ============================================================
+      // 0) Safe Wrappers
+      // ============================================================
+      const SafeSettings = {
+        locale: {
+          formatMoney: function (v) {
+            try {
+              if (window.RefadSettings?.locale?.formatMoney) {
+                return RefadSettings.locale.formatMoney(v);
+              }
+            } catch (e) {}
+            return Refad.format.money(v);
+          },
+          getCurrencySymbol: function () {
+            try {
+              if (window.RefadSettings?.locale?.getCurrencySymbol) {
+                return RefadSettings.locale.getCurrencySymbol();
+              }
+            } catch (e) {}
+            return 'ج.م';
+          }
+        },
+        identity: {
+          getSystemName: function () {
+            try {
+              if (window.RefadSettings?.identity?.getSystemName) {
+                return RefadSettings.identity.getSystemName();
+              }
+            } catch (e) {}
+            return 'رفاد';
+          },
+          getTagline: function () {
+            try {
+              if (window.RefadSettings?.identity?.getTagline) {
+                return RefadSettings.identity.getTagline();
+              }
+            } catch (e) {}
+            return 'نظام إدارة الأدوية';
+          },
+          getLogoUrl: function () {
+            try {
+              if (window.RefadSettings?.identity?.getLogoUrl) {
+                return RefadSettings.identity.getLogoUrl();
+              }
+            } catch (e) {}
+            return null;
+          }
+        }
+      };
 
       // ============================================================
       // 1) Guard
@@ -737,67 +798,10 @@
       };
 
       // ============================================================
-      // 3) Sidebar
+      // 3) Sidebar — Unified Menu
       // ============================================================
-      const MENU = [
-        { section: 'الرئيسية', items: [
-          { label: 'لوحة التحكم', icon: 'layout-dashboard', href: 'dashboard.html' },
-          { label: 'الشات', icon: 'message-circle', href: 'chat.html', permission: 'chat.use' },
-          { label: 'الإشعارات', icon: 'bell', href: 'notifications.html', permission: 'notifications.view' }
-        ]},
-        { section: 'العمليات', items: [
-          { label: 'الأصناف', icon: 'package', href: 'products.html', permission: 'products.view' },
-          { label: 'المخزون', icon: 'warehouse', href: 'inventory.html', permission: 'inventory.view' },
-          { label: 'طلبات الشراء', icon: 'clipboard-list', href: 'purchase-requests.html', permission: 'purchases.view' },
-          { label: 'الاستلامات', icon: 'package-check', href: 'receipts.html', permission: 'purchases.receive' },
-          { label: 'طلبات البيع', icon: 'shopping-cart', href: 'sales-orders.html', permission: 'sales.view' },
-          { label: 'نقطة البيع', icon: 'scan-barcode', href: 'pos.html', permission: 'sales.pos', badge: 'POS', badgeClass: 'teal' },
-          { label: 'الفواتير', icon: 'receipt', href: 'invoices.html', permission: 'sales.view' }
-        ]},
-        { section: 'الأطراف', items: [
-          { label: 'الموردين', icon: 'truck', href: 'suppliers.html', permission: 'suppliers.view' },
-          { label: 'العملاء', icon: 'users', href: 'customers.html', permission: 'customers.view' }
-        ]},
-        { section: 'المخزون', items: [
-          { label: 'الجرد', icon: 'clipboard-check', href: 'stocktake.html', permission: 'inventory.stocktake' },
-          { label: 'التسويات', icon: 'sliders-horizontal', href: 'adjustments.html', permission: 'inventory.adjust' }
-        ]},
-        { section: 'الموارد البشرية', items: [
-          { label: 'الموظفين', icon: 'user-cog', href: 'employees.html', permission: 'employees.view' },
-          { label: 'الصلاحيات', icon: 'shield-check', href: 'permissions.html', permission: 'permissions.manage' },
-          { label: 'الحضور', icon: 'calendar-check', href: 'attendance.html', permission: 'attendance.view' },
-          { label: 'الرواتب', icon: 'wallet', href: 'payroll.html', permission: 'payroll.view' }
-        ]},
-        { section: 'المالية', items: [
-          { label: 'المصاريف', icon: 'banknote', href: 'expenses.html', permission: 'expenses.view' },
-          { label: 'التقارير', icon: 'bar-chart-3', href: 'reports.html', permission: 'reports.view' }
-        ]},
-        { section: 'النظام', items: [
-          { label: 'إعدادات الشركة', icon: 'settings', href: 'company-settings.html', permission: 'settings.view' },
-          { label: 'شاشة الأدمن', icon: 'shield', href: 'admin.html', permission: 'admin.full', badge: 'Admin', badgeClass: 'gold' }
-        ]}
-      ];
-
       function buildSidebar() {
-        const nav = document.getElementById('sidebarNav');
-        const currentPage = 'reports.html';
-        const frag = document.createDocumentFragment();
-        MENU.forEach(group => {
-          const allowed = group.items.filter(it => !it.permission || Refad.Session.has(it.permission));
-          if (!allowed.length) return;
-          frag.appendChild(Refad.el('div', { class: 'nav-section' }, group.section));
-          allowed.forEach(item => {
-            const a = Refad.el('a', {
-              href: item.href,
-              class: 'nav-item' + (item.href === currentPage ? ' active' : '')
-            });
-            a.innerHTML = `<i data-lucide="${item.icon}"></i><span>${Refad.escapeHtml(item.label)}</span>${item.badge ? `<span class="badge ${item.badgeClass || ''}">${item.badge}</span>` : ''}`;
-            frag.appendChild(a);
-          });
-        });
-        nav.innerHTML = '';
-        nav.appendChild(frag);
-        if (window.lucide) lucide.createIcons();
+        Refad.buildMenu('reports.html');
       }
 
       // ============================================================
@@ -806,10 +810,32 @@
       function fillUser() {
         const av = document.getElementById('userAvatar');
         const initial = (session.full_name || '؟').trim().charAt(0);
-        if (session.avatar_url) av.innerHTML = `<img src="${Refad.escapeHtml(session.avatar_url)}" alt="">`;
+        if (session.avatar_url) av.innerHTML = '<img src="' + Refad.escapeHtml(session.avatar_url) + '" alt="">';
         else av.textContent = initial;
         document.getElementById('userName').textContent = session.full_name;
         document.getElementById('userRole').textContent = Refad.Session.has('company.owner') ? 'صاحب الشركة' : 'موظف';
+      }
+
+      function applyIdentity() {
+        const name = SafeSettings.identity.getSystemName();
+        const tagline = SafeSettings.identity.getTagline();
+        const logoUrl = SafeSettings.identity.getLogoUrl();
+
+        const brandName = document.getElementById('sidebarBrandName');
+        const brandDesc = document.getElementById('sidebarBrandDesc');
+        const logoImg = document.getElementById('sidebarLogoImg');
+
+        if (brandName) brandName.textContent = name;
+        if (brandDesc) brandDesc.textContent = tagline;
+
+        if (logoImg && logoUrl) {
+          logoImg.src = logoUrl;
+          logoImg.onerror = function () {
+            this.style.display = 'none';
+            const parent = this.parentElement;
+            if (parent) parent.innerHTML = '<span class="fallback">' + (name.charAt(0) || 'R') + '</span>';
+          };
+        }
       }
 
       function setupTheme() {
@@ -824,7 +850,6 @@
         btn.addEventListener('click', () => {
           Refad.theme.toggle();
           refresh();
-          // Re-render current report to update chart colors
           loadCurrentReport();
         });
       }
@@ -856,6 +881,13 @@
       function setupNotifBtn() {
         document.getElementById('notifBtn').addEventListener('click', () => {
           window.location.href = 'notifications.html';
+        });
+      }
+
+      function setupRealtimeTheme() {
+        window.addEventListener('refad:theme-changed', function () {
+          applyIdentity();
+          loadCurrentReport();
         });
       }
 
@@ -910,7 +942,7 @@
         const fromStr = Refad.format.date(from);
         const toStr = Refad.format.date(to);
         const days = dayjs(to).diff(dayjs(from), 'day') + 1;
-        document.getElementById('dateRangeDisplay').textContent = `${fromStr} ← ${toStr} (${days} يوم)`;
+        document.getElementById('dateRangeDisplay').textContent = fromStr + ' ← ' + toStr + ' (' + days + ' يوم)';
       }
 
       function setupPeriodChips() {
@@ -922,7 +954,6 @@
 
             if (state.period === 'custom') {
               document.getElementById('customDates').style.display = 'flex';
-              // Set defaults
               const today = Refad.date.today();
               const monthStart = dayjs().startOf('month').format('YYYY-MM-DD');
               document.getElementById('dateFrom').value = state.dateFrom || monthStart;
@@ -984,12 +1015,7 @@
       async function loadCurrentReport() {
         destroyCharts();
         const content = document.getElementById('reportContent');
-        content.innerHTML = `
-          <div class="loader">
-            <i data-lucide="loader-2"></i>
-            <p>جارٍ تحميل التقرير...</p>
-          </div>
-        `;
+        content.innerHTML = '<div class="loader"><i data-lucide="loader-2"></i><p>جارٍ تحميل التقرير...</p></div>';
         if (window.lucide) lucide.createIcons();
 
         try {
@@ -1008,13 +1034,12 @@
           }
         } catch (e) {
           console.error('Report load failed:', e);
-          content.innerHTML = `
-            <div class="empty-state">
-              <i data-lucide="alert-triangle"></i>
-              <h3>تعذّر تحميل التقرير</h3>
-              <p>${Refad.escapeHtml(e.message)}</p>
-            </div>
-          `;
+          content.innerHTML =
+            '<div class="empty-state">' +
+              '<i data-lucide="alert-triangle"></i>' +
+              '<h3>تعذّر تحميل التقرير</h3>' +
+              '<p>' + Refad.escapeHtml(e.message) + '</p>' +
+            '</div>';
           if (window.lucide) lucide.createIcons();
         }
       }
@@ -1024,8 +1049,7 @@
       // ============================================================
       async function renderSalesReport(from, to) {
         const invoices = await Refad.db.select('sales_invoices', {
-          columns: `id, invoice_number, invoice_date, grand_total, total_profit, discount_total,
-                    customers(id, name)`,
+          columns: 'id, invoice_number, invoice_date, grand_total, total_profit, discount_total, customers(id, name)',
           eq: { company_id: session.company_id, status: 'paid', invoice_type: 'sale' },
           gte: { invoice_date: from },
           lte: { invoice_date: to },
@@ -1039,7 +1063,6 @@
         const lossInvoices = invoices.filter(invoice => (Number(invoice.total_profit) || 0) < 0);
         const totalLoss = lossInvoices.reduce((sum, invoice) => sum + Math.abs(Number(invoice.total_profit) || 0), 0);
 
-        // Group by day
         const byDay = {};
         invoices.forEach(inv => {
           const d = inv.invoice_date;
@@ -1051,16 +1074,15 @@
 
         const sortedDays = Object.keys(byDay).sort();
 
-        // Render
         renderReportLayout({
           title: 'تقرير المبيعات',
           icon: 'trending-up',
           cards: [
-            { label: 'إجمالي المبيعات', value: Refad.format.money(totalSales), icon: 'dollar-sign', color: 'green' },
-            { label: 'عدد الفواتير', value: Refad.format.number(invoices.length), icon: 'receipt', color: 'blue', sub: `متوسط الفاتورة: ${Refad.format.money(avgInvoice)}` },
-            { label: 'إجمالي الربح', value: Refad.format.money(totalProfit), icon: 'trending-up', color: 'gold' },
-            { label: 'إجمالي الخصم', value: Refad.format.money(totalDiscount), icon: 'percent', color: 'red' },
-            { label: 'فواتير بربح سلبي', value: Refad.format.number(lossInvoices.length), icon: 'circle-alert', color: 'red', sub: `إجمالي الخسارة: ${Refad.format.money(totalLoss)}` }
+            { label: 'إجمالي المبيعات', value: SafeSettings.locale.formatMoney(totalSales), icon: 'dollar-sign', color: 'green' },
+            { label: 'عدد الفواتير', value: Refad.format.number(invoices.length), icon: 'receipt', color: 'blue', sub: 'متوسط الفاتورة: ' + SafeSettings.locale.formatMoney(avgInvoice) },
+            { label: 'إجمالي الربح', value: SafeSettings.locale.formatMoney(totalProfit), icon: 'trending-up', color: 'gold' },
+            { label: 'إجمالي الخصم', value: SafeSettings.locale.formatMoney(totalDiscount), icon: 'percent', color: 'red' },
+            { label: 'فواتير بربح سلبي', value: Refad.format.number(lossInvoices.length), icon: 'circle-alert', color: 'red', sub: 'إجمالي الخسارة: ' + SafeSettings.locale.formatMoney(totalLoss) }
           ],
           charts: [
             { id: 'salesChart', title: 'المبيعات اليومية', icon: 'bar-chart-3', type: 'line', span: 'wide' },
@@ -1073,10 +1095,10 @@
             rows: invoices.map(inv => [
               Refad.escapeHtml(inv.invoice_number),
               Refad.format.date(inv.invoice_date),
-              Refad.escapeHtml(inv.customers?.name || 'نقدي'),
-              `<span class="money-cell accent">${Refad.format.money(inv.grand_total)}</span>`,
-              `<span class="money-cell red">${Refad.format.money(inv.discount_total)}</span>`,
-              `<span class="money-cell ${Number(inv.total_profit) < 0 ? 'red' : 'green'}">${Refad.format.money(inv.total_profit)}</span>`
+              Refad.escapeHtml((inv.customers && inv.customers.name) || 'نقدي'),
+              '<span class="money-cell accent">' + SafeSettings.locale.formatMoney(inv.grand_total) + '</span>',
+              '<span class="money-cell red">' + SafeSettings.locale.formatMoney(inv.discount_total) + '</span>',
+              '<span class="money-cell ' + (Number(inv.total_profit) < 0 ? 'red' : 'green') + '">' + SafeSettings.locale.formatMoney(inv.total_profit) + '</span>'
             ])
           },
           additionalTables: [{
@@ -1086,16 +1108,15 @@
             emptyMessage: 'لا تظهر فواتير خاسرة في الفترة المحددة.',
             columns: ['رقم الفاتورة', 'التاريخ', 'العميل', 'قيمة البيع', 'الخسارة'],
             rows: lossInvoices.map(invoice => [
-              `<a href="invoices.html?id=${Number(invoice.id)}" style="color:var(--accent);font-weight:700;">${Refad.escapeHtml(invoice.invoice_number)}</a>`,
+              '<a href="invoices.html?id=' + Number(invoice.id) + '" style="color:var(--accent);font-weight:700;">' + Refad.escapeHtml(invoice.invoice_number) + '</a>',
               Refad.format.date(invoice.invoice_date),
-              Refad.escapeHtml(invoice.customers?.name || 'نقدي'),
-              Refad.format.money(invoice.grand_total),
-              `<strong style="color:var(--danger);">${Refad.format.money(Math.abs(Number(invoice.total_profit) || 0))}</strong>`
+              Refad.escapeHtml((invoice.customers && invoice.customers.name) || 'نقدي'),
+              SafeSettings.locale.formatMoney(invoice.grand_total),
+              '<strong style="color:var(--danger);">' + SafeSettings.locale.formatMoney(Math.abs(Number(invoice.total_profit) || 0)) + '</strong>'
             ])
           }]
         });
 
-        // Chart 1: Sales by day (line)
         if (sortedDays.length) {
           const ctx1 = document.getElementById('salesChart').getContext('2d');
           const chart1 = new Chart(ctx1, {
@@ -1131,7 +1152,6 @@
           });
           state.charts.push(chart1);
 
-          // Chart 2: Sales vs Profit doughnut
           const ctx2 = document.getElementById('profitChart').getContext('2d');
           const chart2 = new Chart(ctx2, {
             type: 'doughnut',
@@ -1162,7 +1182,7 @@
                 tooltip: {
                   rtl: true,
                   callbacks: {
-                    label: ctx => ` ${Refad.format.money(ctx.parsed)}`
+                    label: ctx => ' ' + SafeSettings.locale.formatMoney(ctx.parsed)
                   }
                 }
               }
@@ -1177,8 +1197,7 @@
       // ============================================================
       async function renderPurchasesReport(from, to) {
         const receipts = await Refad.db.select('receipts', {
-          columns: `id, receipt_number, receipt_date, total_amount, paid_amount, status,
-                    suppliers(id, name)`,
+          columns: 'id, receipt_number, receipt_date, total_amount, paid_amount, status, suppliers(id, name)',
           eq: { company_id: session.company_id },
           gte: { receipt_date: from },
           lte: { receipt_date: to },
@@ -1193,10 +1212,10 @@
           title: 'تقرير المشتريات',
           icon: 'shopping-bag',
           cards: [
-            { label: 'إجمالي المشتريات', value: Refad.format.money(totalPurchases), icon: 'shopping-bag', color: 'blue' },
+            { label: 'إجمالي المشتريات', value: SafeSettings.locale.formatMoney(totalPurchases), icon: 'shopping-bag', color: 'blue' },
             { label: 'عدد الفواتير', value: Refad.format.number(receipts.length), icon: 'receipt', color: 'teal' },
-            { label: 'المدفوع', value: Refad.format.money(totalPaid), icon: 'check-circle', color: 'green' },
-            { label: 'المتبقي', value: Refad.format.money(totalUnpaid), icon: 'clock', color: 'red' }
+            { label: 'المدفوع', value: SafeSettings.locale.formatMoney(totalPaid), icon: 'check-circle', color: 'green' },
+            { label: 'المتبقي', value: SafeSettings.locale.formatMoney(totalUnpaid), icon: 'clock', color: 'red' }
           ],
           charts: [
             { id: 'purchasesChart', title: 'المشتريات حسب الموردين', icon: 'bar-chart-3', type: 'bar', span: 'wide' }
@@ -1209,20 +1228,19 @@
               const remaining = (Number(r.total_amount) || 0) - (Number(r.paid_amount) || 0);
               return [
                 Refad.escapeHtml(r.receipt_number),
-                Refad.escapeHtml(r.suppliers?.name || '—'),
+                Refad.escapeHtml((r.suppliers && r.suppliers.name) || '—'),
                 Refad.format.date(r.receipt_date),
-                `<span class="money-cell accent">${Refad.format.money(r.total_amount)}</span>`,
-                `<span class="money-cell green">${Refad.format.money(r.paid_amount)}</span>`,
-                `<span class="money-cell ${remaining > 0 ? 'red' : 'green'}">${Refad.format.money(remaining)}</span>`
+                '<span class="money-cell accent">' + SafeSettings.locale.formatMoney(r.total_amount) + '</span>',
+                '<span class="money-cell green">' + SafeSettings.locale.formatMoney(r.paid_amount) + '</span>',
+                '<span class="money-cell ' + (remaining > 0 ? 'red' : 'green') + '">' + SafeSettings.locale.formatMoney(remaining) + '</span>'
               ];
             })
           }
         });
 
-        // Chart: by supplier
         const bySupplier = {};
         receipts.forEach(r => {
-          const name = r.suppliers?.name || 'غير محدد';
+          const name = (r.suppliers && r.suppliers.name) || 'غير محدد';
           bySupplier[name] = (bySupplier[name] || 0) + (Number(r.total_amount) || 0);
         });
         const supplierEntries = Object.entries(bySupplier).sort((a, b) => b[1] - a[1]).slice(0, 10);
@@ -1232,10 +1250,10 @@
           const chart = new Chart(ctx, {
             type: 'bar',
             data: {
-              labels: supplierEntries.map(([name]) => name),
+              labels: supplierEntries.map(pair => pair[0]),
               datasets: [{
                 label: 'المشتريات',
-                data: supplierEntries.map(([, v]) => v),
+                data: supplierEntries.map(pair => pair[1]),
                 backgroundColor: '#3b82f6',
                 borderRadius: 6,
                 borderSkipped: false
@@ -1270,7 +1288,6 @@
         const totalExpenses = expenses.reduce((s, e) => s + (Number(e.amount) || 0), 0);
         const netProfit = grossProfit - totalExpenses;
 
-        // Group by day
         const byDay = {};
         invoices.forEach(inv => {
           const d = inv.invoice_date;
@@ -1288,10 +1305,10 @@
           title: 'تقرير الأرباح والخسائر',
           icon: 'dollar-sign',
           cards: [
-            { label: 'إجمالي المبيعات', value: Refad.format.money(totalSales), icon: 'trending-up', color: 'green' },
-            { label: 'الربح الإجمالي', value: Refad.format.money(grossProfit), icon: 'dollar-sign', color: 'gold' },
-            { label: 'إجمالي المصاريف', value: Refad.format.money(totalExpenses), icon: 'banknote', color: 'red' },
-            { label: 'الربح الصافي', value: Refad.format.money(netProfit), icon: 'award', color: netProfit >= 0 ? 'green' : 'red', sub: netProfit >= 0 ? 'ربح' : 'خسارة' }
+            { label: 'إجمالي المبيعات', value: SafeSettings.locale.formatMoney(totalSales), icon: 'trending-up', color: 'green' },
+            { label: 'الربح الإجمالي', value: SafeSettings.locale.formatMoney(grossProfit), icon: 'dollar-sign', color: 'gold' },
+            { label: 'إجمالي المصاريف', value: SafeSettings.locale.formatMoney(totalExpenses), icon: 'banknote', color: 'red' },
+            { label: 'الربح الصافي', value: SafeSettings.locale.formatMoney(netProfit), icon: 'award', color: netProfit >= 0 ? 'green' : 'red', sub: netProfit >= 0 ? 'ربح' : 'خسارة' }
           ],
           charts: [
             { id: 'profitChart', title: 'الأرباح والمصاريف اليومية', icon: 'line-chart', type: 'line', span: 'wide' }
@@ -1304,9 +1321,9 @@
               const net = byDay[d].gross - byDay[d].expenses;
               return [
                 Refad.format.date(d),
-                `<span class="money-cell green">${Refad.format.money(byDay[d].gross)}</span>`,
-                `<span class="money-cell red">${Refad.format.money(byDay[d].expenses)}</span>`,
-                `<span class="money-cell ${net >= 0 ? 'accent' : 'red'}">${Refad.format.money(net)}</span>`
+                '<span class="money-cell green">' + SafeSettings.locale.formatMoney(byDay[d].gross) + '</span>',
+                '<span class="money-cell red">' + SafeSettings.locale.formatMoney(byDay[d].expenses) + '</span>',
+                '<span class="money-cell ' + (net >= 0 ? 'accent' : 'red') + '">' + SafeSettings.locale.formatMoney(net) + '</span>'
               ];
             })
           }
@@ -1413,20 +1430,19 @@
           const dailySales = (salesByProduct[p.id] || 0) / 90;
           const targetStock = Math.max(Number(p.reorder_level) || 0, Math.ceil(dailySales * 30));
           const needed = Math.max(0, targetStock - sellableQty);
-          return {
-            ...p,
+          return Object.assign({}, p, {
             total_qty: qty,
             sellable_qty: sellableQty,
             expired_qty: expiredQty,
             expiring_qty: expiringQty,
             cost_value: costValue,
             nearest_expiry: nearest,
-            status,
+            status: status,
             daily_sales: dailySales,
             recommended_order_qty: needed > 0
               ? Math.max(Number(p.min_order_qty) || 1, needed)
               : 0
-          };
+          });
         });
         const purchaseRecommendations = productStats
           .filter(product => product.recommended_order_qty > 0)
@@ -1439,8 +1455,7 @@
         const totalValue = productStats.reduce((s, p) => s + p.cost_value, 0);
         const expiredBatches = batches
           .filter(batch => batch.expiry_date && batch.expiry_date <= expiryWindow)
-          .map(batch => ({
-            ...batch,
+          .map(batch => Object.assign({}, batch, {
             product: products.find(product => product.id === batch.product_id),
             is_expired: batch.expiry_date < today
           }))
@@ -1460,7 +1475,7 @@
             { label: 'متوفر', value: Refad.format.number(inStock), icon: 'check-circle', color: 'green' },
             { label: 'مخزون منخفض', value: Refad.format.number(lowStock), icon: 'alert-triangle', color: 'gold' },
             { label: 'نفد', value: Refad.format.number(outOfStock), icon: 'x-circle', color: 'red' },
-            { label: 'قيمة المخزون', value: Refad.format.money(totalValue), icon: 'dollar-sign', color: 'teal' },
+            { label: 'قيمة المخزون', value: SafeSettings.locale.formatMoney(totalValue), icon: 'dollar-sign', color: 'teal' },
             { label: 'كمية الشراء المقترحة', value: Refad.format.number(purchaseRecommendations.reduce((sum, product) => sum + product.recommended_order_qty, 0)), icon: 'shopping-cart', color: 'blue' }
           ],
           charts: [
@@ -1482,10 +1497,10 @@
                 Refad.escapeHtml(p.form || '—'),
                 Refad.format.number(p.sellable_qty),
                 p.expired_qty > 0
-                  ? `<span class="badge-tag red">${Refad.format.number(p.expired_qty)}</span>`
+                  ? '<span class="badge-tag red">' + Refad.format.number(p.expired_qty) + '</span>'
                   : Refad.format.number(0),
                 Refad.format.number(p.reorder_level || 0),
-                `<span class="money-cell accent">${Refad.format.money(p.cost_value)}</span>`,
+                '<span class="money-cell accent">' + SafeSettings.locale.formatMoney(p.cost_value) + '</span>',
                 statusMap[p.status]
               ];
             })
@@ -1506,7 +1521,7 @@
               Refad.format.number(product.daily_sales, 1),
               product.sellable_qty <= 0 ? 'نفد المخزون' :
                 product.sellable_qty <= (Number(product.reorder_level) || 0) ? 'وصل لحد إعادة الطلب' : 'التغطية أقل من 30 يوماً',
-              `<strong style="color:var(--accent);">${Refad.format.number(product.recommended_order_qty)}</strong>`
+              '<strong style="color:var(--accent);">' + Refad.format.number(product.recommended_order_qty) + '</strong>'
             ])
           }, {
             title: 'تنبيهات الصلاحية',
@@ -1526,7 +1541,6 @@
           }]
         });
 
-        // Chart 1: Status doughnut
         const ctx1 = document.getElementById('inventoryChart').getContext('2d');
         const chart1 = new Chart(ctx1, {
           type: 'doughnut',
@@ -1559,7 +1573,6 @@
         });
         state.charts.push(chart1);
 
-        // Chart 2: Top products
         const top = productStats.slice(0, 10);
         if (top.length) {
           const ctx2 = document.getElementById('topProductsChart').getContext('2d');
@@ -1574,10 +1587,7 @@
                 borderRadius: 6
               }]
             },
-            options: {
-              ...getBarOptions(),
-              indexAxis: 'y'
-            }
+            options: Object.assign({}, getBarOptions(), { indexAxis: 'y' })
           });
           state.charts.push(chart2);
         }
@@ -1600,10 +1610,6 @@
           }).catch(() => [])
         ]);
 
-        const empMap = {};
-        employees.forEach(e => { empMap[e.id] = e; });
-
-        // Stats per employee
         const stats = employees.map(emp => {
           const recs = attendance.filter(a => a.user_id === emp.id);
           const present = recs.filter(r => r.status === 'present').length;
@@ -1611,8 +1617,7 @@
           const absent = recs.filter(r => r.status === 'absent').length;
           const leave = recs.filter(r => r.status === 'leave').length;
           const totalHours = recs.reduce((s, r) => s + (Number(r.work_hours) || 0), 0);
-          const daysWorked = present + late;
-          return { ...emp, present, late, absent, leave, totalHours, daysWorked };
+          return Object.assign({}, emp, { present, late, absent, leave, totalHours, daysWorked: present + late });
         });
 
         const totalPresent = stats.reduce((s, e) => s + e.present, 0);
@@ -1638,11 +1643,11 @@
             columns: ['الموظف', 'حاضر', 'متأخر', 'غائب', 'إجازة', 'إجمالي الساعات'],
             rows: stats.sort((a, b) => b.totalHours - a.totalHours).map(e => [
               Refad.escapeHtml(e.full_name),
-              `<span class="badge-tag green">${e.present}</span>`,
-              `<span class="badge-tag gold">${e.late}</span>`,
-              `<span class="badge-tag red">${e.absent}</span>`,
-              `<span class="badge-tag blue">${e.leave}</span>`,
-              `<span class="money-cell accent">${Refad.format.number(e.totalHours, 1)}</span>`
+              '<span class="badge-tag green">' + e.present + '</span>',
+              '<span class="badge-tag gold">' + e.late + '</span>',
+              '<span class="badge-tag red">' + e.absent + '</span>',
+              '<span class="badge-tag blue">' + e.leave + '</span>',
+              '<span class="money-cell accent">' + Refad.format.number(e.totalHours, 1) + '</span>'
             ])
           }
         });
@@ -1654,36 +1659,17 @@
             data: {
               labels: stats.map(e => e.full_name),
               datasets: [
-                {
-                  label: 'حاضر',
-                  data: stats.map(e => e.present),
-                  backgroundColor: '#10b981',
-                  borderRadius: 6,
-                  stack: 'a'
-                },
-                {
-                  label: 'متأخر',
-                  data: stats.map(e => e.late),
-                  backgroundColor: '#F59E0B',
-                  borderRadius: 6,
-                  stack: 'a'
-                },
-                {
-                  label: 'غائب',
-                  data: stats.map(e => e.absent),
-                  backgroundColor: '#ef4444',
-                  borderRadius: 6,
-                  stack: 'a'
-                }
+                { label: 'حاضر', data: stats.map(e => e.present), backgroundColor: '#10b981', borderRadius: 6, stack: 'a' },
+                { label: 'متأخر', data: stats.map(e => e.late), backgroundColor: '#F59E0B', borderRadius: 6, stack: 'a' },
+                { label: 'غائب', data: stats.map(e => e.absent), backgroundColor: '#ef4444', borderRadius: 6, stack: 'a' }
               ]
             },
-            options: {
-              ...getBarOptions(),
+            options: Object.assign({}, getBarOptions(), {
               scales: {
                 x: { stacked: true, grid: { display: false }, ticks: { color: getTextColor(), font: { family: 'Cairo', size: 10 } } },
                 y: { stacked: true, beginAtZero: true, grid: { color: getGridColor() }, ticks: { color: getTextColor(), font: { family: 'Cairo', size: 10 } } }
               }
-            }
+            })
           });
           state.charts.push(chart);
         }
@@ -1720,10 +1706,10 @@
           title: 'تقرير المصاريف',
           icon: 'banknote',
           cards: [
-            { label: 'إجمالي المصاريف', value: Refad.format.money(total), icon: 'banknote', color: 'red' },
+            { label: 'إجمالي المصاريف', value: SafeSettings.locale.formatMoney(total), icon: 'banknote', color: 'red' },
             { label: 'عدد المصاريف', value: Refad.format.number(expenses.length), icon: 'list', color: 'blue' },
-            { label: 'متوسط المصروف', value: Refad.format.money(expenses.length ? total / expenses.length : 0), icon: 'calculator', color: 'teal' },
-            { label: 'أكبر تصنيف', value: topCat ? topCat[0] : '—', icon: 'trending-up', color: 'gold', sub: topCat ? Refad.format.money(topCat[1]) : '' }
+            { label: 'متوسط المصروف', value: SafeSettings.locale.formatMoney(expenses.length ? total / expenses.length : 0), icon: 'calculator', color: 'teal' },
+            { label: 'أكبر تصنيف', value: topCat ? topCat[0] : '—', icon: 'trending-up', color: 'gold', sub: topCat ? SafeSettings.locale.formatMoney(topCat[1]) : '' }
           ],
           charts: [
             { id: 'expensesCatChart', title: 'التوزيع حسب التصنيف', icon: 'pie-chart', type: 'doughnut', span: 'narrow' },
@@ -1737,13 +1723,12 @@
               Refad.escapeHtml(CATEGORIES[e.category] || e.category),
               Refad.escapeHtml(e.description || '—'),
               Refad.format.date(e.expense_date),
-              `<span class="money-cell red">${Refad.format.money(e.amount)}</span>`,
-              Refad.escapeHtml(e.users?.full_name || '—')
+              '<span class="money-cell red">' + SafeSettings.locale.formatMoney(e.amount) + '</span>',
+              Refad.escapeHtml((e.users && e.users.full_name) || '—')
             ])
           }
         });
 
-        // Chart 1: by category
         const catEntries = Object.entries(byCat).sort((a, b) => b[1] - a[1]);
         if (catEntries.length) {
           const colors = ['#ef4444', '#F59E0B', '#3b82f6', '#8b5cf6', '#14B8A6', '#ec4899', '#f97316', '#64748b'];
@@ -1751,9 +1736,9 @@
           const chart1 = new Chart(ctx1, {
             type: 'doughnut',
             data: {
-              labels: catEntries.map(([c]) => c),
+              labels: catEntries.map(pair => pair[0]),
               datasets: [{
-                data: catEntries.map(([, v]) => v),
+                data: catEntries.map(pair => pair[1]),
                 backgroundColor: colors.slice(0, catEntries.length),
                 borderWidth: 2,
                 borderColor: Refad.theme.get() === 'dark' ? '#0f2137' : '#ffffff'
@@ -1774,14 +1759,13 @@
                     usePointStyle: true
                   }
                 },
-                tooltip: { rtl: true, callbacks: { label: c => ` ${Refad.format.money(c.parsed)}` } }
+                tooltip: { rtl: true, callbacks: { label: c => ' ' + SafeSettings.locale.formatMoney(c.parsed) } }
               }
             }
           });
           state.charts.push(chart1);
         }
 
-        // Chart 2: daily
         const byDay = {};
         expenses.forEach(e => {
           byDay[e.expense_date] = (byDay[e.expense_date] || 0) + (Number(e.amount) || 0);
@@ -1831,7 +1815,7 @@
           const invs = invoices.filter(i => i.customer_id === c.id);
           const totalSales = invs.reduce((s, i) => s + (Number(i.grand_total) || 0), 0);
           const totalProfit = invs.reduce((s, i) => s + (Number(i.total_profit) || 0), 0);
-          return { ...c, invoicesCount: invs.length, totalSales, totalProfit };
+          return Object.assign({}, c, { invoicesCount: invs.length, totalSales, totalProfit });
         }).sort((a, b) => b.totalSales - a.totalSales);
 
         const totalSales = stats.reduce((s, c) => s + c.totalSales, 0);
@@ -1844,8 +1828,8 @@
           cards: [
             { label: 'إجمالي العملاء', value: Refad.format.number(customers.length), icon: 'users', color: 'blue' },
             { label: 'عملاء نشطين', value: Refad.format.number(activeCustomers), icon: 'user-check', color: 'green' },
-            { label: 'إجمالي المبيعات', value: Refad.format.money(totalSales), icon: 'dollar-sign', color: 'gold' },
-            { label: 'أفضل عميل', value: topCustomer?.name || '—', icon: 'award', color: 'purple', sub: topCustomer ? Refad.format.money(topCustomer.totalSales) : '' }
+            { label: 'إجمالي المبيعات', value: SafeSettings.locale.formatMoney(totalSales), icon: 'dollar-sign', color: 'gold' },
+            { label: 'أفضل عميل', value: (topCustomer && topCustomer.name) || '—', icon: 'award', color: 'purple', sub: topCustomer ? SafeSettings.locale.formatMoney(topCustomer.totalSales) : '' }
           ],
           charts: [
             { id: 'topCustomersChart', title: 'أعلى 10 عملاء', icon: 'bar-chart-3', type: 'bar', span: 'wide' }
@@ -1858,9 +1842,9 @@
               Refad.escapeHtml(c.name),
               Refad.escapeHtml(c.phone || '—'),
               Refad.format.number(c.invoicesCount),
-              `<span class="money-cell accent">${Refad.format.money(c.totalSales)}</span>`,
-              `<span class="money-cell green">${Refad.format.money(c.totalProfit)}</span>`,
-              `<span class="money-cell ${c.balance > 0 ? 'red' : 'green'}">${Refad.format.money(c.balance || 0)}</span>`
+              '<span class="money-cell accent">' + SafeSettings.locale.formatMoney(c.totalSales) + '</span>',
+              '<span class="money-cell green">' + SafeSettings.locale.formatMoney(c.totalProfit) + '</span>',
+              '<span class="money-cell ' + (c.balance > 0 ? 'red' : 'green') + '">' + SafeSettings.locale.formatMoney(c.balance || 0) + '</span>'
             ])
           }
         });
@@ -1879,7 +1863,7 @@
                 borderRadius: 6
               }]
             },
-            options: { ...getBarOptions(), indexAxis: 'y' }
+            options: Object.assign({}, getBarOptions(), { indexAxis: 'y' })
           });
           state.charts.push(chart);
         }
@@ -1906,7 +1890,7 @@
           const rs = receipts.filter(r => r.supplier_id === s.id);
           const totalPurchases = rs.reduce((acc, r) => acc + (Number(r.total_amount) || 0), 0);
           const totalPaid = rs.reduce((acc, r) => acc + (Number(r.paid_amount) || 0), 0);
-          return { ...s, receiptsCount: rs.length, totalPurchases, totalPaid };
+          return Object.assign({}, s, { receiptsCount: rs.length, totalPurchases, totalPaid });
         }).sort((a, b) => b.totalPurchases - a.totalPurchases);
 
         const totalPurchases = stats.reduce((s, x) => s + x.totalPurchases, 0);
@@ -1919,8 +1903,8 @@
           cards: [
             { label: 'إجمالي الموردين', value: Refad.format.number(suppliers.length), icon: 'truck', color: 'blue' },
             { label: 'موردين نشطين', value: Refad.format.number(activeSuppliers), icon: 'check-circle', color: 'green' },
-            { label: 'إجمالي المشتريات', value: Refad.format.money(totalPurchases), icon: 'shopping-bag', color: 'gold' },
-            { label: 'أكبر مورد', value: topSupplier?.name || '—', icon: 'award', color: 'purple', sub: topSupplier ? Refad.format.money(topSupplier.totalPurchases) : '' }
+            { label: 'إجمالي المشتريات', value: SafeSettings.locale.formatMoney(totalPurchases), icon: 'shopping-bag', color: 'gold' },
+            { label: 'أكبر مورد', value: (topSupplier && topSupplier.name) || '—', icon: 'award', color: 'purple', sub: topSupplier ? SafeSettings.locale.formatMoney(topSupplier.totalPurchases) : '' }
           ],
           charts: [
             { id: 'topSuppliersChart', title: 'أعلى 10 موردين', icon: 'bar-chart-3', type: 'bar', span: 'wide' }
@@ -1933,9 +1917,9 @@
               Refad.escapeHtml(s.name),
               Refad.escapeHtml(s.phone || '—'),
               Refad.format.number(s.receiptsCount),
-              `<span class="money-cell accent">${Refad.format.money(s.totalPurchases)}</span>`,
-              `<span class="money-cell green">${Refad.format.money(s.totalPaid)}</span>`,
-              `<span class="money-cell ${s.balance > 0 ? 'red' : 'green'}">${Refad.format.money(s.balance || 0)}</span>`
+              '<span class="money-cell accent">' + SafeSettings.locale.formatMoney(s.totalPurchases) + '</span>',
+              '<span class="money-cell green">' + SafeSettings.locale.formatMoney(s.totalPaid) + '</span>',
+              '<span class="money-cell ' + (s.balance > 0 ? 'red' : 'green') + '">' + SafeSettings.locale.formatMoney(s.balance || 0) + '</span>'
             ])
           }
         });
@@ -1954,7 +1938,7 @@
                 borderRadius: 6
               }]
             },
-            options: { ...getBarOptions(), indexAxis: 'y' }
+            options: Object.assign({}, getBarOptions(), { indexAxis: 'y' })
           });
           state.charts.push(chart);
         }
@@ -1963,119 +1947,125 @@
       // ============================================================
       // 17) Layout renderer
       // ============================================================
-      function renderReportLayout({ title, icon, cards, charts, table, additionalTables = [] }) {
+      function renderReportLayout(options) {
+        const title = options.title;
+        const icon = options.icon;
+        const cards = options.cards || [];
+        const charts = options.charts || [];
+        const table = options.table;
+        const additionalTables = options.additionalTables || [];
+
         const content = document.getElementById('reportContent');
 
-        const cardsHtml = cards.map(c => `
-          <div class="summary-card">
-            <div class="summary-icon ${c.color}">
-              <i data-lucide="${c.icon}"></i>
-            </div>
-            <div class="summary-body">
-              <div class="label">${Refad.escapeHtml(c.label)}</div>
-              <div class="value" style="font-size:${String(c.value).length > 15 ? '16px' : '22px'};">${Refad.escapeHtml(String(c.value))}</div>
-              ${c.sub ? `<div class="sub">${Refad.escapeHtml(c.sub)}</div>` : ''}
-            </div>
-          </div>
-        `).join('');
+        const cardsHtml = cards.map(c =>
+          '<div class="summary-card">' +
+            '<div class="summary-icon ' + c.color + '">' +
+              '<i data-lucide="' + c.icon + '"></i>' +
+            '</div>' +
+            '<div class="summary-body">' +
+              '<div class="label">' + Refad.escapeHtml(c.label) + '</div>' +
+              '<div class="value" style="font-size:' + (String(c.value).length > 15 ? '16px' : '22px') + ';">' + Refad.escapeHtml(String(c.value)) + '</div>' +
+              (c.sub ? '<div class="sub">' + Refad.escapeHtml(c.sub) + '</div>' : '') +
+            '</div>' +
+          '</div>'
+        ).join('');
 
         const wideCharts = charts.filter(ch => ch.span === 'wide');
         const narrowCharts = charts.filter(ch => ch.span === 'narrow');
 
         let chartsHtml = '';
         if (wideCharts.length && narrowCharts.length) {
-          // Mixed layout
-          chartsHtml = `
-            <div class="charts-grid">
-              ${wideCharts.map(ch => `
-                <div class="chart-box">
-                  <h3><i data-lucide="${ch.icon}"></i> ${Refad.escapeHtml(ch.title)}</h3>
-                  <div class="chart-wrap"><canvas id="${ch.id}"></canvas></div>
-                </div>
-              `).join('')}
-              ${narrowCharts.map(ch => `
-                <div class="chart-box">
-                  <h3><i data-lucide="${ch.icon}"></i> ${Refad.escapeHtml(ch.title)}</h3>
-                  <div class="chart-wrap"><canvas id="${ch.id}"></canvas></div>
-                </div>
-              `).join('')}
-            </div>
-          `;
+          chartsHtml =
+            '<div class="charts-grid">' +
+              wideCharts.map(ch =>
+                '<div class="chart-box">' +
+                  '<h3><i data-lucide="' + ch.icon + '"></i> ' + Refad.escapeHtml(ch.title) + '</h3>' +
+                  '<div class="chart-wrap"><canvas id="' + ch.id + '"></canvas></div>' +
+                '</div>'
+              ).join('') +
+              narrowCharts.map(ch =>
+                '<div class="chart-box">' +
+                  '<h3><i data-lucide="' + ch.icon + '"></i> ' + Refad.escapeHtml(ch.title) + '</h3>' +
+                  '<div class="chart-wrap"><canvas id="' + ch.id + '"></canvas></div>' +
+                '</div>'
+              ).join('') +
+            '</div>';
         } else {
-          chartsHtml = `
-            <div class="charts-grid" style="grid-template-columns:1fr;">
-              ${charts.map(ch => `
-                <div class="chart-box">
-                  <h3><i data-lucide="${ch.icon}"></i> ${Refad.escapeHtml(ch.title)}</h3>
-                  <div class="chart-wrap"><canvas id="${ch.id}"></canvas></div>
-                </div>
-              `).join('')}
-            </div>
-          `;
+          chartsHtml =
+            '<div class="charts-grid" style="grid-template-columns:1fr;">' +
+              charts.map(ch =>
+                '<div class="chart-box">' +
+                  '<h3><i data-lucide="' + ch.icon + '"></i> ' + Refad.escapeHtml(ch.title) + '</h3>' +
+                  '<div class="chart-wrap"><canvas id="' + ch.id + '"></canvas></div>' +
+                '</div>'
+              ).join('') +
+            '</div>';
         }
 
-        const tableHtml = table ? `
-          <div class="table-wrap">
-            <div class="table-header">
-              <h3><i data-lucide="${table.icon}"></i> ${Refad.escapeHtml(table.title)}</h3>
-              <span style="font-size:12px;color:var(--text-muted);font-weight:600;">${table.rows.length} سجل</span>
-            </div>
-            <div class="table-scroll">
-              ${table.rows.length === 0 ? `
-                <div class="empty-state">
-                  <i data-lucide="inbox"></i>
-                  <h3>لا توجد بيانات</h3>
-                  <p>لا توجد سجلات في هذه الفترة</p>
-                </div>
-              ` : `
-                <table>
-                  <thead>
-                    <tr>${table.columns.map(c => `<th>${Refad.escapeHtml(c)}</th>`).join('')}</tr>
-                  </thead>
-                  <tbody>
-                    ${table.rows.slice(0, 500).map(row => `
-                      <tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>
-                    `).join('')}
-                  </tbody>
-                </table>
-              `}
-            </div>
-          </div>
-        ` : '';
-        const additionalTablesHtml = additionalTables.map(extraTable => `
-          <div class="table-wrap">
-            <div class="table-header">
-              <h3><i data-lucide="${extraTable.icon}"></i> ${Refad.escapeHtml(extraTable.title)}</h3>
-              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-                ${extraTable.action && extraTable.rows.length
-                  ? `<button type="button" class="btn btn-primary btn-sm" data-report-action="${Refad.escapeHtml(extraTable.action.key)}"><i data-lucide="shopping-cart"></i> ${Refad.escapeHtml(extraTable.action.label)}</button>`
-                  : ''}
-                <span style="font-size:12px;color:var(--text-muted);font-weight:600;">${extraTable.rows.length} صنف</span>
-              </div>
-            </div>
-            <div class="table-scroll">
-              ${extraTable.rows.length === 0 ? `
-                <div class="empty-state">
-                  <i data-lucide="check-circle-2"></i>
-                  <h3>${Refad.escapeHtml(extraTable.emptyTitle || 'لا توجد بيانات')}</h3>
-                  <p>${Refad.escapeHtml(extraTable.emptyMessage || 'لا توجد سجلات حالياً.')}</p>
-                </div>
-              ` : `
-                <table>
-                  <thead><tr>${extraTable.columns.map(column => `<th>${Refad.escapeHtml(column)}</th>`).join('')}</tr></thead>
-                  <tbody>${extraTable.rows.slice(0, 500).map(row => `<tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>`).join('')}</tbody>
-                </table>
-              `}
-            </div>
-          </div>
-        `).join('');
+        const tableHtml = table ?
+          '<div class="table-wrap">' +
+            '<div class="table-header">' +
+              '<h3><i data-lucide="' + table.icon + '"></i> ' + Refad.escapeHtml(table.title) + '</h3>' +
+              '<span style="font-size:12px;color:var(--text-muted);font-weight:600;">' + table.rows.length + ' سجل</span>' +
+            '</div>' +
+            '<div class="table-scroll">' +
+              (table.rows.length === 0 ?
+                '<div class="empty-state">' +
+                  '<i data-lucide="inbox"></i>' +
+                  '<h3>لا توجد بيانات</h3>' +
+                  '<p>لا توجد سجلات في هذه الفترة</p>' +
+                '</div>'
+              :
+                '<table>' +
+                  '<thead><tr>' + table.columns.map(c => '<th>' + Refad.escapeHtml(c) + '</th>').join('') + '</tr></thead>' +
+                  '<tbody>' +
+                    table.rows.slice(0, 500).map(row =>
+                      '<tr>' + row.map(cell => '<td>' + cell + '</td>').join('') + '</tr>'
+                    ).join('') +
+                  '</tbody>' +
+                '</table>'
+              ) +
+            '</div>' +
+          '</div>'
+        : '';
 
-        content.innerHTML = `
-          <div class="summary-cards">${cardsHtml}</div>
-          ${chartsHtml}
-          ${tableHtml}
-          ${additionalTablesHtml}
-        `;
+        const additionalTablesHtml = additionalTables.map(extraTable =>
+          '<div class="table-wrap">' +
+            '<div class="table-header">' +
+              '<h3><i data-lucide="' + extraTable.icon + '"></i> ' + Refad.escapeHtml(extraTable.title) + '</h3>' +
+              '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">' +
+                (extraTable.action && extraTable.rows.length
+                  ? '<button type="button" class="btn btn-primary btn-sm" data-report-action="' + Refad.escapeHtml(extraTable.action.key) + '"><i data-lucide="shopping-cart"></i> ' + Refad.escapeHtml(extraTable.action.label) + '</button>'
+                  : '') +
+                '<span style="font-size:12px;color:var(--text-muted);font-weight:600;">' + extraTable.rows.length + ' صنف</span>' +
+              '</div>' +
+            '</div>' +
+            '<div class="table-scroll">' +
+              (extraTable.rows.length === 0 ?
+                '<div class="empty-state">' +
+                  '<i data-lucide="check-circle-2"></i>' +
+                  '<h3>' + Refad.escapeHtml(extraTable.emptyTitle || 'لا توجد بيانات') + '</h3>' +
+                  '<p>' + Refad.escapeHtml(extraTable.emptyMessage || 'لا توجد سجلات حالياً.') + '</p>' +
+                '</div>'
+              :
+                '<table>' +
+                  '<thead><tr>' + extraTable.columns.map(column => '<th>' + Refad.escapeHtml(column) + '</th>').join('') + '</tr></thead>' +
+                  '<tbody>' +
+                    extraTable.rows.slice(0, 500).map(row =>
+                      '<tr>' + row.map(cell => '<td>' + cell + '</td>').join('') + '</tr>'
+                    ).join('') +
+                  '</tbody>' +
+                '</table>'
+              ) +
+            '</div>' +
+          '</div>'
+        ).join('');
+
+        content.innerHTML =
+          '<div class="summary-cards">' + cardsHtml + '</div>' +
+          chartsHtml +
+          tableHtml +
+          additionalTablesHtml;
 
         if (window.lucide) lucide.createIcons();
       }
@@ -2114,7 +2104,7 @@
               titleFont: { family: 'Cairo', size: 12, weight: '700' },
               bodyFont: { family: 'Cairo', size: 12 },
               callbacks: {
-                label: (ctx) => ` ${ctx.dataset.label}: ${Refad.format.money(ctx.parsed.y ?? ctx.parsed)}`
+                label: (ctx) => ' ' + ctx.dataset.label + ': ' + SafeSettings.locale.formatMoney(ctx.parsed.y !== undefined ? ctx.parsed.y : ctx.parsed)
               }
             }
           },
@@ -2147,7 +2137,7 @@
               titleFont: { family: 'Cairo', size: 12, weight: '700' },
               bodyFont: { family: 'Cairo', size: 12 },
               callbacks: {
-                label: (ctx) => ` ${Refad.format.money(ctx.parsed.x ?? ctx.parsed.y ?? ctx.parsed)}`
+                label: (ctx) => ' ' + SafeSettings.locale.formatMoney(ctx.parsed.x !== undefined ? ctx.parsed.x : (ctx.parsed.y !== undefined ? ctx.parsed.y : ctx.parsed))
               }
             }
           },
@@ -2178,13 +2168,15 @@
 
         const wb = XLSX.utils.book_new();
         tables.forEach((table, index) => {
-          const title = table.closest('.table-wrap')?.querySelector('.table-header h3')?.textContent?.trim();
-          const sheetName = (title || (index ? `Report ${index + 1}` : 'Report')).replace(/[\\/?*[\]:]/g, '').slice(0, 31) || `Report ${index + 1}`;
+          const wrap = table.closest('.table-wrap');
+          const header = wrap ? wrap.querySelector('.table-header h3') : null;
+          const title = header ? header.textContent.trim() : '';
+          const sheetName = (title || (index ? 'Report ' + (index + 1) : 'Report')).replace(/[\\\/?*\[\]:]/g, '').slice(0, 31) || ('Report ' + (index + 1));
           const ws = XLSX.utils.table_to_sheet(table);
           XLSX.utils.book_append_sheet(wb, ws, sheetName);
         });
-        const { from, to } = getDateRange();
-        XLSX.writeFile(wb, `report-${state.currentReport}-${from}-${to}.xlsx`);
+        const range = getDateRange();
+        XLSX.writeFile(wb, 'report-' + state.currentReport + '-' + range.from + '-' + range.to + '.xlsx');
         Refad.toast.success('تم التصدير');
       }
 
@@ -2198,6 +2190,7 @@
       function bindEvents() {
         document.getElementById('exportBtn').addEventListener('click', exportCurrentReport);
         document.getElementById('printBtn').addEventListener('click', printCurrentReport);
+
         document.getElementById('reportContent').addEventListener('click', event => {
           const button = event.target.closest('[data-report-action="purchase-suggestions"]');
           if (!button) return;
@@ -2229,10 +2222,12 @@
       async function init() {
         buildSidebar();
         fillUser();
+        applyIdentity();
         setupTheme();
         setupSidebarMobile();
         setupUserMenu();
         setupNotifBtn();
+        setupRealtimeTheme();
         setupReportSelector();
         setupPeriodChips();
         bindEvents();
@@ -2240,7 +2235,9 @@
         updateDateDisplay();
         await loadCurrentReport();
 
-        Refad.registerServiceWorker();
+        if (Refad.registerServiceWorker) Refad.registerServiceWorker();
+
+        console.log('%c[Refad] Reports v2 ready (Theme Sync + Settings + buildMenu)', 'color:#14B8A6;font-weight:bold');
       }
 
       if (document.readyState === 'loading') {
@@ -2249,12 +2246,8 @@
         init();
       }
 
-      console.log('%c[Refad] Reports ready', 'color:#14B8A6;font-weight:bold');
-
     })();
   </script>
-
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 </body>
 </html>

@@ -106,6 +106,7 @@
       justify-content: center;
       flex-shrink: 0;
       box-shadow: 0 4px 12px rgba(20,184,166,0.4);
+      overflow: hidden;
     }
     .sidebar-logo img { width: 70%; height: 70%; object-fit: contain; }
     .sidebar-logo .fallback { color: white; font-weight: 800; font-size: 18px; }
@@ -136,6 +137,7 @@
     .nav-item .badge { margin-right: auto; background: var(--danger); color: white; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
     .nav-item .badge.teal { background: var(--accent); }
     .nav-item .badge.gold { background: var(--gold); }
+    .nav-item .badge.new { background: var(--purple); }
 
     /* Main */
     .main { flex: 1; margin-right: var(--sidebar-w); min-width: 0; display: flex; flex-direction: column; }
@@ -736,6 +738,10 @@
     .detail-item-row .item-qty.diff-neg { background: rgba(239,68,68,0.12); color: var(--danger); }
     .detail-item-row .item-qty.diff-zero { background: rgba(148,163,184,0.15); color: var(--text-muted); }
 
+    /* Overlay */
+    .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; opacity: 0; transition: opacity 0.3s; }
+    .overlay.show { display: block; opacity: 1; }
+
     /* Responsive */
     @media (max-width: 1024px) {
       .sidebar { transform: translateX(100%); }
@@ -764,12 +770,12 @@
 
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
-      <div class="sidebar-logo">
-        <img src="logo.png" alt="رفاد" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=fallback>R</span>';">
+      <div class="sidebar-logo" id="sidebarLogo">
+        <img src="logo.png" alt="رفاد" id="sidebarLogoImg" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=fallback>R</span>';">
       </div>
       <div class="sidebar-brand">
-        <h2>رفاد</h2>
-        <p>نظام إدارة الأدوية</p>
+        <h2 id="sidebarBrandName">رفاد</h2>
+        <p id="sidebarBrandDesc">نظام إدارة الأدوية</p>
       </div>
     </div>
     <nav class="sidebar-nav" id="sidebarNav"></nav>
@@ -1060,12 +1066,60 @@
     </div>
   </div>
 
+  <!-- ============================================================
+       SCRIPTS — الترتيب مهم جداً
+       ============================================================ -->
   <script src="refad-core.js"></script>
   <script src="refad-auth.js"></script>
+  <script src="refad-theme-sync.js"></script>
+  <script src="refad-settings.js"></script>
   <script src="refad-camera-scanner.js"></script>
-    <script>
+
+  <script>
     (function () {
       'use strict';
+
+      // ============================================================
+      // 0) Safe Wrappers
+      // ============================================================
+      const SafeSettings = {
+        locale: {
+          formatMoney: function (v) {
+            try {
+              if (window.RefadSettings?.locale?.formatMoney) {
+                return RefadSettings.locale.formatMoney(v);
+              }
+            } catch (e) {}
+            return Refad.format.money(v);
+          }
+        },
+        identity: {
+          getSystemName: function () {
+            try {
+              if (window.RefadSettings?.identity?.getSystemName) {
+                return RefadSettings.identity.getSystemName();
+              }
+            } catch (e) {}
+            return 'رفاد';
+          },
+          getTagline: function () {
+            try {
+              if (window.RefadSettings?.identity?.getTagline) {
+                return RefadSettings.identity.getTagline();
+              }
+            } catch (e) {}
+            return 'نظام إدارة الأدوية';
+          },
+          getLogoUrl: function () {
+            try {
+              if (window.RefadSettings?.identity?.getLogoUrl) {
+                return RefadSettings.identity.getLogoUrl();
+              }
+            } catch (e) {}
+            return null;
+          }
+        }
+      };
 
       // ============================================================
       // 1) Guard
@@ -1091,71 +1145,7 @@
       const DRAFT_KEY = 'refad_stocktake_draft_' + session.company_id;
 
       // ============================================================
-      // 3) Sidebar MENU
-      // ============================================================
-      const MENU = [
-        { section: 'الرئيسية', items: [
-          { label: 'لوحة التحكم', icon: 'layout-dashboard', href: 'dashboard.html' },
-          { label: 'الشات', icon: 'message-circle', href: 'chat.html', permission: 'chat.use' },
-          { label: 'الإشعارات', icon: 'bell', href: 'notifications.html', permission: 'notifications.view' }
-        ]},
-        { section: 'العمليات', items: [
-          { label: 'الأصناف', icon: 'package', href: 'products.html', permission: 'products.view' },
-          { label: 'المخزون', icon: 'warehouse', href: 'inventory.html', permission: 'inventory.view' },
-          { label: 'طلبات الشراء', icon: 'clipboard-list', href: 'purchase-requests.html', permission: 'purchases.view' },
-          { label: 'الاستلامات', icon: 'package-check', href: 'receipts.html', permission: 'purchases.receive' },
-          { label: 'طلبات البيع', icon: 'shopping-cart', href: 'sales-orders.html', permission: 'sales.view' },
-          { label: 'نقطة البيع', icon: 'scan-barcode', href: 'pos.html', permission: 'sales.pos', badge: 'POS', badgeClass: 'teal' },
-          { label: 'الفواتير', icon: 'receipt', href: 'invoices.html', permission: 'sales.view' }
-        ]},
-        { section: 'الأطراف', items: [
-          { label: 'الموردين', icon: 'truck', href: 'suppliers.html', permission: 'suppliers.view' },
-          { label: 'العملاء', icon: 'users', href: 'customers.html', permission: 'customers.view' }
-        ]},
-        { section: 'المخزون', items: [
-          { label: 'الجرد', icon: 'clipboard-check', href: 'stocktake.html', permission: 'inventory.stocktake' },
-          { label: 'التسويات', icon: 'sliders-horizontal', href: 'adjustments.html', permission: 'inventory.adjust' }
-        ]},
-        { section: 'الموارد البشرية', items: [
-          { label: 'الموظفين', icon: 'user-cog', href: 'employees.html', permission: 'employees.view' },
-          { label: 'الصلاحيات', icon: 'shield-check', href: 'permissions.html', permission: 'permissions.manage' },
-          { label: 'الحضور', icon: 'calendar-check', href: 'attendance.html', permission: 'attendance.view' },
-          { label: 'الرواتب', icon: 'wallet', href: 'payroll.html', permission: 'payroll.view' }
-        ]},
-        { section: 'المالية', items: [
-          { label: 'المصاريف', icon: 'banknote', href: 'expenses.html', permission: 'expenses.view' },
-          { label: 'التقارير', icon: 'bar-chart-3', href: 'reports.html', permission: 'reports.view' }
-        ]},
-        { section: 'النظام', items: [
-          { label: 'إعدادات الشركة', icon: 'settings', href: 'company-settings.html', permission: 'settings.view' },
-          { label: 'شاشة الأدمن', icon: 'shield', href: 'admin.html', permission: 'admin.full', badge: 'Admin', badgeClass: 'gold' }
-        ]}
-      ];
-
-      function buildSidebar() {
-        const nav = document.getElementById('sidebarNav');
-        const currentPage = 'stocktake.html';
-        const frag = document.createDocumentFragment();
-        MENU.forEach(group => {
-          const allowed = group.items.filter(it => !it.permission || Refad.Session.has(it.permission));
-          if (!allowed.length) return;
-          frag.appendChild(Refad.el('div', { class: 'nav-section' }, group.section));
-          allowed.forEach(item => {
-            const a = Refad.el('a', {
-              href: item.href,
-              class: 'nav-item' + (item.href === currentPage ? ' active' : '')
-            });
-            a.innerHTML = `<i data-lucide="${item.icon}"></i><span>${Refad.escapeHtml(item.label)}</span>${item.badge ? `<span class="badge ${item.badgeClass || ''}">${item.badge}</span>` : ''}`;
-            frag.appendChild(a);
-          });
-        });
-        nav.innerHTML = '';
-        nav.appendChild(frag);
-        if (window.lucide) lucide.createIcons();
-      }
-
-      // ============================================================
-      // 4) UI Helpers
+      // 3) UI Helpers
       // ============================================================
       function fillUser() {
         const av = document.getElementById('userAvatar');
@@ -1164,6 +1154,27 @@
         else av.textContent = initial;
         document.getElementById('userName').textContent = session.full_name;
         document.getElementById('userRole').textContent = Refad.Session.has('company.owner') ? 'صاحب الشركة' : 'موظف';
+      }
+
+      function applyIdentity() {
+        const name = SafeSettings.identity.getSystemName();
+        const tagline = SafeSettings.identity.getTagline();
+        const logoUrl = SafeSettings.identity.getLogoUrl();
+
+        const brandName = document.getElementById('sidebarBrandName');
+        const brandDesc = document.getElementById('sidebarBrandDesc');
+        const logoImg = document.getElementById('sidebarLogoImg');
+
+        if (brandName) brandName.textContent = name;
+        if (brandDesc) brandDesc.textContent = tagline;
+        if (logoImg && logoUrl) {
+          logoImg.src = logoUrl;
+          logoImg.onerror = function () {
+            this.style.display = 'none';
+            const parent = this.parentElement;
+            if (parent) parent.innerHTML = '<span class="fallback">' + (name.charAt(0) || 'R') + '</span>';
+          };
+        }
       }
 
       function setupTheme() {
@@ -1208,8 +1219,14 @@
         });
       }
 
+      function setupRealtimeTheme() {
+        window.addEventListener('refad:theme-changed', () => {
+          applyIdentity();
+        });
+      }
+
       // ============================================================
-      // 5) Tabs
+      // 4) Tabs
       // ============================================================
       function setupTabs() {
         document.querySelectorAll('.tab').forEach(tab => {
@@ -1226,10 +1243,9 @@
       }
 
       // ============================================================
-      // 6) Load Current Session
+      // 5) Load Current Session
       // ============================================================
       async function loadCurrentSession() {
-        // 1. localStorage أولاً
         const draftRaw = localStorage.getItem(DRAFT_KEY);
         if (draftRaw) {
           try {
@@ -1243,7 +1259,6 @@
           } catch (e) { /* ignore */ }
         }
 
-        // 2. ابحث في DB عن جلسة pending
         try {
           const sessions = await Refad.db.select('stock_adjustments', {
             columns: 'id, adjustment_number, type, status, notes, created_at, created_by',
@@ -1316,7 +1331,6 @@
         const createdDate = s.created_at ? Refad.format.datetime(s.created_at) : 'الآن';
         document.getElementById('sessMeta').textContent = `بدأت في ${createdDate}`;
         
-        // المُجرد
         const createdBy = s.created_by === session.user_id ? session.full_name : (s.created_by_name || 'مستخدم آخر');
         document.getElementById('sessUser').innerHTML = `<i data-lucide="user" style="width:11px;height:11px;"></i> ${Refad.escapeHtml(createdBy)}`;
         
@@ -1324,7 +1338,7 @@
       }
 
       // ============================================================
-      // 7) Start New Session
+      // 6) Start New Session
       // ============================================================
       function openNewSessionModal() {
         document.getElementById('sessionName').value = '';
@@ -1412,7 +1426,7 @@
       }
 
       // ============================================================
-      // 8) Draft Management
+      // 7) Draft Management
       // ============================================================
       function saveDraft() {
         try {
@@ -1430,7 +1444,7 @@
       }
 
       // ============================================================
-      // 9) Render Summary
+      // 8) Render Summary
       // ============================================================
       function renderSummary() {
         const total = state.items.length;
@@ -1449,11 +1463,11 @@
         document.getElementById('sumCountedPct').textContent = `${countedPct}% مكتمل`;
         document.getElementById('sumMatched').textContent = Refad.format.number(matched);
         document.getElementById('sumDiff').textContent = Refad.format.number(diff);
-        document.getElementById('sumDiffValue').textContent = Refad.format.money(diffValue);
+        document.getElementById('sumDiffValue').textContent = SafeSettings.locale.formatMoney(diffValue);
       }
 
       // ============================================================
-      // 10) Render Table
+      // 9) Render Table
       // ============================================================
       function applyFilters() {
         const q = state.search.toLowerCase().trim();
@@ -1550,7 +1564,7 @@
                        step="1">
               </td>
               <td class="diff-cell ${diffCls}">${diffText}</td>
-              <td class="value-cell">${value > 0 ? Refad.format.money(value) : '—'}</td>
+              <td class="value-cell">${value > 0 ? SafeSettings.locale.formatMoney(value) : '—'}</td>
             </tr>
           `;
         }).join('');
@@ -1616,8 +1630,9 @@
           });
         });
       }
-            // ============================================================
-      // 11) Save Draft to DB
+
+      // ============================================================
+      // 10) Save Draft to DB
       // ============================================================
       async function saveSessionDraft(silent) {
         if (!state.currentSession || !state.items.length) return null;
@@ -1628,7 +1643,6 @@
             (state.currentSession.notes ? ' — ' + state.currentSession.notes : '');
 
           if (!adjId) {
-            // أنشئ جلسة جديدة
             const created = await Refad.db.insert('stock_adjustments', {
               company_id: session.company_id,
               adjustment_number: state.currentSession.number,
@@ -1640,7 +1654,6 @@
             adjId = created.id;
             state.currentSession.id = adjId;
 
-            // أضف العناصر
             const itemsToInsert = state.items.map(it => ({
               adjustment_id: adjId,
               product_id: it.product_id,
@@ -1652,10 +1665,7 @@
             }));
             await Refad.db.insertMany('stock_adjustment_items', itemsToInsert);
           } else {
-            // حدّث
             await Refad.db.update('stock_adjustments', adjId, { notes: fullNotes });
-
-            // احذف وأعد الإدراج
             await Refad.db.removeWhere('stock_adjustment_items', { adjustment_id: adjId });
 
             const itemsToInsert = state.items.map(it => ({
@@ -1681,7 +1691,7 @@
       }
 
       // ============================================================
-      // 12) Approve Session
+      // 11) Approve Session
       // ============================================================
       async function approveSession() {
         if (!state.items.length) return Refad.toast.warning('لا يوجد جلسة نشطة');
@@ -1706,20 +1716,16 @@
         if (window.lucide) lucide.createIcons();
 
         try {
-          // 1. احفظ الجلسة أولاً
           const adjId = await saveSessionDraft(true);
           if (!adjId) throw new Error('فشل حفظ الجلسة');
 
-          // 2. طبّق التسويات
           for (const it of state.items) {
             if (it.actual_qty === null || it.difference === 0) continue;
 
-            // حدّث الكمية في batch
             await Refad.db.update('batches', it.batch_id, {
               quantity_left: it.actual_qty
             });
 
-            // سجّل حركة تسوية
             await Refad.db.insert('inventory_movements', {
               company_id: session.company_id,
               product_id: it.product_id,
@@ -1734,7 +1740,6 @@
             });
           }
 
-          // 3. اعتمد الجلسة
           await Refad.db.update('stock_adjustments', adjId, {
             status: 'approved',
             approved_by: session.user_id
@@ -1745,7 +1750,6 @@
 
           Refad.toast.success('تم اعتماد الجرد وتطبيق التسويات');
 
-          // 4. نظّف
           clearDraft();
           state.currentSession = null;
           state.items = [];
@@ -1764,7 +1768,7 @@
       }
 
       // ============================================================
-      // 13) Cancel Session
+      // 12) Cancel Session
       // ============================================================
       async function cancelSession() {
         const ok = await Refad.alert.confirm(
@@ -1790,7 +1794,7 @@
       }
 
       // ============================================================
-      // 14) Sessions History
+      // 13) Sessions History
       // ============================================================
       async function loadSessionsHistory() {
         const container = document.getElementById('sessionsList');
@@ -1798,7 +1802,6 @@
         if (window.lucide) lucide.createIcons();
 
         try {
-          // 1) جلب الجلسات
           const rows = await Refad.db.select('stock_adjustments', {
             columns: 'id, adjustment_number, type, status, notes, created_at, updated_at, created_by, approved_by',
             eq: { company_id: session.company_id, type: 'count_diff' },
@@ -1820,7 +1823,6 @@
             return;
           }
 
-          // 2) جلب بيانات المستخدمين
           const userIds = [...new Set([
             ...rows.map(r => r.created_by),
             ...rows.map(r => r.approved_by)
@@ -1835,7 +1837,6 @@
             usersMap = new Map(users.map(u => [String(u.id), u.full_name]));
           }
 
-          // 3) جلب إحصائيات العناصر لكل جلسة
           const sessionIds = rows.map(r => r.id);
           const itemsStats = {};
           
@@ -1869,7 +1870,6 @@
             const st = STATUS[s.status] || STATUS.pending;
             const stats = itemsStats[String(s.id)] || { total: 0, diffs: 0, value: 0 };
             const creatorName = usersMap.get(String(s.created_by)) || '—';
-            const approverName = s.approved_by ? (usersMap.get(String(s.approved_by)) || '—') : null;
 
             return `
               <div class="session-item" data-session-id="${s.id}">
@@ -1882,7 +1882,7 @@
                     <span><i data-lucide="calendar"></i> ${Refad.format.datetime(s.created_at)}</span>
                     <span><i data-lucide="package"></i> ${stats.total} تشغيلة</span>
                     <span><i data-lucide="alert-triangle"></i> ${stats.diffs} فرق</span>
-                    ${stats.value > 0 ? `<span><i data-lucide="coins"></i> ${Refad.format.money(stats.value)}</span>` : ''}
+                    ${stats.value > 0 ? `<span><i data-lucide="coins"></i> ${SafeSettings.locale.formatMoney(stats.value)}</span>` : ''}
                     <span><i data-lucide="user"></i> ${Refad.escapeHtml(creatorName)}</span>
                   </div>
                 </div>
@@ -1901,7 +1901,6 @@
 
           if (window.lucide) lucide.createIcons();
 
-          // ربط الأحداث
           container.querySelectorAll('[data-view-session]').forEach(btn => {
             btn.addEventListener('click', e => {
               e.stopPropagation();
@@ -1916,7 +1915,6 @@
             });
           });
 
-          // فتح بالضغط على الصف
           container.querySelectorAll('.session-item').forEach(item => {
             item.addEventListener('click', e => {
               if (e.target.closest('button')) return;
@@ -1931,7 +1929,7 @@
       }
 
       // ============================================================
-      // 15) Open Session Details
+      // 14) Open Session Details
       // ============================================================
       async function openSessionDetails(sessionId) {
         state.viewingSessionId = sessionId;
@@ -1947,7 +1945,6 @@
         if (window.lucide) lucide.createIcons();
 
         try {
-          // 1) جلب الجلسة
           const s = await Refad.db.selectOne('stock_adjustments', {
             columns: 'id, adjustment_number, type, status, notes, created_at, updated_at, created_by, approved_by',
             eq: { id: sessionId }
@@ -1960,7 +1957,6 @@
 
           document.getElementById('detailsSessionNum').textContent = s.adjustment_number;
 
-          // 2) جلب العناصر
           const items = await Refad.db.select('stock_adjustment_items', {
             columns: `id, product_id, batch_id, system_qty, actual_qty, difference, unit_cost,
                       products(id, name, name_en, form, unit, category),
@@ -1969,7 +1965,6 @@
             order: { column: 'id', ascending: true }
           });
 
-          // 3) جلب المستخدمين
           const userIds = [s.created_by, s.approved_by].filter(Boolean);
           let usersMap = new Map();
           if (userIds.length) {
@@ -1980,7 +1975,6 @@
             usersMap = new Map(users.map(u => [String(u.id), u.full_name]));
           }
 
-          // 4) حساب الإحصائيات
           const total = items.length;
           const counted = items.filter(it => it.actual_qty !== null).length;
           const matched = items.filter(it => it.actual_qty !== null && it.difference === 0).length;
@@ -1990,7 +1984,6 @@
           const negativeValue = negativeDiffs.reduce((sum, it) => sum + (Number(it.unit_cost) || 0) * Math.abs(it.difference), 0);
           const netValue = positiveValue - negativeValue;
 
-          // 5) تصنيفات
           const categories = {};
           items.forEach(it => {
             const cat = it.products?.category || 'غير مصنف';
@@ -1999,15 +1992,12 @@
             if (it.difference !== 0) categories[cat].diffs++;
           });
 
-          // 6) ABC Analysis (حسب قيمة الفرق)
           const sortedByValue = items
             .map(it => ({ ...it, value: Math.abs(it.difference || 0) * (Number(it.unit_cost) || 0) }))
             .sort((a, b) => b.value - a.value);
 
-          // 7) أعلى 10 فروق
           const topDiffs = sortedByValue.slice(0, 10);
 
-          // 8) عرض
           const STATUS = {
             'pending':   { label: 'مسودة',   cls: 'gold' },
             'approved':  { label: 'معتمد',   cls: 'green' },
@@ -2016,7 +2006,6 @@
           const st = STATUS[s.status] || STATUS.pending;
 
           body.innerHTML = `
-            <!-- Header Info -->
             <div class="card" style="margin-bottom:16px;">
               <div class="card-body" style="padding:16px 20px;">
                 <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;">
@@ -2033,7 +2022,6 @@
               </div>
             </div>
 
-            <!-- Summary Cards -->
             <div class="detail-summary-grid">
               <div class="detail-summary-card">
                 <div class="label">إجمالي التشغيلات</div>
@@ -2058,12 +2046,11 @@
               <div class="detail-summary-card">
                 <div class="label">صافي الفرق</div>
                 <div class="value ${netValue >= 0 ? 'success' : 'danger'}">
-                  ${Refad.format.money(netValue)}
+                  ${SafeSettings.locale.formatMoney(netValue)}
                 </div>
               </div>
             </div>
 
-            <!-- Basic Info -->
             <div class="detail-section">
               <div class="detail-section-title"><i data-lucide="info"></i> معلومات أساسية</div>
               <div class="detail-row">
@@ -2080,34 +2067,26 @@
                   <span class="val success">${Refad.escapeHtml(usersMap.get(String(s.approved_by)) || '—')}</span>
                 </div>
               ` : ''}
-              ${s.updated_at && s.updated_at !== s.created_at ? `
-                <div class="detail-row">
-                  <span class="lbl">آخر تحديث</span>
-                  <span class="val">${Refad.format.datetime(s.updated_at)}</span>
-                </div>
-              ` : ''}
             </div>
 
-            <!-- Financial Summary -->
             <div class="detail-section">
               <div class="detail-section-title"><i data-lucide="coins"></i> الملخص المالي</div>
               <div class="detail-row">
                 <span class="lbl">قيمة الزيادات</span>
-                <span class="val success">+ ${Refad.format.money(positiveValue)}</span>
+                <span class="val success">+ ${SafeSettings.locale.formatMoney(positiveValue)}</span>
               </div>
               <div class="detail-row">
                 <span class="lbl">قيمة النقص</span>
-                <span class="val danger">- ${Refad.format.money(negativeValue)}</span>
+                <span class="val danger">- ${SafeSettings.locale.formatMoney(negativeValue)}</span>
               </div>
               <div class="detail-row" style="border-top:2px solid var(--border);padding-top:12px;margin-top:8px;">
                 <span class="lbl" style="font-weight:800;">الصافي</span>
                 <span class="val ${netValue >= 0 ? 'success' : 'danger'}" style="font-size:16px;">
-                  ${Refad.format.money(netValue)}
+                  ${SafeSettings.locale.formatMoney(netValue)}
                 </span>
               </div>
             </div>
 
-            <!-- Categories Breakdown -->
             ${Object.keys(categories).length > 1 ? `
               <div class="detail-section">
                 <div class="detail-section-title"><i data-lucide="tags"></i> حسب التصنيف</div>
@@ -2124,7 +2103,6 @@
               </div>
             ` : ''}
 
-            <!-- Top Diffs -->
             ${topDiffs.filter(it => it.difference !== 0).length ? `
               <div class="detail-section">
                 <div class="detail-section-title"><i data-lucide="trending-up"></i> أعلى 10 فروق</div>
@@ -2148,7 +2126,7 @@
                             ${isPos ? '+' : ''}${Refad.format.number(it.difference)}
                           </span>
                           <span class="item-qty" style="background:var(--bg);color:var(--text);">
-                            ${Refad.format.money(value)}
+                            ${SafeSettings.locale.formatMoney(value)}
                           </span>
                         </div>
                       </div>
@@ -2158,7 +2136,6 @@
               </div>
             ` : ''}
 
-            <!-- All Items -->
             <div class="detail-section">
               <div class="detail-section-title">
                 <i data-lucide="package"></i> كل التشغيلات (${items.length})
@@ -2176,7 +2153,6 @@
                           <div class="item-sub">
                             ${Refad.escapeHtml([it.products?.form, it.products?.unit].filter(Boolean).join(' • ') || '')}
                             • تشغيلة: ${Refad.escapeHtml(it.batches?.batch_number || '—')}
-                            ${it.batches?.expiry_date ? ' • ' + Refad.format.date(it.batches.expiry_date) : ''}
                           </div>
                         </div>
                         <div style="display:flex;gap:6px;align-items:center;">
@@ -2202,7 +2178,7 @@
       }
 
       // ============================================================
-      // 16) Export Session Details
+      // 15) Export Session Details
       // ============================================================
       async function exportSessionDetails() {
         if (!state.viewingSessionId) return;
@@ -2245,7 +2221,7 @@
       }
 
       // ============================================================
-      // 17) Delete Session
+      // 16) Delete Session
       // ============================================================
       async function deleteSession(id) {
         const ok = await Refad.alert.confirm('حذف الجلسة', 'هل تريد حذف هذه الجلسة نهائياً؟', 'حذف');
@@ -2263,7 +2239,7 @@
       }
 
       // ============================================================
-      // 18) Barcode Scanner
+      // 17) Barcode Scanner
       // ============================================================
       function setupScanner() {
         const modal = document.getElementById('scanModal');
@@ -2302,14 +2278,11 @@
         const trimmed = String(code || '').trim().toUpperCase();
         if (!trimmed) return;
 
-        // ابحث في العناصر عن batch_barcode مطابق
         const found = state.items.find(it => 
           it.batch?.batch_number === trimmed ||
           String(it.batch_id) === trimmed
         );
 
-        // ابحث في DB
-        // أولاً: ابحث في batches table
         Refad.db.select('batches', {
           columns: 'id, batch_number, batch_barcode',
           eq: { company_id: session.company_id },
@@ -2331,7 +2304,6 @@
             return;
           }
 
-          // ضع الكمية النظامية + ركّز على الصف
           if (item.actual_qty === null) {
             item.actual_qty = item.system_qty;
             item.difference = 0;
@@ -2341,7 +2313,6 @@
           renderSummary();
           applyFilters();
 
-          // scroll to row
           setTimeout(() => {
             const idx = state.items.indexOf(item);
             const row = document.querySelector(`tr:has(input[data-idx="${idx}"])`);
@@ -2364,12 +2335,13 @@
           console.error('Barcode lookup failed:', e);
           Refad.toast.error('فشل البحث');
         });
-      }      // ============================================================
-      // 19) Export Current Session
+      }
+
+      // ============================================================
+      // 18) Export Current Session
       // ============================================================
       function exportCurrentSession() {
         if (!state.currentSession) {
-          // إذا كنا في قائمة الجلسات
           if (state.allSessions.length) {
             const rows = state.allSessions.map(s => ({
               'رقم الجلسة': s.adjustment_number,
@@ -2408,24 +2380,20 @@
       }
 
       // ============================================================
-      // 20) Bind Events
+      // 19) Bind Events
       // ============================================================
       function bindEvents() {
-        // New Session
         document.getElementById('newSessionBtn').addEventListener('click', openNewSessionModal);
         document.getElementById('startBtn').addEventListener('click', openNewSessionModal);
         document.getElementById('confirmStartBtn').addEventListener('click', startNewSession);
 
-        // Current Session Actions
         document.getElementById('cancelSessionBtn').addEventListener('click', cancelSession);
         document.getElementById('saveSessionBtn').addEventListener('click', () => saveSessionDraft(false));
         document.getElementById('approveSessionBtn').addEventListener('click', approveSession);
 
-        // Export
         document.getElementById('exportBtn').addEventListener('click', exportCurrentSession);
         document.getElementById('exportSessionBtn').addEventListener('click', exportSessionDetails);
 
-        // Search + Filters
         const searchHandler = Refad.debounce(v => {
           state.search = v;
           applyFilters();
@@ -2437,7 +2405,6 @@
           applyFilters();
         });
 
-        // Clear Counts
         document.getElementById('clearCountsBtn').addEventListener('click', async () => {
           const ok = await Refad.alert.confirm('مسح الأعداد', 'سيتم مسح كل الأعداد المُدخلة. متابعة؟', 'مسح');
           if (!ok) return;
@@ -2448,7 +2415,6 @@
           Refad.toast.success('تم المسح');
         });
 
-        // Fill with System Quantities
         document.getElementById('fillSystemBtn').addEventListener('click', async () => {
           const ok = await Refad.alert.confirm('ملء بالكميات النظامية', 'سيتم وضع الكمية النظامية لكل تشغيلة فارغة. متابعة؟', 'ملء');
           if (!ok) return;
@@ -2469,10 +2435,8 @@
           Refad.toast.success(`تم ملء ${filled} تشغيلة`);
         });
 
-        // Refresh Sessions
         document.getElementById('refreshSessionsBtn').addEventListener('click', loadSessionsHistory);
 
-        // Modals close
         document.querySelectorAll('[data-close]').forEach(b => {
           b.addEventListener('click', () => {
             document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.remove('show'));
@@ -2495,26 +2459,21 @@
           }
         });
 
-        // Save draft on unload
         window.addEventListener('beforeunload', () => {
           if (state.currentSession && state.items.length) {
             saveDraft();
           }
         });
 
-        // Keyboard shortcuts
         document.addEventListener('keydown', e => {
-          // Ctrl+S → Save Draft
           if ((e.ctrlKey || e.metaKey) && e.key === 's') {
             e.preventDefault();
             if (state.currentSession) saveSessionDraft(false);
           }
-          // Ctrl+Enter → Approve
           if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
             e.preventDefault();
             if (state.currentSession) approveSession();
           }
-          // F2 → Focus search
           if (e.key === 'F2') {
             e.preventDefault();
             const inp = document.getElementById('searchInput');
@@ -2527,15 +2486,17 @@
       }
 
       // ============================================================
-      // 21) Init
+      // 20) Init
       // ============================================================
       async function init() {
-        buildSidebar();
+        Refad.buildMenu('stocktake.html');
         fillUser();
+        applyIdentity();
         setupTheme();
         setupSidebarMobile();
         setupUserMenu();
         setupNotifBtn();
+        setupRealtimeTheme();
         setupTabs();
         setupScanner();
         bindEvents();
@@ -2544,17 +2505,15 @@
 
         if (Refad.registerServiceWorker) Refad.registerServiceWorker();
 
-        console.log('%c[Refad] Stocktake PRO ready', 'color:#14B8A6;font-weight:bold');
+        console.log('%c[Refad] Stocktake v2 ready (Theme Sync + Settings)', 'color:#14B8A6;font-weight:bold');
       }
 
-      // Start
       if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
       } else {
         init();
       }
 
-      // Spinner
       const spinnerStyle = document.createElement('style');
       spinnerStyle.textContent = '@keyframes spin { to { transform: rotate(360deg); } }';
       document.head.appendChild(spinnerStyle);

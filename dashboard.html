@@ -4,17 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#0B2C4D">
-  <title>الرئيسية - رفاد</title>
+  <title>لوحة التحكم - رفاد</title>
 
   <link rel="icon" type="image/png" href="logo.png">
   <link rel="manifest" href="manifest.json">
 
-  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <!-- Libraries -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
@@ -22,11 +20,9 @@
   <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <style>
-    /* ============================================================
-       Reset & CSS Variables
-       ============================================================ */
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     :root {
@@ -44,9 +40,9 @@
       --success: #10b981;
       --warning: #f59e0b;
       --info: #3b82f6;
+      --purple: #8b5cf6;
       --sidebar-bg: #0B2C4D;
       --sidebar-text: #cbd5e1;
-      --sidebar-active: #14B8A6;
       --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
       --shadow: 0 4px 20px rgba(11, 44, 77, 0.08);
       --shadow-lg: 0 10px 40px rgba(11, 44, 77, 0.12);
@@ -64,9 +60,6 @@
       --border: #1e3a5f;
       --sidebar-bg: #061a2e;
       --sidebar-text: #94a3b8;
-      --shadow-sm: 0 1px 3px rgba(0,0,0,0.4);
-      --shadow: 0 4px 20px rgba(0,0,0,0.4);
-      --shadow-lg: 0 10px 40px rgba(0,0,0,0.5);
     }
 
     html, body {
@@ -77,230 +70,90 @@
       transition: background 0.3s, color 0.3s;
     }
 
-    body {
-      display: flex;
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
+    body { display: flex; min-height: 100vh; overflow-x: hidden; }
 
-    /* ============================================================
-       Sidebar
-       ============================================================ */
+    /* ============ Sidebar ============ */
     .sidebar {
       width: var(--sidebar-w);
       height: 100vh;
       background: var(--sidebar-bg);
       color: var(--sidebar-text);
       position: fixed;
-      top: 0;
-      right: 0;
+      top: 0; right: 0;
       z-index: 100;
-      display: flex;
-      flex-direction: column;
+      display: flex; flex-direction: column;
       transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       box-shadow: -4px 0 20px rgba(0,0,0,0.1);
     }
-
     .sidebar-header {
       padding: 20px 22px;
       border-bottom: 1px solid rgba(255,255,255,0.08);
-      display: flex;
-      align-items: center;
-      gap: 14px;
+      display: flex; align-items: center; gap: 14px;
       height: var(--topbar-h);
       box-sizing: border-box;
     }
-
     .sidebar-logo {
-      width: 40px;
-      height: 40px;
+      width: 40px; height: 40px;
       background: linear-gradient(135deg, var(--accent), var(--accent-dark));
       border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: flex; align-items: center; justify-content: center;
       flex-shrink: 0;
       box-shadow: 0 4px 12px rgba(20,184,166,0.4);
+      overflow: hidden;
     }
-
-    .sidebar-logo img {
-      width: 70%;
-      height: 70%;
-      object-fit: contain;
-    }
-
-    .sidebar-logo .fallback {
-      color: white;
-      font-weight: 800;
-      font-size: 18px;
-    }
-
-    .sidebar-brand h2 {
-      color: white;
-      font-size: 20px;
-      font-weight: 800;
-      letter-spacing: -0.5px;
-      line-height: 1.2;
-    }
-
-    .sidebar-brand p {
-      font-size: 10px;
-      color: var(--sidebar-text);
-      opacity: 0.7;
-      font-weight: 500;
-      margin-top: 2px;
-    }
-
-    .sidebar-nav {
-      flex: 1;
-      overflow-y: auto;
-      padding: 12px 0;
-      scrollbar-width: thin;
-      scrollbar-color: rgba(255,255,255,0.15) transparent;
-    }
-
+    .sidebar-logo img { width: 70%; height: 70%; object-fit: contain; }
+    .sidebar-logo .fallback { color: white; font-weight: 800; font-size: 18px; }
+    .sidebar-brand h2 { color: white; font-size: 20px; font-weight: 800; line-height: 1.2; }
+    .sidebar-brand p { font-size: 10px; color: var(--sidebar-text); opacity: 0.7; font-weight: 500; margin-top: 2px; }
+    .sidebar-nav { flex: 1; overflow-y: auto; padding: 12px 0; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.15) transparent; }
     .sidebar-nav::-webkit-scrollbar { width: 5px; }
-    .sidebar-nav::-webkit-scrollbar-track { background: transparent; }
-    .sidebar-nav::-webkit-scrollbar-thumb {
-      background: rgba(255,255,255,0.15);
-      border-radius: 10px;
-    }
-
-    .nav-section {
-      padding: 8px 20px 4px;
-      font-size: 10px;
-      font-weight: 700;
-      color: rgba(255,255,255,0.35);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-top: 8px;
-    }
-
+    .sidebar-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 10px; }
+    .nav-section { padding: 8px 20px 4px; font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 1px; margin-top: 8px; }
     .nav-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
+      display: flex; align-items: center; gap: 12px;
       padding: 11px 22px;
       color: var(--sidebar-text);
       text-decoration: none;
-      font-size: 14px;
-      font-weight: 500;
+      font-size: 14px; font-weight: 500;
       border-right: 3px solid transparent;
       transition: all 0.2s;
       position: relative;
       cursor: pointer;
     }
-
-    .nav-item:hover {
-      background: rgba(255,255,255,0.05);
-      color: white;
-      border-right-color: rgba(20,184,166,0.5);
-    }
-
-    .nav-item.active {
-      background: rgba(20,184,166,0.12);
-      color: white;
-      border-right-color: var(--accent);
-      font-weight: 600;
-    }
-
-    .nav-item.active::before {
-      content: '';
-      position: absolute;
-      right: 0;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 3px;
-      height: 60%;
-      background: var(--accent);
-      border-radius: 0 4px 4px 0;
-    }
-
-    .nav-item i,
-    .nav-item svg {
-      width: 18px;
-      height: 18px;
-      flex-shrink: 0;
-      opacity: 0.85;
-    }
-
-    .nav-item .badge {
-      margin-right: auto;
-      background: var(--danger);
-      color: white;
-      font-size: 10px;
-      font-weight: 700;
-      padding: 2px 7px;
-      border-radius: 10px;
-      min-width: 20px;
-      text-align: center;
-    }
-
+    .nav-item:hover { background: rgba(255,255,255,0.05); color: white; border-right-color: rgba(20,184,166,0.5); }
+    .nav-item.active { background: rgba(20,184,166,0.12); color: white; border-right-color: var(--accent); font-weight: 600; }
+    .nav-item.active::before { content: ''; position: absolute; right: 0; top: 50%; transform: translateY(-50%); width: 3px; height: 60%; background: var(--accent); border-radius: 0 4px 4px 0; }
+    .nav-item i, .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; opacity: 0.85; }
+    .nav-item .badge { margin-right: auto; background: var(--danger); color: white; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
     .nav-item .badge.teal { background: var(--accent); }
     .nav-item .badge.gold { background: var(--gold); }
+    .nav-item .badge.new { background: var(--purple); }
 
-    /* ============================================================
-       Main Area
-       ============================================================ */
-    .main {
-      flex: 1;
-      margin-right: var(--sidebar-w);
-      min-width: 0;
-      display: flex;
-      flex-direction: column;
-    }
-
-    /* ============================================================
-       Topbar
-       ============================================================ */
+    /* ============ Main ============ */
+    .main { flex: 1; margin-right: var(--sidebar-w); min-width: 0; display: flex; flex-direction: column; }
     .topbar {
       height: var(--topbar-h);
       background: var(--card);
       border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      gap: 16px;
+      display: flex; align-items: center; gap: 16px;
       padding: 0 24px;
-      position: sticky;
-      top: 0;
+      position: sticky; top: 0;
       z-index: 50;
       box-shadow: var(--shadow-sm);
     }
-
-    .menu-toggle {
-      display: none;
-      background: transparent;
-      border: none;
-      color: var(--text);
-      cursor: pointer;
-      padding: 8px;
-      border-radius: 8px;
-      transition: background 0.2s;
-    }
-
+    .menu-toggle { display: none; background: transparent; border: none; color: var(--text); cursor: pointer; padding: 8px; border-radius: 8px; }
     .menu-toggle:hover { background: var(--bg); }
+    .topbar-title { font-size: 18px; font-weight: 700; color: var(--text); flex-shrink: 0; }
+    .topbar-title span { color: var(--text-muted); font-weight: 500; font-size: 14px; margin-right: 8px; }
 
-    .topbar-title {
-      font-size: 18px;
-      font-weight: 700;
-      color: var(--text);
-      flex-shrink: 0;
-    }
-
-    .topbar-title span {
-      color: var(--text-muted);
-      font-weight: 500;
-      font-size: 14px;
-      margin-right: 8px;
-    }
-
-    .search-box {
+    /* ============ Search ============ */
+    .search-wrapper {
       flex: 1;
-      max-width: 380px;
+      max-width: 420px;
       margin-right: auto;
       position: relative;
     }
-
+    .search-box { position: relative; }
     .search-box input {
       width: 100%;
       padding: 10px 42px 10px 16px;
@@ -313,14 +166,12 @@
       outline: none;
       transition: all 0.2s;
     }
-
     .search-box input:focus {
       border-color: var(--accent);
       background: var(--card);
       box-shadow: 0 0 0 3px rgba(20,184,166,0.1);
     }
-
-    .search-box i {
+    .search-box > i {
       position: absolute;
       right: 14px;
       top: 50%;
@@ -330,53 +181,181 @@
       color: var(--text-muted);
       pointer-events: none;
     }
-
-    .topbar-actions {
+    .search-shortcut {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
       display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-right: auto;
+      gap: 3px;
+    }
+    .search-shortcut .kbd {
+      padding: 2px 6px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-muted);
+      font-family: 'Courier New', monospace;
     }
 
+    .search-results {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      left: 0;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: var(--shadow-lg);
+      max-height: 480px;
+      overflow-y: auto;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-8px);
+      transition: all 0.2s;
+      z-index: 100;
+    }
+    .search-results.show {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+    .search-results::-webkit-scrollbar { width: 6px; }
+    .search-results::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+
+    .search-results-header {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .search-results-header .count {
+      background: var(--accent);
+      color: white;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 10px;
+    }
+
+    .search-section { padding: 8px 0; }
+    .search-section-title {
+      padding: 6px 14px;
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .search-section-title i { width: 12px; height: 12px; }
+
+    .search-result-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 14px;
+      cursor: pointer;
+      transition: background 0.15s;
+      text-decoration: none;
+      color: inherit;
+      font-size: 13px;
+    }
+    .search-result-item:hover,
+    .search-result-item.highlighted {
+      background: var(--bg);
+    }
+    .search-result-item .result-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: white;
+    }
+    .search-result-item .result-icon i { width: 16px; height: 16px; }
+    .search-result-item .result-icon.product { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+    .search-result-item .result-icon.customer { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
+    .search-result-item .result-icon.supplier { background: linear-gradient(135deg, #f97316, #ea580c); }
+    .search-result-item .result-icon.invoice { background: linear-gradient(135deg, #10b981, #047857); }
+    .search-result-item .result-body { flex: 1; min-width: 0; }
+    .search-result-item .result-name { font-weight: 700; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .search-result-item .result-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .search-result-item .result-arrow { color: var(--text-muted); flex-shrink: 0; }
+
+    .search-empty { padding: 30px 20px; text-align: center; color: var(--text-muted); }
+    .search-empty i { width: 40px; height: 40px; opacity: 0.4; margin-bottom: 8px; }
+    .search-empty p { font-size: 13px; font-weight: 500; }
+    .search-empty small { display: block; font-size: 11px; margin-top: 4px; opacity: 0.7; }
+
+    .search-loading { padding: 20px; text-align: center; color: var(--text-muted); }
+    .search-loading i { width: 24px; height: 24px; animation: spin 1s linear infinite; color: var(--accent); }
+
+    .search-results-footer {
+      padding: 8px 14px;
+      border-top: 1px solid var(--border);
+      font-size: 10px;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      background: var(--bg);
+      border-radius: 0 0 12px 12px;
+    }
+    .search-results-footer .hint { display: flex; align-items: center; gap: 4px; }
+    .search-results-footer .hint .kbd {
+      padding: 1px 5px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-size: 9px;
+      font-weight: 700;
+      font-family: 'Courier New', monospace;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ============ Topbar Actions ============ */
+    .topbar-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
     .icon-btn {
-      width: 40px;
-      height: 40px;
+      width: 40px; height: 40px;
       border-radius: 10px;
       border: 1px solid var(--border);
       background: var(--card);
       color: var(--text);
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: flex; align-items: center; justify-content: center;
       position: relative;
       transition: all 0.2s;
     }
-
-    .icon-btn:hover {
-      border-color: var(--accent);
-      color: var(--accent);
-      transform: translateY(-1px);
-    }
-
-    .icon-btn i,
-    .icon-btn svg { width: 18px; height: 18px; }
-
-    .icon-btn .dot {
+    .icon-btn:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
+    .icon-btn i, .icon-btn svg { width: 18px; height: 18px; }
+    .icon-btn .notif-count {
       position: absolute;
-      top: 8px;
-      left: 8px;
-      width: 8px;
-      height: 8px;
+      top: -4px;
+      left: -4px;
       background: var(--danger);
-      border-radius: 50%;
+      color: white;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 10px;
       border: 2px solid var(--card);
+      min-width: 20px;
+      text-align: center;
     }
-
     .user-menu {
-      display: flex;
-      align-items: center;
-      gap: 10px;
+      display: flex; align-items: center; gap: 10px;
       padding: 5px 12px 5px 5px;
       border-radius: 10px;
       cursor: pointer;
@@ -384,128 +363,65 @@
       border: 1px solid var(--border);
       background: var(--card);
     }
-
     .user-menu:hover { background: var(--bg); }
-
     .user-avatar {
-      width: 34px;
-      height: 34px;
+      width: 34px; height: 34px;
       border-radius: 9px;
       background: linear-gradient(135deg, var(--primary), var(--accent));
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-weight: 700;
-      font-size: 14px;
-      flex-shrink: 0;
-      overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-weight: 700; font-size: 14px;
+      flex-shrink: 0; overflow: hidden;
     }
-
     .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
-
-    .user-info {
-      display: flex;
-      flex-direction: column;
-      line-height: 1.2;
-    }
-
-    .user-info .name {
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--text);
-    }
-
-    .user-info .role {
-      font-size: 11px;
-      color: var(--text-muted);
-    }
-
-    /* Dropdown */
-    .dropdown {
-      position: absolute;
-      top: calc(100% + 8px);
-      left: 0;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      box-shadow: var(--shadow-lg);
-      min-width: 200px;
-      padding: 6px;
-      opacity: 0;
-      visibility: hidden;
-      transform: translateY(-8px);
-      transition: all 0.2s;
-      z-index: 100;
-    }
-
-    .dropdown.show {
-      opacity: 1;
-      visibility: visible;
-      transform: translateY(0);
-    }
-
-    .dropdown-item {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 9px 12px;
-      border-radius: 8px;
-      color: var(--text);
-      font-size: 13px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background 0.15s;
-      text-decoration: none;
-    }
-
+    .user-info { display: flex; flex-direction: column; line-height: 1.2; }
+    .user-info .name { font-size: 13px; font-weight: 700; color: var(--text); }
+    .user-info .role { font-size: 11px; color: var(--text-muted); }
+    .dropdown { position: absolute; top: calc(100% + 8px); left: 0; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: var(--shadow-lg); min-width: 200px; padding: 6px; opacity: 0; visibility: hidden; transform: translateY(-8px); transition: all 0.2s; z-index: 100; }
+    .dropdown.show { opacity: 1; visibility: visible; transform: translateY(0); }
+    .dropdown-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; color: var(--text); font-size: 13px; font-weight: 500; cursor: pointer; transition: background 0.15s; text-decoration: none; }
     .dropdown-item:hover { background: var(--bg); }
-
     .dropdown-item.danger { color: var(--danger); }
     .dropdown-item.danger:hover { background: rgba(239,68,68,0.08); }
-
     .dropdown-item i { width: 16px; height: 16px; }
+    .dropdown-divider { height: 1px; background: var(--border); margin: 6px 0; }
 
-    .dropdown-divider {
-      height: 1px;
-      background: var(--border);
-      margin: 6px 0;
-    }
+    /* ============ Content ============ */
+    .content { padding: 24px; flex: 1; }
+    .page-header { margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+    .page-header h1 { font-size: 24px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+    .page-header p { font-size: 14px; color: var(--text-muted); }
+    .page-header-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 
-    /* ============================================================
-       Content Area
-       ============================================================ */
-    .content {
-      padding: 24px;
-      flex: 1;
-    }
-
-    .page-header {
-      margin-bottom: 24px;
-    }
-
-    .page-header h1 {
-      font-size: 24px;
-      font-weight: 800;
+    .btn-sm {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 14px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      cursor: pointer;
+      font-family: inherit;
+      font-weight: 600;
+      font-size: 13px;
       color: var(--text);
-      margin-bottom: 4px;
+      transition: all 0.2s;
+      white-space: nowrap;
     }
-
-    .page-header p {
-      font-size: 14px;
-      color: var(--text-muted);
+    .btn-sm:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-sm i { width: 14px; height: 14px; }
+    .btn-sm.primary {
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: white;
+      border: none;
     }
+    .btn-sm.primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(20,184,166,0.3); color: white; }
 
-    /* ============================================================
-       Stats Cards
-       ============================================================ */
+    /* ============ Stats ============ */
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 16px;
       margin-bottom: 24px;
     }
-
     .stat-card {
       background: var(--card);
       border: 1px solid var(--border);
@@ -518,80 +434,45 @@
       transition: all 0.3s;
       position: relative;
       overflow: hidden;
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
     }
-
     .stat-card::before {
       content: '';
       position: absolute;
-      top: 0;
-      right: 0;
-      width: 4px;
-      height: 100%;
+      top: 0; right: 0;
+      width: 4px; height: 100%;
       background: var(--accent);
       transform: scaleY(0);
       transition: transform 0.3s;
     }
-
-    .stat-card:hover {
-      transform: translateY(-3px);
-      box-shadow: var(--shadow);
-      border-color: var(--accent);
-    }
-
+    .stat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow); border-color: var(--accent); }
     .stat-card:hover::before { transform: scaleY(1); }
-
     .stat-icon {
-      width: 54px;
-      height: 54px;
+      width: 54px; height: 54px;
       border-radius: 14px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: flex; align-items: center; justify-content: center;
       flex-shrink: 0;
     }
-
     .stat-icon i, .stat-icon svg { width: 24px; height: 24px; color: white; }
-
     .stat-icon.blue   { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
     .stat-icon.teal   { background: linear-gradient(135deg, #14B8A6, #0d9488); }
     .stat-icon.gold   { background: linear-gradient(135deg, #F59E0B, #d97706); }
     .stat-icon.purple { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
     .stat-icon.red    { background: linear-gradient(135deg, #ef4444, #b91c1c); }
     .stat-icon.green  { background: linear-gradient(135deg, #10b981, #047857); }
-
+    .stat-icon.pink   { background: linear-gradient(135deg, #ec4899, #be185d); }
+    .stat-icon.orange { background: linear-gradient(135deg, #f97316, #ea580c); }
     .stat-body { flex: 1; min-width: 0; }
-
-    .stat-body .label {
-      font-size: 12px;
-      color: var(--text-muted);
-      font-weight: 600;
-      margin-bottom: 4px;
-    }
-
-    .stat-body .value {
-      font-size: 22px;
-      font-weight: 800;
-      color: var(--text);
-      line-height: 1.1;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .stat-body .change {
-      font-size: 11px;
-      font-weight: 600;
-      margin-top: 4px;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-
+    .stat-body .label { font-size: 12px; color: var(--text-muted); font-weight: 600; margin-bottom: 4px; }
+    .stat-body .value { font-size: 22px; font-weight: 800; color: var(--text); line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .stat-body .change { font-size: 11px; font-weight: 600; margin-top: 4px; display: flex; align-items: center; gap: 4px; }
     .change.up   { color: var(--success); }
     .change.down { color: var(--danger); }
     .change.flat { color: var(--text-muted); }
 
-    /* Skeleton loading */
+    /* Skeleton */
     .skeleton {
       background: linear-gradient(90deg, var(--border) 25%, var(--bg) 50%, var(--border) 75%);
       background-size: 200% 100%;
@@ -599,22 +480,52 @@
       border-radius: 6px;
       color: transparent !important;
     }
-
     @keyframes shimmer {
       0% { background-position: 200% 0; }
       100% { background-position: -200% 0; }
     }
 
-    /* ============================================================
-       Grid for Charts + Lists
-       ============================================================ */
+    /* ============ Quick Actions ============ */
+    .quick-actions {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+    .quick-action {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 16px 12px;
+      background: var(--card);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+      color: var(--text);
+    }
+    .quick-action:hover { border-color: var(--accent); transform: translateY(-3px); box-shadow: var(--shadow); }
+    .quick-action .qa-icon {
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      color: white;
+      transition: transform 0.2s;
+    }
+    .quick-action:hover .qa-icon { transform: scale(1.1); }
+    .quick-action .qa-icon i { width: 22px; height: 22px; }
+    .quick-action .qa-label { font-size: 12px; font-weight: 700; text-align: center; }
+
+    /* ============ Grid 2 ============ */
     .grid-2 {
       display: grid;
       grid-template-columns: 2fr 1fr;
       gap: 16px;
       margin-bottom: 16px;
     }
-
     @media (max-width: 1024px) {
       .grid-2 { grid-template-columns: 1fr; }
     }
@@ -627,28 +538,18 @@
       overflow: hidden;
       transition: box-shadow 0.3s;
     }
-
     .card:hover { box-shadow: var(--shadow); }
-
     .card-header {
       padding: 16px 20px;
       border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
     }
-
-    .card-header h3 {
-      font-size: 15px;
-      font-weight: 700;
-      color: var(--text);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
+    .card-header h3 { font-size: 15px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px; }
     .card-header h3 i { width: 18px; height: 18px; color: var(--accent); }
-
     .card-header .link {
       font-size: 12px;
       color: var(--accent);
@@ -659,22 +560,39 @@
       gap: 4px;
       transition: gap 0.2s;
     }
-
     .card-header .link:hover { gap: 8px; }
-
     .card-body { padding: 20px; }
+    .chart-wrap { position: relative; height: 280px; }
 
-    /* Chart wrapper */
-    .chart-wrap {
-      position: relative;
-      height: 280px;
+    /* ============ Chart Controls ============ */
+    .chart-controls {
+      display: flex;
+      gap: 4px;
+      background: var(--bg);
+      padding: 3px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
     }
+    .chart-range-btn {
+      padding: 5px 12px;
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 700;
+      background: transparent;
+      border: none;
+      border-radius: 6px;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .chart-range-btn:hover { color: var(--text); }
+    .chart-range-btn.active { background: var(--card); color: var(--accent); box-shadow: var(--shadow-sm); }
 
-    /* ============================================================
-       Alerts List (expiry / low stock)
-       ============================================================ */
-    .alert-list { display: flex; flex-direction: column; gap: 8px; }
-
+    /* Alerts */
+    .alert-list { display: flex; flex-direction: column; gap: 8px; max-height: 340px; overflow-y: auto; padding-right: 4px; }
+    .alert-list::-webkit-scrollbar { width: 5px; }
+    .alert-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
     .alert-item {
       display: flex;
       align-items: center;
@@ -684,69 +602,33 @@
       background: var(--bg);
       border: 1px solid var(--border);
       transition: all 0.2s;
+      text-decoration: none;
+      color: inherit;
     }
-
-    .alert-item:hover {
-      transform: translateX(-3px);
-      border-color: var(--accent);
-    }
-
+    .alert-item:hover { transform: translateX(-3px); border-color: var(--accent); }
     .alert-icon {
-      width: 38px;
-      height: 38px;
+      width: 38px; height: 38px;
       border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: flex; align-items: center; justify-content: center;
       flex-shrink: 0;
     }
-
     .alert-icon i { width: 18px; height: 18px; color: white; }
-
     .alert-icon.danger  { background: linear-gradient(135deg, #ef4444, #b91c1c); }
     .alert-icon.warning { background: linear-gradient(135deg, #F59E0B, #d97706); }
     .alert-icon.info    { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
-
+    .alert-icon.success { background: linear-gradient(135deg, #10b981, #047857); }
     .alert-body { flex: 1; min-width: 0; }
+    .alert-body .title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .alert-body .sub { font-size: 11px; color: var(--text-muted); }
 
-    .alert-body .title {
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--text);
-      margin-bottom: 2px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
+    .empty-state { padding: 30px 20px; text-align: center; color: var(--text-muted); }
+    .empty-state i { width: 42px; height: 42px; opacity: 0.4; margin-bottom: 8px; }
+    .empty-state p { font-size: 13px; font-weight: 500; }
 
-    .alert-body .sub {
-      font-size: 11px;
-      color: var(--text-muted);
-    }
-
-    .empty-state {
-      padding: 30px 20px;
-      text-align: center;
-      color: var(--text-muted);
-    }
-
-    .empty-state i {
-      width: 42px;
-      height: 42px;
-      opacity: 0.4;
-      margin-bottom: 8px;
-    }
-
-    .empty-state p {
-      font-size: 13px;
-      font-weight: 500;
-    }
-
-    /* ============================================================
-       Recent Activity
-       ============================================================ */
-    .activity-list { display: flex; flex-direction: column; }
-
+    /* Activity */
+    .activity-list { display: flex; flex-direction: column; max-height: 400px; overflow-y: auto; padding-right: 4px; }
+    .activity-list::-webkit-scrollbar { width: 5px; }
+    .activity-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
     .activity-item {
       display: flex;
       align-items: flex-start;
@@ -754,58 +636,26 @@
       padding: 12px 0;
       border-bottom: 1px solid var(--border);
     }
-
     .activity-item:last-child { border-bottom: none; }
-
     .activity-avatar {
-      width: 36px;
-      height: 36px;
+      width: 36px; height: 36px;
       border-radius: 10px;
       background: linear-gradient(135deg, var(--primary), var(--primary-light));
       color: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
-      font-size: 13px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 13px;
       flex-shrink: 0;
     }
-
     .activity-body { flex: 1; min-width: 0; }
-
-    .activity-body .text {
-      font-size: 13px;
-      color: var(--text);
-      font-weight: 500;
-      line-height: 1.4;
-    }
-
+    .activity-body .text { font-size: 13px; color: var(--text); font-weight: 500; line-height: 1.4; }
     .activity-body .text strong { font-weight: 700; }
+    .activity-body .time { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
 
-    .activity-body .time {
-      font-size: 11px;
-      color: var(--text-muted);
-      margin-top: 3px;
-    }
-
-    /* ============================================================
-       Overlay (mobile)
-       ============================================================ */
-    .overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.5);
-      z-index: 99;
-      opacity: 0;
-      transition: opacity 0.3s;
-    }
-
+    /* Overlay */
+    .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; opacity: 0; transition: opacity 0.3s; }
     .overlay.show { display: block; opacity: 1; }
 
-    /* ============================================================
-       Responsive
-       ============================================================ */
+    /* Responsive */
     @media (max-width: 1024px) {
       .sidebar { transform: translateX(100%); }
       .sidebar.open { transform: translateX(0); }
@@ -813,73 +663,71 @@
       .menu-toggle { display: flex; }
       .user-info { display: none; }
     }
-
+    @media (max-width: 768px) {
+      .search-wrapper { max-width: 200px; }
+      .search-shortcut { display: none; }
+    }
     @media (max-width: 640px) {
       .content { padding: 16px; }
       .topbar { padding: 0 14px; gap: 10px; }
-      .search-box { display: none; }
+      .search-wrapper { display: none; }
       .topbar-title { font-size: 15px; }
-      .stats-grid { grid-template-columns: 1fr; gap: 12px; }
-      .stat-card { padding: 16px; }
-      .stat-body .value { font-size: 19px; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .stat-card { padding: 12px; gap: 10px; }
+      .stat-icon { width: 40px; height: 40px; }
+      .stat-icon i { width: 20px; height: 20px; }
+      .stat-body .value { font-size: 16px; }
       .page-header h1 { font-size: 20px; }
+      .quick-actions { grid-template-columns: repeat(2, 1fr); }
     }
   </style>
 </head>
 <body>
 
-  <!-- ============================================================
-       Sidebar
-       ============================================================ -->
+  <!-- Sidebar -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
-      <div class="sidebar-logo">
-        <img src="logo.png" alt="رفاد" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=fallback>R</span>';">
+      <div class="sidebar-logo" id="sidebarLogo">
+        <img src="logo.png" alt="رفاد" id="sidebarLogoImg" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=fallback>R</span>';">
       </div>
       <div class="sidebar-brand">
-        <h2>رفاد</h2>
-        <p>نظام إدارة الأدوية</p>
+        <h2 id="sidebarBrandName">رفاد</h2>
+        <p id="sidebarBrandDesc">نظام إدارة الأدوية</p>
       </div>
     </div>
-
-    <nav class="sidebar-nav" id="sidebarNav">
-      <!-- سيتم توليدها بـ JS -->
-    </nav>
+    <nav class="sidebar-nav" id="sidebarNav"></nav>
   </aside>
 
-  <!-- Overlay للموبايل -->
   <div class="overlay" id="overlay"></div>
 
-  <!-- ============================================================
-       Main
-       ============================================================ -->
+  <!-- Main -->
   <div class="main">
-
-    <!-- Topbar -->
     <header class="topbar">
-      <button class="menu-toggle" id="menuToggle">
-        <i data-lucide="menu"></i>
-      </button>
-
+      <button class="menu-toggle" id="menuToggle"><i data-lucide="menu"></i></button>
       <div class="topbar-title">
         الرئيسية <span id="greeting"></span>
       </div>
 
-      <div class="search-box">
-        <input type="text" placeholder="بحث سريع..." id="globalSearch">
-        <i data-lucide="search"></i>
+      <div class="search-wrapper">
+        <div class="search-box">
+          <input type="text" placeholder="ابحث في النظام..." id="globalSearch" autocomplete="off">
+          <i data-lucide="search"></i>
+          <div class="search-shortcut">
+            <span class="kbd">Ctrl</span>
+            <span class="kbd">K</span>
+          </div>
+        </div>
+        <div class="search-results" id="searchResults"></div>
       </div>
 
       <div class="topbar-actions">
         <button class="icon-btn" id="themeToggle" title="الوضع الليلي/النهاري">
           <i data-lucide="moon" id="themeIcon"></i>
         </button>
-
         <button class="icon-btn" id="notifBtn" title="الإشعارات" style="position:relative;">
           <i data-lucide="bell"></i>
-          <span class="dot" id="notifDot" style="display:none;"></span>
+          <span class="notif-count" id="notifCount" style="display:none;">0</span>
         </button>
-
         <div style="position:relative;">
           <div class="user-menu" id="userMenu">
             <div class="user-avatar" id="userAvatar">م</div>
@@ -889,55 +737,66 @@
             </div>
             <i data-lucide="chevron-down" style="width:14px;height:14px;opacity:0.5;"></i>
           </div>
-
           <div class="dropdown" id="userDropdown">
-            <a href="company-settings.html" class="dropdown-item">
-              <i data-lucide="settings"></i> الإعدادات
-            </a>
-            <a href="employees.html" class="dropdown-item">
-              <i data-lucide="user-cog"></i> الملف الشخصي
-            </a>
+            <a href="company-settings.html" class="dropdown-item"><i data-lucide="settings"></i> الإعدادات</a>
+            <a href="employees.html" class="dropdown-item"><i data-lucide="user-cog"></i> الملف الشخصي</a>
             <div class="dropdown-divider"></div>
-            <div class="dropdown-item danger" id="logoutBtn">
-              <i data-lucide="log-out"></i> تسجيل الخروج
-            </div>
+            <div class="dropdown-item danger" id="logoutBtn"><i data-lucide="log-out"></i> تسجيل الخروج</div>
           </div>
         </div>
       </div>
     </header>
 
-    <!-- Content -->
     <main class="content">
 
       <div class="page-header">
-        <h1>لوحة التحكم</h1>
-        <p id="pageSubtitle">نظرة عامة على أداء الشركة</p>
+        <div>
+          <h1 id="pageTitle">لوحة التحكم</h1>
+          <p id="pageSubtitle">نظرة عامة شاملة على أداء الشركة</p>
+        </div>
+        <div class="page-header-actions">
+          <button class="btn-sm" id="refreshBtn">
+            <i data-lucide="refresh-cw"></i> تحديث
+          </button>
+          <button class="btn-sm" id="exportBtn">
+            <i data-lucide="download"></i> تصدير
+          </button>
+          <button class="btn-sm primary" id="newSaleBtn">
+            <i data-lucide="plus"></i> فاتورة جديدة
+          </button>
+        </div>
       </div>
 
-      <!-- Stats -->
-      <div class="stats-grid" id="statsGrid">
-        <!-- سيتم توليدها بـ JS -->
-      </div>
+      <div class="stats-grid" id="statsGrid"></div>
 
-      <!-- Charts + Alerts -->
+      <div class="quick-actions" id="quickActions"></div>
+
       <div class="grid-2">
         <div class="card" id="salesChartCard">
           <div class="card-header">
-            <h3><i data-lucide="bar-chart-3"></i> مبيعات آخر 7 أيام</h3>
-            <a href="reports.html" class="link">
-              التقارير <i data-lucide="arrow-left" style="width:14px;height:14px;"></i>
-            </a>
+            <h3><i data-lucide="bar-chart-3"></i> حركة المبيعات والمشتريات</h3>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+              <div class="chart-controls">
+                <button class="chart-range-btn" data-range="7">7 أيام</button>
+                <button class="chart-range-btn active" data-range="14">14 يوم</button>
+                <button class="chart-range-btn" data-range="30">30 يوم</button>
+              </div>
+              <a href="reports.html" class="link">
+                التقارير <i data-lucide="arrow-left" style="width:14px;height:14px;"></i>
+              </a>
+            </div>
           </div>
           <div class="card-body">
             <div class="chart-wrap">
-              <canvas id="salesChart"></canvas>
+              <canvas id="mainChart"></canvas>
             </div>
           </div>
         </div>
 
         <div class="card" id="alertsCard">
           <div class="card-header">
-            <h3><i data-lucide="alert-triangle"></i> تنبيهات</h3>
+            <h3><i data-lucide="alert-triangle"></i> تنبيهات ذكية</h3>
+            <span class="link" id="alertsCountBadge" style="background:rgba(239,68,68,0.1);color:var(--danger);padding:4px 10px;border-radius:20px;font-size:11px;">0</span>
           </div>
           <div class="card-body" style="padding:14px;">
             <div class="alert-list" id="alertsList">
@@ -950,7 +809,6 @@
         </div>
       </div>
 
-      <!-- Recent Activity -->
       <div class="card" id="activityCard">
         <div class="card-header">
           <h3><i data-lucide="activity"></i> آخر الحركات</h3>
@@ -972,318 +830,520 @@
   </div>
 
   <!-- ============================================================
-       Scripts
+       SCRIPTS — الترتيب مهم
        ============================================================ -->
   <script src="refad-core.js"></script>
   <script src="refad-auth.js"></script>
+  <script src="refad-theme-sync.js"></script>
+  <script src="refad-settings.js"></script>
+
   <script>
     (function () {
       'use strict';
 
       // ============================================================
-      // 1) Guard: يجب تسجيل الدخول
+      // 0) Safe Wrappers
+      // ============================================================
+      const SafeSettings = {
+        locale: {
+          formatMoney: function (v) {
+            try {
+              if (window.RefadSettings?.locale?.formatMoney) {
+                return RefadSettings.locale.formatMoney(v);
+              }
+            } catch (e) {}
+            return Refad.format.money(v);
+          },
+          getCurrencySymbol: function () {
+            try {
+              if (window.RefadSettings?.locale?.getCurrencySymbol) {
+                return RefadSettings.locale.getCurrencySymbol();
+              }
+            } catch (e) {}
+            return 'ج.م';
+          }
+        },
+        identity: {
+          getSystemName: function () {
+            try {
+              if (window.RefadSettings?.identity?.getSystemName) {
+                return RefadSettings.identity.getSystemName();
+              }
+            } catch (e) {}
+            return 'رفاد';
+          },
+          getTagline: function () {
+            try {
+              if (window.RefadSettings?.identity?.getTagline) {
+                return RefadSettings.identity.getTagline();
+              }
+            } catch (e) {}
+            return 'نظام إدارة الأدوية';
+          },
+          getLogoUrl: function () {
+            try {
+              if (window.RefadSettings?.identity?.getLogoUrl) {
+                return RefadSettings.identity.getLogoUrl();
+              }
+            } catch (e) {}
+            return null;
+          }
+        },
+        inventory: {
+          getExpiryAlertDays: function () {
+            try {
+              if (window.RefadSettings?.inventory?.getExpiryAlertDays) {
+                return RefadSettings.inventory.getExpiryAlertDays();
+              }
+            } catch (e) {}
+            return 90;
+          }
+        }
+      };
+
+      // ============================================================
+      // 1) Guard
       // ============================================================
       const session = Refad.Auth.guardPage();
       if (!session) return;
 
+      const isOwner = session.is_owner === true;
+      const canViewInventory = Refad.Session.has('inventory.view');
+      const canViewSales = Refad.Session.has('sales.view');
+      const canViewPayments = Refad.Session.has('company.owner');
+
       // ============================================================
-      // 2) تعريف قائمة السايدبار
+      // 2) State
+      // ============================================================
+      const state = {
+        chartRange: 14,
+        mainChart: null,
+        expiryAlertDays: 90,
+        searchData: {
+          products: [],
+          customers: [],
+          suppliers: [],
+          invoices: [],
+          loaded: false
+        },
+        searchHighlightIndex: -1,
+        searchResults: []
+      };
+
+      // ============================================================
+      // 3) MENU
       // ============================================================
       const MENU = [
-        {
-          section: 'الرئيسية',
-          items: [
-            { label: 'لوحة التحكم', icon: 'layout-dashboard', href: 'dashboard.html' },
-            { label: 'الشات', icon: 'message-circle', href: 'chat.html', permission: 'chat.use' },
-            { label: 'الإشعارات', icon: 'bell', href: 'notifications.html', id: 'notifNavItem', permission: 'notifications.view' }
-          ]
-        },
-        {
-          section: 'العمليات',
-          items: [
-            { label: 'الأصناف', icon: 'package', href: 'products.html', permission: 'products.view' },
-            { label: 'المخزون', icon: 'warehouse', href: 'inventory.html', permission: 'inventory.view' },
-            { label: 'طلبات الشراء', icon: 'clipboard-list', href: 'purchase-requests.html', permission: 'purchases.view' },
-            { label: 'الاستلامات', icon: 'package-check', href: 'receipts.html', permission: 'purchases.receive' },
-            { label: 'طلبات البيع', icon: 'shopping-cart', href: 'sales-orders.html', permission: 'sales.view' },
-            { label: 'نقطة البيع', icon: 'scan-barcode', href: 'pos.html', permission: 'sales.pos', badge: 'POS', badgeClass: 'teal' },
-            { label: 'الفواتير', icon: 'receipt', href: 'invoices.html', permission: 'sales.view' }
-          ]
-        },
-        {
-          section: 'الأطراف',
-          items: [
-            { label: 'الموردين', icon: 'truck', href: 'suppliers.html', permission: 'suppliers.view' },
-            { label: 'العملاء', icon: 'users', href: 'customers.html', permission: 'customers.view' }
-          ]
-        },
-        {
-          section: 'المخزون',
-          items: [
-            { label: 'الجرد', icon: 'clipboard-check', href: 'stocktake.html', permission: 'inventory.stocktake' },
-            { label: 'التسويات', icon: 'sliders-horizontal', href: 'adjustments.html', permission: 'inventory.adjust' }
-          ]
-        },
-        {
-          section: 'الموارد البشرية',
-          items: [
-            { label: 'الموظفين', icon: 'user-cog', href: 'employees.html', permission: 'employees.view' },
-            { label: 'الصلاحيات', icon: 'shield-check', href: 'permissions.html', permission: 'permissions.manage' },
-            { label: 'الحضور', icon: 'calendar-check', href: 'attendance.html', permission: 'attendance.view' },
-            { label: 'الرواتب', icon: 'wallet', href: 'payroll.html', permission: 'payroll.view' }
-          ]
-        },
-        {
-          section: 'المالية',
-          items: [
-            { label: 'الحسابات', icon: 'landmark', href: 'accounts.html', permission: 'company.owner' },
-            { label: 'المصاريف', icon: 'banknote', href: 'expenses.html', permission: 'expenses.view' },
-            { label: 'التقارير', icon: 'bar-chart-3', href: 'reports.html', permission: 'reports.view' }
-          ]
-        },
-        {
-          section: 'النظام',
-          items: [
-            { label: 'إعدادات الشركة', icon: 'settings', href: 'company-settings.html', permission: 'settings.view' },
-            { label: 'شاشة الأدمن', icon: 'shield', href: 'admin.html', permission: 'admin.full', badge: 'Admin', badgeClass: 'gold' }
-          ]
-        }
+        { section: 'الرئيسية', items: [
+          { label: 'لوحة التحكم', icon: 'layout-dashboard', href: 'dashboard.html' },
+          { label: 'الشات', icon: 'message-circle', href: 'chat.html', permission: 'chat.use' },
+          { label: 'الإشعارات', icon: 'bell', href: 'notifications.html', id: 'notifNavItem', permission: 'notifications.view' }
+        ]},
+        { section: 'العمليات', items: [
+          { label: 'الأصناف', icon: 'package', href: 'products.html', permission: 'products.view' },
+          { label: 'المخزون', icon: 'warehouse', href: 'inventory.html', permission: 'inventory.view' },
+          { label: 'طلبات الشراء', icon: 'clipboard-list', href: 'purchase-requests.html', permission: 'purchases.view' },
+          { label: 'الاستلامات', icon: 'package-check', href: 'receipts.html', permission: 'purchases.receive' },
+          { label: 'طلبات البيع', icon: 'shopping-cart', href: 'sales-orders.html', permission: 'sales.view' },
+          { label: 'نقطة البيع', icon: 'scan-barcode', href: 'pos.html', permission: 'sales.pos', badge: 'POS', badgeClass: 'teal' },
+          { label: 'الفواتير', icon: 'receipt', href: 'invoices.html', permission: 'sales.view' },
+          { label: 'المرتجعات', icon: 'undo-2', href: 'returns.html' }
+        ]},
+        { section: 'الأطراف', items: [
+          { label: 'الموردين', icon: 'truck', href: 'suppliers.html', permission: 'suppliers.view' },
+          { label: 'العملاء', icon: 'users', href: 'customers.html', permission: 'customers.view' },
+          { label: 'المندوبين', icon: 'user-check', href: 'sales-reps.html', permission: 'company.owner', badge: 'جديد', badgeClass: 'new' }
+        ]},
+        { section: 'المخزون', items: [
+          { label: 'المخازن', icon: 'building-2', href: 'warehouses.html', permission: 'inventory.view' },
+          { label: 'الجرد', icon: 'clipboard-check', href: 'stocktake.html', permission: 'inventory.stocktake' },
+          { label: 'التسويات', icon: 'sliders-horizontal', href: 'adjustments.html', permission: 'inventory.adjust' },
+          { label: 'التحويلات', icon: 'arrow-right-left', href: 'transfers.html', permission: 'inventory.transfer', badge: 'جديد', badgeClass: 'new' }
+        ]},
+        { section: 'الموارد البشرية', items: [
+          { label: 'الموظفين', icon: 'user-cog', href: 'employees.html', permission: 'employees.view' },
+          { label: 'الصلاحيات', icon: 'shield-check', href: 'permissions.html', permission: 'permissions.manage' },
+          { label: 'الحضور', icon: 'calendar-check', href: 'attendance.html', permission: 'attendance.view' },
+          { label: 'الرواتب', icon: 'wallet', href: 'payroll.html', permission: 'payroll.view' }
+        ]},
+        { section: 'المالية', items: [
+          { label: 'الحسابات', icon: 'landmark', href: 'accounts.html', permission: 'company.owner' },
+          { label: 'الشيكات', icon: 'file-check-2', href: 'cheques.html', permission: 'company.owner', badge: 'جديد', badgeClass: 'new' },
+          { label: 'الإشعارات', icon: 'file-text', href: 'credit-notes.html', permission: 'company.owner' },
+          { label: 'المدفوعات', icon: 'banknote', href: 'payments.html', permission: 'company.owner' },
+          { label: 'المصاريف', icon: 'receipt-text', href: 'expenses.html', permission: 'expenses.view' },
+          { label: 'التقارير', icon: 'bar-chart-3', href: 'reports.html', permission: 'reports.view' }
+        ]},
+        { section: 'النظام', items: [
+          { label: 'إعدادات الشركة', icon: 'settings', href: 'company-settings.html', permission: 'settings.view' },
+          { label: 'شاشة الأدمن', icon: 'shield', href: 'admin.html', permission: 'admin.full', badge: 'Admin', badgeClass: 'gold' }
+        ]}
       ];
 
-      // ============================================================
-      // 3) بناء السايدبار
-      // ============================================================
       function buildSidebar() {
-        const nav = document.getElementById('sidebarNav');
-        const currentPage = location.pathname.split('/').pop() || 'dashboard.html';
-        const frag = document.createDocumentFragment();
+  Refad.buildMenu('dashboard.html');
+}
 
-        MENU.forEach(group => {
-          // فلترة العناصر حسب الصلاحية
-          const allowed = group.items.filter(item => !item.permission || Refad.Session.has(item.permission));
-          if (allowed.length === 0) return;
+      // ============================================================
+      // 4) Quick Actions (ديناميكية حسب الصلاحيات)
+      // ============================================================
+      function buildQuickActions() {
+        const container = document.getElementById('quickActions');
+        if (!container) return;
 
-          frag.appendChild(Refad.el('div', { class: 'nav-section' }, group.section));
+        const actions = [];
+        if (Refad.Session.has('sales.pos')) {
+          actions.push({ href: 'pos.html', icon: 'scan-barcode', label: 'نقطة البيع', gradient: 'linear-gradient(135deg,#14B8A6,#0d9488)' });
+        }
+        if (Refad.Session.has('sales.view')) {
+          actions.push({ href: 'invoices.html', icon: 'receipt', label: 'الفواتير', gradient: 'linear-gradient(135deg,#3b82f6,#1d4ed8)' });
+        }
+        if (Refad.Session.has('customers.view')) {
+          actions.push({ href: 'customers.html', icon: 'users', label: 'العملاء', gradient: 'linear-gradient(135deg,#8b5cf6,#6d28d9)' });
+        }
+        if (Refad.Session.has('suppliers.view')) {
+          actions.push({ href: 'suppliers.html', icon: 'truck', label: 'الموردين', gradient: 'linear-gradient(135deg,#f97316,#ea580c)' });
+        }
+        if (Refad.Session.has('inventory.view')) {
+          actions.push({ href: 'inventory.html', icon: 'warehouse', label: 'المخزون', gradient: 'linear-gradient(135deg,#06b6d4,#0891b2)' });
+        }
+        if (Refad.Session.has('company.owner')) {
+          actions.push({ href: 'accounts.html', icon: 'landmark', label: 'الحسابات', gradient: 'linear-gradient(135deg,#10b981,#047857)' });
+        }
+        if (Refad.Session.has('reports.view') || isOwner) {
+          actions.push({ href: 'reports.html', icon: 'bar-chart-3', label: 'التقارير', gradient: 'linear-gradient(135deg,#F59E0B,#d97706)' });
+        }
 
-          allowed.forEach(item => {
-            const isActive = item.href === currentPage;
+        container.innerHTML = actions.map(a => '<a href="' + a.href + '" class="quick-action">' +
+          '<div class="qa-icon" style="background:' + a.gradient + ';">' +
+            '<i data-lucide="' + a.icon + '"></i>' +
+          '</div>' +
+          '<span class="qa-label">' + Refad.escapeHtml(a.label) + '</span>' +
+        '</a>').join('');
 
-            const link = Refad.el('a', {
-              href: item.href,
-              class: 'nav-item' + (isActive ? ' active' : ''),
-              id: item.id || null
-            });
-
-            link.innerHTML = `
-              <i data-lucide="${item.icon}"></i>
-              <span>${Refad.escapeHtml(item.label)}</span>
-              ${item.badge ? `<span class="badge ${item.badgeClass || ''}">${item.badge}</span>` : ''}
-            `;
-
-            frag.appendChild(link);
-          });
-        });
-
-        nav.innerHTML = '';
-        nav.appendChild(frag);
         if (window.lucide) lucide.createIcons();
       }
 
       // ============================================================
-      // 4) تعبئة بيانات المستخدم
+      // 5) User Data
       // ============================================================
       function fillUserData() {
         const avatar = document.getElementById('userAvatar');
-        const name   = document.getElementById('userName');
-        const role   = document.getElementById('userRole');
+        const name = document.getElementById('userName');
+        const role = document.getElementById('userRole');
         const greeting = document.getElementById('greeting');
 
         const initial = (session.full_name || '؟').trim().charAt(0);
         if (session.avatar_url) {
-          avatar.innerHTML = `<img src="${Refad.escapeHtml(session.avatar_url)}" alt="">`;
+          avatar.innerHTML = '<img src="' + Refad.escapeHtml(session.avatar_url) + '" alt="">';
         } else {
           avatar.textContent = initial;
         }
         name.textContent = session.full_name;
-        role.textContent = session.is_owner ? 'صاحب الشركة' : 'موظف';
+        role.textContent = isOwner ? 'صاحب الشركة' : 'موظف';
 
-        // تحية حسب الوقت
         const h = new Date().getHours();
         let greet = 'مرحباً';
         if (h < 12) greet = 'صباح الخير';
-        else if (h < 17) greet = 'مساء الخير';
         else greet = 'مساء الخير';
-        greeting.textContent = `— ${greet}، ${session.full_name.split(' ')[0]}`;
+        greeting.textContent = '— ' + greet + '، ' + session.full_name.split(' ')[0];
       }
 
       // ============================================================
-      // 5) جلب الإحصائيات
+      // 6) Apply Identity (اسم النظام + الشعار)
       // ============================================================
-      async function loadStats() {
-        if (!session.is_owner) return;
-        const grid = document.getElementById('statsGrid');
-        const companyId = session.company_id;
-        const today = Refad.date.today();
-        const monthStart = Refad.date.startOfMonth();
+      function applyIdentity() {
+        const name = SafeSettings.identity.getSystemName();
+        const tagline = SafeSettings.identity.getTagline();
+        const logoUrl = SafeSettings.identity.getLogoUrl();
 
-        // skeleton أولي
-        grid.innerHTML = Array(4).fill(0).map(() => `
-          <div class="stat-card">
-            <div class="stat-icon skeleton" style="width:54px;height:54px;"></div>
-            <div class="stat-body">
-              <div class="label skeleton" style="width:60px;height:12px;margin-bottom:6px;">&nbsp;</div>
-              <div class="value skeleton" style="width:100px;height:22px;">&nbsp;</div>
-            </div>
-          </div>
-        `).join('');
+        const brandName = document.getElementById('sidebarBrandName');
+        const brandDesc = document.getElementById('sidebarBrandDesc');
+        const logoImg = document.getElementById('sidebarLogoImg');
 
-        try {
-          const [productsCount, suppliersCount, customersCount, todaySales, monthSales] = await Promise.all([
-            Refad.db.count('products', { eq: { company_id: companyId, is_active: true } }).catch(() => 0),
-            Refad.db.count('suppliers', { eq: { company_id: companyId, is_active: true } }).catch(() => 0),
-            Refad.db.count('customers', { eq: { company_id: companyId, is_active: true } }).catch(() => 0),
-            // مبيعات اليوم
-            Refad.db.select('sales_invoices', {
-              columns: 'grand_total',
-              eq: { company_id: companyId, invoice_date: today, status: 'paid' }
-            }).catch(() => []),
-            // مبيعات الشهر
-            Refad.db.select('sales_invoices', {
-              columns: 'grand_total',
-              eq: { company_id: companyId, status: 'paid' },
-              gte: { invoice_date: monthStart }
-            }).catch(() => [])
-          ]);
-
-          const todayTotal = todaySales.reduce((s, r) => s + (Number(r.grand_total) || 0), 0);
-          const monthTotal = monthSales.reduce((s, r) => s + (Number(r.grand_total) || 0), 0);
-
-          const cards = [
-            {
-              label: 'الأصناف',
-              value: Refad.format.number(productsCount),
-              icon: 'package',
-              cls: 'blue',
-              change: { text: 'نشط', dir: 'flat' }
-            },
-            {
-              label: 'موردين',
-              value: Refad.format.number(suppliersCount),
-              icon: 'truck',
-              cls: 'purple',
-              change: { text: 'نشط', dir: 'flat' }
-            },
-            {
-              label: 'مبيعات اليوم',
-              value: Refad.format.money(todayTotal),
-              icon: 'trending-up',
-              cls: 'teal',
-              change: { text: `${todaySales.length} فاتورة`, dir: 'up' }
-            },
-            {
-              label: 'مبيعات الشهر',
-              value: Refad.format.money(monthTotal),
-              icon: 'bar-chart-3',
-              cls: 'gold',
-              change: { text: `${monthSales.length} فاتورة`, dir: 'up' }
-            }
-          ];
-
-          grid.innerHTML = cards.map(c => `
-            <div class="stat-card">
-              <div class="stat-icon ${c.cls}"><i data-lucide="${c.icon}"></i></div>
-              <div class="stat-body">
-                <div class="label">${Refad.escapeHtml(c.label)}</div>
-                <div class="value">${Refad.escapeHtml(c.value)}</div>
-                <div class="change ${c.change.dir}">${Refad.escapeHtml(c.change.text)}</div>
-              </div>
-            </div>
-          `).join('');
-
-          if (window.lucide) lucide.createIcons();
-
-        } catch (e) {
-          console.error('[Dashboard] Stats error:', e);
-          grid.innerHTML = `
-            <div class="stat-card" style="grid-column:1/-1;justify-content:center;">
-              <div class="stat-body" style="text-align:center;">
-                <div class="label">تعذّر تحميل الإحصائيات</div>
-                <div class="value" style="font-size:14px;color:var(--danger);">${Refad.escapeHtml(e.message)}</div>
-              </div>
-            </div>
-          `;
+        if (brandName) brandName.textContent = name;
+        if (brandDesc) brandDesc.textContent = tagline;
+        if (logoImg && logoUrl) {
+          logoImg.src = logoUrl;
+          logoImg.onerror = function () {
+            this.style.display = 'none';
+            const parent = this.parentElement;
+            if (parent) parent.innerHTML = '<span class="fallback">' + (name.charAt(0) || 'R') + '</span>';
+          };
         }
       }
 
       // ============================================================
-      // 6) رسم بياني للمبيعات (7 أيام)
+      // 7) Load Stats
       // ============================================================
-      let salesChartInstance = null;
-      async function loadChart() {
-        if (!session.is_owner) return;
+      async function loadStats() {
+        const grid = document.getElementById('statsGrid');
+        if (!grid) return;
+        const companyId = session.company_id;
+        const today = Refad.date.today();
+        const monthStart = Refad.date.startOfMonth();
+        const prevMonthStart = dayjs(monthStart).subtract(1, 'month').format('YYYY-MM-DD');
+        const prevMonthEnd = dayjs(monthStart).subtract(1, 'day').format('YYYY-MM-DD');
+
+        grid.innerHTML = Array(6).fill(0).map(() => '<div class="stat-card">' +
+          '<div class="stat-icon skeleton" style="width:54px;height:54px;"></div>' +
+          '<div class="stat-body">' +
+            '<div class="label skeleton" style="width:60px;height:12px;margin-bottom:6px;">&nbsp;</div>' +
+            '<div class="value skeleton" style="width:100px;height:22px;">&nbsp;</div>' +
+          '</div></div>').join('');
+
         try {
+          const results = await Promise.all([
+            Refad.db.count('products', { eq: { company_id: companyId, is_active: true } }).catch(() => 0),
+            Refad.db.count('suppliers', { eq: { company_id: companyId, is_active: true } }).catch(() => 0),
+            Refad.db.count('customers', { eq: { company_id: companyId, is_active: true } }).catch(() => 0),
+            Refad.db.select('sales_invoices', {
+              columns: 'grand_total',
+              eq: { company_id: companyId, invoice_date: today },
+              neq: { status: 'cancelled' }
+            }).catch(() => []),
+            Refad.db.select('sales_invoices', {
+              columns: 'grand_total, total_profit',
+              eq: { company_id: companyId },
+              neq: { status: 'cancelled' },
+              gte: { invoice_date: monthStart }
+            }).catch(() => []),
+            Refad.db.select('sales_invoices', {
+              columns: 'grand_total',
+              eq: { company_id: companyId },
+              neq: { status: 'cancelled' },
+              gte: { invoice_date: prevMonthStart },
+              lte: { invoice_date: prevMonthEnd }
+            }).catch(() => []),
+            Refad.db.select('accounts', {
+              columns: 'current_balance',
+              eq: { company_id: companyId, is_active: true }
+            }).catch(() => []),
+            Refad.db.select('cheques', {
+              columns: 'amount',
+              eq: { company_id: companyId, status: 'pending' }
+            }).catch(() => [])
+          ]);
+
+          const productsCount = results[0];
+          const suppliersCount = results[1];
+          const customersCount = results[2];
+          const todayInvoices = results[3];
+          const monthInvoices = results[4];
+          const prevMonthInvoices = results[5];
+          const accounts = results[6];
+          const chequesDue = results[7];
+
+          const todaySales = todayInvoices.reduce((s, r) => s + (Number(r.grand_total) || 0), 0);
+          const monthSales = monthInvoices.reduce((s, r) => s + (Number(r.grand_total) || 0), 0);
+          const prevMonthSales = prevMonthInvoices.reduce((s, r) => s + (Number(r.grand_total) || 0), 0);
+          const monthProfit = monthInvoices.reduce((s, r) => s + (Number(r.total_profit) || 0), 0);
+          const totalBalance = accounts.reduce((s, a) => s + (Number(a.current_balance) || 0), 0);
+          const chequesTotal = chequesDue.reduce((s, c) => s + (Number(c.amount) || 0), 0);
+
+          const growthPct = prevMonthSales > 0
+            ? Math.round(((monthSales - prevMonthSales) / prevMonthSales) * 100)
+            : (monthSales > 0 ? 100 : 0);
+          const growthDir = growthPct > 0 ? 'up' : (growthPct < 0 ? 'down' : 'flat');
+          const growthText = prevMonthSales > 0
+            ? (growthPct >= 0 ? '+' : '') + growthPct + '% عن الشهر الماضي'
+            : 'لا توجد بيانات سابقة';
+
+          const cards = [];
+
+          if (canViewSales) {
+            cards.push({
+              label: 'مبيعات اليوم',
+              value: SafeSettings.locale.formatMoney(todaySales),
+              icon: 'trending-up',
+              cls: 'teal',
+              change: { text: todayInvoices.length + ' فاتورة', dir: 'up' },
+              href: 'invoices.html'
+            });
+            cards.push({
+              label: 'مبيعات الشهر',
+              value: SafeSettings.locale.formatMoney(monthSales),
+              icon: 'bar-chart-3',
+              cls: 'blue',
+              change: { text: growthText, dir: growthDir },
+              href: 'invoices.html'
+            });
+            cards.push({
+              label: 'أرباح الشهر',
+              value: SafeSettings.locale.formatMoney(monthProfit),
+              icon: 'award',
+              cls: 'gold',
+              change: { text: monthSales > 0 ? 'هامش ' + Math.round((monthProfit / monthSales) * 100) + '%' : '—', dir: 'up' },
+              href: 'reports.html'
+            });
+          }
+
+          if (canViewPayments) {
+            cards.push({
+              label: 'رصيد الحسابات',
+              value: SafeSettings.locale.formatMoney(totalBalance),
+              icon: 'wallet',
+              cls: totalBalance >= 0 ? 'green' : 'red',
+              change: { text: accounts.length + ' حساب', dir: totalBalance >= 0 ? 'up' : 'down' },
+              href: 'accounts.html'
+            });
+            cards.push({
+              label: 'شيكات مستحقة',
+              value: SafeSettings.locale.formatMoney(chequesTotal),
+              icon: 'file-check-2',
+              cls: 'purple',
+              change: { text: chequesDue.length + ' شيك', dir: chequesDue.length > 0 ? 'flat' : 'up' },
+              href: 'cheques.html'
+            });
+          }
+
+          cards.push({
+            label: 'الأصناف',
+            value: Refad.format.number(productsCount),
+            icon: 'package',
+            cls: 'blue',
+            change: { text: 'نشط', dir: 'flat' },
+            href: 'products.html'
+          });
+          cards.push({
+            label: 'العملاء والموردين',
+            value: Refad.format.number(customersCount) + ' / ' + Refad.format.number(suppliersCount),
+            icon: 'users',
+            cls: 'orange',
+            change: { text: 'عميل / مورد', dir: 'flat' },
+            href: 'customers.html'
+          });
+
+          grid.innerHTML = cards.map(c => '<a href="' + c.href + '" class="stat-card">' +
+            '<div class="stat-icon ' + c.cls + '"><i data-lucide="' + c.icon + '"></i></div>' +
+            '<div class="stat-body">' +
+              '<div class="label">' + Refad.escapeHtml(c.label) + '</div>' +
+              '<div class="value">' + Refad.escapeHtml(c.value) + '</div>' +
+              '<div class="change ' + c.change.dir + '">' + Refad.escapeHtml(c.change.text) + '</div>' +
+            '</div></a>').join('');
+
+          if (window.lucide) lucide.createIcons();
+        } catch (e) {
+          console.error('[Dashboard] Stats error:', e);
+          grid.innerHTML = '<div class="stat-card" style="grid-column:1/-1;justify-content:center;">' +
+            '<div class="stat-body" style="text-align:center;">' +
+              '<div class="label">تعذّر تحميل الإحصائيات</div>' +
+              '<div class="value" style="font-size:14px;color:var(--danger);">' + Refad.escapeHtml(e.message) + '</div>' +
+            '</div></div>';
+        }
+      }
+
+      // ============================================================
+      // 8) Main Chart
+      // ============================================================
+      async function loadChart() {
+        try {
+          const canvas = document.getElementById('mainChart');
+          if (!canvas) return;
+
           const companyId = session.company_id;
+          const range = state.chartRange;
           const days = [];
           const labels = [];
-          for (let i = 6; i >= 0; i--) {
+          for (let i = range - 1; i >= 0; i--) {
             const d = Refad.date.addDays(Refad.date.today(), -i);
             days.push(d);
-            labels.push(Refad.format.date(d, 'DD/MM'));
+            labels.push(Refad.format.date(d, range > 14 ? 'DD' : 'DD/MM'));
           }
 
           const fromDate = days[0];
-          const rows = await Refad.db.select('sales_invoices', {
-            columns: 'invoice_date, grand_total',
-            eq: { company_id: companyId, status: 'paid' },
-            gte: { invoice_date: fromDate }
+          const results = await Promise.all([
+            Refad.db.select('sales_invoices', {
+              columns: 'invoice_date, grand_total',
+              eq: { company_id: companyId },
+              neq: { status: 'cancelled' },
+              gte: { invoice_date: fromDate }
+            }).catch(() => []),
+            Refad.db.select('receipts', {
+              columns: 'receipt_date, total_amount',
+              eq: { company_id: companyId },
+              neq: { status: 'cancelled' },
+              gte: { receipt_date: fromDate }
+            }).catch(() => [])
+          ]);
+
+          const invoices = results[0];
+          const receipts = results[1];
+
+          const salesByDay = {};
+          const purchasesByDay = {};
+          invoices.forEach(r => {
+            salesByDay[r.invoice_date] = (salesByDay[r.invoice_date] || 0) + (Number(r.grand_total) || 0);
+          });
+          receipts.forEach(r => {
+            purchasesByDay[r.receipt_date] = (purchasesByDay[r.receipt_date] || 0) + (Number(r.total_amount) || 0);
           });
 
-          const totalsByDay = {};
-          rows.forEach(r => {
-            const d = r.invoice_date;
-            totalsByDay[d] = (totalsByDay[d] || 0) + (Number(r.grand_total) || 0);
-          });
-          const data = days.map(d => totalsByDay[d] || 0);
+          const salesData = days.map(d => salesByDay[d] || 0);
+          const purchasesData = days.map(d => purchasesByDay[d] || 0);
 
-          const ctx = document.getElementById('salesChart').getContext('2d');
+          const ctx = canvas.getContext('2d');
           const isDark = Refad.theme.get() === 'dark';
           const gridColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
           const textColor = isDark ? '#94a3b8' : '#64748b';
 
-          if (salesChartInstance) salesChartInstance.destroy();
+          // ✅ قراءة الألوان من CSS variables
+          const styles = getComputedStyle(document.documentElement);
+          const accentColor = styles.getPropertyValue('--accent').trim() || '#14B8A6';
+          const goldColor = styles.getPropertyValue('--gold').trim() || '#F59E0B';
 
-          salesChartInstance = new Chart(ctx, {
+          if (state.mainChart) state.mainChart.destroy();
+
+          state.mainChart = new Chart(ctx, {
             type: 'line',
             data: {
-              labels,
-              datasets: [{
-                label: 'المبيعات',
-                data,
-                borderColor: '#14B8A6',
-                backgroundColor: (context) => {
-                  const chart = context.chart;
-                  const { ctx, chartArea } = chart;
-                  if (!chartArea) return 'rgba(20,184,166,0.1)';
-                  const g = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-                  g.addColorStop(0, 'rgba(20,184,166,0.35)');
-                  g.addColorStop(1, 'rgba(20,184,166,0)');
-                  return g;
+              labels: labels,
+              datasets: [
+                {
+                  label: 'المبيعات',
+                  data: salesData,
+                  borderColor: accentColor,
+                  backgroundColor: accentColor + '20',
+                  borderWidth: 3,
+                  fill: true,
+                  tension: 0.4,
+                  pointRadius: range > 14 ? 2 : 4,
+                  pointHoverRadius: 6,
+                  pointBackgroundColor: accentColor,
+                  pointBorderColor: '#fff',
+                  pointBorderWidth: 2
                 },
-                borderWidth: 3,
-                fill: true,
-                tension: 0.4,
-                pointRadius: 4,
-                pointHoverRadius: 6,
-                pointBackgroundColor: '#14B8A6',
-                pointBorderColor: '#fff',
-                pointBorderWidth: 2
-              }]
+                {
+                  label: 'المشتريات',
+                  data: purchasesData,
+                  borderColor: goldColor,
+                  backgroundColor: goldColor + '20',
+                  borderWidth: 3,
+                  fill: true,
+                  tension: 0.4,
+                  pointRadius: range > 14 ? 2 : 4,
+                  pointHoverRadius: 6,
+                  pointBackgroundColor: goldColor,
+                  pointBorderColor: '#fff',
+                  pointBorderWidth: 2
+                }
+              ]
             },
             options: {
               responsive: true,
               maintainAspectRatio: false,
+              interaction: { mode: 'index', intersect: false },
               plugins: {
-                legend: { display: false },
+                legend: {
+                  position: 'top',
+                  labels: {
+                    font: { family: 'Cairo', size: 12, weight: '600' },
+                    color: textColor,
+                    padding: 12,
+                    usePointStyle: true,
+                    boxWidth: 10
+                  }
+                },
                 tooltip: {
                   rtl: true,
                   textDirection: 'rtl',
@@ -1293,7 +1353,9 @@
                   titleFont: { family: 'Cairo', size: 13, weight: '700' },
                   bodyFont: { family: 'Cairo', size: 13 },
                   callbacks: {
-                    label: (ctx) => ' ' + Refad.format.money(ctx.parsed.y)
+                    label: function (ctx) {
+                      return ' ' + ctx.dataset.label + ': ' + SafeSettings.locale.formatMoney(ctx.parsed.y);
+                    }
                   }
                 }
               },
@@ -1304,204 +1366,584 @@
                   ticks: {
                     color: textColor,
                     font: { family: 'Cairo', size: 11 },
-                    callback: (v) => Refad.format.number(v)
+                    callback: function (v) { return Refad.format.number(v); }
                   }
                 },
                 x: {
                   grid: { display: false },
-                  ticks: { color: textColor, font: { family: 'Cairo', size: 11 } }
+                  ticks: {
+                    color: textColor,
+                    font: { family: 'Cairo', size: 10 },
+                    maxRotation: 0,
+                    autoSkip: true,
+                    maxTicksLimit: range > 14 ? 10 : 7
+                  }
                 }
               }
             }
           });
-
-          // إعادة الرسم عند تغيير الثيم
-          window.addEventListener('refad:theme-changed', () => loadChart(), { once: true });
-
         } catch (e) {
           console.error('[Dashboard] Chart error:', e);
         }
       }
 
       // ============================================================
-      // 7) تنبيهات (صلاحية قريبة + مخزون منخفض)
+      // 9) Load Alerts
       // ============================================================
       async function loadAlerts() {
-        if (!Refad.Session.has('inventory.view')) {
-          document.getElementById('alertsCard').style.display = 'none';
-          return;
-        }
         const list = document.getElementById('alertsList');
-        list.innerHTML = `<div class="empty-state"><i data-lucide="loader-2"></i><p>جارٍ التحميل...</p></div>`;
+        if (!list) return;
+        list.innerHTML = '<div class="empty-state"><i data-lucide="loader-2"></i><p>جارٍ التحميل...</p></div>';
         if (window.lucide) lucide.createIcons();
 
         try {
           const companyId = session.company_id;
-          const in90Days = Refad.date.addDays(Refad.date.today(), 90);
-          const [products, batches] = await Promise.all([
-            Refad.db.select('products', {
-              columns: 'id, name, reorder_level',
-              eq: { company_id: companyId, is_active: true },
-              order: { column: 'id', ascending: true },
-              limit: 5000
-            }),
-            Refad.db.select('batches', {
-              columns: 'id, product_id, batch_number, expiry_date, quantity_left',
-              eq: { company_id: companyId },
-              gt: { quantity_left: 0 },
-              order: { column: 'id', ascending: true },
-              limit: 5000
-            })
-          ]);
-          const productById = new Map(products.map(product => [String(product.id), product]));
-          const quantityByProduct = new Map();
-          batches.forEach(batch => {
-            const key = String(batch.product_id);
-            quantityByProduct.set(key, (quantityByProduct.get(key) || 0) + (Number(batch.quantity_left) || 0));
-          });
-          const expiring = batches
-            .filter(batch => batch.expiry_date && batch.expiry_date <= in90Days)
-            .sort((a, b) => String(a.expiry_date).localeCompare(String(b.expiry_date)));
-          const lowStock = products.filter(product => {
-            const threshold = Number(product.reorder_level) || 0;
-            return threshold > 0 && (quantityByProduct.get(String(product.id)) || 0) <= threshold;
-          });
           const items = [];
+          const today = Refad.date.today();
+          const in30Days = Refad.date.addDays(today, 30);
 
-          expiring.forEach(b => {
-            const days = Refad.format.daysLeft(b.expiry_date);
-            items.push({
-              type: days <= 30 ? 'danger' : 'warning',
-              icon: 'calendar-x',
-              title: productById.get(String(b.product_id))?.name || 'صنف',
-              sub: `تشغيلة ${b.batch_number || '—'} • متبقي ${b.quantity_left} • ${days} يوم`
-            });
-          });
-          lowStock.forEach(product => {
-            items.push({
-              type: 'warning',
-              icon: 'package-x',
-              title: `مخزون منخفض: ${product.name}`,
-              sub: `المتاح ${Refad.format.number(quantityByProduct.get(String(product.id)) || 0)} • حد إعادة الطلب ${Refad.format.number(product.reorder_level)}`
-            });
-          });
+          if (canViewInventory) {
+            const results = await Promise.all([
+              Refad.db.select('products', {
+                columns: 'id, name, reorder_level',
+                eq: { company_id: companyId, is_active: true },
+                limit: 5000
+              }).catch(() => []),
+              Refad.db.select('batches', {
+                columns: 'id, product_id, batch_number, expiry_date, quantity_left',
+                eq: { company_id: companyId },
+                gt: { quantity_left: 0 },
+                limit: 5000
+              }).catch(() => [])
+            ]);
 
-          Refad.scanInventoryAlerts(companyId).catch(error => {
-            console.error('[Dashboard] Inventory notification dispatch failed:', error);
-            Refad.toast.warning('تم تحميل تنبيهات المخزون، لكن تعذّر إرسال بعضها');
-          });
+            const products = results[0];
+            const batches = results[1];
+
+            const productById = new Map(products.map(p => [String(p.id), p]));
+            const qtyByProduct = new Map();
+            batches.forEach(b => {
+              const key = String(b.product_id);
+              qtyByProduct.set(key, (qtyByProduct.get(key) || 0) + (Number(b.quantity_left) || 0));
+            });
+
+            batches
+              .filter(b => b.expiry_date && b.expiry_date <= in30Days)
+              .sort((a, b) => String(a.expiry_date).localeCompare(String(b.expiry_date)))
+              .slice(0, 3)
+              .forEach(b => {
+                const days = Refad.format.daysLeft(b.expiry_date);
+                const productName = productById.get(String(b.product_id));
+                items.push({
+                  type: days <= 7 ? 'danger' : 'warning',
+                  icon: 'calendar-x',
+                  title: 'قرب انتهاء: ' + (productName ? productName.name : 'صنف'),
+                  sub: 'تشغيلة ' + (b.batch_number || '—') + ' • متبقي ' + b.quantity_left + ' • ' + days + ' يوم',
+                  href: 'inventory.html'
+                });
+              });
+
+            products
+              .filter(p => {
+                const threshold = Number(p.reorder_level) || 0;
+                return threshold > 0 && (qtyByProduct.get(String(p.id)) || 0) <= threshold;
+              })
+              .slice(0, 2)
+              .forEach(p => {
+                items.push({
+                  type: 'warning',
+                  icon: 'package-x',
+                  title: 'مخزون منخفض: ' + p.name,
+                  sub: 'المتاح ' + Refad.format.number(qtyByProduct.get(String(p.id)) || 0) + ' • حد الطلب ' + Refad.format.number(p.reorder_level),
+                  href: 'inventory.html'
+                });
+              });
+          }
+
+          if (canViewPayments) {
+            const cheques = await Refad.db.select('cheques', {
+              columns: 'id, cheque_number, amount, due_date, cheque_type, party_name',
+              eq: { company_id: companyId, status: 'pending' },
+              lte: { due_date: in30Days },
+              order: { column: 'due_date', ascending: true },
+              limit: 10
+            }).catch(() => []);
+
+            cheques.slice(0, 3).forEach(c => {
+              const days = Refad.format.daysLeft(c.due_date);
+              items.push({
+                type: days < 0 ? 'danger' : days <= 7 ? 'warning' : 'info',
+                icon: 'file-check-2',
+                title: 'شيك ' + (c.cheque_type === 'incoming' ? 'وارد' : 'صادر') + ' #' + c.cheque_number,
+                sub: SafeSettings.locale.formatMoney(c.amount) + ' • ' + (days < 0 ? 'متأخر ' + Math.abs(days) + ' يوم' : 'يستحق خلال ' + days + ' يوم'),
+                href: 'cheques.html'
+              });
+            });
+          }
+
+          if (canViewSales) {
+            const customers = await Refad.db.select('customers', {
+              columns: 'id, name, balance, credit_limit',
+              eq: { company_id: companyId, is_active: true }
+            }).catch(() => []);
+
+            const overLimit = customers.filter(c =>
+              Number(c.credit_limit) > 0 && Number(c.balance) > Number(c.credit_limit)
+            ).slice(0, 2);
+
+            overLimit.forEach(c => {
+              items.push({
+                type: 'danger',
+                icon: 'alert-octagon',
+                title: 'تجاوز حد ائتمان: ' + c.name,
+                sub: 'الرصيد ' + SafeSettings.locale.formatMoney(c.balance) + ' • الحد ' + SafeSettings.locale.formatMoney(c.credit_limit),
+                href: 'customers.html'
+              });
+            });
+          }
+
+          const badge = document.getElementById('alertsCountBadge');
+          if (badge) badge.textContent = items.length;
 
           if (items.length === 0) {
-            list.innerHTML = `
-              <div class="empty-state">
-                <i data-lucide="check-circle-2" style="color:var(--success);opacity:1;"></i>
-                <p style="color:var(--text);font-weight:600;">لا توجد تنبيهات</p>
-                <p style="font-size:11px;">كل شيء على ما يرام</p>
-              </div>`;
+            list.innerHTML = '<div class="empty-state">' +
+              '<i data-lucide="check-circle-2" style="color:var(--success);opacity:1;"></i>' +
+              '<p style="color:var(--text);font-weight:600;">لا توجد تنبيهات</p>' +
+              '<p style="font-size:11px;">كل شيء على ما يرام</p>' +
+              '</div>';
           } else {
-            list.innerHTML = items.slice(0, 8).map(it => `
-              <div class="alert-item">
-                <div class="alert-icon ${it.type}"><i data-lucide="${it.icon}"></i></div>
-                <div class="alert-body">
-                  <div class="title">${Refad.escapeHtml(it.title)}</div>
-                  <div class="sub">${Refad.escapeHtml(it.sub)}</div>
-                </div>
-              </div>
-            `).join('');
+            list.innerHTML = items.slice(0, 8).map(it => '<a href="' + it.href + '" class="alert-item">' +
+              '<div class="alert-icon ' + it.type + '"><i data-lucide="' + it.icon + '"></i></div>' +
+              '<div class="alert-body">' +
+                '<div class="title">' + Refad.escapeHtml(it.title) + '</div>' +
+                '<div class="sub">' + Refad.escapeHtml(it.sub) + '</div>' +
+              '</div></a>').join('');
           }
 
           if (window.lucide) lucide.createIcons();
         } catch (e) {
           console.error('[Dashboard] Alerts error:', e);
-          list.innerHTML = `<div class="empty-state"><p style="color:var(--danger);">تعذّر التحميل</p></div>`;
+          list.innerHTML = '<div class="empty-state"><p style="color:var(--danger);">تعذّر التحميل</p></div>';
         }
       }
 
       // ============================================================
-      // 8) آخر الحركات
+      // 10) Load Activity
       // ============================================================
       async function loadActivity() {
-        if (!session.is_owner) return;
+        if (!isOwner) {
+          const card = document.getElementById('activityCard');
+          if (card) card.style.display = 'none';
+          return;
+        }
+
         const list = document.getElementById('activityList');
+        if (!list) return;
+
         try {
           const rows = await Refad.db.select('activity_log', {
-            columns: 'id, action, module, details, created_at, users(full_name)',
+            columns: 'id, action, module, details, created_at, user_id',
             eq: { company_id: session.company_id },
             order: { column: 'created_at', ascending: false },
             limit: 8
           });
 
           if (rows.length === 0) {
-            list.innerHTML = `
-              <div class="empty-state">
-                <i data-lucide="inbox"></i>
-                <p>لا توجد حركات بعد</p>
-              </div>`;
-          } else {
-            const ACTIONS_AR = {
-              'login': 'تسجيل دخول',
-              'logout': 'تسجيل خروج',
-              'create_user': 'إنشاء موظف',
-              'change_password': 'تغيير كلمة مرور',
-              'reset_password': 'إعادة تعيين كلمة مرور',
-              'unlock_user': 'فتح قفل مستخدم'
-            };
-            list.innerHTML = rows.map(r => {
-              const name = r.users?.full_name || 'مستخدم';
-              const initial = name.charAt(0);
-              const act = ACTIONS_AR[r.action] || r.action;
-              return `
-                <div class="activity-item">
-                  <div class="activity-avatar">${Refad.escapeHtml(initial)}</div>
-                  <div class="activity-body">
-                    <div class="text"><strong>${Refad.escapeHtml(name)}</strong> — ${Refad.escapeHtml(act)}</div>
-                    <div class="time">${Refad.format.relative(r.created_at)}</div>
-                  </div>
-                </div>`;
-            }).join('');
+            list.innerHTML = '<div class="empty-state"><i data-lucide="inbox"></i><p>لا توجد حركات بعد</p></div>';
+            if (window.lucide) lucide.createIcons();
+            return;
           }
+
+          const userIds = [];
+          const seen = {};
+          rows.forEach(r => {
+            if (r.user_id && !seen[String(r.user_id)]) {
+              seen[String(r.user_id)] = true;
+              userIds.push(r.user_id);
+            }
+          });
+
+          let users = [];
+          if (userIds.length) {
+            users = await Refad.db.select('users', {
+              columns: 'id, full_name',
+              in: { id: userIds }
+            }).catch(() => []);
+          }
+          const userMap = new Map(users.map(u => [String(u.id), u.full_name]));
+
+          const ACTIONS_AR = {
+            'login': 'تسجيل دخول',
+            'logout': 'تسجيل خروج',
+            'create_user': 'إنشاء موظف',
+            'change_password': 'تغيير كلمة مرور',
+            'reset_password': 'إعادة تعيين كلمة مرور',
+            'unlock_user': 'فتح قفل مستخدم',
+            'update_company_settings': 'تحديث إعدادات الشركة',
+            'create_expense': 'إضافة مصروف',
+            'delete_expense': 'حذف مصروف',
+            'create_payment': 'تسجيل دفعة',
+            'create_cheque': 'إضافة شيك',
+            'create_credit_note': 'إضافة إشعار',
+            'apply_credit_note': 'تطبيق إشعار',
+            'pos_sale': 'فاتورة POS',
+            'create_invoice': 'إنشاء فاتورة',
+            'delete_invoice': 'حذف فاتورة',
+            'update_theme': 'تحديث الثيم'
+          };
+
+          list.innerHTML = rows.map(r => {
+            const name = r.user_id ? (userMap.get(String(r.user_id)) || 'مستخدم') : 'النظام';
+            const initial = name.charAt(0);
+            const act = ACTIONS_AR[r.action] || r.action;
+            const detail = r.details ? ' — ' + r.details : '';
+            return '<div class="activity-item">' +
+              '<div class="activity-avatar">' + Refad.escapeHtml(initial) + '</div>' +
+              '<div class="activity-body">' +
+                '<div class="text"><strong>' + Refad.escapeHtml(name) + '</strong> ' + Refad.escapeHtml(act) + Refad.escapeHtml(detail) + '</div>' +
+                '<div class="time">' + Refad.format.relative(r.created_at) + '</div>' +
+              '</div></div>';
+          }).join('');
 
           if (window.lucide) lucide.createIcons();
         } catch (e) {
           console.error('[Dashboard] Activity error:', e);
-          list.innerHTML = `<div class="empty-state"><p style="color:var(--danger);">تعذّر التحميل</p></div>`;
+          list.innerHTML = '<div class="empty-state"><p style="color:var(--danger);">تعذّر التحميل</p></div>';
         }
       }
 
       // ============================================================
-      // 9) فحص الإشعارات غير المقروءة
+      // 11) Search (نفس اللي كان)
       // ============================================================
-      function canViewNotification(notification) {
-        const requiredByType = {
-          expiry: 'inventory.view',
-          low_stock: 'inventory.view',
-          invoice: 'sales.view',
-          message: 'chat.use',
-          payment: 'company.owner'
-        };
-        const permission = requiredByType[notification.type];
-        return !permission || Refad.Session.has(permission);
+      async function preloadSearchData() {
+        if (state.searchData.loaded) return;
+        try {
+          const companyId = session.company_id;
+          const results = await Promise.all([
+            Refad.db.select('products', {
+              columns: 'id, name, name_en, form, unit, default_price, is_active',
+              eq: { company_id: companyId, is_active: true },
+              order: { column: 'name', ascending: true },
+              limit: 2000
+            }).catch(() => []),
+            Refad.db.select('customers', {
+              columns: 'id, name, phone, balance, credit_limit, is_active',
+              eq: { company_id: companyId, is_active: true },
+              order: { column: 'name', ascending: true },
+              limit: 2000
+            }).catch(() => []),
+            Refad.db.select('suppliers', {
+              columns: 'id, name, phone, balance, is_active',
+              eq: { company_id: companyId, is_active: true },
+              order: { column: 'name', ascending: true },
+              limit: 2000
+            }).catch(() => []),
+            Refad.db.select('sales_invoices', {
+              columns: 'id, invoice_number, grand_total, invoice_date, customer_id',
+              eq: { company_id: companyId },
+              order: { column: 'created_at', ascending: false },
+              limit: 500
+            }).catch(() => [])
+          ]);
+
+          state.searchData.products = results[0];
+          state.searchData.customers = results[1];
+          state.searchData.suppliers = results[2];
+          state.searchData.invoices = results[3];
+          state.searchData.loaded = true;
+        } catch (e) {
+          console.warn('[Search] Preload failed:', e.message);
+        }
       }
 
+      function performSearch(query) {
+        const q = String(query || '').trim().toLowerCase();
+        if (!q || q.length < 1) return [];
+        const results = [];
+        const data = state.searchData;
+
+        data.products
+          .filter(p =>
+            (p.name || '').toLowerCase().includes(q) ||
+            (p.name_en || '').toLowerCase().includes(q) ||
+            (p.form || '').toLowerCase().includes(q)
+          )
+          .slice(0, 5)
+          .forEach(p => {
+            results.push({
+              type: 'product',
+              icon: 'package',
+              iconClass: 'product',
+              title: p.name,
+              sub: [p.form, p.unit].filter(Boolean).join(' • ') || 'صنف',
+              href: 'products.html?id=' + p.id
+            });
+          });
+
+        data.customers
+          .filter(c =>
+            (c.name || '').toLowerCase().includes(q) ||
+            (c.phone || '').toLowerCase().includes(q)
+          )
+          .slice(0, 4)
+          .forEach(c => {
+            const balance = Number(c.balance) || 0;
+            const balanceText = balance !== 0
+              ? (balance > 0 ? 'علينا: ' : 'لنا: ') + SafeSettings.locale.formatMoney(Math.abs(balance))
+              : 'مصفّى';
+            results.push({
+              type: 'customer',
+              icon: 'user',
+              iconClass: 'customer',
+              title: c.name,
+              sub: (c.phone ? c.phone + ' • ' : '') + balanceText,
+              href: 'customer-details.html?id=' + c.id
+            });
+          });
+
+        data.suppliers
+          .filter(s =>
+            (s.name || '').toLowerCase().includes(q) ||
+            (s.phone || '').toLowerCase().includes(q)
+          )
+          .slice(0, 4)
+          .forEach(s => {
+            const balance = Number(s.balance) || 0;
+            const balanceText = balance !== 0
+              ? 'رصيد: ' + SafeSettings.locale.formatMoney(balance)
+              : 'مصفّى';
+            results.push({
+              type: 'supplier',
+              icon: 'truck',
+              iconClass: 'supplier',
+              title: s.name,
+              sub: (s.phone ? s.phone + ' • ' : '') + balanceText,
+              href: 'supplier-details.html?id=' + s.id
+            });
+          });
+
+        data.invoices
+          .filter(inv => (inv.invoice_number || '').toLowerCase().includes(q))
+          .slice(0, 4)
+          .forEach(inv => {
+            results.push({
+              type: 'invoice',
+              icon: 'receipt',
+              iconClass: 'invoice',
+              title: inv.invoice_number,
+              sub: Refad.format.date(inv.invoice_date) + ' • ' + SafeSettings.locale.formatMoney(inv.grand_total),
+              href: 'invoices.html?id=' + inv.id
+            });
+          });
+
+        return results;
+      }
+
+      function renderSearchResults(results, query) {
+        const container = document.getElementById('searchResults');
+        if (!container) return;
+
+        if (!query || query.trim().length < 1) {
+          container.classList.remove('show');
+          container.innerHTML = '';
+          return;
+        }
+
+        container.classList.add('show');
+        state.searchResults = results;
+        state.searchHighlightIndex = -1;
+
+        if (results.length === 0) {
+          container.innerHTML = '<div class="search-empty">' +
+            '<i data-lucide="search-x"></i>' +
+            '<p>لا توجد نتائج لـ "' + Refad.escapeHtml(query) + '"</p>' +
+            '<small>جرّب كلمات أخرى</small>' +
+            '</div>' +
+            '<div class="search-results-footer">' +
+              '<span class="hint"><span class="kbd">Esc</span> إغلاق</span>' +
+            '</div>';
+          if (window.lucide) lucide.createIcons();
+          return;
+        }
+
+        const groups = {
+          product: { label: 'الأصناف', icon: 'package', items: [] },
+          customer: { label: 'العملاء', icon: 'user', items: [] },
+          supplier: { label: 'الموردين', icon: 'truck', items: [] },
+          invoice: { label: 'الفواتير', icon: 'receipt', items: [] }
+        };
+
+        results.forEach(r => {
+          if (groups[r.type]) groups[r.type].items.push(r);
+        });
+
+        let html = '<div class="search-results-header">' +
+          '<span><i data-lucide="search" style="width:12px;height:12px;display:inline-block;vertical-align:middle;"></i> نتائج البحث</span>' +
+          '<span class="count">' + results.length + ' نتيجة</span>' +
+          '</div>';
+
+        let globalIndex = 0;
+        Object.keys(groups).forEach(type => {
+          const group = groups[type];
+          if (!group.items.length) return;
+
+          html += '<div class="search-section">' +
+            '<div class="search-section-title">' +
+              '<i data-lucide="' + group.icon + '"></i>' +
+              group.label + ' (' + group.items.length + ')' +
+            '</div>';
+
+          group.items.forEach(item => {
+            html += '<a href="' + item.href + '" class="search-result-item" data-result-index="' + globalIndex + '">' +
+              '<div class="result-icon ' + item.iconClass + '">' +
+                '<i data-lucide="' + item.icon + '"></i>' +
+              '</div>' +
+              '<div class="result-body">' +
+                '<div class="result-name">' + Refad.escapeHtml(item.title) + '</div>' +
+                '<div class="result-sub">' + Refad.escapeHtml(item.sub) + '</div>' +
+              '</div>' +
+              '<i data-lucide="chevron-left" class="result-arrow" style="width:16px;height:16px;"></i>' +
+              '</a>';
+            globalIndex++;
+          });
+
+          html += '</div>';
+        });
+
+        html += '<div class="search-results-footer">' +
+          '<span class="hint"><span class="kbd">↑</span><span class="kbd">↓</span> للتنقل</span>' +
+          '<span class="hint"><span class="kbd">Enter</span> فتح</span>' +
+          '<span class="hint"><span class="kbd">Esc</span> إغلاق</span>' +
+          '</div>';
+
+        container.innerHTML = html;
+        if (window.lucide) lucide.createIcons();
+      }
+
+      function navigateSearchResults(direction) {
+        const items = document.querySelectorAll('.search-result-item');
+        if (!items.length) return;
+
+        items.forEach(item => item.classList.remove('highlighted'));
+
+        if (direction === 'down') {
+          state.searchHighlightIndex = (state.searchHighlightIndex + 1) % items.length;
+        } else if (direction === 'up') {
+          state.searchHighlightIndex = state.searchHighlightIndex <= 0
+            ? items.length - 1
+            : state.searchHighlightIndex - 1;
+        }
+
+        const current = items[state.searchHighlightIndex];
+        if (current) {
+          current.classList.add('highlighted');
+          current.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        }
+      }
+
+      function handleSearchInput(value) {
+        const q = value.trim();
+        if (!q) {
+          renderSearchResults([], '');
+          return;
+        }
+
+        if (!state.searchData.loaded) {
+          const container = document.getElementById('searchResults');
+          container.classList.add('show');
+          container.innerHTML = '<div class="search-loading"><i data-lucide="loader-2"></i></div>';
+          if (window.lucide) lucide.createIcons();
+          preloadSearchData().then(() => {
+            const results = performSearch(q);
+            renderSearchResults(results, q);
+          });
+          return;
+        }
+
+        const results = performSearch(q);
+        renderSearchResults(results, q);
+      }
+
+      function closeSearch() {
+        const container = document.getElementById('searchResults');
+        const input = document.getElementById('globalSearch');
+        if (container) container.classList.remove('show');
+        if (input) input.value = '';
+        state.searchHighlightIndex = -1;
+      }
+
+      function setupSearch() {
+        const input = document.getElementById('globalSearch');
+        const container = document.getElementById('searchResults');
+        if (!input || !container) return;
+
+        const debouncedSearch = Refad.debounce(handleSearchInput, 200);
+
+        input.addEventListener('input', (e) => debouncedSearch(e.target.value));
+        input.addEventListener('focus', async () => {
+          if (!state.searchData.loaded) await preloadSearchData();
+          if (input.value.trim()) handleSearchInput(input.value);
+        });
+
+        input.addEventListener('keydown', (e) => {
+          if (e.key === 'ArrowDown') { e.preventDefault(); navigateSearchResults('down'); }
+          else if (e.key === 'ArrowUp') { e.preventDefault(); navigateSearchResults('up'); }
+          else if (e.key === 'Enter') {
+            e.preventDefault();
+            const items = document.querySelectorAll('.search-result-item');
+            if (state.searchHighlightIndex >= 0 && items[state.searchHighlightIndex]) {
+              items[state.searchHighlightIndex].click();
+            } else if (items.length > 0) {
+              items[0].click();
+            }
+            closeSearch();
+          } else if (e.key === 'Escape') {
+            closeSearch();
+            input.blur();
+          }
+        });
+
+        document.addEventListener('click', (e) => {
+          if (!e.target.closest('.search-wrapper')) container.classList.remove('show');
+        });
+
+        container.addEventListener('click', (e) => {
+          if (e.target.closest('.search-result-item')) closeSearch();
+        });
+
+        document.addEventListener('keydown', (e) => {
+          if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+            e.preventDefault();
+            input.focus();
+            input.select();
+          }
+        });
+      }
+
+      // ============================================================
+      // 12) Notifications
+      // ============================================================
       async function checkNotifications() {
         if (!Refad.Session.has('notifications.view')) {
-          document.getElementById('notifBtn').style.display = 'none';
+          const btn = document.getElementById('notifBtn');
+          if (btn) btn.style.display = 'none';
           return;
         }
         try {
-          const unreadRows = await Refad.db.select('notifications', {
-            columns: 'type',
-            eq: { user_id: session.user_id, is_read: false }
+          const unread = await Refad.db.select('notifications', {
+            columns: 'id',
+            eq: { user_id: session.user_id, is_read: false },
+            limit: 100
           });
-          const unread = unreadRows.filter(canViewNotification).length;
-          const dot = document.getElementById('notifDot');
+          const countEl = document.getElementById('notifCount');
           const navItem = document.getElementById('notifNavItem');
-          if (unread > 0) {
-            dot.style.display = 'block';
+          if (unread.length > 0 && countEl) {
+            countEl.style.display = 'flex';
+            countEl.textContent = unread.length > 99 ? '99+' : unread.length;
             if (navItem && !navItem.querySelector('.badge')) {
               const b = document.createElement('span');
               b.className = 'badge';
-              b.textContent = unread > 99 ? '99+' : unread;
+              b.textContent = unread.length > 99 ? '99+' : unread.length;
               navItem.appendChild(b);
             }
           }
@@ -1511,133 +1953,197 @@
       }
 
       // ============================================================
-      // 10) Theme Toggle
+      // 13) Theme
       // ============================================================
       function setupTheme() {
         const btn = document.getElementById('themeToggle');
         const icon = document.getElementById('themeIcon');
-
-        function refresh() {
+        if (!btn || !icon) return;
+        const refresh = () => {
           const isDark = Refad.theme.get() === 'dark';
           icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
           if (window.lucide) lucide.createIcons();
-        }
+        };
         refresh();
-
         btn.addEventListener('click', () => {
           Refad.theme.toggle();
           refresh();
+          setTimeout(loadChart, 100);
         });
       }
 
-      // ============================================================
-      // 11) Sidebar (mobile)
-      // ============================================================
       function setupSidebar() {
         const sidebar = document.getElementById('sidebar');
         const overlay = document.getElementById('overlay');
         const btn = document.getElementById('menuToggle');
-
-        function open() { sidebar.classList.add('open'); overlay.classList.add('show'); }
-        function close() { sidebar.classList.remove('open'); overlay.classList.remove('show'); }
-
-        btn.addEventListener('click', open);
-        overlay.addEventListener('click', close);
+        if (!btn || !sidebar || !overlay) return;
+        btn.addEventListener('click', () => { sidebar.classList.add('open'); overlay.classList.add('show'); });
+        overlay.addEventListener('click', () => { sidebar.classList.remove('open'); overlay.classList.remove('show'); });
       }
 
-      // ============================================================
-      // 12) User Dropdown
-      // ============================================================
       function setupUserMenu() {
         const menu = document.getElementById('userMenu');
         const dropdown = document.getElementById('userDropdown');
-
-        menu.addEventListener('click', (e) => {
-          e.stopPropagation();
-          dropdown.classList.toggle('show');
-        });
-
+        if (!menu || !dropdown) return;
+        menu.addEventListener('click', (e) => { e.stopPropagation(); dropdown.classList.toggle('show'); });
         document.addEventListener('click', () => dropdown.classList.remove('show'));
         dropdown.addEventListener('click', (e) => e.stopPropagation());
-
-        document.getElementById('logoutBtn').addEventListener('click', async () => {
-          const ok = await Refad.alert.confirm('تسجيل الخروج', 'هل تريد الخروج من النظام؟', 'خروج');
-          if (ok) await Refad.Auth.logout();
-        });
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+          logoutBtn.addEventListener('click', async () => {
+            if (await Refad.alert.confirm('تسجيل الخروج', 'هل تريد الخروج من النظام؟', 'خروج')) {
+              await Refad.Auth.logout();
+            }
+          });
+        }
       }
 
-      // ============================================================
-      // 13) Notifications Button
-      // ============================================================
       function setupNotifBtn() {
-        document.getElementById('notifBtn').addEventListener('click', () => {
+        const btn = document.getElementById('notifBtn');
+        if (!btn) return;
+        btn.addEventListener('click', () => {
           window.location.href = 'notifications.html';
         });
       }
 
-      // ============================================================
-      // 14) Global Search
-      // ============================================================
-      function setupSearch() {
-        const input = document.getElementById('globalSearch');
-        if (!input) return;
-        const handler = Refad.debounce(async (q) => {
-          if (q.length < 2) return;
-          try {
-            const products = await Refad.db.select('products', {
-              columns: 'id, name',
-              eq: { company_id: session.company_id },
-              ilike: { name: q },
-              limit: 5
-            });
-            if (products.length > 0) {
-              // يمكن لاحقاً فتح modal
-              console.log('Search results:', products);
-            }
-          } catch (e) {
-            console.warn('Search failed:', e.message);
-          }
-        }, 400);
-        input.addEventListener('input', (e) => handler(e.target.value.trim()));
+      function setupChartRange() {
+        document.querySelectorAll('.chart-range-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            document.querySelectorAll('.chart-range-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            state.chartRange = parseInt(btn.dataset.range, 10) || 14;
+            loadChart();
+          });
+        });
       }
 
       // ============================================================
-      // 15) Init
+      // 14) Export
       // ============================================================
-      function init() {
-        buildSidebar();
-        fillUserData();
-        if (!session.is_owner) {
-          document.getElementById('statsGrid').style.display = 'none';
-          document.getElementById('salesChartCard').style.display = 'none';
-          document.getElementById('activityCard').style.display = 'none';
+      function exportDashboard() {
+        try {
+          const data = [
+            ['تقرير لوحة التحكم - ' + SafeSettings.identity.getSystemName()],
+            ['التاريخ', new Date().toLocaleString('ar-EG')],
+            ['المستخدم', session.full_name],
+            ['']
+          ];
+
+          const stats = Array.from(document.querySelectorAll('.stat-card')).map(card => {
+            const label = card.querySelector('.label') ? card.querySelector('.label').textContent : '';
+            const value = card.querySelector('.value') ? card.querySelector('.value').textContent : '';
+            return [label, value];
+          });
+
+          data.push(['الإحصائيات', '']);
+          stats.forEach(s => data.push(s));
+
+          const alerts = Array.from(document.querySelectorAll('.alert-item')).map(item => {
+            const title = item.querySelector('.title') ? item.querySelector('.title').textContent : '';
+            const sub = item.querySelector('.sub') ? item.querySelector('.sub').textContent : '';
+            return [title, sub];
+          });
+
+          if (alerts.length) {
+            data.push([''], ['التنبيهات', '']);
+            alerts.forEach(a => data.push(a));
+          }
+
+          const ws = XLSX.utils.aoa_to_sheet(data);
+          const wb = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(wb, ws, 'Dashboard');
+          XLSX.writeFile(wb, 'dashboard-' + Refad.date.today() + '.xlsx');
+          Refad.toast.success('تم التصدير');
+        } catch (e) {
+          console.error('Export failed:', e);
+          Refad.toast.error('فشل التصدير: ' + e.message);
         }
+      }
+
+      // ============================================================
+      // 15) Bind Events
+      // ============================================================
+      function bindEvents() {
+        const refreshBtn = document.getElementById('refreshBtn');
+        if (refreshBtn) {
+          refreshBtn.addEventListener('click', async () => {
+            Refad.toast.info('جارٍ التحديث...');
+            state.searchData.loaded = false;
+            await Promise.all([loadStats(), loadChart(), loadAlerts(), loadActivity(), checkNotifications(), preloadSearchData()]);
+            Refad.toast.success('تم التحديث');
+          });
+        }
+
+        const exportBtn = document.getElementById('exportBtn');
+        if (exportBtn) exportBtn.addEventListener('click', exportDashboard);
+
+        const newSaleBtn = document.getElementById('newSaleBtn');
+        if (newSaleBtn) {
+          newSaleBtn.addEventListener('click', () => {
+            window.location.href = 'pos.html';
+          });
+        }
+      }
+
+      // ============================================================
+      // 16) Realtime Theme Listener
+      // ============================================================
+      function setupRealtimeTheme() {
+        window.addEventListener('refad:theme-changed', () => {
+          applyIdentity();
+          setTimeout(loadChart, 100);
+        });
+      }
+
+      // ============================================================
+      // 17) Load Settings
+      // ============================================================
+      function loadSettings() {
+        try {
+          if (window.RefadSettings) {
+            state.expiryAlertDays = SafeSettings.inventory.getExpiryAlertDays();
+          }
+        } catch (e) { console.warn('[loadSettings]', e); }
+      }
+
+      // ============================================================
+      // 18) Init
+      // ============================================================
+      async function init() {
+        loadSettings();
+        buildSidebar();
+        buildQuickActions();
+        fillUserData();
         setupTheme();
         setupSidebar();
         setupUserMenu();
         setupNotifBtn();
         setupSearch();
+        setupChartRange();
+        bindEvents();
+        applyIdentity();
+        setupRealtimeTheme();
 
-        // بيانات متوازية
-        loadStats();
-        loadChart();
-        loadAlerts();
-        loadActivity();
-        checkNotifications();
+        await Promise.all([
+          loadStats(),
+          loadChart(),
+          loadAlerts(),
+          loadActivity(),
+          checkNotifications()
+        ]);
 
-        // تسجيل Service Worker
-        Refad.registerServiceWorker();
+        setTimeout(() => preloadSearchData(), 1500);
+
+        if (Refad.registerServiceWorker) Refad.registerServiceWorker();
+
+        console.log('%c[Refad] Dashboard v4 ready (Theme Sync + Settings)', 'color:#14B8A6;font-weight:bold');
       }
 
-      // تشغيل بعد تحميل الـ DOM
       if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
       } else {
         init();
       }
-
-      console.log('%c[Refad] Dashboard ready', 'color:#14B8A6;font-weight:bold');
-
     })();
   </script>
 

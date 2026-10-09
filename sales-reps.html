@@ -1,0 +1,2358 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0B2C4D">
+  <title>المندوبين - رفاد</title>
+
+  <link rel="icon" type="image/png" href="logo.png">
+  <link rel="manifest" href="manifest.json">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --primary: #0B2C4D;
+      --primary-light: #1e4a73;
+      --accent: #14B8A6;
+      --accent-dark: #0d9488;
+      --gold: #F59E0B;
+      --bg: #F1F5F9;
+      --card: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --danger: #ef4444;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --info: #3b82f6;
+      --purple: #8b5cf6;
+      --sidebar-bg: #0B2C4D;
+      --sidebar-text: #cbd5e1;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+      --shadow: 0 4px 20px rgba(11, 44, 77, 0.08);
+      --shadow-lg: 0 10px 40px rgba(11, 44, 77, 0.12);
+      --radius: 14px;
+      --radius-sm: 10px;
+      --sidebar-w: 260px;
+      --topbar-h: 64px;
+    }
+
+    [data-theme="dark"] {
+      --bg: #0a1628;
+      --card: #0f2137;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --border: #1e3a5f;
+      --sidebar-bg: #061a2e;
+      --sidebar-text: #94a3b8;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Cairo', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      transition: background 0.3s, color 0.3s;
+    }
+
+    body { display: flex; min-height: 100vh; overflow-x: hidden; }
+
+    /* ============ Sidebar ============ */
+    .sidebar {
+      width: var(--sidebar-w);
+      height: 100vh;
+      background: var(--sidebar-bg);
+      color: var(--sidebar-text);
+      position: fixed;
+      top: 0; right: 0;
+      z-index: 100;
+      display: flex; flex-direction: column;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: -4px 0 20px rgba(0,0,0,0.1);
+    }
+    .sidebar-header {
+      padding: 20px 22px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      display: flex; align-items: center; gap: 14px;
+      height: var(--topbar-h);
+      box-sizing: border-box;
+    }
+    .sidebar-logo {
+      width: 40px; height: 40px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 4px 12px rgba(20,184,166,0.4);
+      overflow: hidden;
+    }
+    .sidebar-logo img { width: 70%; height: 70%; object-fit: contain; }
+    .sidebar-logo .fallback { color: white; font-weight: 800; font-size: 18px; }
+    .sidebar-brand h2 { color: white; font-size: 20px; font-weight: 800; line-height: 1.2; }
+    .sidebar-brand p { font-size: 10px; color: var(--sidebar-text); opacity: 0.7; font-weight: 500; margin-top: 2px; }
+    .sidebar-nav { flex: 1; overflow-y: auto; padding: 12px 0; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.15) transparent; }
+    .sidebar-nav::-webkit-scrollbar { width: 5px; }
+    .sidebar-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 10px; }
+    .nav-section { padding: 8px 20px 4px; font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 1px; margin-top: 8px; }
+    .nav-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 11px 22px;
+      color: var(--sidebar-text);
+      text-decoration: none;
+      font-size: 14px; font-weight: 500;
+      border-right: 3px solid transparent;
+      transition: all 0.2s;
+      position: relative;
+      cursor: pointer;
+    }
+    .nav-item:hover { background: rgba(255,255,255,0.05); color: white; border-right-color: rgba(20,184,166,0.5); }
+    .nav-item.active { background: rgba(20,184,166,0.12); color: white; border-right-color: var(--accent); font-weight: 600; }
+    .nav-item.active::before { content: ''; position: absolute; right: 0; top: 50%; transform: translateY(-50%); width: 3px; height: 60%; background: var(--accent); border-radius: 0 4px 4px 0; }
+    .nav-item i, .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; opacity: 0.85; }
+    .nav-item .badge { margin-right: auto; background: var(--danger); color: white; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
+    .nav-item .badge.teal { background: var(--accent); }
+    .nav-item .badge.gold { background: var(--gold); }
+    .nav-item .badge.new { background: var(--purple); }
+
+    /* ============ Main ============ */
+    .main { flex: 1; margin-right: var(--sidebar-w); min-width: 0; display: flex; flex-direction: column; }
+    .topbar {
+      height: var(--topbar-h);
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 16px;
+      padding: 0 24px;
+      position: sticky; top: 0;
+      z-index: 50;
+      box-shadow: var(--shadow-sm);
+    }
+    .menu-toggle { display: none; background: transparent; border: none; color: var(--text); cursor: pointer; padding: 8px; border-radius: 8px; }
+    .menu-toggle:hover { background: var(--bg); }
+    .topbar-title { font-size: 18px; font-weight: 700; color: var(--text); flex-shrink: 0; }
+    .topbar-actions { display: flex; align-items: center; gap: 8px; margin-right: auto; }
+    .icon-btn {
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      position: relative;
+      transition: all 0.2s;
+    }
+    .icon-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .icon-btn i, .icon-btn svg { width: 18px; height: 18px; }
+    .icon-btn .dot { position: absolute; top: 8px; left: 8px; width: 8px; height: 8px; background: var(--danger); border-radius: 50%; border: 2px solid var(--card); }
+    .user-menu {
+      display: flex; align-items: center; gap: 10px;
+      padding: 5px 12px 5px 5px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.2s;
+      border: 1px solid var(--border);
+      background: var(--card);
+    }
+    .user-menu:hover { background: var(--bg); }
+    .user-avatar {
+      width: 34px; height: 34px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-weight: 700; font-size: 14px;
+      flex-shrink: 0; overflow: hidden;
+    }
+    .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .user-info { display: flex; flex-direction: column; line-height: 1.2; }
+    .user-info .name { font-size: 13px; font-weight: 700; color: var(--text); }
+    .user-info .role { font-size: 11px; color: var(--text-muted); }
+    .dropdown { position: absolute; top: calc(100% + 8px); left: 0; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: var(--shadow-lg); min-width: 200px; padding: 6px; opacity: 0; visibility: hidden; transform: translateY(-8px); transition: all 0.2s; z-index: 100; }
+    .dropdown.show { opacity: 1; visibility: visible; transform: translateY(0); }
+    .dropdown-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; color: var(--text); font-size: 13px; font-weight: 500; cursor: pointer; transition: background 0.15s; text-decoration: none; }
+    .dropdown-item:hover { background: var(--bg); }
+    .dropdown-item.danger { color: var(--danger); }
+    .dropdown-item.danger:hover { background: rgba(239,68,68,0.08); }
+    .dropdown-item i { width: 16px; height: 16px; }
+    .dropdown-divider { height: 1px; background: var(--border); margin: 6px 0; }
+
+    /* ============ Content ============ */
+    .content { padding: 24px; flex: 1; }
+    .page-head {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .page-head h1 { font-size: 24px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+    .page-head p { font-size: 13px; color: var(--text-muted); }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 18px;
+      font-family: inherit;
+      font-size: 14px; font-weight: 600;
+      border-radius: var(--radius-sm);
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn i { width: 16px; height: 16px; }
+    .btn-primary { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; }
+    .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(20,184,166,0.35); }
+    .btn-outline { background: var(--card); color: var(--text); border: 1px solid var(--border); }
+    .btn-outline:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+    .btn-success { background: var(--success); color: white; }
+    .btn-success:hover:not(:disabled) { background: #047857; }
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-danger:hover:not(:disabled) { background: #b91c1c; }
+    .btn-gold { background: var(--gold); color: white; }
+    .btn-gold:hover:not(:disabled) { background: #d97706; }
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+    /* ============ Period Filter Bar ============ */
+    .period-bar {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      margin-bottom: 16px;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+      box-shadow: var(--shadow-sm);
+    }
+    .period-bar label {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+    .period-select {
+      padding: 10px 14px;
+      font-family: inherit;
+      font-size: 14px; font-weight: 700;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      outline: none;
+      cursor: pointer;
+      min-width: 140px;
+    }
+    .period-select:focus { border-color: var(--accent); background: var(--card); }
+
+    /* ============ Stats ============ */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      display: flex; align-items: center; gap: 14px;
+      box-shadow: var(--shadow-sm);
+      position: relative;
+      overflow: hidden;
+    }
+    .stat-card::before { content: ''; position: absolute; top: 0; right: 0; width: 4px; height: 100%; background: var(--accent); }
+    .stat-card.gold::before { background: var(--gold); }
+    .stat-card.danger::before { background: var(--danger); }
+    .stat-card.info::before { background: var(--info); }
+    .stat-card.purple::before { background: var(--purple); }
+    .stat-card.success::before { background: var(--success); }
+    .stat-icon {
+      width: 48px; height: 48px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      background: rgba(20,184,166,0.12);
+      color: var(--accent);
+    }
+    .stat-icon.gold { background: rgba(245,158,11,0.12); color: var(--gold); }
+    .stat-icon.danger { background: rgba(239,68,68,0.12); color: var(--danger); }
+    .stat-icon.info { background: rgba(59,130,246,0.12); color: var(--info); }
+    .stat-icon.purple { background: rgba(139,92,246,0.12); color: var(--purple); }
+    .stat-icon.success { background: rgba(16,185,129,0.12); color: var(--success); }
+    .stat-icon i { width: 22px; height: 22px; }
+    .stat-body { flex: 1; min-width: 0; }
+    .stat-body .label { font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px; }
+    .stat-body .value { font-size: 20px; font-weight: 800; color: var(--text); line-height: 1.2; overflow-wrap: anywhere; }
+    .stat-body .sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+    /* ============ Tabs ============ */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 6px;
+      margin-bottom: 16px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tab {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 18px;
+      font-family: inherit;
+      font-size: 13px; font-weight: 600;
+      color: var(--text-muted);
+      background: transparent;
+      border: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .tab:hover { background: var(--bg); color: var(--text); }
+    .tab.active { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; box-shadow: 0 4px 12px rgba(20,184,166,0.3); }
+    .tab i { width: 16px; height: 16px; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; animation: fadeIn 0.3s; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ============ Reps Grid ============ */
+    .reps-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 16px;
+    }
+
+    .rep-card {
+      background: var(--card);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.25s;
+      cursor: pointer;
+    }
+    .rep-card::before {
+      content: '';
+      position: absolute;
+      top: 0; right: 0; bottom: 0;
+      width: 4px;
+      background: linear-gradient(180deg, var(--primary), var(--accent));
+    }
+    .rep-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-lg);
+      border-color: var(--accent);
+    }
+
+    .rep-header {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 14px;
+      padding-right: 8px;
+    }
+    .rep-avatar-wrap {
+      display: flex; align-items: center; gap: 12px;
+      flex: 1;
+      min-width: 0;
+    }
+    .rep-avatar {
+      width: 52px; height: 52px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: white;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 20px;
+      flex-shrink: 0;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(20,184,166,0.3);
+    }
+    .rep-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .rep-info { flex: 1; min-width: 0; }
+    .rep-name {
+      font-size: 16px; font-weight: 800;
+      color: var(--text);
+      margin-bottom: 3px;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .rep-phone {
+      font-size: 11px;
+      color: var(--text-muted);
+      display: flex; align-items: center; gap: 4px;
+    }
+    .rep-phone i { width: 11px; height: 11px; }
+
+    .rep-rank {
+      width: 30px; height: 30px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--gold), #d97706);
+      color: white;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800;
+      font-size: 13px;
+      flex-shrink: 0;
+      box-shadow: 0 4px 12px rgba(245,158,11,0.3);
+    }
+    .rep-rank.rank-2 { background: linear-gradient(135deg, #94a3b8, #64748b); box-shadow: 0 4px 12px rgba(148,163,184,0.3); }
+    .rep-rank.rank-3 { background: linear-gradient(135deg, #cd7f32, #a05a1f); box-shadow: 0 4px 12px rgba(205,127,50,0.3); }
+    .rep-rank.rank-other { background: linear-gradient(135deg, var(--text-muted), #475569); box-shadow: none; font-size: 11px; }
+
+    .rep-metrics {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 12px;
+      padding-right: 8px;
+    }
+    .rep-metric {
+      background: var(--bg);
+      border-radius: 10px;
+      padding: 10px 12px;
+    }
+    .rep-metric .lbl {
+      font-size: 10px;
+      color: var(--text-muted);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      margin-bottom: 4px;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .rep-metric .lbl i { width: 11px; height: 11px; }
+    .rep-metric .val {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1.2;
+      overflow-wrap: anywhere;
+    }
+    .rep-metric .val.sales { color: var(--info); }
+    .rep-metric .val.profit { color: var(--success); }
+    .rep-metric .val.due { color: var(--danger); }
+    .rep-metric .val.count { color: var(--purple); }
+
+    .target-block {
+      padding: 12px;
+      padding-right: 20px;
+      background: linear-gradient(135deg, rgba(139,92,246,0.06), rgba(20,184,166,0.04));
+      border: 1.5px solid rgba(139,92,246,0.15);
+      border-radius: 12px;
+      margin-bottom: 12px;
+    }
+    .target-header {
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      font-size: 11px;
+    }
+    .target-label {
+      color: var(--text-muted);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .target-label i { width: 12px; height: 12px; }
+    .target-value {
+      font-weight: 800;
+      font-size: 13px;
+    }
+    .target-value.success { color: var(--success); }
+    .target-value.warning { color: var(--gold); }
+    .target-value.danger { color: var(--danger); }
+
+    .target-progress {
+      height: 8px;
+      background: rgba(148,163,184,0.2);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 6px;
+    }
+    .target-progress > div {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.4s;
+    }
+    .target-progress > div.success { background: linear-gradient(90deg, var(--success), #047857); }
+    .target-progress > div.warning { background: linear-gradient(90deg, var(--gold), #d97706); }
+    .target-progress > div.danger { background: linear-gradient(90deg, var(--danger), #b91c1c); }
+
+    .target-meta {
+      display: flex; justify-content: space-between;
+      font-size: 10px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .target-meta strong { color: var(--text); }
+
+    .rep-actions {
+      display: flex;
+      gap: 6px;
+      padding-right: 8px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+    }
+    .rep-actions .btn {
+      flex: 1;
+      justify-content: center;
+      padding: 7px 10px;
+      font-size: 11px;
+    }
+
+    /* ============ Table ============ */
+    .table-wrap {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+    }
+    .table-scroll { overflow-x: auto; }
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      min-width: 1000px;
+    }
+    table.data-table thead { background: var(--bg); border-bottom: 1px solid var(--border); }
+    table.data-table th {
+      text-align: right;
+      padding: 12px 10px;
+      font-size: 11px; font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+    }
+    table.data-table tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+    }
+    table.data-table tbody tr:hover { background: var(--bg); }
+    table.data-table tbody tr:last-child { border-bottom: none; }
+    table.data-table td { padding: 11px 10px; color: var(--text); vertical-align: middle; }
+
+    .money { font-weight: 700; color: var(--text); }
+    .money.accent { color: var(--accent); }
+    .money.danger { color: var(--danger); }
+    .money.success { color: var(--success); }
+
+    .rep-cell { display: flex; align-items: center; gap: 10px; }
+    .rep-mini-avatar {
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: white;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 14px;
+      flex-shrink: 0;
+    }
+    .rep-mini-info { min-width: 0; }
+    .rep-mini-info .name { font-weight: 700; font-size: 13px; }
+    .rep-mini-info .sub { font-size: 11px; color: var(--text-muted); }
+
+    .status-pill {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px; font-weight: 700;
+      white-space: nowrap;
+    }
+    .status-pill.pending { background: rgba(245,158,11,0.12); color: var(--gold); }
+    .status-pill.approved { background: rgba(59,130,246,0.12); color: var(--info); }
+    .status-pill.paid { background: rgba(16,185,129,0.12); color: var(--success); }
+    .status-pill.cancelled { background: rgba(148,163,184,0.15); color: var(--text-muted); }
+
+    .action-btn {
+      width: 30px; height: 30px;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text-muted);
+      cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+      margin: 0 1px;
+      text-decoration: none;
+    }
+    .action-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .action-btn.danger:hover { border-color: var(--danger); color: var(--danger); background: rgba(239,68,68,0.06); }
+    .action-btn.success:hover { border-color: var(--success); color: var(--success); background: rgba(16,185,129,0.06); }
+    .action-btn i { width: 14px; height: 14px; }
+
+    /* ============ Empty / Loader ============ */
+    .empty-state {
+      padding: 60px 20px;
+      text-align: center;
+      color: var(--text-muted);
+      grid-column: 1/-1;
+    }
+    .empty-state i { width: 52px; height: 52px; opacity: 0.3; margin-bottom: 14px; }
+    .empty-state h3 { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+    .empty-state p { font-size: 13px; }
+
+    .loader { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+    .loader i { width: 40px; height: 40px; animation: spin 1s linear infinite; color: var(--accent); margin-bottom: 12px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ============ Modal ============ */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(11, 44, 77, 0.5);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      display: none;
+      align-items: center; justify-content: center;
+      padding: 20px;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .modal-backdrop.show { display: flex; opacity: 1; }
+    .modal {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-lg);
+      width: 100%;
+      max-width: 620px;
+      max-height: 90vh;
+      display: flex; flex-direction: column;
+      transform: scale(0.95);
+      transition: transform 0.2s;
+      overflow: hidden;
+    }
+    .modal.modal-lg { max-width: 900px; }
+    .modal-backdrop.show .modal { transform: scale(1); }
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+    .modal-header h3 { font-size: 16px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px; }
+    .modal-header h3 i { width: 18px; height: 18px; color: var(--accent); }
+    .modal-close {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .modal-close:hover { background: var(--bg); color: var(--danger); }
+    .modal-close i { width: 18px; height: 18px; }
+    .modal-body { padding: 20px; overflow-y: auto; flex: 1; min-height: 0; }
+    .modal-body::-webkit-scrollbar { width: 8px; }
+    .modal-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+    .modal-footer {
+      padding: 14px 20px;
+      border-top: 1px solid var(--border);
+      display: flex; gap: 10px; justify-content: flex-end;
+      background: var(--bg);
+      flex-shrink: 0;
+    }
+
+    /* ============ Form ============ */
+    .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+    .form-group { display: flex; flex-direction: column; }
+    .form-group.full { grid-column: 1 / -1; }
+    .form-group label { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 6px; display: flex; align-items: center; gap: 4px; }
+    .form-group label .req { color: var(--danger); }
+    .form-group label .hint { color: var(--text-muted); font-weight: 500; font-size: 11px; margin-right: auto; }
+    .form-group input, .form-group select, .form-group textarea {
+      padding: 10px 14px;
+      font-family: inherit;
+      font-size: 14px;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      outline: none;
+      transition: all 0.2s;
+      width: 100%;
+    }
+    .form-group textarea { resize: vertical; min-height: 70px; }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      border-color: var(--accent);
+      background: var(--card);
+      box-shadow: 0 0 0 3px rgba(20,184,166,0.1);
+    }
+
+    .form-section-title {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--purple);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 10px 0 6px;
+      border-bottom: 1px solid var(--border);
+      margin: 6px 0 12px;
+      display: flex; align-items: center; gap: 6px;
+      grid-column: 1 / -1;
+    }
+    .form-section-title i { width: 14px; height: 14px; }
+
+    .info-box {
+      grid-column: 1 / -1;
+      background: linear-gradient(135deg, rgba(139,92,246,0.06), rgba(20,184,166,0.04));
+      border: 1.5px solid rgba(139,92,246,0.2);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 12px;
+      line-height: 1.7;
+      display: flex; align-items: flex-start; gap: 8px;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    .info-box i { width: 16px; height: 16px; color: var(--purple); flex-shrink: 0; margin-top: 2px; }
+    .info-box.warning {
+      background: rgba(245,158,11,0.06);
+      border-color: rgba(245,158,11,0.25);
+    }
+    .info-box.warning i { color: var(--gold); }
+
+    /* ============ Overlay ============ */
+    .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; opacity: 0; transition: opacity 0.3s; }
+    .overlay.show { display: block; opacity: 1; }
+
+    /* ============ Responsive ============ */
+    @media (max-width: 1024px) {
+      .sidebar { transform: translateX(100%); }
+      .sidebar.open { transform: translateX(0); }
+      .main { margin-right: 0; }
+      .menu-toggle { display: flex; }
+      .user-info { display: none; }
+    }
+    @media (max-width: 640px) {
+      .content { padding: 16px; }
+      .topbar { padding: 0 14px; gap: 10px; }
+      .topbar-title { font-size: 15px; }
+      .page-head { flex-direction: column; align-items: stretch; }
+      .page-head h1 { font-size: 20px; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .stat-card { padding: 14px; }
+      .stat-icon { width: 40px; height: 40px; }
+      .stat-body .value { font-size: 16px; }
+      .form-grid { grid-template-columns: 1fr; }
+      .modal-footer { flex-direction: column-reverse; }
+      .modal-footer .btn { width: 100%; justify-content: center; }
+      .reps-grid { grid-template-columns: 1fr; }
+      .rep-metrics { grid-template-columns: 1fr; }
+      .period-bar { padding: 12px; }
+      .period-select { flex: 1; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo" id="sidebarLogo">
+        <img src="logo.png" alt="رفاد" id="sidebarLogoImg" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=fallback>R</span>';">
+      </div>
+      <div class="sidebar-brand">
+        <h2 id="sidebarBrandName">رفاد</h2>
+        <p id="sidebarBrandDesc">نظام إدارة الأدوية</p>
+      </div>
+    </div>
+    <nav class="sidebar-nav" id="sidebarNav"></nav>
+  </aside>
+
+  <div class="overlay" id="overlay"></div>
+
+  <!-- Main -->
+  <div class="main">
+    <header class="topbar">
+      <button class="menu-toggle" id="menuToggle"><i data-lucide="menu"></i></button>
+      <div class="topbar-title">المندوبين</div>
+      <div class="topbar-actions">
+        <button class="icon-btn" id="themeToggle" title="الوضع الليلي/النهاري">
+          <i data-lucide="moon" id="themeIcon"></i>
+        </button>
+        <button class="icon-btn" id="notifBtn" title="الإشعارات" style="position:relative;">
+          <i data-lucide="bell"></i>
+          <span class="dot" id="notifDot" style="display:none;"></span>
+        </button>
+        <div style="position:relative;">
+          <div class="user-menu" id="userMenu">
+            <div class="user-avatar" id="userAvatar">م</div>
+            <div class="user-info">
+              <span class="name" id="userName">—</span>
+              <span class="role" id="userRole">—</span>
+            </div>
+            <i data-lucide="chevron-down" style="width:14px;height:14px;opacity:0.5;"></i>
+          </div>
+          <div class="dropdown" id="userDropdown">
+            <a href="company-settings.html" class="dropdown-item"><i data-lucide="settings"></i> الإعدادات</a>
+            <a href="employees.html" class="dropdown-item"><i data-lucide="user-cog"></i> الملف الشخصي</a>
+            <div class="dropdown-divider"></div>
+            <div class="dropdown-item danger" id="logoutBtn"><i data-lucide="log-out"></i> تسجيل الخروج</div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="content">
+
+      <div class="page-head">
+        <div>
+          <h1>المندوبين</h1>
+          <p>أداء المندوبين والأهداف والعمولات</p>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn btn-outline btn-sm" id="refreshBtn">
+            <i data-lucide="refresh-cw"></i> تحديث
+          </button>
+          <button class="btn btn-outline btn-sm" id="exportBtn">
+            <i data-lucide="download"></i> تصدير Excel
+          </button>
+          <button class="btn btn-outline btn-sm" id="targetsBtn">
+            <i data-lucide="target"></i> الأهداف
+          </button>
+          <button class="btn btn-primary" id="calcCommissionsBtn">
+            <i data-lucide="calculator"></i> احتساب العمولات
+          </button>
+        </div>
+      </div>
+
+      <!-- Period Filter -->
+      <div class="period-bar">
+        <label>الفترة:</label>
+        <select class="period-select" id="monthSelect"></select>
+        <select class="period-select" id="yearSelect"></select>
+        <span style="margin-right:auto;font-size:12px;color:var(--text-muted);" id="updatedAt">—</span>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon"><i data-lucide="users"></i></div>
+          <div class="stat-body">
+            <div class="label">إجمالي المندوبين</div>
+            <div class="value" id="statTotal">0</div>
+            <div class="sub" id="statTotalSub">—</div>
+          </div>
+        </div>
+        <div class="stat-card info">
+          <div class="stat-icon info"><i data-lucide="trending-up"></i></div>
+          <div class="stat-body">
+            <div class="label">إجمالي المبيعات</div>
+            <div class="value" id="statSales">0.00</div>
+            <div class="sub">للفترة المحددة</div>
+          </div>
+        </div>
+        <div class="stat-card success">
+          <div class="stat-icon success"><i data-lucide="badge-dollar-sign"></i></div>
+          <div class="stat-body">
+            <div class="label">إجمالي الأرباح</div>
+            <div class="value" id="statProfit">0.00</div>
+            <div class="sub">أساس العمولات</div>
+          </div>
+        </div>
+        <div class="stat-card purple">
+          <div class="stat-icon purple"><i data-lucide="percent"></i></div>
+          <div class="stat-body">
+            <div class="label">إجمالي العمولات</div>
+            <div class="value" id="statCommissions">0.00</div>
+            <div class="sub" id="statCommissionsSub">—</div>
+          </div>
+        </div>
+        <div class="stat-card gold">
+          <div class="stat-icon gold"><i data-lucide="target"></i></div>
+          <div class="stat-body">
+            <div class="label">متوسط تحقيق الهدف</div>
+            <div class="value" id="statTarget">0%</div>
+            <div class="sub">للفترة المحددة</div>
+          </div>
+        </div>
+        <div class="stat-card danger">
+          <div class="stat-icon danger"><i data-lucide="wallet"></i></div>
+          <div class="stat-body">
+            <div class="label">متبقي للتحصيل</div>
+            <div class="value" id="statDue">0.00</div>
+            <div class="sub">فواتير آجلة</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tabs">
+        <button class="tab active" data-tab="overview"><i data-lucide="layout-grid"></i> البطاقات</button>
+        <button class="tab" data-tab="table"><i data-lucide="table"></i> الجدول</button>
+        <button class="tab" data-tab="commissions"><i data-lucide="wallet"></i> العمولات المحتسبة</button>
+        <button class="tab" data-tab="targets"><i data-lucide="target"></i> الأهداف</button>
+      </div>
+
+      <!-- Tab: Overview (Cards) -->
+      <div class="tab-panel active" data-panel="overview">
+        <div class="reps-grid" id="repsGrid">
+          <div class="empty-state"><i data-lucide="loader"></i><p>جارٍ التحميل...</p></div>
+        </div>
+      </div>
+
+      <!-- Tab: Table -->
+      <div class="tab-panel" data-panel="table">
+        <div class="table-wrap">
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th style="width:50px;">#</th>
+                  <th>المندوب</th>
+                  <th>عدد الفواتير</th>
+                  <th>إجمالي المبيعات</th>
+                  <th>إجمالي الأرباح</th>
+                  <th>المحصل</th>
+                  <th>المتبقي</th>
+                  <th>الهدف</th>
+                  <th>التحقيق</th>
+                  <th>العمولة</th>
+                </tr>
+              </thead>
+              <tbody id="tableBody">
+                <tr><td colspan="10"><div class="loader"><i data-lucide="loader-2"></i><p>جارٍ التحميل...</p></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: Commissions -->
+      <div class="tab-panel" data-panel="commissions">
+        <div class="table-wrap">
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>المندوب</th>
+                  <th>الفترة</th>
+                  <th>إجمالي المبيعات</th>
+                  <th>إجمالي الأرباح</th>
+                  <th>الهدف</th>
+                  <th>التحقيق</th>
+                  <th>النسبة</th>
+                  <th>العمولة</th>
+                  <th>الحالة</th>
+                  <th style="width:120px;">إجراءات</th>
+                </tr>
+              </thead>
+              <tbody id="commissionsBody">
+                <tr><td colspan="10" class="empty-state">لا توجد عمولات محتسبة بعد</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: Targets -->
+      <div class="tab-panel" data-panel="targets">
+        <div class="table-wrap">
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>المندوب</th>
+                  <th>الشهر</th>
+                  <th>السنة</th>
+                  <th>الهدف</th>
+                  <th>نسبة العمولة</th>
+                  <th>ملاحظات</th>
+                  <th style="width:120px;">إجراءات</th>
+                </tr>
+              </thead>
+              <tbody id="targetsBody">
+                <tr><td colspan="7" class="empty-state">لا توجد أهداف محددة</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- ========== Modal: Target Add/Edit ========== -->
+  <div class="modal-backdrop" id="targetModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3><i data-lucide="target"></i> <span id="targetModalTitle">هدف جديد</span></h3>
+        <button class="modal-close" data-close><i data-lucide="x"></i></button>
+      </div>
+      <form id="targetForm">
+        <div class="modal-body">
+          <div class="form-grid">
+
+            <div class="form-section-title"><i data-lucide="user"></i> المندوب والفترة</div>
+
+            <div class="form-group full">
+              <label>المندوب <span class="req">*</span></label>
+              <select id="tUserId" required>
+                <option value="">— اختر —</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>الشهر <span class="req">*</span></label>
+              <select id="tMonth" required></select>
+            </div>
+
+            <div class="form-group">
+              <label>السنة <span class="req">*</span></label>
+              <select id="tYear" required></select>
+            </div>
+
+            <div class="form-section-title"><i data-lucide="dollar-sign"></i> الهدف والعمولة</div>
+
+            <div class="info-box">
+              <i data-lucide="info"></i>
+              <div>
+                <b>الهدف:</b> المبلغ المستهدف من الأرباح خلال الشهر.<br>
+                <b>نسبة العمولة:</b> نسبة من الأرباح الفعلية تُمنح للمندوب.<br>
+                <b>مثال:</b> هدف 50,000 ج.م + نسبة 3% = عمولة 1,500 ج.م عند تحقيق الهدف كاملاً.
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>الهدف (من الأرباح) <span class="req">*</span></label>
+              <input type="number" id="tTarget" min="0" step="0.01" placeholder="50000" required>
+            </div>
+
+            <div class="form-group">
+              <label>نسبة العمولة % <span class="hint">0-100</span></label>
+              <input type="number" id="tCommission" min="0" max="100" step="0.01" value="3" placeholder="3">
+            </div>
+
+            <div class="form-group full">
+              <label>ملاحظات</label>
+              <textarea id="tNotes" maxlength="255" placeholder="ملاحظات..."></textarea>
+            </div>
+
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" data-close>إلغاء</button>
+          <button type="submit" class="btn btn-primary" id="targetSaveBtn">
+            <i data-lucide="save"></i> <span id="targetSaveBtnText">إضافة الهدف</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========== Modal: Rep Details ========== -->
+  <div class="modal-backdrop" id="repDetailsModal">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <h3><i data-lucide="user"></i> تفاصيل المندوب</h3>
+        <button class="modal-close" data-close><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body" id="repDetailsBody"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" data-close>إغلاق</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       SCRIPTS — الترتيب مهم جداً
+       ============================================================ -->
+  <script src="refad-core.js"></script>
+  <script src="refad-auth.js"></script>
+  <script src="refad-theme-sync.js"></script>
+  <script src="refad-settings.js"></script>
+
+  <script>
+    (function () {
+      'use strict';
+
+      // ============================================================
+      // 0) Safe Wrappers
+      // ============================================================
+      const SafeSettings = {
+        locale: {
+          formatMoney: function (v) {
+            try {
+              if (window.RefadSettings?.locale?.formatMoney) {
+                return RefadSettings.locale.formatMoney(v);
+              }
+            } catch (e) {}
+            return Refad.format.money(v);
+          }
+        },
+        identity: {
+          getSystemName: function () {
+            try {
+              if (window.RefadSettings?.identity?.getSystemName) {
+                return RefadSettings.identity.getSystemName();
+              }
+            } catch (e) {}
+            return 'رفاد';
+          },
+          getTagline: function () {
+            try {
+              if (window.RefadSettings?.identity?.getTagline) {
+                return RefadSettings.identity.getTagline();
+              }
+            } catch (e) {}
+            return 'نظام إدارة الأدوية';
+          },
+          getLogoUrl: function () {
+            try {
+              if (window.RefadSettings?.identity?.getLogoUrl) {
+                return RefadSettings.identity.getLogoUrl();
+              }
+            } catch (e) {}
+            return null;
+          }
+        }
+      };
+
+      // ============================================================
+      // 1) Guard
+      // ============================================================
+      const session = Refad.Auth.guardPage('company.owner');
+      if (!session) return;
+
+      // ============================================================
+      // 2) Constants
+      // ============================================================
+      const AR_MONTHS = [
+        'يناير','فبراير','مارس','أبريل','مايو','يونيو',
+        'يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'
+      ];
+
+      const STATUS_LABELS = {
+        pending: 'قيد الانتظار',
+        approved: 'معتمد',
+        paid: 'مدفوع',
+        cancelled: 'ملغي'
+      };
+
+      // ============================================================
+      // 3) UI Helpers
+      // ============================================================
+      function esc(s) { return Refad.escapeHtml(s); }
+      function fmtMoney(v) { return SafeSettings.locale.formatMoney(v); }
+      function fmtNumber(v) { return Refad.format.number(v); }
+      const toNum = v => Number(v) || 0;
+      const today = () => Refad.date.today();
+
+      function fillUser() {
+        const av = document.getElementById('userAvatar');
+        const initial = (session.full_name || '؟').trim().charAt(0);
+        if (session.avatar_url) av.innerHTML = `<img src="${esc(session.avatar_url)}" alt="">`;
+        else av.textContent = initial;
+        document.getElementById('userName').textContent = session.full_name;
+        document.getElementById('userRole').textContent = Refad.Session.has('company.owner') ? 'صاحب الشركة' : 'موظف';
+      }
+
+      function applyIdentity() {
+        const name = SafeSettings.identity.getSystemName();
+        const tagline = SafeSettings.identity.getTagline();
+        const logoUrl = SafeSettings.identity.getLogoUrl();
+
+        const brandName = document.getElementById('sidebarBrandName');
+        const brandDesc = document.getElementById('sidebarBrandDesc');
+        const logoImg = document.getElementById('sidebarLogoImg');
+
+        if (brandName) brandName.textContent = name;
+        if (brandDesc) brandDesc.textContent = tagline;
+        if (logoImg && logoUrl) {
+          logoImg.src = logoUrl;
+          logoImg.onerror = function () {
+            this.style.display = 'none';
+            const parent = this.parentElement;
+            if (parent) parent.innerHTML = '<span class="fallback">' + (name.charAt(0) || 'R') + '</span>';
+          };
+        }
+      }
+
+      function setupTheme() {
+        const btn = document.getElementById('themeToggle');
+        const icon = document.getElementById('themeIcon');
+        const refresh = () => {
+          const isDark = Refad.theme.get() === 'dark';
+          icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+          if (window.lucide) lucide.createIcons();
+        };
+        refresh();
+        btn.addEventListener('click', () => { Refad.theme.toggle(); refresh(); });
+      }
+
+      function setupSidebarMobile() {
+        const sb = document.getElementById('sidebar');
+        const ov = document.getElementById('overlay');
+        document.getElementById('menuToggle').addEventListener('click', () => {
+          sb.classList.add('open'); ov.classList.add('show');
+        });
+        ov.addEventListener('click', () => {
+          sb.classList.remove('open'); ov.classList.remove('show');
+        });
+      }
+
+      function setupUserMenu() {
+        const m = document.getElementById('userMenu');
+        const d = document.getElementById('userDropdown');
+        m.addEventListener('click', e => { e.stopPropagation(); d.classList.toggle('show'); });
+        document.addEventListener('click', () => d.classList.remove('show'));
+        d.addEventListener('click', e => e.stopPropagation());
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+          if (await Refad.alert.confirm('تسجيل الخروج', 'هل تريد الخروج؟', 'خروج')) {
+            await Refad.Auth.logout();
+          }
+        });
+      }
+
+      function setupNotifBtn() {
+        document.getElementById('notifBtn').addEventListener('click', () => {
+          window.location.href = 'notifications.html';
+        });
+      }
+
+      function setupRealtimeTheme() {
+        window.addEventListener('refad:theme-changed', () => {
+          applyIdentity();
+        });
+      }
+
+      // ============================================================
+      // 4) State
+      // ============================================================
+      const state = {
+        users: [],
+        invoices: [],
+        targets: [],
+        commissions: [],
+        settlements: [],
+        reps: [],
+        editingTargetId: null,
+        selectedMonth: new Date().getMonth() + 1,
+        selectedYear: new Date().getFullYear(),
+        schemaWarnings: []
+      };
+
+      // ============================================================
+      // 5) Init Filters
+      // ============================================================
+      function initFilters() {
+        const monthSel = document.getElementById('monthSelect');
+        const yearSel = document.getElementById('yearSelect');
+
+        monthSel.innerHTML = AR_MONTHS.map((m, i) =>
+          `<option value="${i + 1}" ${i + 1 === state.selectedMonth ? 'selected' : ''}>${m}</option>`
+        ).join('');
+
+        const currentYear = new Date().getFullYear();
+        const years = [];
+        for (let y = currentYear + 1; y >= currentYear - 3; y--) years.push(y);
+        yearSel.innerHTML = years.map(y =>
+          `<option value="${y}" ${y === state.selectedYear ? 'selected' : ''}>${y}</option>`
+        ).join('');
+      }
+
+      // ============================================================
+      // 6) Load Data
+      // ============================================================
+      async function loadData() {
+        try {
+          const startDate = `${state.selectedYear}-${String(state.selectedMonth).padStart(2, '0')}-01`;
+          const endDate = dayjs(startDate).endOf('month').format('YYYY-MM-DD');
+
+          const [users, invoices, targets, commissions, settlements] = await Promise.all([
+            Refad.db.select('users', {
+              columns: 'id, full_name, phone, avatar_url, is_active, role_id',
+              eq: { company_id: session.company_id },
+              order: { column: 'full_name', ascending: true }
+            }),
+            Refad.db.select('sales_invoices', {
+              columns: 'id, invoice_number, invoice_date, grand_total, paid_amount, total_profit, status, invoice_type, cashier_id',
+              eq: { company_id: session.company_id },
+              gte: { invoice_date: startDate },
+              lte: { invoice_date: endDate },
+              limit: 5000
+            }).catch(() => []),
+            Refad.db.select('sales_rep_targets', {
+              columns: 'id, user_id, month, year, target_amount, commission_pct, notes, created_at',
+              eq: { company_id: session.company_id, year: state.selectedYear },
+              limit: 1000
+            }).catch(() => []),
+            Refad.db.select('sales_rep_commissions', {
+              columns: '*',
+              eq: { company_id: session.company_id },
+              order: { column: 'id', ascending: false },
+              limit: 500
+            }).catch(() => []),
+            Refad.db.select('representative_settlements', {
+              columns: 'id, representative_id, invoice_id, amount, settlement_date',
+              eq: { company_id: session.company_id },
+              gte: { settlement_date: startDate },
+              lte: { settlement_date: endDate },
+              limit: 5000
+            }).catch(() => [])
+          ]);
+
+          state.users = users || [];
+          state.invoices = invoices || [];
+          state.targets = targets || [];
+          state.commissions = commissions || [];
+          state.settlements = settlements || [];
+
+          computeReps();
+          renderAll();
+
+          document.getElementById('updatedAt').textContent = `آخر تحديث: ${new Date().toLocaleString('ar-EG')}`;
+          document.getElementById('monthSelect').value = state.selectedMonth;
+          document.getElementById('yearSelect').value = state.selectedYear;
+
+        } catch (e) {
+          console.error('[SalesReps] load failed:', e);
+          Refad.toast.error('فشل التحميل: ' + e.message);
+        }
+      }
+
+      // ============================================================
+      // 7) Compute Reps
+      // ============================================================
+      function computeReps() {
+        const repMap = {};
+
+        state.invoices.forEach(inv => {
+          if (inv.status === 'cancelled') return;
+          if ((inv.invoice_type || 'sale') !== 'sale') return;
+          if (!inv.cashier_id) return;
+
+          const uid = inv.cashier_id;
+          if (!repMap[uid]) {
+            repMap[uid] = {
+              user_id: uid,
+              total_sales: 0,
+              total_profit: 0,
+              total_collected: 0,
+              invoice_count: 0
+            };
+          }
+          repMap[uid].total_sales += toNum(inv.grand_total);
+          repMap[uid].total_profit += toNum(inv.total_profit);
+          repMap[uid].total_collected += toNum(inv.paid_amount);
+          repMap[uid].invoice_count += 1;
+        });
+
+        state.reps = Object.values(repMap).map(rep => {
+          const user = state.users.find(u => String(u.id) === String(rep.user_id));
+          if (!user) return null;
+
+          const target = state.targets.find(t =>
+            String(t.user_id) === String(rep.user_id) &&
+            Number(t.month) === state.selectedMonth &&
+            Number(t.year) === state.selectedYear
+          );
+
+          const commission = state.commissions.find(c =>
+            String(c.user_id) === String(rep.user_id) &&
+            Number(c.month) === state.selectedMonth &&
+            Number(c.year) === state.selectedYear
+          );
+
+          const targetAmount = target ? toNum(target.target_amount) : 0;
+          const commissionPct = target ? toNum(target.commission_pct) : (commission ? toNum(commission.commission_pct) : 3);
+          const achievementPct = targetAmount > 0
+            ? Math.round((rep.total_profit / targetAmount) * 100)
+            : 0;
+          const commissionAmount = target ? (rep.total_profit * (commissionPct / 100)) : (commission ? toNum(commission.commission_amount) : 0);
+          const outstanding = Math.max(0, rep.total_sales - rep.total_collected);
+
+          return {
+            user_id: rep.user_id,
+            full_name: user.full_name,
+            phone: user.phone,
+            avatar_url: user.avatar_url,
+            is_active: user.is_active !== false,
+            total_sales: rep.total_sales,
+            total_profit: rep.total_profit,
+            total_collected: rep.total_collected,
+            invoice_count: rep.invoice_count,
+            outstanding,
+            target_amount: targetAmount,
+            commission_pct: commissionPct,
+            achievement_pct: achievementPct,
+            commission_amount: commissionAmount,
+            existing_commission: commission,
+            has_target: !!target
+          };
+        })
+        .filter(Boolean)
+        .sort((a, b) => b.total_profit - a.total_profit);
+
+        state.reps.forEach((rep, idx) => {
+          rep.rank = idx + 1;
+        });
+      }
+
+      // ============================================================
+      // 8) Render All
+      // ============================================================
+      function renderAll() {
+        renderStats();
+        renderRepsGrid();
+        renderTable();
+        renderCommissions();
+        renderTargets();
+        if (window.lucide) lucide.createIcons();
+      }
+
+      // ============================================================
+      // 9) Render Stats
+      // ============================================================
+      function renderStats() {
+        const reps = state.reps;
+        const totalReps = reps.length;
+        const activeReps = reps.filter(r => r.is_active).length;
+
+        const totalSales = reps.reduce((s, r) => s + r.total_sales, 0);
+        const totalProfit = reps.reduce((s, r) => s + r.total_profit, 0);
+        const totalCommissions = reps.reduce((s, r) => s + r.commission_amount, 0);
+        const totalDue = reps.reduce((s, r) => s + r.outstanding, 0);
+
+        const withTarget = reps.filter(r => r.has_target && r.target_amount > 0);
+        const avgAchievement = withTarget.length
+          ? Math.round(withTarget.reduce((s, r) => s + r.achievement_pct, 0) / withTarget.length)
+          : 0;
+
+        const paidCount = state.commissions.filter(c =>
+          Number(c.month) === state.selectedMonth &&
+          Number(c.year) === state.selectedYear &&
+          c.status === 'paid'
+        ).length;
+
+        document.getElementById('statTotal').textContent = fmtNumber(totalReps);
+        document.getElementById('statTotalSub').textContent = `${activeReps} نشط`;
+        document.getElementById('statSales').textContent = fmtMoney(totalSales);
+        document.getElementById('statProfit').textContent = fmtMoney(totalProfit);
+        document.getElementById('statCommissions').textContent = fmtMoney(totalCommissions);
+        document.getElementById('statCommissionsSub').textContent = `${paidCount} مدفوعة`;
+        document.getElementById('statTarget').textContent = avgAchievement + '%';
+        document.getElementById('statDue').textContent = fmtMoney(totalDue);
+      }
+
+      // ============================================================
+      // 10) Render Reps Grid
+      // ============================================================
+      function renderRepsGrid() {
+        const grid = document.getElementById('repsGrid');
+        const reps = state.reps;
+
+        if (!reps.length) {
+          grid.innerHTML = `
+            <div class="empty-state">
+              <i data-lucide="user-x"></i>
+              <h3>لا يوجد مندوبين</h3>
+              <p>لم يتم تسجيل أي فواتير بيع بمندوبين في هذه الفترة</p>
+            </div>
+          `;
+          if (window.lucide) lucide.createIcons();
+          return;
+        }
+
+        grid.innerHTML = reps.map(rep => {
+          const initial = esc((rep.full_name || '؟').trim().charAt(0));
+          const avatarHtml = rep.avatar_url
+            ? `<img src="${esc(rep.avatar_url)}" alt="">`
+            : initial;
+
+          let rankClass = 'rep-rank';
+          let rankLabel = rep.rank;
+          if (rep.rank === 1) { rankClass += ''; rankLabel = '🥇'; }
+          else if (rep.rank === 2) { rankClass += ' rank-2'; rankLabel = '🥈'; }
+          else if (rep.rank === 3) { rankClass += ' rank-3'; rankLabel = '🥉'; }
+          else { rankClass += ' rank-other'; }
+
+          let targetBlock = '';
+          if (rep.has_target && rep.target_amount > 0) {
+            const pct = Math.min(100, rep.achievement_pct);
+            let progressClass = 'success';
+            let valueClass = 'success';
+            if (rep.achievement_pct < 50) { progressClass = 'danger'; valueClass = 'danger'; }
+            else if (rep.achievement_pct < 100) { progressClass = 'warning'; valueClass = 'warning'; }
+
+            targetBlock = `
+              <div class="target-block">
+                <div class="target-header">
+                  <span class="target-label"><i data-lucide="target"></i> الهدف الشهري</span>
+                  <span class="target-value ${valueClass}">${rep.achievement_pct}%</span>
+                </div>
+                <div class="target-progress">
+                  <div class="${progressClass}" style="width:${pct}%;"></div>
+                </div>
+                <div class="target-meta">
+                  <span>المحقق: <strong>${fmtMoney(rep.total_profit)}</strong></span>
+                  <span>الهدف: <strong>${fmtMoney(rep.target_amount)}</strong></span>
+                </div>
+              </div>
+            `;
+          }
+
+          return `
+            <div class="rep-card" data-user-id="${rep.user_id}">
+              <div class="rep-header">
+                <div class="rep-avatar-wrap">
+                  <div class="rep-avatar">${avatarHtml}</div>
+                  <div class="rep-info">
+                    <div class="rep-name">${esc(rep.full_name)}</div>
+                    <div class="rep-phone">
+                      <i data-lucide="phone"></i> ${esc(rep.phone || '—')}
+                    </div>
+                  </div>
+                </div>
+                <div class="${rankClass}" title="الترتيب #${rep.rank}">${rankLabel}</div>
+              </div>
+
+              <div class="rep-metrics">
+                <div class="rep-metric">
+                  <div class="lbl"><i data-lucide="trending-up"></i> المبيعات</div>
+                  <div class="val sales">${fmtMoney(rep.total_sales)}</div>
+                </div>
+                <div class="rep-metric">
+                  <div class="lbl"><i data-lucide="badge-dollar-sign"></i> الأرباح</div>
+                  <div class="val profit">${fmtMoney(rep.total_profit)}</div>
+                </div>
+                <div class="rep-metric">
+                  <div class="lbl"><i data-lucide="receipt"></i> الفواتير</div>
+                  <div class="val count">${fmtNumber(rep.invoice_count)}</div>
+                </div>
+                <div class="rep-metric">
+                  <div class="lbl"><i data-lucide="wallet"></i> المتبقي</div>
+                  <div class="val due">${fmtMoney(rep.outstanding)}</div>
+                </div>
+              </div>
+
+              ${targetBlock}
+
+              ${rep.commission_amount > 0 ? `
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 12px;padding-right:20px;background:linear-gradient(135deg,rgba(139,92,246,0.08),rgba(20,184,166,0.05));border-radius:10px;margin-bottom:12px;">
+                  <span style="font-size:11px;font-weight:700;color:var(--purple);display:flex;align-items:center;gap:4px;">
+                    <i data-lucide="percent" style="width:12px;height:12px;"></i>
+                    عمولة ${rep.commission_pct}%
+                  </span>
+                  <strong style="font-size:15px;color:var(--purple);">${fmtMoney(rep.commission_amount)}</strong>
+                </div>
+              ` : ''}
+
+              <div class="rep-actions">
+                <button class="btn btn-outline" data-action="details" data-id="${rep.user_id}">
+                  <i data-lucide="eye"></i> التفاصيل
+                </button>
+                <button class="btn btn-primary" data-action="target" data-id="${rep.user_id}">
+                  <i data-lucide="target"></i> ${rep.has_target ? 'تعديل الهدف' : 'تحديد هدف'}
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        if (window.lucide) lucide.createIcons();
+
+        grid.querySelectorAll('.rep-card').forEach(card => {
+          card.addEventListener('click', (e) => {
+            if (e.target.closest('[data-action]')) return;
+            openRepDetails(parseInt(card.dataset.userId, 10));
+          });
+        });
+
+        grid.querySelectorAll('[data-action]').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const uid = parseInt(btn.dataset.id, 10);
+            if (btn.dataset.action === 'details') openRepDetails(uid);
+            else if (btn.dataset.action === 'target') openTargetModal(uid);
+          });
+        });
+      }
+
+      // ============================================================
+      // 11) Render Table
+      // ============================================================
+      function renderTable() {
+        const tbody = document.getElementById('tableBody');
+        const reps = state.reps;
+
+        if (!reps.length) {
+          tbody.innerHTML = `<tr><td colspan="10" class="empty-state">لا توجد بيانات لهذه الفترة</td></tr>`;
+          if (window.lucide) lucide.createIcons();
+          return;
+        }
+
+        tbody.innerHTML = reps.map((rep, i) => {
+          const initial = esc((rep.full_name || '؟').trim().charAt(0));
+          let achievementCls = 'money';
+          if (rep.achievement_pct >= 100) achievementCls = 'money success';
+          else if (rep.achievement_pct >= 50) achievementCls = 'money accent';
+
+          return `
+            <tr>
+              <td style="color:var(--text-muted);font-weight:700;text-align:center;">${i + 1}</td>
+              <td>
+                <div class="rep-cell">
+                  <div class="rep-mini-avatar">${initial}</div>
+                  <div class="rep-mini-info">
+                    <div class="name">${esc(rep.full_name)}</div>
+                    <div class="sub">${esc(rep.phone || '—')}</div>
+                  </div>
+                </div>
+              </td>
+              <td>${fmtNumber(rep.invoice_count)}</td>
+              <td class="money accent">${fmtMoney(rep.total_sales)}</td>
+              <td class="money success">${fmtMoney(rep.total_profit)}</td>
+              <td class="money">${fmtMoney(rep.total_collected)}</td>
+              <td class="money danger">${fmtMoney(rep.outstanding)}</td>
+              <td>${rep.has_target ? fmtMoney(rep.target_amount) : '—'}</td>
+              <td class="${achievementCls}">${rep.has_target ? rep.achievement_pct + '%' : '—'}</td>
+              <td><strong style="color:var(--purple);">${fmtMoney(rep.commission_amount)}</strong></td>
+            </tr>
+          `;
+        }).join('');
+
+        if (window.lucide) lucide.createIcons();
+      }
+
+      // ============================================================
+      // 12) Render Commissions
+      // ============================================================
+      function renderCommissions() {
+        const tbody = document.getElementById('commissionsBody');
+        const list = state.commissions.slice(0, 200);
+
+        if (!list.length) {
+          tbody.innerHTML = `<tr><td colspan="10" class="empty-state"><i data-lucide="wallet"></i><br>لا توجد عمولات محتسبة بعد</td></tr>`;
+          if (window.lucide) lucide.createIcons();
+          return;
+        }
+
+        tbody.innerHTML = list.map(c => {
+          const user = state.users.find(u => String(u.id) === String(c.user_id));
+          const statusLabel = STATUS_LABELS[c.status] || c.status;
+          const period = `${AR_MONTHS[c.month - 1]} ${c.year}`;
+
+          const hasFullSchema = c.total_profit !== undefined && c.total_sales !== undefined;
+
+          return `
+            <tr>
+              <td><strong>${esc(user?.full_name || '—')}</strong></td>
+              <td>${period}</td>
+              <td>${hasFullSchema ? fmtMoney(c.total_sales) : '—'}</td>
+              <td>${hasFullSchema ? fmtMoney(c.total_profit) : '—'}</td>
+              <td>${c.target_amount !== undefined ? fmtMoney(c.target_amount) : '—'}</td>
+              <td>${c.achievement_pct !== undefined ? Math.round(toNum(c.achievement_pct)) + '%' : '—'}</td>
+              <td>${toNum(c.commission_pct)}%</td>
+              <td><strong style="color:var(--purple);">${fmtMoney(c.commission_amount)}</strong></td>
+              <td>
+                <span class="status-pill ${c.status}">
+                  ${statusLabel}
+                </span>
+              </td>
+              <td>
+                ${c.status === 'pending' ? `
+                  <button class="action-btn success" data-action="approve" data-id="${c.id}" title="اعتماد">
+                    <i data-lucide="check"></i>
+                  </button>
+                ` : ''}
+                ${c.status === 'approved' ? `
+                  <button class="action-btn success" data-action="pay" data-id="${c.id}" title="تسجيل الدفع">
+                    <i data-lucide="banknote"></i>
+                  </button>
+                ` : ''}
+                <button class="action-btn danger" data-action="delete-comm" data-id="${c.id}" title="حذف">
+                  <i data-lucide="trash-2"></i>
+                </button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+
+        if (window.lucide) lucide.createIcons();
+
+        tbody.querySelectorAll('[data-action]').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const cid = parseInt(btn.dataset.id, 10);
+            if (btn.dataset.action === 'approve') await approveCommission(cid);
+            else if (btn.dataset.action === 'pay') await payCommission(cid);
+            else if (btn.dataset.action === 'delete-comm') await deleteCommission(cid);
+          });
+        });
+      }
+
+      // ============================================================
+      // 13) Render Targets
+      // ============================================================
+      function renderTargets() {
+        const tbody = document.getElementById('targetsBody');
+        const list = state.targets.slice(0, 200);
+
+        if (!list.length) {
+          tbody.innerHTML = `<tr><td colspan="7" class="empty-state"><i data-lucide="target"></i><br>لا توجد أهداف محددة</td></tr>`;
+          if (window.lucide) lucide.createIcons();
+          return;
+        }
+
+        tbody.innerHTML = list.map(t => {
+          const user = state.users.find(u => String(u.id) === String(t.user_id));
+          return `
+            <tr>
+              <td><strong>${esc(user?.full_name || '—')}</strong></td>
+              <td>${AR_MONTHS[t.month - 1]}</td>
+              <td>${t.year}</td>
+              <td>${fmtMoney(t.target_amount)}</td>
+              <td>${toNum(t.commission_pct)}%</td>
+              <td>${esc(t.notes || '—')}</td>
+              <td>
+                <button class="action-btn" data-action="edit-target" data-id="${t.id}" title="تعديل">
+                  <i data-lucide="edit"></i>
+                </button>
+                <button class="action-btn danger" data-action="delete-target" data-id="${t.id}" title="حذف">
+                  <i data-lucide="trash-2"></i>
+                </button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+
+        if (window.lucide) lucide.createIcons();
+
+        tbody.querySelectorAll('[data-action]').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const tid = parseInt(btn.dataset.id, 10);
+            if (btn.dataset.action === 'edit-target') editTarget(tid);
+            else if (btn.dataset.action === 'delete-target') await deleteTarget(tid);
+          });
+        });
+      }
+
+      // ============================================================
+      // 14) Target Modal
+      // ============================================================
+      function openTargetModal(userId) {
+        state.editingTargetId = null;
+        document.getElementById('targetModalTitle').textContent = 'هدف جديد';
+        document.getElementById('targetSaveBtnText').textContent = 'إضافة الهدف';
+        document.getElementById('targetForm').reset();
+
+        const userSel = document.getElementById('tUserId');
+        userSel.innerHTML = '<option value="">— اختر —</option>' +
+          state.users.map(u => `<option value="${u.id}">${esc(u.full_name)}</option>`).join('');
+
+        const monthSel = document.getElementById('tMonth');
+        monthSel.innerHTML = AR_MONTHS.map((m, i) =>
+          `<option value="${i + 1}" ${i + 1 === state.selectedMonth ? 'selected' : ''}>${m}</option>`
+        ).join('');
+
+        const yearSel = document.getElementById('tYear');
+        const currentYear = new Date().getFullYear();
+        yearSel.innerHTML = [currentYear + 1, currentYear, currentYear - 1, currentYear - 2]
+          .map(y => `<option value="${y}" ${y === state.selectedYear ? 'selected' : ''}>${y}</option>`).join('');
+
+        if (userId) userSel.value = userId;
+
+        document.getElementById('targetModal').classList.add('show');
+        setTimeout(() => userSel.focus(), 150);
+        if (window.lucide) lucide.createIcons();
+      }
+
+      function editTarget(tid) {
+        const t = state.targets.find(x => x.id === tid);
+        if (!t) return;
+
+        state.editingTargetId = tid;
+        document.getElementById('targetModalTitle').textContent = 'تعديل الهدف';
+        document.getElementById('targetSaveBtnText').textContent = 'حفظ التعديلات';
+
+        const userSel = document.getElementById('tUserId');
+        userSel.innerHTML = '<option value="">— اختر —</option>' +
+          state.users.map(u => `<option value="${u.id}">${esc(u.full_name)}</option>`).join('');
+        userSel.value = t.user_id;
+
+        const monthSel = document.getElementById('tMonth');
+        monthSel.innerHTML = AR_MONTHS.map((m, i) => `<option value="${i + 1}">${m}</option>`).join('');
+        monthSel.value = t.month;
+
+        const yearSel = document.getElementById('tYear');
+        const currentYear = new Date().getFullYear();
+        yearSel.innerHTML = [currentYear + 1, currentYear, currentYear - 1, currentYear - 2]
+          .map(y => `<option value="${y}">${y}</option>`).join('');
+        yearSel.value = t.year;
+
+        document.getElementById('tTarget').value = t.target_amount;
+        document.getElementById('tCommission').value = t.commission_pct;
+        document.getElementById('tNotes').value = t.notes || '';
+
+        document.getElementById('targetModal').classList.add('show');
+        if (window.lucide) lucide.createIcons();
+      }
+
+      async function saveTarget(e) {
+        e.preventDefault();
+        const btn = document.getElementById('targetSaveBtn');
+        btn.disabled = true;
+
+        try {
+          const userId = parseInt(document.getElementById('tUserId').value, 10);
+          const month = parseInt(document.getElementById('tMonth').value, 10);
+          const year = parseInt(document.getElementById('tYear').value, 10);
+          const targetAmount = Refad.toNum(document.getElementById('tTarget').value);
+          const commissionPct = Refad.toNum(document.getElementById('tCommission').value);
+          const notes = document.getElementById('tNotes').value.trim() || null;
+
+          if (!userId || !month || !year) { Refad.toast.warning('أكمل البيانات'); btn.disabled = false; return; }
+          if (targetAmount <= 0) { Refad.toast.warning('أدخل هدفاً صحيحاً'); btn.disabled = false; return; }
+
+          const payload = {
+            company_id: session.company_id,
+            user_id: userId,
+            month,
+            year,
+            target_amount: targetAmount,
+            commission_pct: commissionPct,
+            notes
+          };
+
+          if (state.editingTargetId) {
+            await Refad.db.update('sales_rep_targets', state.editingTargetId, payload);
+            await Refad.logActivity('update_target', 'sales_reps', `تعديل هدف: ${AR_MONTHS[month - 1]} ${year}`, state.editingTargetId);
+            Refad.toast.success('تم تحديث الهدف');
+          } else {
+            const created = await Refad.db.insert('sales_rep_targets', payload);
+            await Refad.logActivity('create_target', 'sales_reps', `إضافة هدف: ${AR_MONTHS[month - 1]} ${year}`, created?.id);
+            Refad.toast.success('تم إضافة الهدف');
+          }
+
+          document.getElementById('targetModal').classList.remove('show');
+          await loadData();
+
+        } catch (err) {
+          console.error('[SalesReps] Save target failed:', err);
+          Refad.toast.error('فشل الحفظ: ' + (err.message || err));
+        } finally {
+          btn.disabled = false;
+        }
+      }
+
+      async function deleteTarget(tid) {
+        const t = state.targets.find(x => x.id === tid);
+        if (!t) return;
+
+        const ok = await Refad.alert.confirm(
+          'حذف الهدف',
+          `سيتم حذف هدف ${AR_MONTHS[t.month - 1]} ${t.year}. متابعة؟`,
+          'حذف'
+        );
+        if (!ok) return;
+
+        try {
+          await Refad.db.remove('sales_rep_targets', tid);
+          await Refad.logActivity('delete_target', 'sales_reps', `حذف هدف`, tid);
+          Refad.toast.success('تم الحذف');
+          await loadData();
+        } catch (err) {
+          console.error('[SalesReps] Delete target failed:', err);
+          Refad.toast.error('فشل الحذف: ' + err.message);
+        }
+      }
+
+      // ============================================================
+      // 15) ✨ Calculate Commissions (مع Fallback ذكي)
+      // ============================================================
+      async function calculateCommissions() {
+        if (!state.reps.length) {
+          Refad.toast.warning('لا يوجد مندوبين لهذه الفترة');
+          return;
+        }
+
+        const withTarget = state.reps.filter(r => r.has_target);
+        if (!withTarget.length) {
+          Refad.toast.warning('لا توجد أهداف محددة لهذه الفترة');
+          return;
+        }
+
+        const totalAmount = withTarget.reduce((s, r) => s + r.commission_amount, 0);
+
+        const ok = await Refad.alert.confirm(
+          'احتساب العمولات',
+          `سيتم احتساب عمولات ${withTarget.length} مندوب بإجمالي ${fmtMoney(totalAmount)}.\n\nالفترة: ${AR_MONTHS[state.selectedMonth - 1]} ${state.selectedYear}\n\nمتابعة؟`,
+          'احتساب'
+        );
+        if (!ok) return;
+
+        const btn = document.getElementById('calcCommissionsBtn');
+        const originalHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i data-lucide="loader-2"></i> جارٍ الاحتساب...';
+        if (window.lucide) lucide.createIcons();
+
+        try {
+          let created = 0;
+          let updated = 0;
+          let fallbackUsed = 0;
+          const errors = [];
+
+          for (const rep of withTarget) {
+            const existing = state.commissions.find(c =>
+              String(c.user_id) === String(rep.user_id) &&
+              Number(c.month) === state.selectedMonth &&
+              Number(c.year) === state.selectedYear
+            );
+
+            // ✨ Payload الكامل
+            const fullPayload = {
+              company_id: session.company_id,
+              user_id: rep.user_id,
+              month: state.selectedMonth,
+              year: state.selectedYear,
+              total_sales: rep.total_sales,
+              total_profit: rep.total_profit,
+              target_amount: rep.target_amount,
+              achievement_pct: rep.achievement_pct,
+              commission_pct: rep.commission_pct,
+              commission_amount: rep.commission_amount,
+              created_by: session.user_id
+            };
+
+            // ✨ Payload مصغر (Fallback للجداول القديمة)
+            const minimalPayload = {
+              company_id: session.company_id,
+              user_id: rep.user_id,
+              month: state.selectedMonth,
+              year: state.selectedYear,
+              commission_pct: rep.commission_pct,
+              commission_amount: rep.commission_amount
+            };
+
+            try {
+              if (existing) {
+                if (existing.status !== 'paid') {
+                  try {
+                    await Refad.db.update('sales_rep_commissions', existing.id, {
+                      ...fullPayload,
+                      status: existing.status
+                    });
+                  } catch (updateErr) {
+                    // Fallback للـ update
+                    console.warn('[SalesReps] Full update failed, trying minimal:', updateErr.message);
+                    await Refad.db.update('sales_rep_commissions', existing.id, {
+                      ...minimalPayload,
+                      status: existing.status
+                    });
+                    fallbackUsed++;
+                  }
+                  updated++;
+                }
+              } else {
+                const insertPayload = { ...fullPayload, status: 'pending' };
+                try {
+                  await Refad.db.insert('sales_rep_commissions', insertPayload);
+                } catch (insertErr) {
+                  console.warn('[SalesReps] Full insert failed, trying minimal:', insertErr.message);
+                  await Refad.db.insert('sales_rep_commissions', {
+                    ...minimalPayload,
+                    status: 'pending'
+                  });
+                  fallbackUsed++;
+                }
+                created++;
+              }
+            } catch (repErr) {
+              errors.push(`${rep.full_name}: ${repErr.message}`);
+              console.error('[SalesReps] Commission save failed for', rep.full_name, repErr);
+            }
+          }
+
+          await Refad.logActivity('calc_commissions', 'sales_reps',
+            `احتساب ${created + updated} عمولة لفترة ${AR_MONTHS[state.selectedMonth - 1]} ${state.selectedYear}`, null);
+
+          // ✨ رسالة نجاح ذكية
+          let successMsg = `تم الاحتساب: ${created} جديد، ${updated} محدّث`;
+          if (fallbackUsed > 0) {
+            successMsg += ` ⚠️ (${fallbackUsed} استخدم الوضع المبسّط — يُنصح بتشغيل SQL Migration)`;
+          }
+          if (errors.length > 0) {
+            successMsg += ` — فشل: ${errors.length}`;
+          }
+
+          Refad.toast.success(successMsg, 6000);
+
+          // ✨ لو في fallback، اطبع تحذير واضح في الـ console
+          if (fallbackUsed > 0) {
+            console.warn('%c[Refad] ⚠️ SQL Migration Required!', 'color:#F59E0B;font-weight:bold;font-size:14px;');
+            console.warn('الجدول sales_rep_commissions يفتقد لبعض الأعمدة (total_profit, total_sales, ...)');
+            console.warn('الرجاء تشغيل SQL ده في Supabase:');
+            console.warn(`
+ALTER TABLE sales_rep_commissions 
+  ADD COLUMN IF NOT EXISTS total_sales NUMERIC(15,2) DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS total_profit NUMERIC(15,2) DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS target_amount NUMERIC(15,2) DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS achievement_pct NUMERIC(7,2) DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS commission_pct NUMERIC(7,2) DEFAULT 3,
+  ADD COLUMN IF NOT EXISTS commission_amount NUMERIC(15,2) DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS created_by BIGINT,
+  ADD COLUMN IF NOT EXISTS paid_at TIMESTAMPTZ;
+            `);
+          }
+
+          await loadData();
+          document.querySelector('.tab[data-tab="commissions"]').click();
+
+        } catch (err) {
+          console.error('[SalesReps] Calculate failed:', err);
+          Refad.toast.error('فشل الاحتساب: ' + err.message);
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = originalHtml;
+          if (window.lucide) lucide.createIcons();
+        }
+      }
+
+      // ============================================================
+      // 16) Approve / Pay / Delete Commission
+      // ============================================================
+      async function approveCommission(cid) {
+        const ok = await Refad.alert.confirm('اعتماد العمولة', 'هل تريد اعتماد هذه العمولة؟', 'اعتماد');
+        if (!ok) return;
+
+        try {
+          await Refad.db.update('sales_rep_commissions', cid, { status: 'approved' });
+          await Refad.logActivity('approve_commission', 'sales_reps', 'اعتماد عمولة', cid);
+          Refad.toast.success('تم الاعتماد');
+          await loadData();
+        } catch (err) {
+          Refad.toast.error('فشل: ' + err.message);
+        }
+      }
+
+      async function payCommission(cid) {
+        const c = state.commissions.find(x => x.id === cid);
+        if (!c) return;
+
+        const ok = await Refad.alert.confirm(
+          'تسجيل الدفع',
+          `سيتم تسجيل دفع عمولة ${fmtMoney(c.commission_amount)}. متابعة؟`,
+          'تسجيل الدفع'
+        );
+        if (!ok) return;
+
+        try {
+          const payload = {
+            status: 'paid',
+            paid_at: new Date().toISOString()
+          };
+          try {
+            await Refad.db.update('sales_rep_commissions', cid, payload);
+          } catch (e) {
+            // Fallback لو paid_at مش موجود
+            await Refad.db.update('sales_rep_commissions', cid, { status: 'paid' });
+          }
+          await Refad.logActivity('pay_commission', 'sales_reps', `دفع عمولة ${fmtMoney(c.commission_amount)}`, cid);
+          Refad.toast.success('تم تسجيل الدفع');
+          await loadData();
+        } catch (err) {
+          Refad.toast.error('فشل: ' + err.message);
+        }
+      }
+
+      async function deleteCommission(cid) {
+        const ok = await Refad.alert.confirm('حذف العمولة', 'هل تريد الحذف؟', 'حذف');
+        if (!ok) return;
+
+        try {
+          await Refad.db.remove('sales_rep_commissions', cid);
+          await Refad.logActivity('delete_commission', 'sales_reps', 'حذف عمولة', cid);
+          Refad.toast.success('تم الحذف');
+          await loadData();
+        } catch (err) {
+          Refad.toast.error('فشل: ' + err.message);
+        }
+      }
+
+      // ============================================================
+      // 17) Rep Details Modal
+      // ============================================================
+      function openRepDetails(userId) {
+        const rep = state.reps.find(r => String(r.user_id) === String(userId));
+        if (!rep) return;
+
+        const user = state.users.find(u => String(u.id) === String(userId));
+        const initial = esc((rep.full_name || '؟').trim().charAt(0));
+        const avatarHtml = rep.avatar_url
+          ? `<img src="${esc(rep.avatar_url)}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:14px;">`
+          : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;">${initial}</div>`;
+
+        const repInvoices = state.invoices
+          .filter(inv =>
+            String(inv.cashier_id) === String(userId) &&
+            inv.status !== 'cancelled' &&
+            (inv.invoice_type || 'sale') === 'sale'
+          )
+          .sort((a, b) => String(b.invoice_date).localeCompare(String(a.invoice_date)))
+          .slice(0, 20);
+
+        document.getElementById('repDetailsBody').innerHTML = `
+          <div style="display:flex;align-items:center;gap:16px;padding:16px;background:linear-gradient(135deg,rgba(11,44,77,0.04),rgba(20,184,166,0.06));border-radius:14px;margin-bottom:20px;">
+            <div style="width:80px;height:80px;border-radius:18px;background:linear-gradient(135deg,var(--primary),var(--accent));color:white;overflow:hidden;flex-shrink:0;box-shadow:0 6px 20px rgba(20,184,166,0.3);">
+              ${avatarHtml}
+            </div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:22px;font-weight:800;color:var(--text);">${esc(rep.full_name)}</div>
+              <div style="font-size:13px;color:var(--text-muted);margin-top:4px;">
+                📞 ${esc(rep.phone || '—')}
+              </div>
+            </div>
+            <div style="text-align:left;">
+              <div style="font-size:11px;color:var(--text-muted);font-weight:700;">الترتيب</div>
+              <div style="font-size:24px;font-weight:800;color:var(--gold);">#${rep.rank}</div>
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px;">
+            <div style="background:var(--bg);padding:14px;border-radius:12px;border-right:3px solid var(--info);">
+              <div style="font-size:11px;color:var(--text-muted);font-weight:700;">إجمالي المبيعات</div>
+              <div style="font-size:18px;font-weight:800;color:var(--info);margin-top:4px;">${fmtMoney(rep.total_sales)}</div>
+            </div>
+            <div style="background:var(--bg);padding:14px;border-radius:12px;border-right:3px solid var(--success);">
+              <div style="font-size:11px;color:var(--text-muted);font-weight:700;">إجمالي الأرباح</div>
+              <div style="font-size:18px;font-weight:800;color:var(--success);margin-top:4px;">${fmtMoney(rep.total_profit)}</div>
+            </div>
+            <div style="background:var(--bg);padding:14px;border-radius:12px;border-right:3px solid var(--purple);">
+              <div style="font-size:11px;color:var(--text-muted);font-weight:700;">عدد الفواتير</div>
+              <div style="font-size:18px;font-weight:800;color:var(--purple);margin-top:4px;">${fmtNumber(rep.invoice_count)}</div>
+            </div>
+            <div style="background:var(--bg);padding:14px;border-radius:12px;border-right:3px solid var(--danger);">
+              <div style="font-size:11px;color:var(--text-muted);font-weight:700;">متبقي للتحصيل</div>
+              <div style="font-size:18px;font-weight:800;color:var(--danger);margin-top:4px;">${fmtMoney(rep.outstanding)}</div>
+            </div>
+          </div>
+
+          ${rep.has_target ? `
+            <div style="background:linear-gradient(135deg,rgba(139,92,246,0.06),rgba(20,184,166,0.04));border:1.5px solid rgba(139,92,246,0.2);padding:16px;border-radius:12px;margin-bottom:20px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                <span style="font-size:13px;font-weight:800;color:var(--purple);display:flex;align-items:center;gap:6px;">
+                  <i data-lucide="target" style="width:16px;height:16px;"></i>
+                  الهدف الشهري
+                </span>
+                <span style="font-size:20px;font-weight:800;color:${rep.achievement_pct >= 100 ? 'var(--success)' : rep.achievement_pct >= 50 ? 'var(--gold)' : 'var(--danger)'};">
+                  ${rep.achievement_pct}%
+                </span>
+              </div>
+              <div style="height:10px;background:rgba(148,163,184,0.2);border-radius:5px;overflow:hidden;margin-bottom:8px;">
+                <div style="height:100%;width:${Math.min(100, rep.achievement_pct)}%;background:linear-gradient(90deg,${rep.achievement_pct >= 100 ? 'var(--success),#047857' : rep.achievement_pct >= 50 ? 'var(--gold),#d97706' : 'var(--danger),#b91c1c'});border-radius:5px;"></div>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);">
+                <span>المحقق: <strong style="color:var(--text);">${fmtMoney(rep.total_profit)}</strong></span>
+                <span>الهدف: <strong style="color:var(--text);">${fmtMoney(rep.target_amount)}</strong></span>
+              </div>
+            </div>
+
+            <div style="background:rgba(139,92,246,0.08);padding:14px;border-radius:12px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;">
+              <div>
+                <div style="font-size:11px;color:var(--purple);font-weight:700;">العمولة المحتسبة (${rep.commission_pct}%)</div>
+                <div style="font-size:22px;font-weight:800;color:var(--purple);margin-top:4px;">${fmtMoney(rep.commission_amount)}</div>
+              </div>
+              ${rep.existing_commission ? `
+                <span class="status-pill ${rep.existing_commission.status}">
+                  ${STATUS_LABELS[rep.existing_commission.status]}
+                </span>
+              ` : ''}
+            </div>
+          ` : `
+            <div style="background:rgba(245,158,11,0.08);border:1.5px solid rgba(245,158,11,0.2);padding:14px;border-radius:12px;margin-bottom:20px;text-align:center;color:var(--gold);font-size:13px;font-weight:700;">
+              <i data-lucide="alert-triangle" style="width:16px;height:16px;display:inline-block;vertical-align:middle;margin-left:4px;"></i>
+              لم يتم تحديد هدف لهذا المندوب في هذه الفترة
+            </div>
+          `}
+
+          ${repInvoices.length ? `
+            <div style="margin-top:20px;">
+              <h4 style="font-size:14px;font-weight:800;margin-bottom:12px;color:var(--text);">
+                <i data-lucide="receipt" style="width:16px;height:16px;display:inline-block;vertical-align:middle;color:var(--accent);margin-left:4px;"></i>
+                آخر ${repInvoices.length} فاتورة
+              </h4>
+              <div class="table-wrap">
+                <div class="table-scroll">
+                  <table class="data-table" style="min-width:auto;">
+                    <thead>
+                      <tr>
+                        <th>التاريخ</th>
+                        <th>الفاتورة</th>
+                        <th>الإجمالي</th>
+                        <th>المحصل</th>
+                        <th>المتبقي</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${repInvoices.map(inv => {
+                        const due = toNum(inv.grand_total) - toNum(inv.paid_amount);
+                        return `
+                          <tr>
+                            <td>${Refad.format.date(inv.invoice_date)}</td>
+                            <td><a href="invoices.html?id=${inv.id}" class="type-link" style="color:var(--accent);text-decoration:none;font-weight:700;">${esc(inv.invoice_number)}</a></td>
+                            <td>${fmtMoney(inv.grand_total)}</td>
+                            <td style="color:var(--success);">${fmtMoney(inv.paid_amount)}</td>
+                            <td style="color:${due > 0 ? 'var(--danger)' : 'var(--success)'};font-weight:700;">${fmtMoney(due)}</td>
+                          </tr>
+                        `;
+                      }).join('')}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          ` : ''}
+        `;
+
+        document.getElementById('repDetailsModal').classList.add('show');
+        if (window.lucide) lucide.createIcons();
+      }
+
+      // ============================================================
+      // 18) Export
+      // ============================================================
+      function exportExcel() {
+        const list = state.reps;
+        if (!list.length) { Refad.toast.warning('لا توجد بيانات'); return; }
+
+        const data = list.map((r, i) => ({
+          'الترتيب': i + 1,
+          'المندوب': r.full_name,
+          'الهاتف': r.phone || '',
+          'عدد الفواتير': r.invoice_count,
+          'إجمالي المبيعات': r.total_sales,
+          'إجمالي الأرباح': r.total_profit,
+          'المحصل': r.total_collected,
+          'المتبقي': r.outstanding,
+          'الهدف': r.target_amount,
+          'التحقيق %': r.achievement_pct,
+          'نسبة العمولة %': r.commission_pct,
+          'العمولة': r.commission_amount
+        }));
+
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'المندوبين');
+        XLSX.writeFile(wb, `sales-reps_${state.selectedYear}-${String(state.selectedMonth).padStart(2, '0')}.xlsx`);
+        Refad.toast.success('تم التصدير');
+      }
+
+      // ============================================================
+      // 19) Tabs
+      // ============================================================
+      function setupTabs() {
+        document.querySelectorAll('.tab').forEach(tab => {
+          tab.addEventListener('click', () => {
+            const name = tab.dataset.tab;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            tab.classList.add('active');
+            document.querySelector(`.tab-panel[data-panel="${name}"]`).classList.add('active');
+            if (window.lucide) lucide.createIcons();
+          });
+        });
+      }
+
+      // ============================================================
+      // 20) Bind Events
+      // ============================================================
+      function bindEvents() {
+        document.getElementById('refreshBtn').addEventListener('click', async () => {
+          Refad.toast.info('جارٍ التحديث...');
+          await loadData();
+          Refad.toast.success('تم التحديث');
+        });
+
+        document.getElementById('exportBtn').addEventListener('click', exportExcel);
+        document.getElementById('targetsBtn').addEventListener('click', () => openTargetModal());
+        document.getElementById('calcCommissionsBtn').addEventListener('click', calculateCommissions);
+
+        document.getElementById('monthSelect').addEventListener('change', async (e) => {
+          state.selectedMonth = parseInt(e.target.value, 10);
+          await loadData();
+        });
+
+        document.getElementById('yearSelect').addEventListener('change', async (e) => {
+          state.selectedYear = parseInt(e.target.value, 10);
+          await loadData();
+        });
+
+        document.getElementById('targetForm').addEventListener('submit', saveTarget);
+
+        document.querySelectorAll('[data-close]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.remove('show'));
+          });
+        });
+
+        document.querySelectorAll('.modal-backdrop').forEach(m => {
+          m.addEventListener('click', e => {
+            if (e.target === m) m.classList.remove('show');
+          });
+        });
+
+        document.addEventListener('keydown', e => {
+          if (e.key === 'Escape') {
+            document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.remove('show'));
+          }
+        });
+      }
+
+      // ============================================================
+      // 21) Init
+      // ============================================================
+      async function init() {
+        Refad.buildMenu('sales-reps.html');
+        fillUser();
+        applyIdentity();
+        setupTheme();
+        setupSidebarMobile();
+        setupUserMenu();
+        setupNotifBtn();
+        setupTabs();
+        setupRealtimeTheme();
+        initFilters();
+        bindEvents();
+
+        await loadData();
+
+        Refad.registerServiceWorker();
+
+        console.log('%c[Refad] Sales Reps v2 ready (Safe Commission Save)', 'color:#14B8A6;font-weight:bold');
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+
+    })();
+  </script>
+
+</body>
+</html>

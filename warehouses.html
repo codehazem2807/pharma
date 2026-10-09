@@ -1,0 +1,2047 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0B2C4D">
+  <title>المخازن - رفاد</title>
+
+  <link rel="icon" type="image/png" href="logo.png">
+  <link rel="manifest" href="manifest.json">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --primary: #0B2C4D;
+      --primary-light: #1e4a73;
+      --accent: #14B8A6;
+      --accent-dark: #0d9488;
+      --gold: #F59E0B;
+      --bg: #F1F5F9;
+      --card: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --danger: #ef4444;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --info: #3b82f6;
+      --purple: #8b5cf6;
+      --sidebar-bg: #0B2C4D;
+      --sidebar-text: #cbd5e1;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+      --shadow: 0 4px 20px rgba(11, 44, 77, 0.08);
+      --shadow-lg: 0 10px 40px rgba(11, 44, 77, 0.12);
+      --radius: 14px;
+      --radius-sm: 10px;
+      --sidebar-w: 260px;
+      --topbar-h: 64px;
+    }
+
+    [data-theme="dark"] {
+      --bg: #0a1628;
+      --card: #0f2137;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --border: #1e3a5f;
+      --sidebar-bg: #061a2e;
+      --sidebar-text: #94a3b8;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Cairo', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      transition: background 0.3s, color 0.3s;
+    }
+
+    body { display: flex; min-height: 100vh; overflow-x: hidden; }
+
+    /* ============================================================
+       Sidebar
+       ============================================================ */
+    .sidebar {
+      width: var(--sidebar-w);
+      height: 100vh;
+      background: var(--sidebar-bg);
+      color: var(--sidebar-text);
+      position: fixed;
+      top: 0;
+      right: 0;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: -4px 0 20px rgba(0,0,0,0.1);
+    }
+
+    .sidebar-header {
+      padding: 20px 22px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      height: var(--topbar-h);
+      box-sizing: border-box;
+    }
+
+    .sidebar-logo {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 4px 12px rgba(20,184,166,0.4);
+      overflow: hidden;
+    }
+    .sidebar-logo img { width: 70%; height: 70%; object-fit: contain; }
+    .sidebar-logo .fallback { color: white; font-weight: 800; font-size: 18px; }
+
+    .sidebar-brand h2 { color: white; font-size: 20px; font-weight: 800; letter-spacing: -0.5px; line-height: 1.2; }
+    .sidebar-brand p { font-size: 10px; color: var(--sidebar-text); opacity: 0.7; font-weight: 500; margin-top: 2px; }
+
+    .sidebar-nav { flex: 1; overflow-y: auto; padding: 12px 0; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.15) transparent; }
+    .sidebar-nav::-webkit-scrollbar { width: 5px; }
+    .sidebar-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 10px; }
+
+    .nav-section { padding: 8px 20px 4px; font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 1px; margin-top: 8px; }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 22px;
+      color: var(--sidebar-text);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      border-right: 3px solid transparent;
+      transition: all 0.2s;
+      position: relative;
+      cursor: pointer;
+    }
+    .nav-item:hover { background: rgba(255,255,255,0.05); color: white; border-right-color: rgba(20,184,166,0.5); }
+    .nav-item.active { background: rgba(20,184,166,0.12); color: white; border-right-color: var(--accent); font-weight: 600; }
+    .nav-item.active::before { content: ''; position: absolute; right: 0; top: 50%; transform: translateY(-50%); width: 3px; height: 60%; background: var(--accent); border-radius: 0 4px 4px 0; }
+    .nav-item i, .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; opacity: 0.85; }
+    .nav-item .badge { margin-right: auto; background: var(--danger); color: white; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
+    .nav-item .badge.teal { background: var(--accent); }
+    .nav-item .badge.gold { background: var(--gold); }
+    .nav-item .badge.new { background: var(--purple); }
+
+    /* ============================================================
+       Main
+       ============================================================ */
+    .main { flex: 1; margin-right: var(--sidebar-w); min-width: 0; display: flex; flex-direction: column; }
+
+    .topbar {
+      height: var(--topbar-h);
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 0 24px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .menu-toggle { display: none; background: transparent; border: none; color: var(--text); cursor: pointer; padding: 8px; border-radius: 8px; }
+    .menu-toggle:hover { background: var(--bg); }
+
+    .topbar-title { font-size: 18px; font-weight: 700; color: var(--text); flex-shrink: 0; }
+    .topbar-actions { display: flex; align-items: center; gap: 8px; margin-right: auto; }
+
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      transition: all 0.2s;
+    }
+    .icon-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .icon-btn i, .icon-btn svg { width: 18px; height: 18px; }
+
+    .user-menu {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 5px 12px 5px 5px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.2s;
+      border: 1px solid var(--border);
+      background: var(--card);
+    }
+    .user-menu:hover { background: var(--bg); }
+
+    .user-avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 700;
+      font-size: 14px;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .user-info { display: flex; flex-direction: column; line-height: 1.2; }
+    .user-info .name { font-size: 13px; font-weight: 700; color: var(--text); }
+    .user-info .role { font-size: 11px; color: var(--text-muted); }
+
+    .dropdown { position: absolute; top: calc(100% + 8px); left: 0; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: var(--shadow-lg); min-width: 200px; padding: 6px; opacity: 0; visibility: hidden; transform: translateY(-8px); transition: all 0.2s; z-index: 100; }
+    .dropdown.show { opacity: 1; visibility: visible; transform: translateY(0); }
+    .dropdown-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; color: var(--text); font-size: 13px; font-weight: 500; cursor: pointer; transition: background 0.15s; text-decoration: none; }
+    .dropdown-item:hover { background: var(--bg); }
+    .dropdown-item.danger { color: var(--danger); }
+    .dropdown-item.danger:hover { background: rgba(239,68,68,0.08); }
+    .dropdown-item i { width: 16px; height: 16px; }
+    .dropdown-divider { height: 1px; background: var(--border); margin: 6px 0; }
+
+    /* ============================================================
+       Content
+       ============================================================ */
+    .content { padding: 24px; flex: 1; }
+
+    .page-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .page-head h1 { font-size: 24px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+    .page-head p { font-size: 13px; color: var(--text-muted); }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: var(--radius-sm);
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn i { width: 16px; height: 16px; }
+
+    .btn-primary { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; }
+    .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(20,184,166,0.35); }
+
+    .btn-outline { background: var(--card); color: var(--text); border: 1px solid var(--border); }
+    .btn-outline:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-danger:hover:not(:disabled) { background: #dc2626; }
+
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+    /* Toolbar */
+    .toolbar {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .search-input { position: relative; flex: 1; min-width: 220px; }
+    .search-input input {
+      width: 100%;
+      padding: 10px 42px 10px 14px;
+      font-family: inherit;
+      font-size: 14px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      outline: none;
+      transition: all 0.2s;
+    }
+    .search-input input:focus { border-color: var(--accent); background: var(--card); box-shadow: 0 0 0 3px rgba(20,184,166,0.1); }
+    .search-input i { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--text-muted); pointer-events: none; }
+
+    .select-wrap { position: relative; min-width: 160px; }
+    .select-wrap select {
+      width: 100%;
+      padding: 10px 14px 10px 32px;
+      font-family: inherit;
+      font-size: 14px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      outline: none;
+      cursor: pointer;
+      appearance: none;
+      transition: all 0.2s;
+    }
+    .select-wrap select:focus { border-color: var(--accent); background: var(--card); }
+    .select-wrap::after {
+      content: '';
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 0;
+      height: 0;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-top: 5px solid var(--text-muted);
+      pointer-events: none;
+    }
+
+    /* Warehouse Grid */
+    .wh-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .wh-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.25s;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .wh-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-3px);
+      box-shadow: var(--shadow);
+    }
+
+    .wh-card.is-default {
+      border-color: var(--accent);
+      background: linear-gradient(135deg, rgba(20,184,166,0.03), rgba(20,184,166,0.08));
+    }
+
+    .wh-card.is-inactive {
+      opacity: 0.65;
+      filter: grayscale(0.3);
+    }
+
+    .wh-card.is-inactive::after {
+      content: 'معطّل';
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      background: var(--danger);
+      color: white;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 10px;
+    }
+
+    .wh-card-head {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .wh-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 22px;
+    }
+
+    .wh-icon.main   { background: linear-gradient(135deg, #0B2C4D, #1e4a73); }
+    .wh-icon.branch { background: linear-gradient(135deg, #14B8A6, #0d9488); }
+    .wh-icon.cold   { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+    .wh-icon.hazard { background: linear-gradient(135deg, #F59E0B, #d97706); }
+    .wh-icon.other  { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
+
+    .wh-info { flex: 1; min-width: 0; }
+    .wh-info h3 {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .wh-info .wh-code {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 600;
+      background: var(--bg);
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-family: monospace;
+    }
+    .wh-info .wh-type {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .default-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      font-size: 10px;
+      font-weight: 700;
+      border-radius: 10px;
+      background: rgba(20,184,166,0.15);
+      color: var(--accent);
+    }
+    .default-badge i { width: 11px; height: 11px; }
+
+    .wh-details {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--text-muted);
+      padding: 10px 0;
+      border-top: 1px dashed var(--border);
+      border-bottom: 1px dashed var(--border);
+    }
+    .wh-details .row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .wh-details .row i { width: 14px; height: 14px; opacity: 0.7; flex-shrink: 0; }
+    .wh-details .row span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    .wh-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .wh-stat {
+      background: var(--bg);
+      border-radius: 10px;
+      padding: 8px 10px;
+      text-align: center;
+    }
+    .wh-stat .label {
+      font-size: 10px;
+      color: var(--text-muted);
+      font-weight: 600;
+      margin-bottom: 3px;
+    }
+    .wh-stat .value {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--text);
+    }
+    .wh-stat.teal .value { color: var(--accent); }
+    .wh-stat.gold .value { color: var(--warning); }
+    .wh-stat.blue .value { color: var(--info); }
+
+    .wh-actions {
+      display: flex;
+      gap: 6px;
+      margin-top: 4px;
+    }
+    .wh-actions .btn { flex: 1; padding: 8px; font-size: 12px; justify-content: center; }
+
+    /* Empty State */
+    .empty-state {
+      background: var(--card);
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 60px 20px;
+      text-align: center;
+    }
+    .empty-state i {
+      width: 64px;
+      height: 64px;
+      color: var(--text-muted);
+      opacity: 0.4;
+      margin-bottom: 16px;
+    }
+    .empty-state h3 {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+    .empty-state p {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+    }
+
+    /* Skeleton */
+    .skeleton-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      min-height: 280px;
+    }
+    .skeleton-bar {
+      height: 14px;
+      background: linear-gradient(90deg, var(--border) 25%, var(--bg) 50%, var(--border) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+      border-radius: 6px;
+      margin-bottom: 12px;
+    }
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* ============================================================
+       Modal
+       ============================================================ */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      background: rgba(15, 23, 42, 0.55);
+      animation: fadeIn 0.2s;
+    }
+    .modal-backdrop.show { display: flex; }
+
+    .modal {
+      width: min(640px, 100%);
+      max-height: min(92vh, 800px);
+      overflow-y: auto;
+      background: var(--card);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-lg);
+      animation: slideUp 0.25s;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .modal-header, .modal-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .modal-header h2 {
+      font-size: 17px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .modal-header h2 i { width: 20px; height: 20px; color: var(--accent); }
+    .modal-footer {
+      justify-content: flex-end;
+      border-top: 1px solid var(--border);
+      border-bottom: 0;
+      background: var(--bg);
+    }
+    .modal-body { padding: 20px; }
+
+    .close-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    .close-btn:hover { border-color: var(--danger); color: var(--danger); }
+    .close-btn i { width: 16px; height: 16px; }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .form-field { display: flex; flex-direction: column; gap: 6px; }
+    .form-field.full { grid-column: 1 / -1; }
+    .form-field label {
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .form-field label .req { color: var(--danger); }
+    .form-field input, .form-field select, .form-field textarea {
+      width: 100%;
+      min-height: 42px;
+      padding: 9px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      background: var(--bg);
+      font: inherit;
+      outline: none;
+      transition: all 0.2s;
+    }
+    .form-field input:focus, .form-field select:focus, .form-field textarea:focus {
+      border-color: var(--accent);
+      background: var(--card);
+      box-shadow: 0 0 0 3px rgba(20,184,166,0.1);
+    }
+    .form-field textarea { min-height: 80px; resize: vertical; }
+
+    /* Type radio pills */
+    .type-pills {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .type-pill {
+      padding: 8px 14px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .type-pill:hover { border-color: var(--accent); }
+    .type-pill input { display: none; }
+    .type-pill.selected {
+      background: rgba(20,184,166,0.1);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* Checkbox */
+    .check-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--bg);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .check-row:hover { border-color: var(--accent); }
+    .check-row input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--accent);
+      cursor: pointer;
+      min-height: auto;
+      flex-shrink: 0;
+    }
+    .check-row input[type="radio"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--accent);
+      cursor: pointer;
+      min-height: auto;
+      flex-shrink: 0;
+    }
+    .check-row span {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .check-row small {
+      display: block;
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 500;
+      margin-top: 2px;
+    }
+
+    /* Overlay (mobile) */
+    .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; opacity: 0; transition: opacity 0.3s; }
+    .overlay.show { display: block; opacity: 1; }
+
+    /* Loading overlay */
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .loading-spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .sidebar { transform: translateX(100%); }
+      .sidebar.open { transform: translateX(0); }
+      .main { margin-right: 0; }
+      .menu-toggle { display: flex; }
+      .user-info { display: none; }
+    }
+
+    @media (max-width: 640px) {
+      .content { padding: 16px; }
+      .topbar { padding: 0 14px; gap: 10px; }
+      .topbar-title { font-size: 15px; }
+      .page-head { flex-direction: column; align-items: stretch; }
+      .page-head h1 { font-size: 20px; }
+      .toolbar { padding: 12px; }
+      .search-input { min-width: 100%; }
+      .wh-grid { grid-template-columns: 1fr; }
+      .form-grid { grid-template-columns: 1fr; }
+      .form-field.full { grid-column: auto; }
+      .wh-stats { grid-template-columns: repeat(3, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+    <div style="font-size:14px;color:var(--text-muted);font-weight:600;">جارٍ التحقق من الصلاحية...</div>
+  </div>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo" id="sidebarLogo">
+        <img src="logo.png" alt="رفاد" id="sidebarLogoImg" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=fallback>R</span>';">
+      </div>
+      <div class="sidebar-brand">
+        <h2 id="sidebarBrandName">رفاد</h2>
+        <p id="sidebarBrandDesc">نظام إدارة الأدوية</p>
+      </div>
+    </div>
+    <nav class="sidebar-nav" id="sidebarNav"></nav>
+  </aside>
+
+  <div class="overlay" id="overlay"></div>
+
+  <div class="main">
+
+    <header class="topbar">
+      <button class="menu-toggle" id="menuToggle"><i data-lucide="menu"></i></button>
+      <div class="topbar-title">المخازن</div>
+      <div class="topbar-actions">
+        <button class="icon-btn" id="themeToggle" title="الوضع الليلي/النهاري">
+          <i data-lucide="moon" id="themeIcon"></i>
+        </button>
+        <button class="icon-btn" id="notifBtn" title="الإشعارات" style="position:relative;">
+          <i data-lucide="bell"></i>
+        </button>
+        <div style="position:relative;">
+          <div class="user-menu" id="userMenu">
+            <div class="user-avatar" id="userAvatar">م</div>
+            <div class="user-info">
+              <span class="name" id="userName">—</span>
+              <span class="role" id="userRole">—</span>
+            </div>
+            <i data-lucide="chevron-down" style="width:14px;height:14px;opacity:0.5;"></i>
+          </div>
+          <div class="dropdown" id="userDropdown">
+            <a href="company-settings.html" class="dropdown-item"><i data-lucide="settings"></i> الإعدادات</a>
+            <a href="employees.html" class="dropdown-item"><i data-lucide="user-cog"></i> الملف الشخصي</a>
+            <div class="dropdown-divider"></div>
+            <div class="dropdown-item danger" id="logoutBtn"><i data-lucide="log-out"></i> تسجيل الخروج</div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="content">
+
+      <div class="page-head">
+        <div>
+          <h1>إدارة المخازن</h1>
+          <p>إدارة مخازن الشركة وتعيين المخزن الافتراضي</p>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn btn-outline" id="refreshBtn">
+            <i data-lucide="refresh-cw"></i> تحديث
+          </button>
+          <button class="btn btn-primary" id="addBtn">
+            <i data-lucide="plus"></i> إضافة مخزن
+          </button>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <div class="search-input">
+          <input type="text" id="searchInput" placeholder="ابحث بالاسم أو الكود أو العنوان...">
+          <i data-lucide="search"></i>
+        </div>
+        <div class="select-wrap">
+          <select id="filterType">
+            <option value="">كل الأنواع</option>
+            <option value="main">🏢 رئيسي</option>
+            <option value="branch">🏪 فرع</option>
+            <option value="cold">❄️ مبرد</option>
+            <option value="hazard">⚠️ مواد خطرة</option>
+            <option value="other">📦 آخر</option>
+          </select>
+        </div>
+        <div class="select-wrap">
+          <select id="filterStatus">
+            <option value="">كل الحالات</option>
+            <option value="active">نشط</option>
+            <option value="inactive">معطّل</option>
+            <option value="default">افتراضي</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="wh-grid" id="whGrid"></div>
+
+    </main>
+  </div>
+
+  <div class="modal-backdrop" id="modalBackdrop" aria-hidden="true">
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <form id="whForm">
+        <header class="modal-header">
+          <h2 id="modalTitle">
+            <i data-lucide="warehouse"></i>
+            <span>إضافة مخزن جديد</span>
+          </h2>
+          <button class="close-btn" type="button" id="closeModalBtn" aria-label="إغلاق">
+            <i data-lucide="x"></i>
+          </button>
+        </header>
+
+        <div class="modal-body">
+          <div class="form-grid">
+
+            <div class="form-field full">
+              <label for="whName">اسم المخزن <span class="req">*</span></label>
+              <input id="whName" type="text" maxlength="100" required autocomplete="off" placeholder="مثال: المخزن الرئيسي">
+            </div>
+
+            <div class="form-field">
+              <label for="whCode">كود المخزن (اختياري)</label>
+              <input id="whCode" type="text" maxlength="20" autocomplete="off" placeholder="MAIN">
+            </div>
+
+            <div class="form-field">
+              <label for="whPhone">الهاتف</label>
+              <input id="whPhone" type="tel" maxlength="20" autocomplete="off" placeholder="01012345678">
+            </div>
+
+            <div class="form-field full">
+              <label>نوع المخزن <span class="req">*</span></label>
+              <div class="type-pills" id="typePills">
+                <label class="type-pill" data-type="main">
+                  <input type="radio" name="whType" value="main" checked>
+                  <span>🏢</span><span>رئيسي</span>
+                </label>
+                <label class="type-pill" data-type="branch">
+                  <input type="radio" name="whType" value="branch">
+                  <span>🏪</span><span>فرع</span>
+                </label>
+                <label class="type-pill" data-type="cold">
+                  <input type="radio" name="whType" value="cold">
+                  <span>❄️</span><span>مبرد</span>
+                </label>
+                <label class="type-pill" data-type="hazard">
+                  <input type="radio" name="whType" value="hazard">
+                  <span>⚠️</span><span>مواد خطرة</span>
+                </label>
+                <label class="type-pill" data-type="other">
+                  <input type="radio" name="whType" value="other">
+                  <span>📦</span><span>آخر</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="form-field full">
+              <label for="whAddress">العنوان</label>
+              <input id="whAddress" type="text" maxlength="200" autocomplete="off" placeholder="المعادي - القاهرة">
+            </div>
+
+            <div class="form-field full">
+              <label for="whManager">المسؤول (اختياري)</label>
+              <select id="whManager">
+                <option value="">بدون مسؤول</option>
+              </select>
+            </div>
+
+            <div class="form-field full">
+              <label class="check-row" for="whIsDefault">
+                <input type="checkbox" id="whIsDefault">
+                <div>
+                  <span>تعيين كمخزن افتراضي</span>
+                  <small>سيتم إلغاء الافتراضي من المخازن الأخرى</small>
+                </div>
+              </label>
+            </div>
+
+            <div class="form-field full">
+              <label class="check-row" for="whIsActive">
+                <input type="checkbox" id="whIsActive" checked>
+                <div>
+                  <span>مخزن نشط</span>
+                  <small>المخازن المعطّلة لا تظهر في العمليات</small>
+                </div>
+              </label>
+            </div>
+
+            <div class="form-field full">
+              <label for="whNotes">ملاحظات</label>
+              <textarea id="whNotes" maxlength="500" placeholder="أي تفاصيل إضافية عن المخزن..."></textarea>
+            </div>
+
+          </div>
+        </div>
+
+        <footer class="modal-footer">
+          <button class="btn btn-outline" type="button" id="cancelModalBtn">إلغاء</button>
+          <button class="btn btn-primary" type="submit" id="saveBtn">
+            <i data-lucide="save"></i> حفظ
+          </button>
+        </footer>
+      </form>
+    </section>
+  </div>
+
+  <div class="modal-backdrop" id="deleteBackdrop" aria-hidden="true">
+    <section class="modal" style="width:min(560px,100%);" role="dialog" aria-modal="true">
+      <header class="modal-header">
+        <h2>
+          <i data-lucide="alert-triangle" style="color:var(--danger);"></i>
+          <span>تأكيد الحذف</span>
+        </h2>
+        <button class="close-btn" type="button" id="closeDeleteBtn" aria-label="إغلاق">
+          <i data-lucide="x"></i>
+        </button>
+      </header>
+
+      <div class="modal-body">
+        <div id="deleteInfo" style="margin-bottom:16px;padding:14px;border-radius:10px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);color:var(--text);font-size:14px;line-height:1.7;"></div>
+
+        <div id="deleteOptions" style="display:none;flex-direction:column;gap:12px;">
+          <div class="form-field">
+            <label>الإجراء المطلوب <span class="req">*</span></label>
+            <div style="display:flex;flex-direction:column;gap:8px;margin-top:6px;">
+              <label class="check-row" for="delMove">
+                <input type="radio" name="delAction" id="delMove" value="move" checked>
+                <div>
+                  <span>نقل البيانات لمخزن آخر</span>
+                  <small>سيتم نقل كل الدفعات والحركات</small>
+                </div>
+              </label>
+              <label class="check-row" for="delDisable">
+                <input type="radio" name="delAction" id="delDisable" value="disable">
+                <div>
+                  <span>تعطيل المخزن فقط</span>
+                  <small>لن يُحذف — يمكن تفعيله لاحقاً</small>
+                </div>
+              </label>
+              <label class="check-row" for="delForce">
+                <input type="radio" name="delAction" id="delForce" value="force">
+                <div>
+                  <span>حذف نهائي (خطير!)</span>
+                  <small>سيتم حذف كل البيانات المرتبطة نهائياً</small>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-field" id="moveTargetField">
+            <label for="delTargetWh">المخزن الجديد <span class="req">*</span></label>
+            <select id="delTargetWh">
+              <option value="">اختر المخزن...</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <footer class="modal-footer">
+        <button class="btn btn-outline" type="button" id="cancelDeleteBtn">إلغاء</button>
+        <button class="btn btn-danger" type="button" id="confirmDeleteBtn">
+          <i data-lucide="trash-2"></i> تنفيذ
+        </button>
+      </footer>
+    </section>
+  </div>
+
+  <!-- ============================================================
+       SCRIPTS — الترتيب مهم جداً
+       ============================================================ -->
+  <script src="refad-core.js"></script>
+  <script src="refad-auth.js"></script>
+  <script src="refad-theme-sync.js"></script>
+  <script src="refad-settings.js"></script>
+  <script src="refad-warehouse.js"></script>
+
+  <script>
+    (function () {
+      'use strict';
+
+      // ============================================================
+      // 0) Safe Wrappers
+      // ============================================================
+      const SafeSettings = {
+        locale: {
+          formatMoney: function (v) {
+            try {
+              if (window.RefadSettings?.locale?.formatMoney) {
+                return RefadSettings.locale.formatMoney(v);
+              }
+            } catch (e) {}
+            return Refad.format.money(v);
+          }
+        },
+        identity: {
+          getSystemName: function () {
+            try {
+              if (window.RefadSettings?.identity?.getSystemName) {
+                return RefadSettings.identity.getSystemName();
+              }
+            } catch (e) {}
+            return 'رفاد';
+          },
+          getTagline: function () {
+            try {
+              if (window.RefadSettings?.identity?.getTagline) {
+                return RefadSettings.identity.getTagline();
+              }
+            } catch (e) {}
+            return 'نظام إدارة الأدوية';
+          },
+          getLogoUrl: function () {
+            try {
+              if (window.RefadSettings?.identity?.getLogoUrl) {
+                return RefadSettings.identity.getLogoUrl();
+              }
+            } catch (e) {}
+            return null;
+          }
+        }
+      };
+
+      // ============================================================
+      // 1) Guard — صاحب الشركة فقط
+      // ============================================================
+      const baseSession = Refad.Auth.guardPage();
+      if (!baseSession) return;
+
+      async function verifyOwner() {
+        if (baseSession.is_owner === true) return true;
+        if (baseSession.company_owner === true) return true;
+
+        try {
+          if (typeof Refad.Session.has === 'function') {
+            if (Refad.Session.has('company.owner')) return true;
+            if (Refad.Session.has('is_owner')) return true;
+          }
+        } catch (e) { /* ignore */ }
+
+        try {
+          const user = await Refad.db.selectOne('users', {
+            columns: 'id, role_id, is_owner',
+            eq: { id: baseSession.user_id }
+          });
+
+          if (user) {
+            if (user.is_owner === true) return true;
+            if (Number(user.role_id) === 1) return true;
+
+            if (user.role_id) {
+              const role = await Refad.db.selectOne('roles', {
+                columns: 'id, is_owner, is_system',
+                eq: { id: user.role_id }
+              });
+              if (role && role.is_owner === true) return true;
+            }
+          }
+        } catch (e) {
+          console.warn('[Warehouses] Owner check via DB failed:', e.message);
+        }
+
+        return false;
+      }
+
+      // ============================================================
+      // 2) State
+      // ============================================================
+      const state = {
+        session: baseSession,
+        warehouses: [],
+        stats: {},
+        users: [],
+        search: '',
+        filterType: '',
+        filterStatus: '',
+        editingId: null,
+        deletingId: null,
+        saving: false,
+        deleting: false
+      };
+
+      // ============================================================
+      // 3) MENU
+      // ============================================================
+      const MENU = [
+        { section: 'الرئيسية', items: [
+          { label: 'لوحة التحكم', icon: 'layout-dashboard', href: 'dashboard.html' },
+          { label: 'الشات', icon: 'message-circle', href: 'chat.html', permission: 'chat.use' },
+          { label: 'الإشعارات', icon: 'bell', href: 'notifications.html', permission: 'notifications.view' }
+        ]},
+        { section: 'العمليات', items: [
+          { label: 'الأصناف', icon: 'package', href: 'products.html', permission: 'products.view' },
+          { label: 'المخزون', icon: 'warehouse', href: 'inventory.html', permission: 'inventory.view' },
+          { label: 'طلبات الشراء', icon: 'clipboard-list', href: 'purchase-requests.html', permission: 'purchases.view' },
+          { label: 'الاستلامات', icon: 'package-check', href: 'receipts.html', permission: 'purchases.receive' },
+          { label: 'طلبات البيع', icon: 'shopping-cart', href: 'sales-orders.html', permission: 'sales.view' },
+          { label: 'نقطة البيع', icon: 'scan-barcode', href: 'pos.html', permission: 'sales.pos', badge: 'POS', badgeClass: 'teal' },
+          { label: 'الفواتير', icon: 'receipt', href: 'invoices.html', permission: 'sales.view' },
+          { label: 'المرتجعات', icon: 'undo-2', href: 'returns.html' }
+        ]},
+        { section: 'الأطراف', items: [
+          { label: 'الموردين', icon: 'truck', href: 'suppliers.html', permission: 'suppliers.view' },
+          { label: 'العملاء', icon: 'users', href: 'customers.html', permission: 'customers.view' },
+          { label: 'المندوبين', icon: 'user-check', href: 'sales-reps.html', permission: 'company.owner', badge: 'جديد', badgeClass: 'new' }
+        ]},
+        { section: 'المخزون', items: [
+          { label: 'المخازن', icon: 'building-2', href: 'warehouses.html' },
+          { label: 'الجرد', icon: 'clipboard-check', href: 'stocktake.html', permission: 'inventory.stocktake' },
+          { label: 'التسويات', icon: 'sliders-horizontal', href: 'adjustments.html', permission: 'inventory.adjust' },
+          { label: 'التحويلات', icon: 'arrow-right-left', href: 'transfers.html', permission: 'inventory.transfer', badge: 'جديد', badgeClass: 'new' }
+        ]},
+        { section: 'الموارد البشرية', items: [
+          { label: 'الموظفين', icon: 'user-cog', href: 'employees.html', permission: 'employees.view' },
+          { label: 'الصلاحيات', icon: 'shield-check', href: 'permissions.html', permission: 'permissions.manage' },
+          { label: 'الحضور', icon: 'calendar-check', href: 'attendance.html', permission: 'attendance.view' },
+          { label: 'الرواتب', icon: 'wallet', href: 'payroll.html', permission: 'payroll.view' }
+        ]},
+        { section: 'المالية', items: [
+          { label: 'الحسابات', icon: 'landmark', href: 'accounts.html', permission: 'company.owner' },
+          { label: 'الشيكات', icon: 'file-check-2', href: 'cheques.html', permission: 'company.owner', badge: 'جديد', badgeClass: 'new' },
+          { label: 'الإشعارات', icon: 'file-text', href: 'credit-notes.html', permission: 'company.owner' },
+          { label: 'المدفوعات', icon: 'banknote', href: 'payments.html', permission: 'company.owner' },
+          { label: 'المصاريف', icon: 'receipt-text', href: 'expenses.html', permission: 'expenses.view' },
+          { label: 'التقارير', icon: 'bar-chart-3', href: 'reports.html', permission: 'reports.view' }
+        ]},
+        { section: 'النظام', items: [
+          { label: 'إعدادات الشركة', icon: 'settings', href: 'company-settings.html', permission: 'settings.view' },
+          { label: 'شاشة الأدمن', icon: 'shield', href: 'admin.html', permission: 'admin.full', badge: 'Admin', badgeClass: 'gold' }
+        ]}
+      ];
+
+      function buildSidebar() {
+  Refad.buildMenu('warehouses.html');
+}
+
+      // ============================================================
+      // 4) UI Helpers
+      // ============================================================
+      function fillUser() {
+        const av = document.getElementById('userAvatar');
+        const initial = (state.session.full_name || '؟').trim().charAt(0);
+        if (state.session.avatar_url) av.innerHTML = `<img src="${Refad.escapeHtml(state.session.avatar_url)}" alt="">`;
+        else av.textContent = initial;
+        document.getElementById('userName').textContent = state.session.full_name;
+        document.getElementById('userRole').textContent = 'صاحب الشركة';
+      }
+
+      function applyIdentity() {
+        const name = SafeSettings.identity.getSystemName();
+        const tagline = SafeSettings.identity.getTagline();
+        const logoUrl = SafeSettings.identity.getLogoUrl();
+
+        const brandName = document.getElementById('sidebarBrandName');
+        const brandDesc = document.getElementById('sidebarBrandDesc');
+        const logoImg = document.getElementById('sidebarLogoImg');
+
+        if (brandName) brandName.textContent = name;
+        if (brandDesc) brandDesc.textContent = tagline;
+        if (logoImg && logoUrl) {
+          logoImg.src = logoUrl;
+          logoImg.onerror = function () {
+            this.style.display = 'none';
+            const parent = this.parentElement;
+            if (parent) parent.innerHTML = '<span class="fallback">' + (name.charAt(0) || 'R') + '</span>';
+          };
+        }
+      }
+
+      function setupTheme() {
+        const btn = document.getElementById('themeToggle');
+        const icon = document.getElementById('themeIcon');
+        const refresh = () => {
+          const isDark = Refad.theme.get() === 'dark';
+          icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+          if (window.lucide) lucide.createIcons();
+        };
+        refresh();
+        btn.addEventListener('click', () => {
+          Refad.theme.toggle();
+          refresh();
+        });
+      }
+
+      function setupSidebarMobile() {
+        const sb = document.getElementById('sidebar');
+        const ov = document.getElementById('overlay');
+        document.getElementById('menuToggle').addEventListener('click', () => {
+          sb.classList.add('open'); ov.classList.add('show');
+        });
+        ov.addEventListener('click', () => {
+          sb.classList.remove('open'); ov.classList.remove('show');
+        });
+      }
+
+      function setupUserMenu() {
+        const m = document.getElementById('userMenu');
+        const d = document.getElementById('userDropdown');
+        m.addEventListener('click', e => { e.stopPropagation(); d.classList.toggle('show'); });
+        document.addEventListener('click', () => d.classList.remove('show'));
+        d.addEventListener('click', e => e.stopPropagation());
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+          if (await Refad.alert.confirm('تسجيل الخروج', 'هل تريد الخروج؟', 'خروج')) {
+            await Refad.Auth.logout();
+          }
+        });
+      }
+
+      function setupNotifBtn() {
+        document.getElementById('notifBtn').addEventListener('click', () => {
+          window.location.href = 'notifications.html';
+        });
+      }
+
+      function setupRealtimeTheme() {
+        window.addEventListener('refad:theme-changed', () => {
+          applyIdentity();
+        });
+      }
+
+      // ============================================================
+      // 5) Load Data
+      // ============================================================
+      async function loadWarehouses() {
+        renderSkeleton();
+        try {
+          const rows = await Refad.db.select('warehouses', {
+            columns: 'id, company_id, name, code, type, address, phone, manager_id, is_default, is_active, notes, created_at, updated_at',
+            eq: { company_id: state.session.company_id },
+            order: { column: 'is_default', ascending: false },
+            limit: 200
+          });
+
+          state.warehouses = (rows || []).slice().sort((a, b) => {
+            if (a.is_default && !b.is_default) return -1;
+            if (!a.is_default && b.is_default) return 1;
+            if (a.is_active && !b.is_active) return -1;
+            if (!a.is_active && b.is_active) return 1;
+            return String(a.name || '').localeCompare(String(b.name || ''), 'ar');
+          });
+
+          await loadStats();
+          renderGrid();
+        } catch (e) {
+          console.error('[Warehouses] load failed:', e);
+          Refad.toast.error('تعذّر التحميل: ' + e.message);
+          state.warehouses = [];
+          renderGrid();
+        }
+      }
+
+      async function loadStats() {
+        state.stats = {};
+        if (!state.warehouses.length) return;
+
+        const whIds = state.warehouses.map(w => w.id);
+
+        try {
+          const batches = await Refad.db.select('batches', {
+            columns: 'warehouse_id, quantity_left, cost_price',
+            eq: { company_id: state.session.company_id },
+            in: { warehouse_id: whIds },
+            limit: 5000
+          });
+
+          whIds.forEach(id => {
+            state.stats[id] = { batches_count: 0, stock_value: 0, movements_30d: 0 };
+          });
+
+          (batches || []).forEach(b => {
+            const wid = b.warehouse_id;
+            if (!state.stats[wid]) state.stats[wid] = { batches_count: 0, stock_value: 0, movements_30d: 0 };
+            if ((b.quantity_left || 0) > 0) {
+              state.stats[wid].batches_count += 1;
+              state.stats[wid].stock_value += (Number(b.quantity_left) || 0) * (Number(b.cost_price) || 0);
+            }
+          });
+        } catch (e) {
+          console.warn('[Warehouses] batches stats failed:', e.message);
+          whIds.forEach(id => {
+            if (!state.stats[id]) state.stats[id] = { batches_count: 0, stock_value: 0, movements_30d: 0 };
+          });
+        }
+
+        try {
+          const fromDate = Refad.date.addDays(Refad.date.today(), -30);
+          const movements = await Refad.db.select('inventory_movements', {
+            columns: 'warehouse_id, created_at',
+            eq: { company_id: state.session.company_id },
+            in: { warehouse_id: whIds },
+            gte: { created_at: fromDate + 'T00:00:00Z' },
+            limit: 5000
+          });
+
+          (movements || []).forEach(m => {
+            const wid = m.warehouse_id;
+            if (state.stats[wid]) state.stats[wid].movements_30d += 1;
+          });
+        } catch (e) {
+          console.warn('[Warehouses] movements stats failed:', e.message);
+        }
+      }
+
+      async function loadUsers() {
+        try {
+          const rows = await Refad.db.select('users', {
+            columns: 'id, full_name, username, is_active',
+            eq: { company_id: state.session.company_id, is_active: true },
+            order: { column: 'full_name', ascending: true },
+            limit: 500
+          });
+          state.users = rows || [];
+          const sel = document.getElementById('whManager');
+          sel.innerHTML = '<option value="">بدون مسؤول</option>' +
+            state.users.map(u => `<option value="${u.id}">${Refad.escapeHtml(u.full_name || u.username)}</option>`).join('');
+        } catch (e) {
+          console.warn('[Warehouses] users load failed:', e.message);
+        }
+      }
+
+      // ============================================================
+      // 6) Render Grid
+      // ============================================================
+      function renderSkeleton() {
+        const grid = document.getElementById('whGrid');
+        grid.innerHTML = Array(3).fill(0).map(() => `
+          <div class="skeleton-card">
+            <div class="skeleton-bar" style="width:60%;height:20px;"></div>
+            <div class="skeleton-bar" style="width:40%;"></div>
+            <div class="skeleton-bar" style="width:80%;"></div>
+            <div class="skeleton-bar" style="width:70%;"></div>
+            <div class="skeleton-bar" style="width:100%;height:60px;margin-top:20px;"></div>
+          </div>
+        `).join('');
+      }
+
+      function getTypeText(type) {
+        const map = { main: 'رئيسي', branch: 'فرع', cold: 'مبرد', hazard: 'مواد خطرة', other: 'آخر' };
+        return map[type] || 'غير محدد';
+      }
+
+      function getTypeIcon(type) {
+        const map = { main: '🏢', branch: '🏪', cold: '❄️', hazard: '⚠️', other: '📦' };
+        return map[type] || '📦';
+      }
+
+      function getFilteredWarehouses() {
+        const q = state.search.toLowerCase().trim();
+        return state.warehouses.filter(w => {
+          if (state.filterType && w.type !== state.filterType) return false;
+          if (state.filterStatus === 'active' && !w.is_active) return false;
+          if (state.filterStatus === 'inactive' && w.is_active) return false;
+          if (state.filterStatus === 'default' && !w.is_default) return false;
+          if (!q) return true;
+          return (
+            (w.name || '').toLowerCase().includes(q) ||
+            (w.code || '').toLowerCase().includes(q) ||
+            (w.address || '').toLowerCase().includes(q) ||
+            (w.phone || '').toLowerCase().includes(q)
+          );
+        });
+      }
+
+      function renderGrid() {
+        const grid = document.getElementById('whGrid');
+        const list = getFilteredWarehouses();
+
+        if (state.warehouses.length === 0) {
+          grid.innerHTML = `
+            <div class="empty-state" style="grid-column: 1/-1;">
+              <i data-lucide="warehouse"></i>
+              <h3>لا توجد مخازن بعد</h3>
+              <p>ابدأ بإضافة أول مخزن للشركة</p>
+              <button class="btn btn-primary" id="emptyAddBtn"><i data-lucide="plus"></i> إضافة مخزن</button>
+            </div>
+          `;
+          if (window.lucide) lucide.createIcons();
+          const emptyBtn = document.getElementById('emptyAddBtn');
+          if (emptyBtn) emptyBtn.addEventListener('click', () => openModal());
+          return;
+        }
+
+        if (list.length === 0) {
+          grid.innerHTML = `
+            <div class="empty-state" style="grid-column: 1/-1;">
+              <i data-lucide="search-x"></i>
+              <h3>لا توجد نتائج مطابقة</h3>
+              <p>جرّب تغيير معايير البحث أو الفلترة</p>
+            </div>
+          `;
+          if (window.lucide) lucide.createIcons();
+          return;
+        }
+
+        grid.innerHTML = list.map(w => renderCard(w)).join('');
+        if (window.lucide) lucide.createIcons();
+        bindCardEvents();
+      }
+
+      function renderCard(w) {
+        const stats = state.stats[w.id] || { batches_count: 0, stock_value: 0, movements_30d: 0 };
+        const isDefault = w.is_default;
+        const isInactive = !w.is_active;
+        const iconClass = w.type || 'other';
+
+        const classes = ['wh-card'];
+        if (isDefault) classes.push('is-default');
+        if (isInactive) classes.push('is-inactive');
+
+        return `
+          <div class="${classes.join(' ')}" data-wh-id="${w.id}">
+            <div class="wh-card-head">
+              <div class="wh-icon ${iconClass}">
+                <span style="color:white;">${getTypeIcon(w.type)}</span>
+              </div>
+              <div class="wh-info">
+                <h3>
+                  ${Refad.escapeHtml(w.name)}
+                  ${isDefault ? `<span class="default-badge"><i data-lucide="star"></i> افتراضي</span>` : ''}
+                </h3>
+                <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+                  ${w.code ? `<span class="wh-code">${Refad.escapeHtml(w.code)}</span>` : ''}
+                  <span class="wh-type">${getTypeText(w.type)}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="wh-details">
+              ${w.address ? `<div class="row"><i data-lucide="map-pin"></i><span>${Refad.escapeHtml(w.address)}</span></div>` : ''}
+              ${w.phone ? `<div class="row"><i data-lucide="phone"></i><span>${Refad.escapeHtml(w.phone)}</span></div>` : ''}
+              ${w.manager_id ? `<div class="row"><i data-lucide="user"></i><span>${Refad.escapeHtml(getManagerName(w.manager_id))}</span></div>` : ''}
+            </div>
+
+            <div class="wh-stats">
+              <div class="wh-stat teal">
+                <div class="label">دفعات</div>
+                <div class="value">${Refad.format.number(stats.batches_count)}</div>
+              </div>
+              <div class="wh-stat gold">
+                <div class="label">قيمة المخزون</div>
+                <div class="value">${SafeSettings.locale.formatMoney(stats.stock_value)}</div>
+              </div>
+              <div class="wh-stat blue">
+                <div class="label">حركات 30 يوم</div>
+                <div class="value">${Refad.format.number(stats.movements_30d)}</div>
+              </div>
+            </div>
+
+            <div class="wh-actions">
+              ${!isDefault && w.is_active ? `
+                <button class="btn btn-outline btn-sm" data-action="set-default" data-id="${w.id}" title="تعيين كافتراضي">
+                  <i data-lucide="star"></i> افتراضي
+                </button>
+              ` : ''}
+              <button class="btn btn-outline btn-sm" data-action="edit" data-id="${w.id}" title="تعديل">
+                <i data-lucide="pencil"></i> تعديل
+              </button>
+              <button class="btn btn-outline btn-sm" data-action="delete" data-id="${w.id}" title="حذف" style="color:var(--danger);border-color:rgba(239,68,68,0.3);">
+                <i data-lucide="trash-2"></i>
+              </button>
+            </div>
+          </div>
+        `;
+      }
+
+      function getManagerName(id) {
+        const u = state.users.find(x => Number(x.id) === Number(id));
+        return u ? (u.full_name || u.username) : '—';
+      }
+
+      function bindCardEvents() {
+        document.querySelectorAll('.wh-card [data-action]').forEach(btn => {
+          btn.addEventListener('click', e => {
+            e.stopPropagation();
+            const action = btn.dataset.action;
+            const id = Number(btn.dataset.id);
+            if (action === 'edit') openModal(id);
+            else if (action === 'delete') openDeleteModal(id);
+            else if (action === 'set-default') setDefault(id);
+          });
+        });
+      }
+
+      // ============================================================
+      // 7) Modal: Add / Edit
+      // ============================================================
+      function openModal(id) {
+        state.editingId = id || null;
+        const form = document.getElementById('whForm');
+        form.reset();
+
+        const titleEl = document.querySelector('#modalTitle span');
+        titleEl.textContent = id ? 'تعديل مخزن' : 'إضافة مخزن جديد';
+
+        document.querySelectorAll('.type-pill').forEach(p => p.classList.remove('selected'));
+        const mainPill = document.querySelector('.type-pill[data-type="main"]');
+        if (mainPill) {
+          mainPill.classList.add('selected');
+          mainPill.querySelector('input').checked = true;
+        }
+
+        if (id) {
+          const w = state.warehouses.find(x => Number(x.id) === Number(id));
+          if (!w) {
+            Refad.toast.error('المخزن غير موجود');
+            return;
+          }
+          document.getElementById('whName').value = w.name || '';
+          document.getElementById('whCode').value = w.code || '';
+          document.getElementById('whPhone').value = w.phone || '';
+          document.getElementById('whAddress').value = w.address || '';
+          document.getElementById('whManager').value = w.manager_id ? String(w.manager_id) : '';
+          document.getElementById('whIsDefault').checked = Boolean(w.is_default);
+          document.getElementById('whIsActive').checked = Boolean(w.is_active);
+          document.getElementById('whNotes').value = w.notes || '';
+
+          const typePill = document.querySelector(`.type-pill[data-type="${w.type || 'other'}"]`);
+          if (typePill) {
+            document.querySelectorAll('.type-pill').forEach(p => p.classList.remove('selected'));
+            typePill.classList.add('selected');
+            typePill.querySelector('input').checked = true;
+          }
+        } else {
+          document.getElementById('whIsActive').checked = true;
+          const hasDefault = state.warehouses.some(x => x.is_default);
+          document.getElementById('whIsDefault').checked = !hasDefault;
+        }
+
+        document.getElementById('modalBackdrop').classList.add('show');
+        document.getElementById('modalBackdrop').setAttribute('aria-hidden', 'false');
+        if (window.lucide) lucide.createIcons();
+        setTimeout(() => document.getElementById('whName').focus(), 100);
+      }
+
+      function closeModal() {
+        document.getElementById('modalBackdrop').classList.remove('show');
+        document.getElementById('modalBackdrop').setAttribute('aria-hidden', 'true');
+        state.editingId = null;
+      }
+
+      function setupTypePills() {
+        document.querySelectorAll('.type-pill').forEach(pill => {
+          pill.addEventListener('click', () => {
+            document.querySelectorAll('.type-pill').forEach(p => p.classList.remove('selected'));
+            pill.classList.add('selected');
+            pill.querySelector('input').checked = true;
+          });
+        });
+      }
+
+      async function saveWarehouse(e) {
+        e.preventDefault();
+        if (state.saving) return;
+
+        const name = document.getElementById('whName').value.trim();
+        const code = document.getElementById('whCode').value.trim();
+        const phone = document.getElementById('whPhone').value.trim();
+        const address = document.getElementById('whAddress').value.trim();
+        const managerId = document.getElementById('whManager').value;
+        const isDefault = document.getElementById('whIsDefault').checked;
+        const isActive = document.getElementById('whIsActive').checked;
+        const notes = document.getElementById('whNotes').value.trim();
+        const typeInput = document.querySelector('input[name="whType"]:checked');
+        const type = typeInput ? typeInput.value : 'main';
+
+        if (!name) {
+          Refad.toast.warning('اسم المخزن مطلوب');
+          return;
+        }
+        if (name.length < 2) {
+          Refad.toast.warning('اسم المخزن قصير جداً');
+          return;
+        }
+
+        if (code) {
+          const dup = state.warehouses.find(w =>
+            String(w.code || '').toLowerCase() === code.toLowerCase() &&
+            Number(w.id) !== Number(state.editingId || 0)
+          );
+          if (dup) {
+            Refad.toast.warning(`الكود "${code}" مستخدم بالفعل في مخزن آخر`);
+            return;
+          }
+        }
+
+        const payload = {
+          name,
+          code: code || null,
+          type,
+          phone: phone || null,
+          address: address || null,
+          manager_id: managerId ? Number(managerId) : null,
+          is_default: isDefault,
+          is_active: isActive,
+          notes: notes || null,
+          updated_at: new Date().toISOString()
+        };
+
+        const saveBtn = document.getElementById('saveBtn');
+        const original = saveBtn.innerHTML;
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<i data-lucide="loader-2"></i> جارٍ الحفظ...';
+        if (window.lucide) lucide.createIcons();
+        state.saving = true;
+
+        try {
+          if (isDefault) {
+            const currentDefault = state.warehouses.find(x => x.is_default && Number(x.id) !== Number(state.editingId || 0));
+            if (currentDefault) {
+              await Refad.db.update('warehouses', currentDefault.id, { is_default: false });
+            }
+          }
+
+          if (state.editingId) {
+            await Refad.db.update('warehouses', state.editingId, payload);
+            await Refad.logActivity('update_warehouse', 'warehouses', `تعديل مخزن: ${name}`, state.editingId);
+            Refad.toast.success('تم تحديث المخزن');
+          } else {
+            payload.company_id = state.session.company_id;
+            payload.created_at = new Date().toISOString();
+
+            const created = await Refad.db.insert('warehouses', payload);
+            await Refad.logActivity('create_warehouse', 'warehouses', `إضافة مخزن: ${name}`, created?.id);
+            Refad.toast.success('تم إضافة المخزن');
+          }
+
+          closeModal();
+          if (window.Refad?.Warehouse?.refresh) {
+            await Refad.Warehouse.refresh();
+          }
+          await loadWarehouses();
+        } catch (err) {
+          console.error('[Warehouses] save failed:', err);
+          Refad.toast.error('تعذّر الحفظ: ' + err.message);
+        } finally {
+          saveBtn.disabled = false;
+          saveBtn.innerHTML = original;
+          if (window.lucide) lucide.createIcons();
+          state.saving = false;
+        }
+      }
+
+      // ============================================================
+      // 8) Set Default
+      // ============================================================
+      async function setDefault(id) {
+        const w = state.warehouses.find(x => Number(x.id) === Number(id));
+        if (!w) return;
+
+        const ok = await Refad.alert.confirm(
+          'تعيين المخزن الافتراضي',
+          `هل تريد تعيين "${w.name}" كمخزن افتراضي للشركة؟`,
+          'تعيين'
+        );
+        if (!ok) return;
+
+        try {
+          const currentDefault = state.warehouses.find(x => x.is_default);
+          if (currentDefault && Number(currentDefault.id) !== Number(id)) {
+            await Refad.db.update('warehouses', currentDefault.id, { is_default: false });
+          }
+          await Refad.db.update('warehouses', id, { is_default: true });
+
+          await Refad.logActivity('set_default_warehouse', 'warehouses', `تعيين "${w.name}" كمخزن افتراضي`, id);
+          Refad.toast.success('تم تعيين المخزن الافتراضي');
+          if (window.Refad?.Warehouse?.refresh) {
+            await Refad.Warehouse.refresh();
+          }
+          await loadWarehouses();
+        } catch (e) {
+          console.error('[Warehouses] setDefault failed:', e);
+          Refad.toast.error('تعذّر التعيين: ' + e.message);
+        }
+      }
+
+      // ============================================================
+      // 9) Delete Modal
+      // ============================================================
+      async function openDeleteModal(id) {
+        const w = state.warehouses.find(x => Number(x.id) === Number(id));
+        if (!w) return;
+
+        if (state.warehouses.length <= 1) {
+          Refad.alert.error('لا يمكن الحذف', 'يجب أن يكون هناك مخزن واحد على الأقل في الشركة');
+          return;
+        }
+
+        if (w.is_default) {
+          Refad.alert.error('لا يمكن الحذف', 'المخزن الافتراضي لا يمكن حذفه. عيّن مخزناً آخر كافتراضي أولاً.');
+          return;
+        }
+
+        state.deletingId = id;
+        const stats = state.stats[id] || { batches_count: 0, stock_value: 0, movements_30d: 0 };
+        const hasData = stats.batches_count > 0 || stats.movements_30d > 0;
+
+        const info = document.getElementById('deleteInfo');
+        const options = document.getElementById('deleteOptions');
+
+        if (!hasData) {
+          info.innerHTML = `
+            <strong style="display:block;margin-bottom:6px;color:var(--danger);">حذف المخزن "${Refad.escapeHtml(w.name)}"</strong>
+            المخزن لا يحتوي على بيانات. سيتم حذفه نهائياً.
+          `;
+          options.style.display = 'none';
+        } else {
+          info.innerHTML = `
+            <strong style="display:block;margin-bottom:6px;color:var(--danger);">⚠️ المخزن "${Refad.escapeHtml(w.name)}" يحتوي على بيانات:</strong>
+            <ul style="margin:8px 0 0 0;padding-right:20px;">
+              <li>${Refad.format.number(stats.batches_count)} دفعة</li>
+              <li>${Refad.format.number(stats.movements_30d)} حركة (آخر 30 يوم)</li>
+              <li>قيمة مخزون: ${SafeSettings.locale.formatMoney(stats.stock_value)}</li>
+            </ul>
+          `;
+          options.style.display = 'flex';
+
+          document.getElementById('delMove').checked = true;
+          document.getElementById('moveTargetField').style.display = 'flex';
+
+          const targetSel = document.getElementById('delTargetWh');
+          targetSel.innerHTML = '<option value="">اختر المخزن...</option>' +
+            state.warehouses.filter(x => Number(x.id) !== Number(id) && x.is_active)
+              .map(x => `<option value="${x.id}">${Refad.escapeHtml(x.name)}</option>`).join('');
+        }
+
+        document.querySelectorAll('input[name="delAction"]').forEach(r => {
+          r.onchange = () => {
+            const target = document.getElementById('moveTargetField');
+            target.style.display = document.getElementById('delMove').checked ? 'flex' : 'none';
+          };
+        });
+
+        document.getElementById('deleteBackdrop').classList.add('show');
+        document.getElementById('deleteBackdrop').setAttribute('aria-hidden', 'false');
+        if (window.lucide) lucide.createIcons();
+      }
+
+      function closeDeleteModal() {
+        document.getElementById('deleteBackdrop').classList.remove('show');
+        document.getElementById('deleteBackdrop').setAttribute('aria-hidden', 'true');
+        state.deletingId = null;
+      }
+
+      async function confirmDelete() {
+        if (state.deleting || !state.deletingId) return;
+
+        const id = state.deletingId;
+        const w = state.warehouses.find(x => Number(x.id) === Number(id));
+        if (!w) return;
+
+        const stats = state.stats[id] || { batches_count: 0 };
+        const hasData = stats.batches_count > 0;
+        let action = 'force';
+
+        if (hasData) {
+          const sel = document.querySelector('input[name="delAction"]:checked');
+          action = sel ? sel.value : 'move';
+        }
+
+        let targetId = null;
+        if (action === 'move') {
+          targetId = Number(document.getElementById('delTargetWh').value);
+          if (!targetId) {
+            Refad.toast.warning('اختر المخزن الجديد');
+            return;
+          }
+        }
+
+        const btn = document.getElementById('confirmDeleteBtn');
+        const original = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i data-lucide="loader-2"></i> جارٍ التنفيذ...';
+        if (window.lucide) lucide.createIcons();
+        state.deleting = true;
+
+        try {
+          if (action === 'disable') {
+            await Refad.db.update('warehouses', id, { is_active: false });
+            await Refad.logActivity('disable_warehouse', 'warehouses', `تعطيل مخزن: ${w.name}`, id);
+            Refad.toast.success('تم تعطيل المخزن');
+          } else if (action === 'move') {
+            await moveWarehouseData(id, targetId);
+            await Refad.db.remove('warehouses', id);
+            await Refad.logActivity('delete_warehouse', 'warehouses', `نقل وحذف مخزن: ${w.name} → ${targetId}`, id);
+            Refad.toast.success('تم نقل البيانات وحذف المخزن');
+          } else {
+            await forceDeleteWarehouse(id);
+            await Refad.db.remove('warehouses', id);
+            await Refad.logActivity('delete_warehouse', 'warehouses', `حذف نهائي لمخزن: ${w.name}`, id);
+            Refad.toast.success('تم الحذف النهائي');
+          }
+
+          closeDeleteModal();
+          if (window.Refad?.Warehouse?.refresh) {
+            await Refad.Warehouse.refresh();
+          }
+          await loadWarehouses();
+        } catch (e) {
+          console.error('[Warehouses] delete failed:', e);
+          Refad.toast.error('تعذّر التنفيذ: ' + e.message);
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = original;
+          if (window.lucide) lucide.createIcons();
+          state.deleting = false;
+        }
+      }
+
+      async function moveWarehouseData(fromId, toId) {
+        const tables = [
+          { name: 'batches', col: 'warehouse_id' },
+          { name: 'inventory_movements', col: 'warehouse_id' },
+          { name: 'receipts', col: 'warehouse_id' },
+          { name: 'sales_invoices', col: 'warehouse_id' }
+        ];
+
+        for (const t of tables) {
+          try {
+            const rows = await Refad.db.select(t.name, {
+              columns: 'id',
+              eq: { [t.col]: fromId },
+              limit: 10000
+            });
+            for (const row of rows) {
+              await Refad.db.update(t.name, row.id, { [t.col]: toId });
+            }
+          } catch (e) {
+            console.warn(`move ${t.name}:`, e.message);
+          }
+        }
+      }
+
+      async function forceDeleteWarehouse(id) {
+        const tables = [
+          { name: 'batches', col: 'warehouse_id' },
+          { name: 'inventory_movements', col: 'warehouse_id' },
+          { name: 'receipts', col: 'warehouse_id' },
+          { name: 'sales_invoices', col: 'warehouse_id' }
+        ];
+
+        for (const t of tables) {
+          try {
+            await Refad.db.removeWhere(t.name, { [t.col]: id });
+          } catch (e) {
+            console.warn(`force delete ${t.name}:`, e.message);
+          }
+        }
+      }
+
+      // ============================================================
+      // 10) Events
+      // ============================================================
+      function bindEvents() {
+        const searchHandler = Refad.debounce(v => {
+          state.search = v;
+          renderGrid();
+        }, 250);
+        document.getElementById('searchInput').addEventListener('input', e => searchHandler(e.target.value));
+
+        document.getElementById('filterType').addEventListener('change', e => {
+          state.filterType = e.target.value;
+          renderGrid();
+        });
+
+        document.getElementById('filterStatus').addEventListener('change', e => {
+          state.filterStatus = e.target.value;
+          renderGrid();
+        });
+
+        document.getElementById('addBtn').addEventListener('click', () => openModal());
+
+        document.getElementById('refreshBtn').addEventListener('click', async () => {
+          Refad.toast.info('جارٍ التحديث...');
+          if (window.Refad?.Warehouse?.refresh) {
+            await Refad.Warehouse.refresh();
+          }
+          await loadWarehouses();
+          Refad.toast.success('تم التحديث');
+        });
+
+        document.getElementById('closeModalBtn').addEventListener('click', closeModal);
+        document.getElementById('cancelModalBtn').addEventListener('click', closeModal);
+        document.getElementById('modalBackdrop').addEventListener('click', e => {
+          if (e.target.id === 'modalBackdrop') closeModal();
+        });
+        document.getElementById('whForm').addEventListener('submit', saveWarehouse);
+
+        document.getElementById('closeDeleteBtn').addEventListener('click', closeDeleteModal);
+        document.getElementById('cancelDeleteBtn').addEventListener('click', closeDeleteModal);
+        document.getElementById('deleteBackdrop').addEventListener('click', e => {
+          if (e.target.id === 'deleteBackdrop') closeDeleteModal();
+        });
+        document.getElementById('confirmDeleteBtn').addEventListener('click', confirmDelete);
+
+        document.addEventListener('keydown', e => {
+          if (e.key === 'Escape') {
+            closeModal();
+            closeDeleteModal();
+          }
+        });
+      }
+
+      // ============================================================
+      // 11) Init
+      // ============================================================
+      async function init() {
+        // 11.1) تحقق من الصلاحية
+        const isOwner = await verifyOwner();
+        if (!isOwner) {
+          document.getElementById('loadingOverlay').innerHTML = `
+            <div style="text-align:center;">
+              <div style="font-size:48px;margin-bottom:12px;">🚫</div>
+              <div style="font-size:16px;font-weight:700;color:var(--danger);margin-bottom:8px;">صفحة مخصصة لصاحب الشركة</div>
+              <div style="font-size:13px;color:var(--text-muted);">جارٍ تحويلك للوحة التحكم...</div>
+            </div>
+          `;
+          setTimeout(() => { location.href = 'dashboard.html'; }, 1800);
+          return;
+        }
+
+        // 11.2) اخفاء الـ loading
+        document.getElementById('loadingOverlay').style.display = 'none';
+
+        // 11.3) بناء الواجهة
+        buildSidebar();
+        fillUser();
+        applyIdentity(); // ✨ جديد
+        setupTheme();
+        setupSidebarMobile();
+        setupUserMenu();
+        setupNotifBtn();
+        setupTypePills();
+        setupRealtimeTheme(); // ✨ جديد
+        bindEvents();
+
+        // 11.4) تحميل البيانات
+        if (window.Refad?.Warehouse) {
+          try {
+            if (typeof Refad.Warehouse.ensureLoaded === 'function') {
+              await Refad.Warehouse.ensureLoaded();
+            }
+            if (typeof Refad.Warehouse.injectSelector === 'function') {
+              Refad.Warehouse.injectSelector();
+            }
+          } catch (e) {
+            console.warn('[Warehouses] Refad.Warehouse init failed:', e.message);
+          }
+        }
+
+        await loadUsers();
+        await loadWarehouses();
+
+        if (Refad.registerServiceWorker) Refad.registerServiceWorker();
+
+        console.log('%c[Refad] Warehouses v2 ready (Theme Sync + Settings)', 'color:#14B8A6;font-weight:bold');
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+
+    })();
+  </script>
+
+</body>
+</html>

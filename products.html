@@ -19,6 +19,7 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -38,6 +39,7 @@
       --success: #10b981;
       --warning: #f59e0b;
       --info: #3b82f6;
+      --purple: #8b5cf6;
       --sidebar-bg: #0B2C4D;
       --sidebar-text: #cbd5e1;
       --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
@@ -69,67 +71,49 @@
 
     body { display: flex; min-height: 100vh; overflow-x: hidden; }
 
-    /* ============================================================
-       Sidebar (نفس dashboard)
-       ============================================================ */
+    /* ============ Sidebar ============ */
     .sidebar {
       width: var(--sidebar-w);
       height: 100vh;
       background: var(--sidebar-bg);
       color: var(--sidebar-text);
       position: fixed;
-      top: 0;
-      right: 0;
+      top: 0; right: 0;
       z-index: 100;
-      display: flex;
-      flex-direction: column;
+      display: flex; flex-direction: column;
       transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       box-shadow: -4px 0 20px rgba(0,0,0,0.1);
     }
-
     .sidebar-header {
       padding: 20px 22px;
       border-bottom: 1px solid rgba(255,255,255,0.08);
-      display: flex;
-      align-items: center;
-      gap: 14px;
+      display: flex; align-items: center; gap: 14px;
       height: var(--topbar-h);
       box-sizing: border-box;
     }
-
     .sidebar-logo {
-      width: 40px;
-      height: 40px;
+      width: 40px; height: 40px;
       background: linear-gradient(135deg, var(--accent), var(--accent-dark));
       border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: flex; align-items: center; justify-content: center;
       flex-shrink: 0;
       box-shadow: 0 4px 12px rgba(20,184,166,0.4);
+      overflow: hidden;
     }
     .sidebar-logo img { width: 70%; height: 70%; object-fit: contain; }
     .sidebar-logo .fallback { color: white; font-weight: 800; font-size: 18px; }
-
-    .sidebar-brand h2 { color: white; font-size: 20px; font-weight: 800; letter-spacing: -0.5px; line-height: 1.2; }
+    .sidebar-brand h2 { color: white; font-size: 20px; font-weight: 800; line-height: 1.2; }
     .sidebar-brand p { font-size: 10px; color: var(--sidebar-text); opacity: 0.7; font-weight: 500; margin-top: 2px; }
-
     .sidebar-nav { flex: 1; overflow-y: auto; padding: 12px 0; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.15) transparent; }
     .sidebar-nav::-webkit-scrollbar { width: 5px; }
-    .sidebar-nav::-webkit-scrollbar-track { background: transparent; }
     .sidebar-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 10px; }
-
     .nav-section { padding: 8px 20px 4px; font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 1px; margin-top: 8px; }
-
     .nav-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
+      display: flex; align-items: center; gap: 12px;
       padding: 11px 22px;
       color: var(--sidebar-text);
       text-decoration: none;
-      font-size: 14px;
-      font-weight: 500;
+      font-size: 14px; font-weight: 500;
       border-right: 3px solid transparent;
       transition: all 0.2s;
       position: relative;
@@ -139,68 +123,43 @@
     .nav-item.active { background: rgba(20,184,166,0.12); color: white; border-right-color: var(--accent); font-weight: 600; }
     .nav-item.active::before { content: ''; position: absolute; right: 0; top: 50%; transform: translateY(-50%); width: 3px; height: 60%; background: var(--accent); border-radius: 0 4px 4px 0; }
     .nav-item i, .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; opacity: 0.85; }
-    .nav-item .badge { margin-right: auto; background: var(--danger); color: white; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; min-width: 20px; text-align: center; }
+    .nav-item .badge { margin-right: auto; background: var(--danger); color: white; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
     .nav-item .badge.teal { background: var(--accent); }
     .nav-item .badge.gold { background: var(--gold); }
+    .nav-item .badge.new { background: var(--purple); }
 
-    /* ============================================================
-       Main
-       ============================================================ */
+    /* ============ Main ============ */
     .main { flex: 1; margin-right: var(--sidebar-w); min-width: 0; display: flex; flex-direction: column; }
-
-    /* Topbar */
     .topbar {
       height: var(--topbar-h);
       background: var(--card);
       border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      gap: 16px;
+      display: flex; align-items: center; gap: 16px;
       padding: 0 24px;
-      position: sticky;
-      top: 0;
+      position: sticky; top: 0;
       z-index: 50;
       box-shadow: var(--shadow-sm);
     }
-
-    .menu-toggle {
-      display: none;
-      background: transparent;
-      border: none;
-      color: var(--text);
-      cursor: pointer;
-      padding: 8px;
-      border-radius: 8px;
-    }
+    .menu-toggle { display: none; background: transparent; border: none; color: var(--text); cursor: pointer; padding: 8px; border-radius: 8px; }
     .menu-toggle:hover { background: var(--bg); }
-
     .topbar-title { font-size: 18px; font-weight: 700; color: var(--text); flex-shrink: 0; }
-    .topbar-title span { color: var(--text-muted); font-weight: 500; font-size: 14px; margin-right: 8px; }
-
     .topbar-actions { display: flex; align-items: center; gap: 8px; margin-right: auto; }
-
     .icon-btn {
-      width: 40px;
-      height: 40px;
+      width: 40px; height: 40px;
       border-radius: 10px;
       border: 1px solid var(--border);
       background: var(--card);
       color: var(--text);
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: flex; align-items: center; justify-content: center;
       position: relative;
       transition: all 0.2s;
     }
-    .icon-btn:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
+    .icon-btn:hover { border-color: var(--accent); color: var(--accent); }
     .icon-btn i, .icon-btn svg { width: 18px; height: 18px; }
     .icon-btn .dot { position: absolute; top: 8px; left: 8px; width: 8px; height: 8px; background: var(--danger); border-radius: 50%; border: 2px solid var(--card); }
-
     .user-menu {
-      display: flex;
-      align-items: center;
-      gap: 10px;
+      display: flex; align-items: center; gap: 10px;
       padding: 5px 12px 5px 5px;
       border-radius: 10px;
       cursor: pointer;
@@ -209,26 +168,18 @@
       background: var(--card);
     }
     .user-menu:hover { background: var(--bg); }
-
     .user-avatar {
-      width: 34px;
-      height: 34px;
+      width: 34px; height: 34px;
       border-radius: 9px;
       background: linear-gradient(135deg, var(--primary), var(--accent));
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-weight: 700;
-      font-size: 14px;
-      flex-shrink: 0;
-      overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-weight: 700; font-size: 14px;
+      flex-shrink: 0; overflow: hidden;
     }
     .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
     .user-info { display: flex; flex-direction: column; line-height: 1.2; }
     .user-info .name { font-size: 13px; font-weight: 700; color: var(--text); }
     .user-info .role { font-size: 11px; color: var(--text-muted); }
-
     .dropdown { position: absolute; top: calc(100% + 8px); left: 0; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: var(--shadow-lg); min-width: 200px; padding: 6px; opacity: 0; visibility: hidden; transform: translateY(-8px); transition: all 0.2s; z-index: 100; }
     .dropdown.show { opacity: 1; visibility: visible; transform: translateY(0); }
     .dropdown-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; color: var(--text); font-size: 13px; font-weight: 500; cursor: pointer; transition: background 0.15s; text-decoration: none; }
@@ -238,37 +189,22 @@
     .dropdown-item i { width: 16px; height: 16px; }
     .dropdown-divider { height: 1px; background: var(--border); margin: 6px 0; }
 
-    /* ============================================================
-       Content
-       ============================================================ */
+    /* ============ Content ============ */
     .content { padding: 24px; flex: 1; }
-
-    /* Page header */
     .page-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      display: flex; align-items: center; justify-content: space-between;
       gap: 16px;
       margin-bottom: 20px;
       flex-wrap: wrap;
     }
-
-    .page-head h1 {
-      font-size: 24px;
-      font-weight: 800;
-      color: var(--text);
-      margin-bottom: 4px;
-    }
+    .page-head h1 { font-size: 24px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
     .page-head p { font-size: 13px; color: var(--text-muted); }
 
     .btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
+      display: inline-flex; align-items: center; gap: 8px;
       padding: 10px 18px;
       font-family: inherit;
-      font-size: 14px;
-      font-weight: 600;
+      font-size: 14px; font-weight: 600;
       border-radius: var(--radius-sm);
       border: none;
       cursor: pointer;
@@ -278,123 +214,122 @@
     }
     .btn:disabled { opacity: 0.6; cursor: not-allowed; }
     .btn i { width: 16px; height: 16px; }
-
     .btn-primary { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; }
     .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(20,184,166,0.35); }
-
     .btn-outline { background: var(--card); color: var(--text); border: 1px solid var(--border); }
     .btn-outline:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
-
     .btn-danger { background: var(--danger); color: white; }
     .btn-danger:hover:not(:disabled) { background: #b91c1c; }
-
     .btn-sm { padding: 6px 12px; font-size: 12px; }
-    .btn-icon { padding: 8px; width: 34px; height: 34px; justify-content: center; }
 
-    /* Stats mini */
-    .mini-stats {
+    /* ============ Stats ============ */
+    .stats-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 14px;
       margin-bottom: 20px;
     }
-
-    .mini-card {
+    .stat-card {
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 14px 16px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
+      padding: 18px;
+      display: flex; align-items: center; gap: 14px;
+      box-shadow: var(--shadow-sm);
+      position: relative;
+      overflow: hidden;
       transition: all 0.2s;
     }
-    .mini-card:hover { border-color: var(--accent); transform: translateY(-2px); }
-
-    .mini-icon {
-      width: 42px;
-      height: 42px;
+    .stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+    .stat-card::before { content: ''; position: absolute; top: 0; right: 0; width: 4px; height: 100%; background: var(--accent); }
+    .stat-card.success::before { background: var(--success); }
+    .stat-card.danger::before { background: var(--danger); }
+    .stat-card.gold::before { background: var(--gold); }
+    .stat-card.info::before { background: var(--info); }
+    .stat-card.purple::before { background: var(--purple); }
+    .stat-icon {
+      width: 48px; height: 48px;
       border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: flex; align-items: center; justify-content: center;
       flex-shrink: 0;
+      background: rgba(20,184,166,0.12);
+      color: var(--accent);
     }
-    .mini-icon i { width: 20px; height: 20px; color: white; }
-    .mini-icon.blue   { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
-    .mini-icon.teal   { background: linear-gradient(135deg, #14B8A6, #0d9488); }
-    .mini-icon.gold   { background: linear-gradient(135deg, #F59E0B, #d97706); }
-    .mini-icon.gray   { background: linear-gradient(135deg, #94a3b8, #64748b); }
+    .stat-icon.success { background: rgba(16,185,129,0.12); color: var(--success); }
+    .stat-icon.danger { background: rgba(239,68,68,0.12); color: var(--danger); }
+    .stat-icon.gold { background: rgba(245,158,11,0.12); color: var(--gold); }
+    .stat-icon.info { background: rgba(59,130,246,0.12); color: var(--info); }
+    .stat-icon.purple { background: rgba(139,92,246,0.12); color: var(--purple); }
+    .stat-icon i { width: 22px; height: 22px; }
+    .stat-body { flex: 1; min-width: 0; }
+    .stat-body .label { font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px; }
+    .stat-body .value { font-size: 20px; font-weight: 800; color: var(--text); line-height: 1.2; overflow-wrap: anywhere; }
+    .stat-body .sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
 
-    .mini-body { flex: 1; min-width: 0; }
-    .mini-body .label { font-size: 11px; color: var(--text-muted); font-weight: 600; margin-bottom: 2px; }
-    .mini-body .value { font-size: 18px; font-weight: 800; color: var(--text); line-height: 1; }
-
-    /* Toolbar */
+    /* ============ Toolbar ============ */
     .toolbar {
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 14px 16px;
+      padding: 14px 18px;
       margin-bottom: 16px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
+      display: flex; gap: 12px;
       flex-wrap: wrap;
+      align-items: center;
       box-shadow: var(--shadow-sm);
     }
-
-    .search-input {
-      position: relative;
-      flex: 1;
-      min-width: 220px;
-    }
-    .search-input input {
+    .search-box { position: relative; flex: 1; min-width: 220px; }
+    .search-box input {
       width: 100%;
       padding: 10px 42px 10px 14px;
       font-family: inherit;
       font-size: 14px;
       background: var(--bg);
-      border: 1px solid var(--border);
+      border: 1.5px solid var(--border);
       border-radius: var(--radius-sm);
       color: var(--text);
       outline: none;
       transition: all 0.2s;
     }
-    .search-input input:focus { border-color: var(--accent); background: var(--card); box-shadow: 0 0 0 3px rgba(20,184,166,0.1); }
-    .search-input i { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--text-muted); pointer-events: none; }
-
-    .select-wrap { position: relative; min-width: 150px; }
-    .select-wrap select {
-      width: 100%;
-      padding: 10px 14px 10px 32px;
+    .search-box input:focus { border-color: var(--accent); background: var(--card); box-shadow: 0 0 0 3px rgba(20,184,166,0.1); }
+    .search-box i { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--text-muted); pointer-events: none; }
+    .filter-select {
+      padding: 10px 14px;
       font-family: inherit;
-      font-size: 14px;
+      font-size: 13px; font-weight: 600;
       background: var(--bg);
-      border: 1px solid var(--border);
+      border: 1.5px solid var(--border);
       border-radius: var(--radius-sm);
       color: var(--text);
       outline: none;
       cursor: pointer;
-      appearance: none;
+      min-width: 140px;
+    }
+    .filter-select:focus { border-color: var(--accent); background: var(--card); }
+
+    .view-toggle {
+      display: flex;
+      gap: 2px;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 3px;
+    }
+    .view-btn {
+      width: 34px; height: 34px;
+      border-radius: 7px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
       transition: all 0.2s;
     }
-    .select-wrap select:focus { border-color: var(--accent); background: var(--card); }
-    .select-wrap::after {
-      content: '';
-      position: absolute;
-      left: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 0;
-      height: 0;
-      border-left: 5px solid transparent;
-      border-right: 5px solid transparent;
-      border-top: 5px solid var(--text-muted);
-      pointer-events: none;
-    }
+    .view-btn:hover { color: var(--text); }
+    .view-btn.active { background: var(--card); color: var(--accent); box-shadow: var(--shadow-sm); }
+    .view-btn i { width: 16px; height: 16px; }
 
-    /* Table */
+    /* ============ Table ============ */
     .table-wrap {
       background: var(--card);
       border: 1px solid var(--border);
@@ -402,165 +337,197 @@
       box-shadow: var(--shadow-sm);
       overflow: hidden;
     }
-
     .table-scroll { overflow-x: auto; }
-
-    table {
+    table.data-table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 14px;
-      min-width: 760px;
+      font-size: 13px;
+      min-width: 1000px;
     }
-
-    thead {
-      background: var(--bg);
-      border-bottom: 1px solid var(--border);
-    }
-
-    th {
+    table.data-table thead { background: var(--bg); border-bottom: 1px solid var(--border); }
+    table.data-table th {
       text-align: right;
-      padding: 14px 16px;
-      font-size: 12px;
-      font-weight: 700;
+      padding: 12px 10px;
+      font-size: 11px; font-weight: 700;
       color: var(--text-muted);
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.3px;
       white-space: nowrap;
     }
-
-    tbody tr {
+    table.data-table tbody tr {
       border-bottom: 1px solid var(--border);
       transition: background 0.15s;
-    }
-    tbody tr:last-child { border-bottom: none; }
-    tbody tr:hover { background: var(--bg); }
-
-    td {
-      padding: 14px 16px;
-      color: var(--text);
-      vertical-align: middle;
-    }
-
-    .product-cell {
-      display: flex;
-      align-items: center;
-      gap: 12px;
       cursor: pointer;
     }
-    .product-cell:hover .product-name { color: var(--accent); }
+    table.data-table tbody tr:hover { background: var(--bg); }
+    table.data-table tbody tr:last-child { border-bottom: none; }
+    table.data-table td { padding: 11px 10px; color: var(--text); vertical-align: middle; }
 
+    .product-cell { display: flex; align-items: center; gap: 10px; }
     .product-avatar {
-      width: 40px;
-      height: 40px;
+      width: 38px; height: 38px;
       border-radius: 10px;
       background: linear-gradient(135deg, var(--primary), var(--accent));
       color: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
-      font-size: 15px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 14px;
       flex-shrink: 0;
     }
+    .product-info { min-width: 0; }
+    .product-info .name { font-weight: 700; color: var(--text); font-size: 13px; }
+    .product-info .sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
 
-    .product-name { font-weight: 700; color: var(--text); transition: color 0.2s; }
-    .product-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .money { font-weight: 700; color: var(--text); }
+    .money.accent { color: var(--accent); }
+    .money.danger { color: var(--danger); }
+    .money.success { color: var(--success); }
+    .money.gold { color: var(--gold); }
 
-    .badge-tag {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
+    .stock-badge {
+      display: inline-flex; align-items: center; gap: 4px;
       padding: 4px 10px;
-      font-size: 11px;
-      font-weight: 600;
       border-radius: 20px;
+      font-size: 11px; font-weight: 700;
       white-space: nowrap;
     }
-    .badge-tag.green  { background: rgba(16,185,129,0.12); color: var(--success); }
-    .badge-tag.red    { background: rgba(239,68,68,0.12); color: var(--danger); }
-    .badge-tag.gray   { background: rgba(148,163,184,0.15); color: var(--text-muted); }
-    .badge-tag.blue   { background: rgba(59,130,246,0.12); color: var(--info); }
-    .badge-tag.gold   { background: rgba(245,158,11,0.12); color: var(--warning); }
+    .stock-badge.ok { background: rgba(16,185,129,0.12); color: var(--success); }
+    .stock-badge.low { background: rgba(245,158,11,0.15); color: var(--gold); }
+    .stock-badge.out { background: rgba(239,68,68,0.12); color: var(--danger); }
 
-    .actions-cell { display: flex; gap: 6px; justify-content: flex-end; }
+    .status-pill {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px; font-weight: 700;
+      white-space: nowrap;
+    }
+    .status-pill.active { background: rgba(16,185,129,0.12); color: var(--success); }
+    .status-pill.inactive { background: rgba(239,68,68,0.12); color: var(--danger); }
+
+    .expiry-badge {
+      display: inline-flex; align-items: center; gap: 3px;
+      padding: 3px 8px;
+      border-radius: 10px;
+      font-size: 10px; font-weight: 700;
+      white-space: nowrap;
+    }
+    .expiry-badge.ok { background: rgba(16,185,129,0.12); color: var(--success); }
+    .expiry-badge.warning { background: rgba(245,158,11,0.15); color: var(--gold); }
+    .expiry-badge.danger { background: rgba(239,68,68,0.15); color: var(--danger); }
+    .expiry-badge.none { background: rgba(148,163,184,0.15); color: var(--text-muted); }
 
     .action-btn {
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
+      width: 30px; height: 30px;
+      border-radius: 7px;
       border: 1px solid var(--border);
       background: var(--card);
       color: var(--text-muted);
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: inline-flex; align-items: center; justify-content: center;
       transition: all 0.2s;
+      margin: 0 1px;
+      text-decoration: none;
     }
-    .action-btn:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
+    .action-btn:hover { border-color: var(--accent); color: var(--accent); }
     .action-btn.danger:hover { border-color: var(--danger); color: var(--danger); background: rgba(239,68,68,0.06); }
-    .action-btn i { width: 15px; height: 15px; }
+    .action-btn i { width: 14px; height: 14px; }
 
-    /* Empty & Loading */
-    .empty-row td {
+    /* ============ Cards Grid ============ */
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 14px;
+    }
+    .product-card {
+      background: var(--card);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.25s;
+      cursor: pointer;
+    }
+    .product-card::before {
+      content: '';
+      position: absolute;
+      top: 0; right: 0; bottom: 0;
+      width: 5px;
+      background: var(--pc-color, var(--accent));
+    }
+    .product-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-lg);
+      border-color: var(--pc-color, var(--accent));
+    }
+    .product-card.inactive { opacity: 0.6; filter: grayscale(0.5); }
+    .product-card.low-stock { --pc-color: #F59E0B; }
+    .product-card.out-of-stock { --pc-color: #ef4444; }
+
+    .pc-header {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+      padding-right: 8px;
+    }
+    .pc-icon-wrap { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+    .pc-icon {
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: white;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 16px;
+      flex-shrink: 0;
+    }
+    .pc-name-wrap { min-width: 0; flex: 1; }
+    .pc-name { font-size: 14px; font-weight: 800; color: var(--text); margin-bottom: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .pc-sub { font-size: 11px; color: var(--text-muted); }
+
+    .pc-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 10px;
+      padding-right: 8px;
+    }
+    .pc-stat { font-size: 11px; }
+    .pc-stat .lbl { color: var(--text-muted); font-weight: 600; margin-bottom: 2px; }
+    .pc-stat .val { color: var(--text); font-weight: 700; }
+    .pc-stat .val.accent { color: var(--accent); }
+    .pc-stat .val.danger { color: var(--danger); }
+    .pc-stat .val.gold { color: var(--gold); }
+    .pc-stat .val.success { color: var(--success); }
+
+    .pc-actions {
+      display: flex;
+      gap: 6px;
+      padding-right: 8px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+    }
+    .pc-actions .btn {
+      flex: 1;
+      justify-content: center;
+      padding: 6px 10px;
+      font-size: 11px;
+    }
+
+    /* ============ Empty / Loader ============ */
+    .empty-state {
       padding: 60px 20px;
       text-align: center;
       color: var(--text-muted);
     }
-    .empty-row i { width: 48px; height: 48px; opacity: 0.4; margin-bottom: 10px; }
-    .empty-row p { font-size: 14px; font-weight: 500; }
+    .empty-state i { width: 52px; height: 52px; opacity: 0.3; margin-bottom: 14px; }
+    .empty-state h3 { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+    .empty-state p { font-size: 13px; }
 
-    .skeleton-row td {
-      padding: 18px 16px;
-    }
-    .skeleton-bar {
-      height: 14px;
-      background: linear-gradient(90deg, var(--border) 25%, var(--bg) 50%, var(--border) 75%);
-      background-size: 200% 100%;
-      animation: shimmer 1.4s infinite;
-      border-radius: 6px;
-    }
-    @keyframes shimmer {
-      0% { background-position: 200% 0; }
-      100% { background-position: -200% 0; }
-    }
+    .loader { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+    .loader i { width: 40px; height: 40px; animation: spin 1s linear infinite; color: var(--accent); margin-bottom: 12px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* Pagination */
-    .pagination {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 14px 20px;
-      border-top: 1px solid var(--border);
-      font-size: 13px;
-      color: var(--text-muted);
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    .pagination .controls { display: flex; gap: 6px; align-items: center; }
-
-    .page-btn {
-      min-width: 34px;
-      height: 34px;
-      padding: 0 10px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      background: var(--card);
-      color: var(--text);
-      font-family: inherit;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .page-btn:hover:not(:disabled):not(.active) { border-color: var(--accent); color: var(--accent); }
-    .page-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
-    .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
-    /* ============================================================
-       Modal
-       ============================================================ */
+    /* ============ Modal ============ */
     .modal-backdrop {
       position: fixed;
       inset: 0;
@@ -568,103 +535,71 @@
       backdrop-filter: blur(4px);
       z-index: 200;
       display: none;
-      align-items: center;
-      justify-content: center;
+      align-items: center; justify-content: center;
       padding: 20px;
       opacity: 0;
       transition: opacity 0.2s;
     }
     .modal-backdrop.show { display: flex; opacity: 1; }
-
     .modal {
       background: var(--card);
       border-radius: var(--radius);
       box-shadow: var(--shadow-lg);
       width: 100%;
-      max-width: 620px;
+      max-width: 720px;
       max-height: 90vh;
-      display: flex;
-      flex-direction: column;
+      display: flex; flex-direction: column;
       transform: scale(0.95);
       transition: transform 0.2s;
       overflow: hidden;
     }
+    .modal.modal-lg { max-width: 900px; }
     .modal-backdrop.show .modal { transform: scale(1); }
-
     .modal-header {
-      padding: 18px 22px;
+      padding: 16px 20px;
       border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      display: flex; align-items: center; justify-content: space-between;
       gap: 12px;
+      flex-shrink: 0;
     }
-
-    .modal-header h3 {
-      font-size: 17px;
-      font-weight: 700;
-      color: var(--text);
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .modal-header h3 i { width: 20px; height: 20px; color: var(--accent); }
-
+    .modal-header h3 { font-size: 16px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px; }
+    .modal-header h3 i { width: 18px; height: 18px; color: var(--accent); }
     .modal-close {
-      width: 34px;
-      height: 34px;
+      width: 32px; height: 32px;
       border-radius: 8px;
       border: none;
       background: transparent;
       color: var(--text-muted);
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.2s;
+      display: flex; align-items: center; justify-content: center;
     }
     .modal-close:hover { background: var(--bg); color: var(--danger); }
     .modal-close i { width: 18px; height: 18px; }
-
-    .modal-body {
-      padding: 22px;
-      overflow-y: auto;
-      flex: 1;
-    }
-
+    .modal-body { padding: 20px; overflow-y: auto; flex: 1; min-height: 0; }
+    .modal-body::-webkit-scrollbar { width: 8px; }
+    .modal-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
     .modal-footer {
-      padding: 16px 22px;
+      padding: 14px 20px;
       border-top: 1px solid var(--border);
-      display: flex;
-      gap: 10px;
-      justify-content: flex-end;
+      display: flex; gap: 10px; justify-content: flex-end;
       background: var(--bg);
+      flex-shrink: 0;
+      flex-wrap: wrap;
     }
 
     /* Form */
-    .form-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 16px;
-    }
-
+    .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
     .form-group { display: flex; flex-direction: column; }
     .form-group.full { grid-column: 1 / -1; }
-
     .form-group label {
-      font-size: 12px;
-      font-weight: 700;
+      font-size: 12px; font-weight: 700;
       color: var(--text);
       margin-bottom: 6px;
-      display: flex;
-      align-items: center;
-      gap: 4px;
+      display: flex; align-items: center; gap: 4px;
     }
     .form-group label .req { color: var(--danger); }
-
-    .form-group input,
-    .form-group select,
-    .form-group textarea {
+    .form-group label .hint { color: var(--text-muted); font-weight: 500; font-size: 11px; margin-right: auto; }
+    .form-group input, .form-group select, .form-group textarea {
       padding: 10px 14px;
       font-family: inherit;
       font-size: 14px;
@@ -676,62 +611,134 @@
       transition: all 0.2s;
       width: 100%;
     }
-
     .form-group textarea { resize: vertical; min-height: 70px; }
-
-    .form-group input:focus,
-    .form-group select:focus,
-    .form-group textarea:focus {
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
       border-color: var(--accent);
       background: var(--card);
       box-shadow: 0 0 0 3px rgba(20,184,166,0.1);
     }
 
-    .form-group input:disabled { opacity: 0.7; cursor: not-allowed; }
+    .form-section-title {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--purple);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 10px 0 6px;
+      border-bottom: 1px solid var(--border);
+      margin: 6px 0 12px;
+      display: flex; align-items: center; gap: 6px;
+      grid-column: 1 / -1;
+    }
+    .form-section-title i { width: 14px; height: 14px; }
 
     .switch-row {
-      display: flex;
-      align-items: center;
-      gap: 12px;
+      display: flex; align-items: center; gap: 12px;
       padding: 12px 14px;
       background: var(--bg);
       border: 1.5px solid var(--border);
       border-radius: var(--radius-sm);
+      grid-column: 1 / -1;
     }
-
-    .switch {
-      position: relative;
-      display: inline-block;
-      width: 42px;
-      height: 24px;
-      flex-shrink: 0;
-    }
+    .switch { position: relative; display: inline-block; width: 42px; height: 24px; flex-shrink: 0; }
     .switch input { opacity: 0; width: 0; height: 0; }
-    .switch .slider {
-      position: absolute;
-      cursor: pointer;
-      inset: 0;
-      background: #cbd5e1;
-      border-radius: 24px;
-      transition: 0.3s;
-    }
-    .switch .slider:before {
-      content: '';
-      position: absolute;
-      height: 18px;
-      width: 18px;
-      left: 3px;
-      bottom: 3px;
-      background: white;
-      border-radius: 50%;
-      transition: 0.3s;
-    }
+    .switch .slider { position: absolute; cursor: pointer; inset: 0; background: #cbd5e1; border-radius: 24px; transition: 0.3s; }
+    .switch .slider:before { content: ''; position: absolute; height: 18px; width: 18px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: 0.3s; }
     .switch input:checked + .slider { background: var(--accent); }
     .switch input:checked + .slider:before { transform: translateX(18px); }
-
     .switch-label { font-size: 13px; font-weight: 600; color: var(--text); }
 
-    /* Overlay (mobile) */
+    /* Barcode */
+    .barcode-input-row {
+      display: flex; gap: 8px; align-items: stretch;
+      grid-column: 1 / -1;
+    }
+    .barcode-input-row input { flex: 1; }
+    .barcode-chips {
+      display: flex; flex-wrap: wrap; gap: 6px;
+      grid-column: 1 / -1;
+      margin-top: 8px;
+    }
+    .barcode-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 10px;
+      background: rgba(59,130,246,0.1);
+      color: var(--info);
+      border-radius: 8px;
+      font-size: 12px; font-weight: 700;
+      font-family: 'Courier New', monospace;
+    }
+    .barcode-chip button {
+      background: transparent; border: none;
+      color: var(--info); cursor: pointer;
+      padding: 0; line-height: 1;
+      font-size: 14px; font-weight: 800;
+    }
+    .barcode-chip button:hover { color: var(--danger); }
+
+    /* Detail */
+    .detail-hero {
+      display: flex; align-items: center; gap: 16px;
+      padding: 16px;
+      background: linear-gradient(135deg, rgba(11,44,77,0.04), rgba(20,184,166,0.06));
+      border-radius: 12px;
+      margin-bottom: 20px;
+    }
+    .detail-hero-icon {
+      width: 64px; height: 64px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: white;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 24px;
+      flex-shrink: 0;
+    }
+    .detail-hero-info { flex: 1; min-width: 0; }
+    .detail-hero-name { font-size: 20px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+    .detail-hero-sub { font-size: 13px; color: var(--text-muted); }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .detail-item {
+      background: var(--bg);
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+    .detail-item .lbl { font-size: 10px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 4px; }
+    .detail-item .val { font-size: 14px; font-weight: 800; color: var(--text); word-break: break-word; }
+    .detail-item .val.accent { color: var(--accent); }
+    .detail-item .val.danger { color: var(--danger); }
+    .detail-item .val.success { color: var(--success); }
+    .detail-item .val.gold { color: var(--gold); }
+
+    .batches-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      margin-top: 8px;
+    }
+    .batches-table th {
+      background: var(--bg);
+      padding: 8px;
+      text-align: right;
+      font-size: 10px; font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--border);
+    }
+    .batches-table td {
+      padding: 8px;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+    }
+    .batches-table tbody tr:last-child td { border-bottom: none; }
+
+    /* Overlay */
     .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; opacity: 0; transition: opacity 0.3s; }
     .overlay.show { display: block; opacity: 1; }
 
@@ -743,18 +750,20 @@
       .menu-toggle { display: flex; }
       .user-info { display: none; }
     }
-
     @media (max-width: 640px) {
       .content { padding: 16px; }
       .topbar { padding: 0 14px; gap: 10px; }
       .topbar-title { font-size: 15px; }
       .page-head { flex-direction: column; align-items: stretch; }
       .page-head h1 { font-size: 20px; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .stat-card { padding: 14px; }
+      .stat-icon { width: 40px; height: 40px; }
+      .stat-body .value { font-size: 16px; }
       .form-grid { grid-template-columns: 1fr; }
-      .toolbar { padding: 12px; }
-      .search-input { min-width: 100%; }
       .modal-footer { flex-direction: column-reverse; }
       .modal-footer .btn { width: 100%; justify-content: center; }
+      .products-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -763,12 +772,12 @@
   <!-- Sidebar -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
-      <div class="sidebar-logo">
-        <img src="logo.png" alt="رفاد" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=fallback>R</span>';">
+      <div class="sidebar-logo" id="sidebarLogo">
+        <img src="logo.png" alt="رفاد" id="sidebarLogoImg" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=fallback>R</span>';">
       </div>
       <div class="sidebar-brand">
-        <h2>رفاد</h2>
-        <p>نظام إدارة الأدوية</p>
+        <h2 id="sidebarBrandName">رفاد</h2>
+        <p id="sidebarBrandDesc">نظام إدارة الأدوية</p>
       </div>
     </div>
     <nav class="sidebar-nav" id="sidebarNav"></nav>
@@ -778,12 +787,8 @@
 
   <!-- Main -->
   <div class="main">
-
-    <!-- Topbar -->
     <header class="topbar">
-      <button class="menu-toggle" id="menuToggle">
-        <i data-lucide="menu"></i>
-      </button>
+      <button class="menu-toggle" id="menuToggle"><i data-lucide="menu"></i></button>
       <div class="topbar-title">الأصناف</div>
       <div class="topbar-actions">
         <button class="icon-btn" id="themeToggle" title="الوضع الليلي/النهاري">
@@ -812,20 +817,19 @@
       </div>
     </header>
 
-    <!-- Content -->
     <main class="content">
 
       <div class="page-head">
         <div>
           <h1>إدارة الأصناف</h1>
-          <p>إدارة كل الأصناف الدوائية مع الخصومات والباركود</p>
+          <p>إدارة كاملة للأصناف مع المخزون والباركود وصلاحية التشغيلات</p>
         </div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;">
-          <button class="btn btn-outline" id="importBtn">
-            <i data-lucide="upload"></i> استيراد
+          <button class="btn btn-outline btn-sm" id="refreshBtn">
+            <i data-lucide="refresh-cw"></i> تحديث
           </button>
-          <button class="btn btn-outline" id="exportBtn">
-            <i data-lucide="download"></i> تصدير
+          <button class="btn btn-outline btn-sm" id="exportBtn">
+            <i data-lucide="download"></i> تصدير Excel
           </button>
           <button class="btn btn-primary" id="addBtn">
             <i data-lucide="plus"></i> صنف جديد
@@ -833,184 +837,330 @@
         </div>
       </div>
 
-      <!-- Mini stats -->
-      <div class="mini-stats">
-        <div class="mini-card">
-          <div class="mini-icon blue"><i data-lucide="package"></i></div>
-          <div class="mini-body">
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon"><i data-lucide="package"></i></div>
+          <div class="stat-body">
             <div class="label">إجمالي الأصناف</div>
-            <div class="value" id="statTotal">—</div>
+            <div class="value" id="statTotal">0</div>
+            <div class="sub" id="statTotalSub">—</div>
           </div>
         </div>
-        <div class="mini-card">
-          <div class="mini-icon teal"><i data-lucide="check-circle-2"></i></div>
-          <div class="mini-body">
-            <div class="label">نشط</div>
-            <div class="value" id="statActive">—</div>
+        <div class="stat-card success">
+          <div class="stat-icon success"><i data-lucide="check-circle"></i></div>
+          <div class="stat-body">
+            <div class="label">أصناف نشطة</div>
+            <div class="value" id="statActive">0</div>
+            <div class="sub">حالة نشطة</div>
           </div>
         </div>
-        <div class="mini-card">
-          <div class="mini-icon gray"><i data-lucide="x-circle"></i></div>
-          <div class="mini-body">
-            <div class="label">غير نشط</div>
-            <div class="value" id="statInactive">—</div>
-          </div>
-        </div>
-        <div class="mini-card">
-          <div class="mini-icon gold"><i data-lucide="alert-triangle"></i></div>
-          <div class="mini-body">
+        <div class="stat-card gold">
+          <div class="stat-icon gold"><i data-lucide="alert-triangle"></i></div>
+          <div class="stat-body">
             <div class="label">مخزون منخفض</div>
-            <div class="value" id="statLow">—</div>
+            <div class="value" id="statLow">0</div>
+            <div class="sub">تحتاج إعادة طلب</div>
+          </div>
+        </div>
+        <div class="stat-card danger">
+          <div class="stat-icon danger"><i data-lucide="x-circle"></i></div>
+          <div class="stat-body">
+            <div class="label">نفد من المخزون</div>
+            <div class="value" id="statOut">0</div>
+            <div class="sub">بحاجة عاجلة</div>
+          </div>
+        </div>
+        <div class="stat-card purple">
+          <div class="stat-icon purple"><i data-lucide="calendar-x"></i></div>
+          <div class="stat-body">
+            <div class="label">قريب الانتهاء</div>
+            <div class="value" id="statExpiring">0</div>
+            <div class="sub" id="statExpiringSub">خلال 90 يوم</div>
+          </div>
+        </div>
+        <div class="stat-card info">
+          <div class="stat-icon info"><i data-lucide="dollar-sign"></i></div>
+          <div class="stat-body">
+            <div class="label">قيمة المخزون</div>
+            <div class="value" id="statValue">0.00</div>
+            <div class="sub">بالتكلفة</div>
           </div>
         </div>
       </div>
 
       <!-- Toolbar -->
       <div class="toolbar">
-        <div class="search-input">
+        <div class="search-box">
           <input type="text" id="searchInput" placeholder="ابحث بالاسم أو الباركود أو التصنيف...">
           <i data-lucide="search"></i>
         </div>
-        <div class="select-wrap">
-          <select id="filterStatus">
-            <option value="">كل الحالات</option>
-            <option value="active">نشط</option>
-            <option value="inactive">غير نشط</option>
-          </select>
-        </div>
-        <div class="select-wrap">
-          <select id="filterForm">
-            <option value="">كل الأشكال</option>
-            <option value="شراب">شراب</option>
-            <option value="أقراص">أقراص</option>
-            <option value="كبسولات">كبسولات</option>
-            <option value="أمبولات">أمبولات</option>
-            <option value="مرهم">مرهم</option>
-          </select>
+        <select class="filter-select" id="filterForm">
+          <option value="">كل الأشكال</option>
+        </select>
+        <select class="filter-select" id="filterStatus">
+          <option value="">كل الحالات</option>
+          <option value="active">نشط</option>
+          <option value="inactive">موقوف</option>
+        </select>
+        <select class="filter-select" id="filterStock">
+          <option value="">كل المخزون</option>
+          <option value="in_stock">متوفر</option>
+          <option value="low">منخفض</option>
+          <option value="out">نفد</option>
+        </select>
+        <div class="view-toggle">
+          <button class="view-btn active" data-view="table" title="جدول">
+            <i data-lucide="list"></i>
+          </button>
+          <button class="view-btn" data-view="cards" title="بطاقات">
+            <i data-lucide="grid-3x3"></i>
+          </button>
         </div>
       </div>
 
-      <!-- Table -->
-      <div class="table-wrap">
+      <!-- Table View -->
+      <div class="table-wrap" id="tableView">
         <div class="table-scroll">
-          <table>
+          <table class="data-table">
             <thead>
               <tr>
+                <th style="width:50px;">#</th>
                 <th>الصنف</th>
                 <th>الشكل</th>
                 <th>الوحدة</th>
                 <th>السعر</th>
-                <th>الحد الأدنى</th>
+                <th>المخزون</th>
+                <th>أقرب صلاحية</th>
                 <th>الحالة</th>
-                <th></th>
+                <th style="width:130px;">إجراءات</th>
               </tr>
             </thead>
-            <tbody id="tableBody"></tbody>
+            <tbody id="tableBody">
+              <tr><td colspan="9"><div class="loader"><i data-lucide="loader-2"></i><p>جارٍ التحميل...</p></div></td></tr>
+            </tbody>
           </table>
         </div>
-        <div class="pagination" id="pagination"></div>
       </div>
+
+      <!-- Cards View -->
+      <div class="products-grid" id="cardsView" style="display:none;"></div>
 
     </main>
   </div>
 
-  <!-- ============================================================
-       Modal: Add/Edit Product
-       ============================================================ -->
+  <!-- ========== Modal: Add/Edit Product ========== -->
   <div class="modal-backdrop" id="productModal">
-    <div class="modal">
+    <div class="modal modal-lg">
       <div class="modal-header">
         <h3><i data-lucide="package-plus" id="modalIcon"></i> <span id="modalTitle">صنف جديد</span></h3>
-        <button class="modal-close" id="modalClose"><i data-lucide="x"></i></button>
+        <button class="modal-close" data-close><i data-lucide="x"></i></button>
       </div>
-
       <form id="productForm">
         <div class="modal-body">
           <div class="form-grid">
 
+            <div class="form-section-title"><i data-lucide="info"></i> البيانات الأساسية</div>
+
             <div class="form-group full">
               <label>اسم الصنف <span class="req">*</span></label>
-              <input type="text" name="name" required maxlength="200" placeholder="مثال: باراسيتامول 500mg">
+              <input type="text" id="pName" maxlength="200" placeholder="مثال: باراسيتامول 500mg" required>
             </div>
 
             <div class="form-group">
               <label>الاسم بالإنجليزية</label>
-              <input type="text" name="name_en" maxlength="200" placeholder="Paracetamol 500mg">
+              <input type="text" id="pNameEn" maxlength="200" placeholder="Paracetamol 500mg">
             </div>
 
             <div class="form-group">
               <label>الشكل الدوائي</label>
-              <select name="form">
-                <option value="">اختر...</option>
-                <option value="شراب">شراب</option>
-                <option value="أقراص">أقراص</option>
-                <option value="كبسولات">كبسولات</option>
-                <option value="أمبولات">أمبولات</option>
-                <option value="مرهم">مرهم</option>
-                <option value="قطرة">قطرة</option>
-                <option value="لبوس">لبوس</option>
-              </select>
+              <input type="text" id="pForm" maxlength="50" list="formList" placeholder="شراب / أقراص / كبسولات...">
+              <datalist id="formList">
+                <option value="شراب">
+                <option value="أقراص">
+                <option value="كبسولات">
+                <option value="أمبولات">
+                <option value="مرهم">
+                <option value="قطرة">
+                <option value="لبوس">
+                <option value="حقن">
+              </datalist>
             </div>
 
             <div class="form-group">
               <label>الوحدة</label>
-              <input type="text" name="unit" maxlength="30" placeholder="علبة / شريط / زجاجة">
+              <input type="text" id="pUnit" maxlength="30" placeholder="علبة / شريط / زجاجة">
             </div>
 
             <div class="form-group">
               <label>التصنيف</label>
-              <input type="text" name="category" maxlength="80" placeholder="مضاد حيوي، مسكن...">
+              <input type="text" id="pCategory" maxlength="80" placeholder="مضاد حيوي، مسكن...">
             </div>
 
             <div class="form-group">
-              <label>السعر الافتراضي</label>
-              <input type="number" name="default_price" min="0" step="0.01" value="0">
+              <label>السعر الافتراضي <span class="hint" id="currencyHint">ج.م</span></label>
+              <input type="number" id="pPrice" min="0" step="0.01" value="0">
+            </div>
+
+            <div class="form-group">
+              <label>حد إعادة الطلب <span class="hint">تنبيه عند المخزون المنخفض</span></label>
+              <input type="number" id="pReorder" min="0" step="1" value="10">
             </div>
 
             <div class="form-group">
               <label>الحد الأدنى للطلب</label>
-              <input type="number" name="min_order_qty" min="1" step="1" value="1">
+              <input type="number" id="pMinOrder" min="1" step="1" value="1">
             </div>
 
-            <div class="form-group">
-              <label>حد إعادة الطلب</label>
-              <input type="number" name="reorder_level" min="0" step="1" value="10">
+            <div class="form-section-title"><i data-lucide="barcode"></i> الباركود</div>
+
+            <div class="barcode-input-row">
+              <input type="text" id="pBarcodeInput" maxlength="50" placeholder="امسح أو اكتب الباركود ثم اضغط إضافة">
+              <button type="button" class="btn btn-outline btn-sm" id="addBarcodeBtn">
+                <i data-lucide="plus"></i> إضافة
+              </button>
             </div>
+            <div class="barcode-chips" id="barcodeChips"></div>
+
+            <div class="form-section-title"><i data-lucide="edit-3"></i> إعدادات إضافية</div>
 
             <div class="form-group full">
               <label>ملاحظات</label>
-              <textarea name="notes" maxlength="255" placeholder="ملاحظات إضافية..."></textarea>
+              <textarea id="pNotes" maxlength="500" placeholder="ملاحظات إضافية..."></textarea>
             </div>
 
-            <div class="form-group full">
-              <div class="switch-row">
-                <label class="switch">
-                  <input type="checkbox" name="is_active" checked>
-                  <span class="slider"></span>
-                </label>
-                <span class="switch-label">الصنف نشط</span>
-              </div>
+            <div class="switch-row">
+              <label class="switch">
+                <input type="checkbox" id="pIsActive" checked>
+                <span class="slider"></span>
+              </label>
+              <span class="switch-label">الصنف نشط</span>
             </div>
 
           </div>
         </div>
-
         <div class="modal-footer">
-          <button type="button" class="btn btn-outline" id="cancelBtn">إلغاء</button>
+          <button type="button" class="btn btn-outline" data-close>إلغاء</button>
           <button type="submit" class="btn btn-primary" id="saveBtn">
-            <i data-lucide="save"></i> <span id="saveBtnText">حفظ</span>
+            <i data-lucide="save"></i> <span id="saveBtnText">إضافة الصنف</span>
           </button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- Scripts -->
+  <!-- ========== Modal: Product Details ========== -->
+  <div class="modal-backdrop" id="detailsModal">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <h3><i data-lucide="package"></i> تفاصيل الصنف</h3>
+        <button class="modal-close" data-close><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body" id="detailsModalBody"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" data-close>إغلاق</button>
+        <button type="button" class="btn btn-primary" id="editFromDetailsBtn">
+          <i data-lucide="edit"></i> تعديل
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       SCRIPTS — الترتيب مهم جداً!
+       ============================================================ -->
   <script src="refad-core.js"></script>
   <script src="refad-auth.js"></script>
+  <script src="refad-theme-sync.js"></script>
+  <script src="refad-settings.js"></script>
+
   <script>
     (function () {
       'use strict';
+
+      // ============================================================
+      // 0) Safe Wrappers (عشان مايحصلش crash لو حاجة مش محمّلة)
+      // ============================================================
+      const SafeSettings = {
+        locale: {
+          formatMoney: function (v) {
+            try {
+              if (window.RefadSettings?.locale?.formatMoney) {
+                return RefadSettings.locale.formatMoney(v);
+              }
+            } catch (e) {}
+            return Refad.format.money(v);
+          },
+          getCurrencySymbol: function () {
+            try {
+              if (window.RefadSettings?.locale?.getCurrencySymbol) {
+                return RefadSettings.locale.getCurrencySymbol();
+              }
+            } catch (e) {}
+            return 'ج.م';
+          }
+        },
+        inventory: {
+          getReorderLevel: function () {
+            try {
+              if (window.RefadSettings?.inventory?.getReorderLevel) {
+                return RefadSettings.inventory.getReorderLevel();
+              }
+            } catch (e) {}
+            return 10;
+          },
+          getExpiryAlertDays: function () {
+            try {
+              if (window.RefadSettings?.inventory?.getExpiryAlertDays) {
+                return RefadSettings.inventory.getExpiryAlertDays();
+              }
+            } catch (e) {}
+            return 90;
+          },
+          getMinOrderQty: function () {
+            try {
+              if (window.RefadSettings?.inventory?.getMinOrderQty) {
+                return RefadSettings.inventory.getMinOrderQty();
+              }
+            } catch (e) {}
+            return 1;
+          },
+          getCostMethod: function () {
+            try {
+              if (window.RefadSettings?.inventory?.getCostMethod) {
+                return RefadSettings.inventory.getCostMethod();
+              }
+            } catch (e) {}
+            return 'fifo';
+          }
+        },
+        identity: {
+          getSystemName: function () {
+            try {
+              if (window.RefadSettings?.identity?.getSystemName) {
+                return RefadSettings.identity.getSystemName();
+              }
+            } catch (e) {}
+            return 'رفاد';
+          },
+          getTagline: function () {
+            try {
+              if (window.RefadSettings?.identity?.getTagline) {
+                return RefadSettings.identity.getTagline();
+              }
+            } catch (e) {}
+            return 'نظام إدارة الأدوية';
+          },
+          getLogoUrl: function () {
+            try {
+              if (window.RefadSettings?.identity?.getLogoUrl) {
+                return RefadSettings.identity.getLogoUrl();
+              }
+            } catch (e) {}
+            return null;
+          }
+        }
+      };
 
       // ============================================================
       // 1) Guard
@@ -1018,12 +1168,47 @@
       const session = Refad.Auth.guardPage('products.view');
       if (!session) return;
 
-      const canCreate = Refad.Session.has('products.create');
-      const canEdit   = Refad.Session.has('products.edit');
-      const canDelete = Refad.Session.has('products.delete');
+      const canCreate = Refad.Session.has('products.create') || Refad.Session.has('company.owner');
+      const canEdit = Refad.Session.has('products.edit') || Refad.Session.has('company.owner');
+      const canDelete = Refad.Session.has('products.delete') || Refad.Session.has('company.owner');
 
       // ============================================================
-      // 2) Sidebar (نفس dashboard — مختصر)
+      // 2) Helpers
+      // ============================================================
+      function esc(s) { return Refad.escapeHtml(s); }
+      function fmtMoney(v) { return SafeSettings.locale.formatMoney(v); }
+      function fmtNumber(v) { return Refad.format.number(v); }
+      function toNum(v) { return Number(v) || 0; }
+      function getToday() { return Refad.date.today(); }
+      function daysUntil(dateStr) {
+        if (!dateStr) return null;
+        const d = dayjs(dateStr).startOf('day');
+        const t = dayjs().startOf('day');
+        return d.diff(t, 'day');
+      }
+
+      // ============================================================
+      // 3) State
+      // ============================================================
+      const state = {
+        products: [],
+        batchesByProduct: {},
+        barcodesByProduct: {},
+        filtered: [],
+        editingId: null,
+        editingBarcodes: [],
+        viewMode: 'table',
+        filters: { search: '', form: '', status: '', stock: '' },
+        // إعدادات محمّلة
+        defaultReorderLevel: 10,
+        defaultMinOrder: 1,
+        expiryAlertDays: 90,
+        currencySymbol: 'ج.م',
+        costMethod: 'fifo'
+      };
+
+      // ============================================================
+      // 4) Sidebar MENU
       // ============================================================
       const MENU = [
         { section: 'الرئيسية', items: [
@@ -1038,15 +1223,19 @@
           { label: 'الاستلامات', icon: 'package-check', href: 'receipts.html', permission: 'purchases.receive' },
           { label: 'طلبات البيع', icon: 'shopping-cart', href: 'sales-orders.html', permission: 'sales.view' },
           { label: 'نقطة البيع', icon: 'scan-barcode', href: 'pos.html', permission: 'sales.pos', badge: 'POS', badgeClass: 'teal' },
-          { label: 'الفواتير', icon: 'receipt', href: 'invoices.html', permission: 'sales.view' }
+          { label: 'الفواتير', icon: 'receipt', href: 'invoices.html', permission: 'sales.view' },
+          { label: 'المرتجعات', icon: 'undo-2', href: 'returns.html' }
         ]},
         { section: 'الأطراف', items: [
           { label: 'الموردين', icon: 'truck', href: 'suppliers.html', permission: 'suppliers.view' },
-          { label: 'العملاء', icon: 'users', href: 'customers.html', permission: 'customers.view' }
+          { label: 'العملاء', icon: 'users', href: 'customers.html', permission: 'customers.view' },
+          { label: 'المندوبين', icon: 'user-check', href: 'sales-reps.html', permission: 'company.owner', badge: 'جديد', badgeClass: 'new' }
         ]},
         { section: 'المخزون', items: [
+          { label: 'المخازن', icon: 'building-2', href: 'warehouses.html', permission: 'inventory.view' },
           { label: 'الجرد', icon: 'clipboard-check', href: 'stocktake.html', permission: 'inventory.stocktake' },
-          { label: 'التسويات', icon: 'sliders-horizontal', href: 'adjustments.html', permission: 'inventory.adjust' }
+          { label: 'التسويات', icon: 'sliders-horizontal', href: 'adjustments.html', permission: 'inventory.adjust' },
+          { label: 'التحويلات', icon: 'arrow-right-left', href: 'transfers.html', permission: 'inventory.transfer', badge: 'جديد', badgeClass: 'new' }
         ]},
         { section: 'الموارد البشرية', items: [
           { label: 'الموظفين', icon: 'user-cog', href: 'employees.html', permission: 'employees.view' },
@@ -1055,7 +1244,11 @@
           { label: 'الرواتب', icon: 'wallet', href: 'payroll.html', permission: 'payroll.view' }
         ]},
         { section: 'المالية', items: [
-          { label: 'المصاريف', icon: 'banknote', href: 'expenses.html', permission: 'expenses.view' },
+          { label: 'الحسابات', icon: 'landmark', href: 'accounts.html', permission: 'company.owner' },
+          { label: 'الشيكات', icon: 'file-check-2', href: 'cheques.html', permission: 'company.owner', badge: 'جديد', badgeClass: 'new' },
+          { label: 'الإشعارات', icon: 'file-text', href: 'credit-notes.html', permission: 'company.owner' },
+          { label: 'المدفوعات', icon: 'banknote', href: 'payments.html', permission: 'company.owner' },
+          { label: 'المصاريف', icon: 'receipt-text', href: 'expenses.html', permission: 'expenses.view' },
           { label: 'التقارير', icon: 'bar-chart-3', href: 'reports.html', permission: 'reports.view' }
         ]},
         { section: 'النظام', items: [
@@ -1065,58 +1258,68 @@
       ];
 
       function buildSidebar() {
-        const nav = document.getElementById('sidebarNav');
-        const currentPage = location.pathname.split('/').pop() || 'products.html';
-        const frag = document.createDocumentFragment();
-        MENU.forEach(group => {
-          const allowed = group.items.filter(it => !it.permission || Refad.Session.has(it.permission));
-          if (!allowed.length) return;
-          frag.appendChild(Refad.el('div', { class: 'nav-section' }, group.section));
-          allowed.forEach(item => {
-            const a = Refad.el('a', {
-              href: item.href,
-              class: 'nav-item' + (item.href === currentPage ? ' active' : '')
-            });
-            a.innerHTML = `<i data-lucide="${item.icon}"></i><span>${Refad.escapeHtml(item.label)}</span>${item.badge ? `<span class="badge ${item.badgeClass || ''}">${item.badge}</span>` : ''}`;
-            frag.appendChild(a);
-          });
-        });
-        nav.innerHTML = '';
-        nav.appendChild(frag);
-        if (window.lucide) lucide.createIcons();
-      }
+  Refad.buildMenu('products.html');
+}
 
       // ============================================================
-      // 3) User + Theme + Sidebar
+      // 5) UI Setup
       // ============================================================
       function fillUser() {
         const av = document.getElementById('userAvatar');
         const initial = (session.full_name || '؟').trim().charAt(0);
-        if (session.avatar_url) av.innerHTML = `<img src="${Refad.escapeHtml(session.avatar_url)}" alt="">`;
+        if (session.avatar_url) av.innerHTML = '<img src="' + esc(session.avatar_url) + '" alt="">';
         else av.textContent = initial;
         document.getElementById('userName').textContent = session.full_name;
         document.getElementById('userRole').textContent = Refad.Session.has('company.owner') ? 'صاحب الشركة' : 'موظف';
       }
 
+      // ✅ تطبيق الهوية من الإعدادات
+      function applyIdentity() {
+        const name = SafeSettings.identity.getSystemName();
+        const tagline = SafeSettings.identity.getTagline();
+        const logoUrl = SafeSettings.identity.getLogoUrl();
+
+        const brandName = document.getElementById('sidebarBrandName');
+        const brandDesc = document.getElementById('sidebarBrandDesc');
+        const logoImg = document.getElementById('sidebarLogoImg');
+
+        if (brandName) brandName.textContent = name;
+        if (brandDesc) brandDesc.textContent = tagline;
+        if (logoImg && logoUrl) {
+          logoImg.src = logoUrl;
+          logoImg.onerror = function () {
+            this.style.display = 'none';
+            const parent = this.parentElement;
+            if (parent) parent.innerHTML = '<span class="fallback">' + (name.charAt(0) || 'R') + '</span>';
+          };
+        }
+
+        const currencyHint = document.getElementById('currencyHint');
+        if (currencyHint) currencyHint.textContent = state.currencySymbol;
+
+        const expiringSub = document.getElementById('statExpiringSub');
+        if (expiringSub) expiringSub.textContent = 'خلال ' + state.expiryAlertDays + ' يوم';
+      }
+
       function setupTheme() {
         const btn = document.getElementById('themeToggle');
         const icon = document.getElementById('themeIcon');
-        const refresh = () => {
+        const refresh = function () {
           const isDark = Refad.theme.get() === 'dark';
           icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
           if (window.lucide) lucide.createIcons();
         };
         refresh();
-        btn.addEventListener('click', () => { Refad.theme.toggle(); refresh(); });
+        btn.addEventListener('click', function () { Refad.theme.toggle(); refresh(); });
       }
 
       function setupSidebarMobile() {
         const sb = document.getElementById('sidebar');
         const ov = document.getElementById('overlay');
-        document.getElementById('menuToggle').addEventListener('click', () => {
+        document.getElementById('menuToggle').addEventListener('click', function () {
           sb.classList.add('open'); ov.classList.add('show');
         });
-        ov.addEventListener('click', () => {
+        ov.addEventListener('click', function () {
           sb.classList.remove('open'); ov.classList.remove('show');
         });
       }
@@ -1124,10 +1327,10 @@
       function setupUserMenu() {
         const m = document.getElementById('userMenu');
         const d = document.getElementById('userDropdown');
-        m.addEventListener('click', e => { e.stopPropagation(); d.classList.toggle('show'); });
-        document.addEventListener('click', () => d.classList.remove('show'));
-        d.addEventListener('click', e => e.stopPropagation());
-        document.getElementById('logoutBtn').addEventListener('click', async () => {
+        m.addEventListener('click', function (e) { e.stopPropagation(); d.classList.toggle('show'); });
+        document.addEventListener('click', function () { d.classList.remove('show'); });
+        d.addEventListener('click', function (e) { e.stopPropagation(); });
+        document.getElementById('logoutBtn').addEventListener('click', async function () {
           if (await Refad.alert.confirm('تسجيل الخروج', 'هل تريد الخروج؟', 'خروج')) {
             await Refad.Auth.logout();
           }
@@ -1135,439 +1338,868 @@
       }
 
       function setupNotifBtn() {
-        document.getElementById('notifBtn').addEventListener('click', () => {
+        document.getElementById('notifBtn').addEventListener('click', function () {
           window.location.href = 'notifications.html';
         });
       }
 
       // ============================================================
-      // 4) State
+      // 6) Load Data
       // ============================================================
-      const state = {
-        all: [],
-        filtered: [],
-        page: 1,
-        perPage: 15,
-        search: '',
-        filterStatus: '',
-        filterForm: '',
-        editingId: null
-      };
+      async function loadData() {
+        const tbody = document.getElementById('tableBody');
+        tbody.innerHTML = '<tr><td colspan="9"><div class="loader"><i data-lucide="loader-2"></i><p>جارٍ التحميل...</p></div></td></tr>';
+        if (window.lucide) lucide.createIcons();
 
-      // ============================================================
-      // 5) Load products
-      // ============================================================
-      async function loadProducts(silent) {
-        if (!silent) renderSkeleton();
         try {
-          const rows = await Refad.db.select('products', {
-            eq: { company_id: session.company_id },
-            order: { column: 'name', ascending: true }
+          const results = await Promise.all([
+            Refad.db.select('products', {
+              columns: 'id, name, name_en, form, unit, category, default_price, min_order_qty, reorder_level, notes, is_active, created_at',
+              eq: { company_id: session.company_id },
+              order: { column: 'name', ascending: true },
+              limit: 3000
+            }).catch(function () { return []; }),
+
+            Refad.db.select('batches', {
+              columns: 'id, product_id, batch_number, quantity_left, cost_price, sale_price, expiry_date, warehouse_id',
+              eq: { company_id: session.company_id },
+              gt: { quantity_left: 0 },
+              order: { column: 'expiry_date', ascending: true },
+              limit: 5000
+            }).catch(function () { return []; }),
+
+            Refad.db.select('product_barcodes', {
+              columns: 'id, product_id, barcode, is_primary',
+              limit: 5000
+            }).catch(function () { return []; })
+          ]);
+
+          const products = results[0] || [];
+          const batches = results[1] || [];
+          const barcodes = results[2] || [];
+
+          state.batchesByProduct = {};
+          batches.forEach(function (b) {
+            if (!state.batchesByProduct[b.product_id]) state.batchesByProduct[b.product_id] = [];
+            state.batchesByProduct[b.product_id].push(b);
           });
-          state.all = rows;
-          applyFilters();
+
+          state.barcodesByProduct = {};
+          barcodes.forEach(function (b) {
+            if (!state.barcodesByProduct[b.product_id]) state.barcodesByProduct[b.product_id] = [];
+            state.barcodesByProduct[b.product_id].push(b);
+          });
+
+          state.products = products.map(function (p) {
+            const pBatches = state.batchesByProduct[p.id] || [];
+            const totalStock = pBatches.reduce(function (s, b) { return s + toNum(b.quantity_left); }, 0);
+            const stockValue = pBatches.reduce(function (s, b) {
+              return s + (toNum(b.quantity_left) * toNum(b.cost_price));
+            }, 0);
+
+            let nearestExpiry = null;
+            pBatches.forEach(function (b) {
+              if (!b.expiry_date) return;
+              if (!nearestExpiry || b.expiry_date < nearestExpiry) nearestExpiry = b.expiry_date;
+            });
+
+            const reorderLevel = toNum(p.reorder_level) || state.defaultReorderLevel;
+            let stockStatus = 'in_stock';
+            if (totalStock <= 0) stockStatus = 'out';
+            else if (reorderLevel > 0 && totalStock <= reorderLevel) stockStatus = 'low';
+
+            return Object.assign({}, p, {
+              total_stock: totalStock,
+              stock_value: stockValue,
+              nearest_expiry: nearestExpiry,
+              stock_status: stockStatus,
+              barcodes: state.barcodesByProduct[p.id] || []
+            });
+          });
+
           renderStats();
-        } catch (e) {
-          console.error('[Products] load failed:', e);
-          Refad.toast.error('تعذّر تحميل الأصناف: ' + e.message);
-          state.all = [];
+          populateFormFilter();
           applyFilters();
+        } catch (e) {
+          console.error('[Products] Load failed:', e);
+          tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state" style="color:var(--danger);"><i data-lucide="alert-circle"></i><h3>فشل التحميل</h3><p>' + esc(e.message) + '</p></div></td></tr>';
+          if (window.lucide) lucide.createIcons();
         }
       }
 
+      // ============================================================
+      // 7) Render Stats
+      // ============================================================
       function renderStats() {
-        const total = state.all.length;
-        const active = state.all.filter(p => p.is_active).length;
-        const inactive = total - active;
-        const low = state.all.filter(p => p.is_active && (p.reorder_level || 0) > 0 && (p.default_price || 0) === 0).length;
-        // ملاحظة: "مخزون منخفض" هنا مبدئي — سنربطه بـ batches لاحقاً
-        document.getElementById('statTotal').textContent = Refad.format.number(total);
-        document.getElementById('statActive').textContent = Refad.format.number(active);
-        document.getElementById('statInactive').textContent = Refad.format.number(inactive);
-        document.getElementById('statLow').textContent = Refad.format.number(low);
+        const list = state.products;
+        const total = list.length;
+        const active = list.filter(function (p) { return p.is_active !== false; }).length;
+        const low = list.filter(function (p) { return p.is_active !== false && p.stock_status === 'low'; }).length;
+        const out = list.filter(function (p) { return p.is_active !== false && p.stock_status === 'out'; }).length;
+
+        const t = getToday();
+        const inAlert = dayjs(t).add(state.expiryAlertDays, 'day').format('YYYY-MM-DD');
+        const expiring = list.filter(function (p) {
+          return p.is_active !== false && p.nearest_expiry && p.nearest_expiry <= inAlert;
+        }).length;
+
+        const totalValue = list.reduce(function (s, p) { return s + toNum(p.stock_value); }, 0);
+
+        document.getElementById('statTotal').textContent = fmtNumber(total);
+        document.getElementById('statTotalSub').textContent = active + ' نشط';
+        document.getElementById('statActive').textContent = fmtNumber(active);
+        document.getElementById('statLow').textContent = fmtNumber(low);
+        document.getElementById('statOut').textContent = fmtNumber(out);
+        document.getElementById('statExpiring').textContent = fmtNumber(expiring);
+        document.getElementById('statValue').textContent = fmtMoney(totalValue);
       }
 
       // ============================================================
-      // 6) Filters + Pagination
+      // 8) Populate Form Filter
+      // ============================================================
+      function populateFormFilter() {
+        const forms = new Set();
+        state.products.forEach(function (p) { if (p.form) forms.add(p.form); });
+        const sel = document.getElementById('filterForm');
+        const current = sel.value;
+        sel.innerHTML = '<option value="">كل الأشكال</option>' +
+          Array.from(forms).sort().map(function (f) {
+            return '<option value="' + esc(f) + '">' + esc(f) + '</option>';
+          }).join('');
+        if (current) sel.value = current;
+      }
+
+      // ============================================================
+      // 9) Apply Filters
       // ============================================================
       function applyFilters() {
-        const q = state.search.toLowerCase().trim();
-        state.filtered = state.all.filter(p => {
-          if (state.filterStatus === 'active' && !p.is_active) return false;
-          if (state.filterStatus === 'inactive' && p.is_active) return false;
-          if (state.filterForm && p.form !== state.filterForm) return false;
-          if (!q) return true;
-          return (
-            (p.name || '').toLowerCase().includes(q) ||
-            (p.name_en || '').toLowerCase().includes(q) ||
-            (p.category || '').toLowerCase().includes(q) ||
-            (p.unit || '').toLowerCase().includes(q)
-          );
-        });
-        state.page = 1;
-        renderTable();
+        let list = state.products.slice();
+
+        if (state.filters.search) {
+          const q = state.filters.search.toLowerCase();
+          list = list.filter(function (p) {
+            return (p.name || '').toLowerCase().includes(q) ||
+                   (p.name_en || '').toLowerCase().includes(q) ||
+                   (p.category || '').toLowerCase().includes(q) ||
+                   (p.unit || '').toLowerCase().includes(q) ||
+                   (p.barcodes || []).some(function (b) {
+                     return (b.barcode || '').toLowerCase().includes(q);
+                   });
+          });
+        }
+
+        if (state.filters.form) {
+          list = list.filter(function (p) { return p.form === state.filters.form; });
+        }
+
+        if (state.filters.status) {
+          list = list.filter(function (p) {
+            return state.filters.status === 'active' ? p.is_active !== false : p.is_active === false;
+          });
+        }
+
+        if (state.filters.stock) {
+          list = list.filter(function (p) { return p.stock_status === state.filters.stock; });
+        }
+
+        state.filtered = list;
+
+        if (state.viewMode === 'table') renderTable();
+        else renderCards();
       }
 
-      function renderSkeleton() {
-        const tbody = document.getElementById('tableBody');
-        tbody.innerHTML = Array(6).fill(0).map(() => `
-          <tr class="skeleton-row">
-            <td><div class="skeleton-bar" style="width:60%"></div></td>
-            <td><div class="skeleton-bar" style="width:70px"></div></td>
-            <td><div class="skeleton-bar" style="width:60px"></div></td>
-            <td><div class="skeleton-bar" style="width:80px"></div></td>
-            <td><div class="skeleton-bar" style="width:50px"></div></td>
-            <td><div class="skeleton-bar" style="width:70px"></div></td>
-            <td><div class="skeleton-bar" style="width:80px"></div></td>
-          </tr>
-        `).join('');
-      }
-
+      // ============================================================
+      // 10) Render Table
+      // ============================================================
       function renderTable() {
         const tbody = document.getElementById('tableBody');
-        const pag = Refad.paginate(state.filtered, state.page, state.perPage);
+        const list = state.filtered;
 
-        if (state.filtered.length === 0) {
-          const msg = state.all.length === 0
-            ? 'لا توجد أصناف بعد. ابدأ بإضافة صنف جديد.'
-            : 'لا توجد نتائج مطابقة للبحث.';
-          tbody.innerHTML = `
-            <tr class="empty-row">
-              <td colspan="7">
-                <i data-lucide="package-open"></i>
-                <p>${msg}</p>
-              </td>
-            </tr>
-          `;
+        if (!list.length) {
+          tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state">' +
+            '<i data-lucide="package-open"></i>' +
+            '<h3>' + (state.products.length ? 'لا توجد نتائج مطابقة' : 'لا توجد أصناف بعد') + '</h3>' +
+            '<p>' + (state.products.length ? 'جرّب تعديل الفلاتر' : 'ابدأ بإضافة صنف جديد') + '</p>' +
+            '</div></td></tr>';
           if (window.lucide) lucide.createIcons();
-          renderPagination(pag);
           return;
         }
 
-        tbody.innerHTML = pag.data.map(p => {
-          const initial = (p.name || '؟').trim().charAt(0);
-          const formTag = p.form ? `<span class="badge-tag blue">${Refad.escapeHtml(p.form)}</span>` : '<span style="color:var(--text-muted);">—</span>';
-          const statusTag = p.is_active
-            ? '<span class="badge-tag green">نشط</span>'
-            : '<span class="badge-tag gray">غير نشط</span>';
+        tbody.innerHTML = list.map(function (p, i) {
+          const initial = esc((p.name || '؟').charAt(0));
+          const stockCls = p.stock_status === 'out' ? 'out' : (p.stock_status === 'low' ? 'low' : 'ok');
+          const stockLabel = p.stock_status === 'out' ? 'نفد' : (p.stock_status === 'low' ? 'منخفض' : fmtNumber(p.total_stock));
+          const isActive = p.is_active !== false;
 
-          return `
-            <tr data-id="${p.id}" tabindex="0" style="cursor:pointer">
-              <td>
-                <div class="product-cell">
-                  <div class="product-avatar">${Refad.escapeHtml(initial)}</div>
-                  <div>
-                    <div class="product-name">${Refad.escapeHtml(p.name)}</div>
-                    ${p.name_en ? `<div class="product-sub">${Refad.escapeHtml(p.name_en)}</div>` : ''}
-                  </div>
-                </div>
-              </td>
-              <td>${formTag}</td>
-              <td>${Refad.escapeHtml(p.unit || '—')}</td>
-              <td style="font-weight:700;">${Refad.format.money(p.default_price)}</td>
-              <td>${Refad.format.number(p.min_order_qty || 1)}</td>
-              <td>${statusTag}</td>
-              <td>
-                <div class="actions-cell">
-                  <button class="action-btn" data-action="view" data-id="${p.id}" title="عرض">
-                    <i data-lucide="eye"></i>
-                  </button>
-                  ${canEdit ? `<button class="action-btn" data-action="edit" data-id="${p.id}" title="تعديل"><i data-lucide="pencil"></i></button>` : ''}
-                  ${canDelete ? `<button class="action-btn danger" data-action="delete" data-id="${p.id}" title="حذف"><i data-lucide="trash-2"></i></button>` : ''}
-                </div>
-              </td>
-            </tr>
-          `;
+          let expiryHtml = '<span style="color:var(--text-muted);">—</span>';
+          if (p.nearest_expiry) {
+            const days = daysUntil(p.nearest_expiry);
+            if (days !== null) {
+              let cls = 'ok';
+              let label = days + ' يوم';
+              if (days < 0) { cls = 'danger'; label = 'منتهي'; }
+              else if (days <= 30) { cls = 'danger'; }
+              else if (days <= state.expiryAlertDays) { cls = 'warning'; }
+              expiryHtml = '<span class="expiry-badge ' + cls + '">' +
+                '<i data-lucide="calendar" style="width:10px;height:10px;"></i>' +
+                label +
+              '</span>';
+            }
+          }
+
+          return '<tr data-id="' + p.id + '" tabindex="0">' +
+            '<td style="color:var(--text-muted);font-weight:700;text-align:center;">' + (i + 1) + '</td>' +
+            '<td>' +
+              '<div class="product-cell">' +
+                '<div class="product-avatar">' + initial + '</div>' +
+                '<div class="product-info">' +
+                  '<div class="name">' + esc(p.name) + '</div>' +
+                  (p.name_en ? '<div class="sub">' + esc(p.name_en) + '</div>' : (p.category ? '<div class="sub">' + esc(p.category) + '</div>' : '')) +
+                '</div>' +
+              '</div>' +
+            '</td>' +
+            '<td>' + (p.form ? '<span class="status-pill active" style="background:rgba(59,130,246,0.12);color:var(--info);">' + esc(p.form) + '</span>' : '<span style="color:var(--text-muted);">—</span>') + '</td>' +
+            '<td>' + esc(p.unit || '—') + '</td>' +
+            '<td class="money accent">' + fmtMoney(p.default_price) + '</td>' +
+            '<td><span class="stock-badge ' + stockCls + '">' + stockLabel + '</span></td>' +
+            '<td>' + expiryHtml + '</td>' +
+            '<td><span class="status-pill ' + (isActive ? 'active' : 'inactive') + '">' + (isActive ? 'نشط' : 'موقوف') + '</span></td>' +
+            '<td>' +
+              '<button class="action-btn" data-action="view" data-id="' + p.id + '" title="تفاصيل">' +
+                '<i data-lucide="eye"></i>' +
+              '</button>' +
+              (canEdit ?
+                '<button class="action-btn" data-action="edit" data-id="' + p.id + '" title="تعديل">' +
+                  '<i data-lucide="edit"></i>' +
+                '</button>'
+              : '') +
+              (canDelete ?
+                '<button class="action-btn danger" data-action="delete" data-id="' + p.id + '" title="حذف">' +
+                  '<i data-lucide="trash-2"></i>' +
+                '</button>'
+              : '') +
+            '</td>' +
+          '</tr>';
         }).join('');
 
         if (window.lucide) lucide.createIcons();
-        renderPagination(pag);
-      }
 
-      function renderPagination(pag) {
-        const el = document.getElementById('pagination');
-        const { page, pages, total, perPage } = pag;
-
-        if (total === 0) {
-          el.innerHTML = '';
-          return;
-        }
-
-        const from = (page - 1) * perPage + 1;
-        const to = Math.min(page * perPage, total);
-
-        // توليد أرقام الصفحات (بحد أقصى 5)
-        let pageNums = [];
-        if (pages <= 5) {
-          for (let i = 1; i <= pages; i++) pageNums.push(i);
-        } else if (page <= 3) {
-          pageNums = [1, 2, 3, 4, 5];
-        } else if (page >= pages - 2) {
-          pageNums = [pages - 4, pages - 3, pages - 2, pages - 1, pages];
-        } else {
-          pageNums = [page - 2, page - 1, page, page + 1, page + 2];
-        }
-
-        el.innerHTML = `
-          <div>عرض ${from} - ${to} من ${total}</div>
-          <div class="controls">
-            <button class="page-btn" data-page="${page - 1}" ${page === 1 ? 'disabled' : ''}>
-              <i data-lucide="chevron-right" style="width:14px;height:14px;"></i>
-            </button>
-            ${pageNums.map(n => `<button class="page-btn ${n === page ? 'active' : ''}" data-page="${n}">${n}</button>`).join('')}
-            <button class="page-btn" data-page="${page + 1}" ${page === pages ? 'disabled' : ''}>
-              <i data-lucide="chevron-left" style="width:14px;height:14px;"></i>
-            </button>
-          </div>
-        `;
-
-        el.querySelectorAll('.page-btn:not(:disabled)').forEach(btn => {
-          btn.addEventListener('click', () => {
-            const p = parseInt(btn.dataset.page, 10);
-            if (p >= 1 && p <= pages && p !== page) {
-              state.page = p;
-              renderTable();
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }
+        tbody.querySelectorAll('tr[data-id]').forEach(function (tr) {
+          tr.addEventListener('click', function (e) {
+            if (e.target.closest('[data-action]') || e.target.closest('a')) return;
+            openDetails(parseInt(tr.dataset.id, 10));
           });
         });
 
-        if (window.lucide) lucide.createIcons();
-      }
-
-      // ============================================================
-      // 7) Modal
-      // ============================================================
-      function openModal(product) {
-        state.editingId = product ? product.id : null;
-        document.getElementById('modalTitle').textContent = product ? 'تعديل صنف' : 'صنف جديد';
-        document.getElementById('saveBtnText').textContent = product ? 'تحديث' : 'حفظ';
-        document.getElementById('modalIcon').setAttribute('data-lucide', product ? 'package-check' : 'package-plus');
-
-        const form = document.getElementById('productForm');
-        form.reset();
-
-        if (product) {
-          ['name','name_en','form','unit','category','default_price','min_order_qty','reorder_level','notes'].forEach(k => {
-            if (form[k]) form[k].value = product[k] ?? '';
+        tbody.querySelectorAll('[data-action]').forEach(function (btn) {
+          btn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            const id = parseInt(btn.dataset.id, 10);
+            if (btn.dataset.action === 'view') openDetails(id);
+            else if (btn.dataset.action === 'edit') openEdit(id);
+            else if (btn.dataset.action === 'delete') deleteProduct(id);
           });
-          form.is_active.checked = product.is_active !== false;
-        } else {
-          form.default_price.value = '0';
-          form.min_order_qty.value = '1';
-          form.reorder_level.value = '10';
-          form.is_active.checked = true;
-        }
-
-        document.getElementById('productModal').classList.add('show');
-        if (window.lucide) lucide.createIcons();
-        setTimeout(() => form.name.focus(), 100);
-      }
-
-      function closeModal() {
-        document.getElementById('productModal').classList.remove('show');
-        state.editingId = null;
+        });
       }
 
       // ============================================================
-      // 8) Save
+      // 11) Render Cards
       // ============================================================
-      async function saveProduct(e) {
-        e.preventDefault();
-        const form = e.target;
-        const btn = document.getElementById('saveBtn');
-        const originalText = document.getElementById('saveBtnText').textContent;
+      function renderCards() {
+        const grid = document.getElementById('cardsView');
+        const list = state.filtered;
 
-        const payload = {
-          company_id: session.company_id,
-          name: form.name.value.trim(),
-          name_en: form.name_en.value.trim() || null,
-          form: form.form.value || null,
-          unit: form.unit.value.trim() || null,
-          category: form.category.value.trim() || null,
-          default_price: Refad.toNum(form.default_price.value),
-          min_order_qty: parseInt(form.min_order_qty.value, 10) || 1,
-          reorder_level: parseInt(form.reorder_level.value, 10) || 0,
-          notes: form.notes.value.trim() || null,
-          is_active: form.is_active.checked
-        };
-
-        if (!payload.name) {
-          Refad.toast.warning('اسم الصنف مطلوب');
-          form.name.focus();
+        if (!list.length) {
+          grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;">' +
+            '<i data-lucide="package-open"></i>' +
+            '<h3>' + (state.products.length ? 'لا توجد نتائج مطابقة' : 'لا توجد أصناف بعد') + '</h3>' +
+            '<p>' + (state.products.length ? 'جرّب تعديل الفلاتر' : 'ابدأ بإضافة صنف جديد') + '</p>' +
+            '</div>';
+          if (window.lucide) lucide.createIcons();
           return;
         }
 
+        grid.innerHTML = list.map(function (p) {
+          const initial = esc((p.name || '؟').charAt(0));
+          const stockCls = p.stock_status === 'out' ? 'out' : (p.stock_status === 'low' ? 'low' : 'ok');
+          const stockLabel = p.stock_status === 'out' ? 'نفد' : (p.stock_status === 'low' ? 'منخفض' : fmtNumber(p.total_stock));
+          const isActive = p.is_active !== false;
+
+          let cardClass = '';
+          if (p.stock_status === 'out') cardClass = 'out-of-stock';
+          else if (p.stock_status === 'low') cardClass = 'low-stock';
+          if (!isActive) cardClass += ' inactive';
+
+          let expiryText = '—';
+          let expiryCls = 'none';
+          if (p.nearest_expiry) {
+            const days = daysUntil(p.nearest_expiry);
+            if (days !== null) {
+              if (days < 0) { expiryText = 'منتهي'; expiryCls = 'danger'; }
+              else if (days <= 30) { expiryText = days + ' يوم'; expiryCls = 'danger'; }
+              else if (days <= state.expiryAlertDays) { expiryText = days + ' يوم'; expiryCls = 'warning'; }
+              else { expiryText = Refad.format.date(p.nearest_expiry); expiryCls = 'ok'; }
+            }
+          }
+
+          return '<div class="product-card ' + cardClass + '" data-id="' + p.id + '">' +
+            '<div class="pc-header">' +
+              '<div class="pc-icon-wrap">' +
+                '<div class="pc-icon">' + initial + '</div>' +
+                '<div class="pc-name-wrap">' +
+                  '<div class="pc-name">' + esc(p.name) + '</div>' +
+                  '<div class="pc-sub">' + esc([p.form, p.unit].filter(Boolean).join(' • ') || '—') + '</div>' +
+                '</div>' +
+              '</div>' +
+              '<span class="status-pill ' + (isActive ? 'active' : 'inactive') + '">' + (isActive ? 'نشط' : 'موقوف') + '</span>' +
+            '</div>' +
+
+            '<div class="pc-stats">' +
+              '<div class="pc-stat">' +
+                '<div class="lbl">السعر</div>' +
+                '<div class="val accent">' + fmtMoney(p.default_price) + '</div>' +
+              '</div>' +
+              '<div class="pc-stat">' +
+                '<div class="lbl">المخزون</div>' +
+                '<div class="val ' + (stockCls === 'out' ? 'danger' : stockCls === 'low' ? 'gold' : 'success') + '">' + stockLabel + '</div>' +
+              '</div>' +
+              '<div class="pc-stat">' +
+                '<div class="lbl">أقرب صلاحية</div>' +
+                '<div class="val"><span class="expiry-badge ' + expiryCls + '">' + expiryText + '</span></div>' +
+              '</div>' +
+              '<div class="pc-stat">' +
+                '<div class="lbl">الحد الأدنى</div>' +
+                '<div class="val">' + fmtNumber(p.reorder_level || 0) + '</div>' +
+              '</div>' +
+            '</div>' +
+
+            '<div class="pc-actions">' +
+              '<button class="btn btn-outline" data-action="view" data-id="' + p.id + '" onclick="event.stopPropagation();">' +
+                '<i data-lucide="eye"></i> تفاصيل' +
+              '</button>' +
+              (canEdit ?
+                '<button class="btn btn-primary" data-action="edit" data-id="' + p.id + '" onclick="event.stopPropagation();">' +
+                  '<i data-lucide="edit"></i> تعديل' +
+                '</button>'
+              : '') +
+            '</div>' +
+          '</div>';
+        }).join('');
+
+        if (window.lucide) lucide.createIcons();
+
+        grid.querySelectorAll('.product-card').forEach(function (card) {
+          card.addEventListener('click', function (e) {
+            if (e.target.closest('[data-action]')) return;
+            openDetails(parseInt(card.dataset.id, 10));
+          });
+        });
+
+        grid.querySelectorAll('[data-action]').forEach(function (btn) {
+          btn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            const id = parseInt(btn.dataset.id, 10);
+            if (btn.dataset.action === 'view') openDetails(id);
+            else if (btn.dataset.action === 'edit') openEdit(id);
+          });
+        });
+      }
+
+      // ============================================================
+      // 12) View Toggle
+      // ============================================================
+      function setupViewToggle() {
+        document.querySelectorAll('.view-btn').forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            document.querySelectorAll('.view-btn').forEach(function (b) { b.classList.remove('active'); });
+            btn.classList.add('active');
+            state.viewMode = btn.dataset.view;
+
+            if (state.viewMode === 'table') {
+              document.getElementById('tableView').style.display = 'block';
+              document.getElementById('cardsView').style.display = 'none';
+              renderTable();
+            } else {
+              document.getElementById('tableView').style.display = 'none';
+              document.getElementById('cardsView').style.display = 'grid';
+              renderCards();
+            }
+          });
+        });
+      }
+
+      // ============================================================
+      // 13) Barcode Chips
+      // ============================================================
+      function renderBarcodeChips() {
+        const container = document.getElementById('barcodeChips');
+        if (!state.editingBarcodes.length) {
+          container.innerHTML = '';
+          return;
+        }
+        container.innerHTML = state.editingBarcodes.map(function (b, i) {
+          return '<div class="barcode-chip">' +
+            '<i data-lucide="barcode" style="width:12px;height:12px;"></i>' +
+            '<span>' + esc(b) + '</span>' +
+            '<button type="button" data-remove-barcode="' + i + '" title="حذف">×</button>' +
+          '</div>';
+        }).join('');
+        if (window.lucide) lucide.createIcons();
+
+        container.querySelectorAll('[data-remove-barcode]').forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            const idx = parseInt(btn.dataset.removeBarcode, 10);
+            state.editingBarcodes.splice(idx, 1);
+            renderBarcodeChips();
+          });
+        });
+      }
+
+      function addBarcodeFromInput() {
+        const input = document.getElementById('pBarcodeInput');
+        const value = input.value.trim();
+        if (!value) return;
+        if (state.editingBarcodes.indexOf(value) !== -1) {
+          Refad.toast.warning('الباركود موجود بالفعل');
+          input.value = '';
+          return;
+        }
+        state.editingBarcodes.push(value);
+        input.value = '';
+        renderBarcodeChips();
+        input.focus();
+      }
+
+      // ============================================================
+      // 14) Open Add/Edit Modal
+      // ============================================================
+      function openAdd() {
+        if (!canCreate) { Refad.toast.warning('ليس لديك صلاحية'); return; }
+        state.editingId = null;
+        state.editingBarcodes = [];
+        document.getElementById('modalTitle').textContent = 'صنف جديد';
+        document.getElementById('saveBtnText').textContent = 'إضافة الصنف';
+        document.getElementById('modalIcon').setAttribute('data-lucide', 'package-plus');
+        document.getElementById('productForm').reset();
+        document.getElementById('pPrice').value = '0';
+        document.getElementById('pReorder').value = String(state.defaultReorderLevel);
+        document.getElementById('pMinOrder').value = String(state.defaultMinOrder);
+        document.getElementById('pIsActive').checked = true;
+        renderBarcodeChips();
+        document.getElementById('productModal').classList.add('show');
+        if (window.lucide) lucide.createIcons();
+        setTimeout(function () { document.getElementById('pName').focus(); }, 150);
+      }
+
+      function openEdit(id) {
+        if (!canEdit) { Refad.toast.warning('ليس لديك صلاحية'); return; }
+        const p = state.products.find(function (x) { return x.id === id; });
+        if (!p) return;
+
+        state.editingId = id;
+        state.editingBarcodes = (p.barcodes || []).map(function (b) { return b.barcode; });
+        document.getElementById('modalTitle').textContent = 'تعديل: ' + p.name;
+        document.getElementById('saveBtnText').textContent = 'حفظ التعديلات';
+        document.getElementById('modalIcon').setAttribute('data-lucide', 'package-check');
+
+        document.getElementById('pName').value = p.name || '';
+        document.getElementById('pNameEn').value = p.name_en || '';
+        document.getElementById('pForm').value = p.form || '';
+        document.getElementById('pUnit').value = p.unit || '';
+        document.getElementById('pCategory').value = p.category || '';
+        document.getElementById('pPrice').value = p.default_price || 0;
+        document.getElementById('pReorder').value = p.reorder_level || 0;
+        document.getElementById('pMinOrder').value = p.min_order_qty || 1;
+        document.getElementById('pNotes').value = p.notes || '';
+        document.getElementById('pIsActive').checked = p.is_active !== false;
+
+        renderBarcodeChips();
+        document.getElementById('productModal').classList.add('show');
+        if (window.lucide) lucide.createIcons();
+        setTimeout(function () { document.getElementById('pName').focus(); }, 150);
+      }
+
+      // ============================================================
+      // 15) Save
+      // ============================================================
+      async function saveProduct(e) {
+        e.preventDefault();
+        const name = document.getElementById('pName').value.trim();
+        if (!name) {
+          Refad.toast.warning('اسم الصنف مطلوب');
+          document.getElementById('pName').focus();
+          return;
+        }
+
+        const btn = document.getElementById('saveBtn');
         btn.disabled = true;
-        document.getElementById('saveBtnText').textContent = 'جارٍ الحفظ...';
 
         try {
+          const payload = {
+            company_id: session.company_id,
+            name: name,
+            name_en: document.getElementById('pNameEn').value.trim() || null,
+            form: document.getElementById('pForm').value.trim() || null,
+            unit: document.getElementById('pUnit').value.trim() || null,
+            category: document.getElementById('pCategory').value.trim() || null,
+            default_price: toNum(document.getElementById('pPrice').value),
+            min_order_qty: parseInt(document.getElementById('pMinOrder').value, 10) || 1,
+            reorder_level: parseInt(document.getElementById('pReorder').value, 10) || 0,
+            notes: document.getElementById('pNotes').value.trim() || null,
+            is_active: document.getElementById('pIsActive').checked
+          };
+
+          let productId = state.editingId;
+
           if (state.editingId) {
             await Refad.db.update('products', state.editingId, payload);
-            await Refad.logActivity('update_product', 'products', `تعديل: ${payload.name}`, state.editingId);
+            await Refad.logActivity('update_product', 'products', 'تعديل صنف: ' + name, state.editingId);
             Refad.toast.success('تم تحديث الصنف');
           } else {
             const created = await Refad.db.insert('products', payload);
-            await Refad.logActivity('create_product', 'products', `إضافة: ${payload.name}`, created.id);
+            productId = created.id;
+            await Refad.logActivity('create_product', 'products', 'إضافة صنف: ' + name, productId);
             Refad.toast.success('تم إضافة الصنف');
           }
-          closeModal();
-          await loadProducts(true);
+
+          if (productId) {
+            if (state.editingId) {
+              await Refad.db.removeWhere('product_barcodes', { product_id: productId }).catch(function () {});
+            }
+
+            const barcodesToInsert = state.editingBarcodes.map(function (barcode, i) {
+              return {
+                product_id: productId,
+                barcode: barcode,
+                is_primary: i === 0
+              };
+            });
+
+            if (barcodesToInsert.length) {
+              for (let i = 0; i < barcodesToInsert.length; i++) {
+                await Refad.db.insert('product_barcodes', barcodesToInsert[i]).catch(function (err) {
+                  console.warn('Barcode insert failed:', err.message);
+                });
+              }
+            }
+          }
+
+          document.getElementById('productModal').classList.remove('show');
+          await loadData();
         } catch (err) {
-          console.error('[Products] save error:', err);
+          console.error('[Products] Save failed:', err);
           Refad.toast.error('فشل الحفظ: ' + err.message);
         } finally {
           btn.disabled = false;
-          document.getElementById('saveBtnText').textContent = originalText;
         }
       }
 
       // ============================================================
-      // 9) Delete
+      // 16) Delete
       // ============================================================
-      async function deleteProduct(id, name) {
-        const ok = await Refad.alert.confirm(
-          'حذف الصنف',
-          `هل أنت متأكد من حذف "${name}"؟ لا يمكن التراجع.`,
-          'حذف'
-        );
-        if (!ok) return;
+      async function deleteProduct(id) {
+        const p = state.products.find(function (x) { return x.id === id; });
+        if (!p) return;
+
+        if (p.total_stock > 0) {
+          const ok = await Refad.alert.confirm(
+            'تحذير: يوجد مخزون',
+            '"' + p.name + '" عنده ' + p.total_stock + ' وحدة في المخزون.\nهل أنت متأكد من الحذف؟',
+            'حذف رغم ذلك'
+          );
+          if (!ok) return;
+        } else {
+          const ok = await Refad.alert.confirm(
+            'حذف الصنف',
+            'سيتم حذف "' + p.name + '" نهائياً. متابعة؟',
+            'حذف'
+          );
+          if (!ok) return;
+        }
 
         try {
+          await Refad.db.removeWhere('product_barcodes', { product_id: id }).catch(function () {});
           await Refad.db.remove('products', id);
-          await Refad.logActivity('delete_product', 'products', `حذف: ${name}`, id);
+          await Refad.logActivity('delete_product', 'products', 'حذف صنف: ' + p.name, id);
           Refad.toast.success('تم الحذف');
-          await loadProducts(true);
+          await loadData();
         } catch (err) {
-          console.error('[Products] delete error:', err);
+          console.error('[Products] Delete failed:', err);
           Refad.toast.error('فشل الحذف: ' + err.message);
         }
       }
 
       // ============================================================
-      // 10) Excel (مبدئي)
+      // 17) Open Details
       // ============================================================
-      function setupExcel() {
-        document.getElementById('exportBtn').addEventListener('click', () => {
-          if (!state.filtered.length) {
-            Refad.toast.warning('لا توجد بيانات للتصدير');
-            return;
-          }
-          const rows = state.filtered.map(p => ({
+      function openDetails(id) {
+        const p = state.products.find(function (x) { return x.id === id; });
+        if (!p) return;
+
+        const batches = state.batchesByProduct[p.id] || [];
+        const initial = esc((p.name || '؟').charAt(0));
+        const isActive = p.is_active !== false;
+
+        const barcodesHtml = (p.barcodes || []).length
+          ? p.barcodes.map(function (b) {
+              return '<div class="barcode-chip">' +
+                '<i data-lucide="barcode" style="width:12px;height:12px;"></i>' +
+                '<span>' + esc(b.barcode) + '</span>' +
+              '</div>';
+            }).join('')
+          : '<span style="color:var(--text-muted);font-size:12px;">لا يوجد باركود مسجل</span>';
+
+        const batchesHtml = batches.length
+          ? '<table class="batches-table">' +
+              '<thead>' +
+                '<tr>' +
+                  '<th>رقم التشغيلة</th>' +
+                  '<th>الكمية</th>' +
+                  '<th>سعر التكلفة</th>' +
+                  '<th>سعر البيع</th>' +
+                  '<th>الصلاحية</th>' +
+                '</tr>' +
+              '</thead>' +
+              '<tbody>' +
+                batches.map(function (b) {
+                  const days = b.expiry_date ? daysUntil(b.expiry_date) : null;
+                  let expiryCls = 'none';
+                  let expiryText = '—';
+                  if (days !== null) {
+                    if (days < 0) { expiryCls = 'danger'; expiryText = 'منتهي'; }
+                    else if (days <= 30) { expiryCls = 'danger'; expiryText = days + ' يوم'; }
+                    else if (days <= state.expiryAlertDays) { expiryCls = 'warning'; expiryText = days + ' يوم'; }
+                    else { expiryCls = 'ok'; expiryText = Refad.format.date(b.expiry_date); }
+                  }
+                  return '<tr>' +
+                    '<td style="font-family:monospace;font-weight:700;">' + esc(b.batch_number || '—') + '</td>' +
+                    '<td><strong>' + fmtNumber(b.quantity_left) + '</strong></td>' +
+                    '<td>' + fmtMoney(b.cost_price) + '</td>' +
+                    '<td class="money accent">' + fmtMoney(b.sale_price) + '</td>' +
+                    '<td><span class="expiry-badge ' + expiryCls + '">' + expiryText + '</span></td>' +
+                  '</tr>';
+                }).join('') +
+              '</tbody>' +
+            '</table>'
+          : '<div class="empty-state" style="padding:20px;"><i data-lucide="package-x"></i><p style="font-size:12px;">لا توجد تشغيلات متوفرة</p></div>';
+
+        document.getElementById('detailsModalBody').innerHTML =
+          '<div class="detail-hero">' +
+            '<div class="detail-hero-icon">' + initial + '</div>' +
+            '<div class="detail-hero-info">' +
+              '<div class="detail-hero-name">' + esc(p.name) + '</div>' +
+              '<div class="detail-hero-sub">' +
+                esc([p.name_en, p.form, p.unit, p.category].filter(Boolean).join(' • ') || '—') +
+              '</div>' +
+            '</div>' +
+            '<span class="status-pill ' + (isActive ? 'active' : 'inactive') + '">' + (isActive ? 'نشط' : 'موقوف') + '</span>' +
+          '</div>' +
+
+          '<div class="detail-grid">' +
+            '<div class="detail-item">' +
+              '<div class="lbl">السعر</div>' +
+              '<div class="val accent">' + fmtMoney(p.default_price) + '</div>' +
+            '</div>' +
+            '<div class="detail-item">' +
+              '<div class="lbl">المخزون الحالي</div>' +
+              '<div class="val ' + (p.stock_status === 'out' ? 'danger' : p.stock_status === 'low' ? 'gold' : 'success') + '">' + fmtNumber(p.total_stock) + '</div>' +
+            '</div>' +
+            '<div class="detail-item">' +
+              '<div class="lbl">قيمة المخزون</div>' +
+              '<div class="val">' + fmtMoney(p.stock_value) + '</div>' +
+            '</div>' +
+            '<div class="detail-item">' +
+              '<div class="lbl">حد إعادة الطلب</div>' +
+              '<div class="val">' + fmtNumber(p.reorder_level || 0) + '</div>' +
+            '</div>' +
+            '<div class="detail-item">' +
+              '<div class="lbl">الحد الأدنى</div>' +
+              '<div class="val">' + fmtNumber(p.min_order_qty || 1) + '</div>' +
+            '</div>' +
+            '<div class="detail-item">' +
+              '<div class="lbl">عدد التشغيلات</div>' +
+              '<div class="val">' + fmtNumber(batches.length) + '</div>' +
+            '</div>' +
+          '</div>' +
+
+          '<div style="margin-bottom:20px;">' +
+            '<h4 style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:10px;display:flex;align-items:center;gap:6px;">' +
+              '<i data-lucide="barcode" style="width:16px;height:16px;color:var(--info);"></i>' +
+              'الباركود (' + (p.barcodes || []).length + ')' +
+            '</h4>' +
+            '<div class="barcode-chips">' + barcodesHtml + '</div>' +
+          '</div>' +
+
+          '<div>' +
+            '<h4 style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:10px;display:flex;align-items:center;gap:6px;">' +
+              '<i data-lucide="layers" style="width:16px;height:16px;color:var(--purple);"></i>' +
+              'التشغيلات (' + batches.length + ')' +
+            '</h4>' +
+            batchesHtml +
+          '</div>' +
+
+          (p.notes ?
+            '<div style="margin-top:20px;padding:12px;background:var(--bg);border-radius:10px;border:1px solid var(--border);">' +
+              '<div style="font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:4px;">ملاحظات</div>' +
+              '<div style="font-size:13px;line-height:1.7;">' + esc(p.notes) + '</div>' +
+            '</div>'
+          : '');
+
+        document.getElementById('detailsModal').classList.add('show');
+        document.getElementById('editFromDetailsBtn').onclick = function () {
+          document.getElementById('detailsModal').classList.remove('show');
+          setTimeout(function () { openEdit(id); }, 200);
+        };
+        if (window.lucide) lucide.createIcons();
+      }
+
+      // ============================================================
+      // 18) Export Excel
+      // ============================================================
+      function exportExcel() {
+        const list = state.filtered.length ? state.filtered : state.products;
+        if (!list.length) { Refad.toast.warning('لا توجد بيانات'); return; }
+
+        const data = list.map(function (p, i) {
+          return {
+            '#': i + 1,
             'الاسم': p.name,
             'الاسم EN': p.name_en || '',
             'الشكل': p.form || '',
             'الوحدة': p.unit || '',
             'التصنيف': p.category || '',
-            'السعر': p.default_price || 0,
-            'الحد الأدنى': p.min_order_qty || 1,
-            'حد إعادة الطلب': p.reorder_level || 0,
-            'الحالة': p.is_active ? 'نشط' : 'غير نشط'
-          }));
-          const ws = XLSX.utils.json_to_sheet(rows);
-          const wb = XLSX.utils.book_new();
-          XLSX.utils.book_append_sheet(wb, ws, 'Products');
-          XLSX.writeFile(wb, `products-${Refad.date.today()}.xlsx`);
-          Refad.toast.success('تم التصدير');
+            'السعر': toNum(p.default_price),
+            'المخزون': toNum(p.total_stock),
+            'حد إعادة الطلب': toNum(p.reorder_level),
+            'الحد الأدنى': toNum(p.min_order_qty),
+            'أقرب صلاحية': p.nearest_expiry || '',
+            'الباركود': (p.barcodes || []).map(function (b) { return b.barcode; }).join(', '),
+            'الحالة': p.is_active === false ? 'موقوف' : 'نشط'
+          };
         });
 
-        document.getElementById('importBtn').addEventListener('click', () => {
-          Refad.toast.info('سيتم تفعيل الاستيراد قريباً');
-        });
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'الأصناف');
+        XLSX.writeFile(wb, 'products_' + getToday() + '.xlsx');
+        Refad.toast.success('تم التصدير');
       }
 
       // ============================================================
-      // 11) Events
+      // 19) Bind Events
       // ============================================================
       function bindEvents() {
-        // Search
-        const searchHandler = Refad.debounce(v => {
-          state.search = v;
-          applyFilters();
-        }, 250);
-        document.getElementById('searchInput').addEventListener('input', e => searchHandler(e.target.value));
-
-        // Filters
-        document.getElementById('filterStatus').addEventListener('change', e => {
-          state.filterStatus = e.target.value;
-          applyFilters();
+        document.getElementById('addBtn').addEventListener('click', openAdd);
+        document.getElementById('refreshBtn').addEventListener('click', async function () {
+          Refad.toast.info('جارٍ التحديث...');
+          await loadData();
+          Refad.toast.success('تم التحديث');
         });
-        document.getElementById('filterForm').addEventListener('change', e => {
-          state.filterForm = e.target.value;
-          applyFilters();
-        });
+        document.getElementById('exportBtn').addEventListener('click', exportExcel);
 
-        // Add
-        if (canCreate) {
-          document.getElementById('addBtn').addEventListener('click', () => openModal(null));
-        } else {
-          const b = document.getElementById('addBtn');
-          b.disabled = true;
-          b.title = 'ليس لديك صلاحية';
-        }
-
-        // Modal close
-        document.getElementById('modalClose').addEventListener('click', closeModal);
-        document.getElementById('cancelBtn').addEventListener('click', closeModal);
-        document.getElementById('productModal').addEventListener('click', e => {
-          if (e.target.id === 'productModal') closeModal();
-        });
-
-        // Form submit
         document.getElementById('productForm').addEventListener('submit', saveProduct);
 
-        // Table actions (event delegation)
-        document.getElementById('tableBody').addEventListener('click', e => {
-          const btn = e.target.closest('[data-action]');
-          if (!btn) {
-            const row = e.target.closest('tr[data-id]');
-            if (row && !e.target.closest('a, input, select, textarea, label')) {
-              location.href = `product-details.html?id=${row.dataset.id}`;
-            }
-            return;
-          }
-          const action = btn.dataset.action;
-          const id = parseInt(btn.dataset.id, 10);
-          const product = state.all.find(p => p.id === id);
-          if (!product) return;
-
-          if (action === 'view') {
-            location.href = `product-details.html?id=${id}`;
-          } else if (action === 'edit') {
-            openModal(product);
-          } else if (action === 'delete') {
-            deleteProduct(id, product.name);
-          }
-        });
-        document.getElementById('tableBody').addEventListener('keydown', e => {
-          const row = e.target.closest('tr[data-id]');
-          if (row && e.target === row && (e.key === 'Enter' || e.key === ' ')) {
+        document.getElementById('addBarcodeBtn').addEventListener('click', addBarcodeFromInput);
+        document.getElementById('pBarcodeInput').addEventListener('keydown', function (e) {
+          if (e.key === 'Enter') {
             e.preventDefault();
-            location.href = `product-details.html?id=${row.dataset.id}`;
+            addBarcodeFromInput();
           }
         });
 
-        // ESC يغلق Modal
-        document.addEventListener('keydown', e => {
-          if (e.key === 'Escape') closeModal();
+        document.getElementById('searchInput').addEventListener('input', Refad.debounce(function (e) {
+          state.filters.search = e.target.value.trim();
+          applyFilters();
+        }, 200));
+
+        document.getElementById('filterForm').addEventListener('change', function (e) {
+          state.filters.form = e.target.value;
+          applyFilters();
+        });
+
+        document.getElementById('filterStatus').addEventListener('change', function (e) {
+          state.filters.status = e.target.value;
+          applyFilters();
+        });
+
+        document.getElementById('filterStock').addEventListener('change', function (e) {
+          state.filters.stock = e.target.value;
+          applyFilters();
+        });
+
+        document.querySelectorAll('[data-close]').forEach(function (b) {
+          b.addEventListener('click', function () {
+            document.querySelectorAll('.modal-backdrop').forEach(function (m) { m.classList.remove('show'); });
+          });
+        });
+
+        document.querySelectorAll('.modal-backdrop').forEach(function (m) {
+          m.addEventListener('click', function (e) {
+            if (e.target === m) m.classList.remove('show');
+          });
+        });
+
+        document.addEventListener('keydown', function (e) {
+          if (e.key === 'Escape') {
+            document.querySelectorAll('.modal-backdrop').forEach(function (m) { m.classList.remove('show'); });
+          }
         });
       }
 
       // ============================================================
-      // 12) Init
+      // 20) Load Settings from RefadSettings
       // ============================================================
-      function init() {
+      function loadSettings() {
+        try {
+          if (window.RefadSettings) {
+            state.defaultReorderLevel = SafeSettings.inventory.getReorderLevel();
+            state.defaultMinOrder = SafeSettings.inventory.getMinOrderQty();
+            state.expiryAlertDays = SafeSettings.inventory.getExpiryAlertDays();
+            state.currencySymbol = SafeSettings.locale.getCurrencySymbol();
+            state.costMethod = SafeSettings.inventory.getCostMethod();
+          }
+        } catch (e) { console.warn('[loadSettings]', e); }
+      }
+
+      // ============================================================
+      // 21) Realtime Theme Listener
+      // ============================================================
+      function setupRealtimeTheme() {
+        window.addEventListener('refad:theme-changed', function () {
+          applyIdentity();
+        });
+      }
+
+      // ============================================================
+      // 22) Init
+      // ============================================================
+      async function init() {
+        // 1) حمّل الإعدادات
+        loadSettings();
+
+        // 2) UI Setup
         buildSidebar();
         fillUser();
         setupTheme();
         setupSidebarMobile();
         setupUserMenu();
         setupNotifBtn();
+        setupViewToggle();
         bindEvents();
-        setupExcel();
-        loadProducts();
 
-        Refad.registerServiceWorker();
+        // 3) طبّق الهوية
+        applyIdentity();
+
+        // 4) حمّل البيانات
+        await loadData();
+
+        // 5) realtime theme listener
+        setupRealtimeTheme();
+
+        // 6) service worker
+        if (Refad.registerServiceWorker) Refad.registerServiceWorker();
+
+        console.log('%c[Refad] Products v3 ready (Theme Sync + Settings + Silent Realtime)', 'color:#14B8A6;font-weight:bold');
       }
 
       if (document.readyState === 'loading') {
@@ -1576,13 +2208,8 @@
         init();
       }
 
-      console.log('%c[Refad] Products page ready', 'color:#14B8A6;font-weight:bold');
-
     })();
   </script>
-
-  <!-- XLSX (يُحمّل عند الحاجة) -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 </body>
 </html>

@@ -61,6 +61,14 @@
       --sidebar-text: #94a3b8;
     }
 
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
     html, body {
       height: 100%;
       font-family: 'Cairo', sans-serif;
@@ -107,6 +115,7 @@
       justify-content: center;
       flex-shrink: 0;
       box-shadow: 0 4px 12px rgba(20,184,166,0.4);
+      overflow: hidden;
     }
     .sidebar-logo img { width: 70%; height: 70%; object-fit: contain; }
     .sidebar-logo .fallback { color: white; font-weight: 800; font-size: 18px; }
@@ -114,7 +123,7 @@
     .sidebar-brand h2 { color: white; font-size: 20px; font-weight: 800; letter-spacing: -0.5px; line-height: 1.2; }
     .sidebar-brand p { font-size: 10px; color: var(--sidebar-text); opacity: 0.7; font-weight: 500; margin-top: 2px; }
 
-    .sidebar-nav { flex: 1; overflow-y: auto; padding: 12px 0; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.15) transparent; }
+    .sidebar-nav { flex: 1; overflow-y: auto; padding: 12px 0; scrollbar-width: thin; }
     .sidebar-nav::-webkit-scrollbar { width: 5px; }
     .sidebar-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 10px; }
 
@@ -141,6 +150,7 @@
     .nav-item .badge { margin-right: auto; background: var(--danger); color: white; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
     .nav-item .badge.teal { background: var(--accent); }
     .nav-item .badge.gold { background: var(--gold); }
+    .nav-item .badge.new { background: var(--purple); }
 
     /* Main */
     .main { flex: 1; margin-right: var(--sidebar-w); min-width: 0; display: flex; flex-direction: column; }
@@ -263,6 +273,9 @@
     .btn-outline { background: var(--card); color: var(--text); border: 1px solid var(--border); }
     .btn-outline:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
 
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-danger:hover:not(:disabled) { background: #b91c1c; }
+
     .btn-sm { padding: 6px 12px; font-size: 12px; }
 
     /* Mini stats */
@@ -283,8 +296,10 @@
       gap: 12px;
       transition: all 0.2s;
       box-shadow: var(--shadow-sm);
+      cursor: pointer;
     }
     .mini-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: var(--shadow); }
+    .mini-card.active { border-color: var(--accent); background: linear-gradient(135deg, rgba(20,184,166,0.08), rgba(20,184,166,0.03)); }
 
     .mini-icon {
       width: 42px;
@@ -307,6 +322,30 @@
     .mini-body .label { font-size: 11px; color: var(--text-muted); font-weight: 600; margin-bottom: 2px; }
     .mini-body .value { font-size: 18px; font-weight: 800; color: var(--text); line-height: 1; }
     .mini-body .sub { font-size: 10px; color: var(--text-muted); margin-top: 3px; }
+
+    /* Active filters summary */
+    .filters-summary {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      background: rgba(20,184,166,0.06);
+      border: 1px solid rgba(20,184,166,0.2);
+      border-radius: var(--radius-sm);
+      margin-bottom: 12px;
+      font-size: 12px;
+      flex-wrap: wrap;
+    }
+    .filters-summary.show { display: flex; }
+    .filters-summary .lbl { color: var(--text-muted); font-weight: 700; }
+    .filters-summary .chip {
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 11px;
+    }
 
     /* Toolbar */
     .toolbar {
@@ -337,6 +376,12 @@
     }
     .search-input input:focus { border-color: var(--accent); background: var(--card); box-shadow: 0 0 0 3px rgba(20,184,166,0.1); }
     .search-input i { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--text-muted); pointer-events: none; }
+    .search-input kbd {
+      position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+      font-family: 'Courier New', monospace; font-size: 10px;
+      padding: 2px 6px; background: var(--border); color: var(--text-muted);
+      border-radius: 4px; font-weight: 700; pointer-events: none;
+    }
 
     .select-wrap { position: relative; min-width: 150px; }
     .select-wrap select {
@@ -382,16 +427,8 @@
       box-shadow: var(--shadow-sm);
     }
 
-    .date-range-group {
-      display: flex;
-      gap: 6px;
-      align-items: center;
-    }
-    .date-range-group label {
-      font-size: 12px;
-      color: var(--text-muted);
-      font-weight: 600;
-    }
+    .date-range-group { display: flex; gap: 6px; align-items: center; }
+    .date-range-group label { font-size: 12px; color: var(--text-muted); font-weight: 600; }
     .date-range-group input[type="date"] {
       padding: 8px 10px;
       font-family: inherit;
@@ -402,16 +439,9 @@
       color: var(--text);
       outline: none;
     }
-    .date-range-group input[type="date"]:focus {
-      border-color: var(--accent);
-      background: var(--card);
-    }
+    .date-range-group input[type="date"]:focus { border-color: var(--accent); background: var(--card); }
 
-    .quick-filters {
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-    }
+    .quick-filters { display: flex; gap: 6px; flex-wrap: wrap; }
     .quick-filter-btn {
       padding: 6px 12px;
       font-size: 12px;
@@ -442,7 +472,7 @@
       width: 100%;
       border-collapse: collapse;
       font-size: 14px;
-      min-width: 1000px;
+      min-width: 1100px;
     }
 
     thead { background: var(--bg); border-bottom: 1px solid var(--border); }
@@ -468,18 +498,31 @@
 
     td { padding: 14px 16px; color: var(--text); vertical-align: middle; }
 
+    .receipt-number-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
     .receipt-number {
       font-weight: 800;
       color: var(--accent);
       cursor: pointer;
       font-family: 'Courier New', monospace;
       letter-spacing: 0.5px;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
     }
     .receipt-number:hover { text-decoration: underline; }
-    .receipt-number .lock-icon { width: 12px; height: 12px; color: var(--gold); }
+
+    .copy-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 22px; height: 22px; border-radius: 6px;
+      border: none; background: transparent; color: var(--text-muted);
+      cursor: pointer; transition: all 0.2s;
+    }
+    .copy-btn:hover { background: var(--accent); color: white; }
+    .copy-btn i { width: 12px; height: 12px; }
+    .copy-btn.copied { background: var(--success); color: white; }
+
+    .lock-icon { width: 12px; height: 12px; color: var(--gold); }
 
     .supplier-name-cell { font-weight: 600; color: var(--text); }
     .supplier-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
@@ -520,6 +563,20 @@
     .badge-tag.blue   { background: rgba(59,130,246,0.12); color: var(--info); }
     .badge-tag.purple { background: rgba(139,92,246,0.12); color: var(--purple); }
 
+    .wh-badge-sm {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 15px;
+      background: rgba(11,44,77,0.06);
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 600;
+    }
+    [data-theme="dark"] .wh-badge-sm { background: rgba(148,163,184,0.12); }
+    .wh-badge-sm i { width: 11px; height: 11px; }
+
     .actions-cell { display: flex; gap: 6px; justify-content: flex-end; }
 
     .action-btn {
@@ -537,6 +594,7 @@
     }
     .action-btn:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
     .action-btn.danger:hover { border-color: var(--danger); color: var(--danger); background: rgba(239,68,68,0.06); }
+    .action-btn.success:hover { border-color: var(--success); color: var(--success); }
     .action-btn i { width: 15px; height: 15px; }
 
     .empty-row td { padding: 60px 20px; text-align: center; color: var(--text-muted); }
@@ -590,7 +648,8 @@
     .page-btn:hover:not(:disabled):not(.active) { border-color: var(--accent); color: var(--accent); }
     .page-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
     .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-        /* Side Panel */
+
+    /* Side Panel */
     .side-panel-backdrop {
       position: fixed;
       inset: 0;
@@ -608,7 +667,7 @@
       top: 0;
       left: 0;
       bottom: 0;
-      width: 540px;
+      width: 580px;
       max-width: 92vw;
       background: var(--card);
       box-shadow: 4px 0 24px rgba(0,0,0,0.15);
@@ -653,9 +712,7 @@
     .side-panel-body::-webkit-scrollbar { width: 8px; }
     .side-panel-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
 
-    .detail-section {
-      margin-bottom: 22px;
-    }
+    .detail-section { margin-bottom: 22px; }
     .detail-section-title {
       font-size: 12px;
       font-weight: 700;
@@ -690,7 +747,7 @@
       border: 1px solid var(--border);
       border-radius: var(--radius-sm);
       padding: 10px;
-      max-height: 320px;
+      max-height: 400px;
       overflow-y: auto;
     }
     .detail-item-row {
@@ -723,6 +780,7 @@
       text-align: center;
     }
     .detail-item-row.is-return .item-qty { background: var(--gold); }
+    .detail-item-row.is-bonus .item-qty { background: var(--purple); }
 
     /* Panel summary cards */
     .panel-summary-grid {
@@ -754,6 +812,7 @@
     .panel-summary-card .value.gold { color: var(--gold); }
     .panel-summary-card .value.success { color: var(--success); }
     .panel-summary-card .value.danger { color: var(--danger); }
+    .panel-summary-card .value.purple { color: var(--purple); }
 
     /* Modal */
     .modal-backdrop {
@@ -814,15 +873,7 @@
     .modal-close:hover { background: var(--bg); color: var(--danger); }
     .modal-close i { width: 18px; height: 18px; }
 
-    .modal-body {
-      padding: 20px;
-      overflow-y: auto;
-      flex: 1;
-      min-height: 0;
-    }
-    .modal-body::-webkit-scrollbar { width: 8px; }
-    .modal-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
-
+    .modal-body { padding: 20px; overflow-y: auto; flex: 1; min-height: 0; }
     .modal-footer {
       padding: 14px 20px;
       border-top: 1px solid var(--border);
@@ -831,6 +882,126 @@
       justify-content: flex-end;
       background: var(--bg);
       flex-shrink: 0;
+    }
+
+    /* Warehouse Selector Wrapper */
+    .wh-info-box {
+      background: rgba(59,130,246,0.06);
+      border: 1.5px solid rgba(59,130,246,0.25);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .wh-info-box i { width: 18px; height: 18px; color: var(--info); flex-shrink: 0; }
+    .wh-info-box strong { color: var(--primary); }
+    .wh-info-box select {
+      padding: 6px 12px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      background: var(--card);
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      outline: none;
+      cursor: pointer;
+      margin-right: auto;
+    }
+
+    /* ✨ Quick Search */
+    .quick-search-overlay {
+      position: fixed; inset: 0;
+      z-index: 600;
+      display: none;
+      align-items: flex-start; justify-content: center;
+      padding: 80px 20px 20px;
+      background: rgba(15,23,42,0.6);
+      backdrop-filter: blur(6px);
+      animation: qsFadeIn 0.2s;
+    }
+    .quick-search-overlay.show { display: flex; }
+    @keyframes qsFadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes qsSlideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .quick-search-box {
+      width: min(600px, 100%);
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+      animation: qsSlideUp 0.25s;
+    }
+    .quick-search-input-wrap { position: relative; }
+    .quick-search-input {
+      width: 100%;
+      padding: 18px 60px 18px 18px;
+      font-family: inherit;
+      font-size: 16px; font-weight: 600;
+      background: var(--card);
+      border: none;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+      outline: none;
+    }
+    .quick-search-input-wrap > i {
+      position: absolute; right: 20px; top: 50%;
+      transform: translateY(-50%);
+      width: 22px; height: 22px;
+      color: var(--accent);
+      pointer-events: none;
+    }
+    .quick-search-kbd {
+      position: absolute; left: 18px; top: 50%;
+      transform: translateY(-50%);
+      font-size: 10px;
+      padding: 3px 8px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-muted);
+      font-family: 'Courier New', monospace;
+      font-weight: 700;
+    }
+    .quick-search-results { max-height: 400px; overflow-y: auto; padding: 8px; }
+    .quick-search-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .quick-search-item:hover, .quick-search-item.selected { background: rgba(20,184,166,0.1); }
+    .quick-search-item .qs-icon {
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: white;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 15px;
+      flex-shrink: 0;
+    }
+    .quick-search-item .qs-body { flex: 1; min-width: 0; }
+    .quick-search-item .qs-name { font-weight: 700; font-size: 14px; color: var(--text); }
+    .quick-search-item .qs-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .quick-search-empty { text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 13px; }
+    .quick-search-footer {
+      padding: 10px 16px;
+      border-top: 1px solid var(--border);
+      background: var(--bg);
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 11px; color: var(--text-muted);
+    }
+    .quick-search-footer kbd {
+      font-family: 'Courier New', monospace;
+      padding: 2px 6px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-weight: 700;
     }
 
     /* Overlay mobile */
@@ -855,9 +1026,11 @@
       .toolbar { padding: 12px; }
       .filters-advanced { padding: 10px; }
       .search-input { min-width: 100%; }
+      .search-input kbd { display: none; }
       .modal-footer { flex-direction: column-reverse; }
       .modal-footer .btn { width: 100%; justify-content: center; }
       .panel-summary-grid { grid-template-columns: 1fr; }
+      .quick-search-overlay { padding: 20px 10px; }
       .side-panel {
         width: 100%;
         max-width: 100%;
@@ -874,12 +1047,12 @@
   <!-- Sidebar -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
-      <div class="sidebar-logo">
-        <img src="logo.png" alt="رفاد" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=fallback>R</span>';">
+      <div class="sidebar-logo" id="sidebarLogo">
+        <img src="logo.png" alt="رفاد" id="sidebarLogoImg" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=fallback>R</span>';">
       </div>
       <div class="sidebar-brand">
-        <h2>رفاد</h2>
-        <p>نظام إدارة الأدوية</p>
+        <h2 id="sidebarBrandName">رفاد</h2>
+        <p id="sidebarBrandDesc">نظام إدارة الأدوية</p>
       </div>
     </div>
     <nav class="sidebar-nav" id="sidebarNav"></nav>
@@ -894,7 +1067,7 @@
       <button class="menu-toggle" id="menuToggle"><i data-lucide="menu"></i></button>
       <div class="topbar-title">الاستلامات</div>
       <div class="topbar-actions">
-        <button class="icon-btn" id="themeToggle" title="الوضع الليلي/النهاري">
+        <button class="icon-btn" id="themeToggle" title="الوضع الليلي">
           <i data-lucide="moon" id="themeIcon"></i>
         </button>
         <button class="icon-btn" id="notifBtn" title="الإشعارات" style="position:relative;">
@@ -940,9 +1113,17 @@
         </div>
       </div>
 
+      <!-- Warehouse Info -->
+      <div class="wh-info-box" id="whInfoBox">
+        <i data-lucide="warehouse"></i>
+        <span>عرض فواتير المخزن:</span>
+        <strong id="activeWhName">—</strong>
+        <select id="whSelect"></select>
+      </div>
+
       <!-- Mini stats -->
       <div class="mini-stats">
-        <div class="mini-card">
+        <div class="mini-card" data-stat-filter="all">
           <div class="mini-icon blue"><i data-lucide="package-check"></i></div>
           <div class="mini-body">
             <div class="label">إجمالي الاستلامات</div>
@@ -950,7 +1131,7 @@
             <div class="sub" id="statTotalSub">—</div>
           </div>
         </div>
-        <div class="mini-card">
+        <div class="mini-card" data-stat-filter="completed">
           <div class="mini-icon green"><i data-lucide="check-circle-2"></i></div>
           <div class="mini-body">
             <div class="label">مكتمل</div>
@@ -958,7 +1139,7 @@
             <div class="sub" id="statCompletedSub">—</div>
           </div>
         </div>
-        <div class="mini-card">
+        <div class="mini-card" data-stat-filter="partial">
           <div class="mini-icon gold"><i data-lucide="clock"></i></div>
           <div class="mini-body">
             <div class="label">جزئي</div>
@@ -966,7 +1147,7 @@
             <div class="sub" id="statPartialSub">—</div>
           </div>
         </div>
-        <div class="mini-card">
+        <div class="mini-card" data-stat-filter="pending">
           <div class="mini-icon blue"><i data-lucide="hourglass"></i></div>
           <div class="mini-body">
             <div class="label">معلق</div>
@@ -974,7 +1155,7 @@
             <div class="sub" id="statPendingSub">—</div>
           </div>
         </div>
-        <div class="mini-card">
+        <div class="mini-card" data-stat-filter="all">
           <div class="mini-icon teal"><i data-lucide="banknote"></i></div>
           <div class="mini-body">
             <div class="label">إجمالي القيمة</div>
@@ -982,7 +1163,7 @@
             <div class="sub" id="statValueSub">—</div>
           </div>
         </div>
-        <div class="mini-card">
+        <div class="mini-card" data-stat-filter="unpaid">
           <div class="mini-icon red"><i data-lucide="wallet"></i></div>
           <div class="mini-body">
             <div class="label">المتبقي للموردين</div>
@@ -990,7 +1171,15 @@
             <div class="sub" id="statDueSub">—</div>
           </div>
         </div>
-        <div class="mini-card">
+        <div class="mini-card" data-stat-filter="bonus">
+          <div class="mini-icon purple"><i data-lucide="gift"></i></div>
+          <div class="mini-body">
+            <div class="label">إجمالي البونص</div>
+            <div class="value" id="statBonus">—</div>
+            <div class="sub" id="statBonusSub">—</div>
+          </div>
+        </div>
+        <div class="mini-card" data-stat-filter="locked">
           <div class="mini-icon purple"><i data-lucide="lock"></i></div>
           <div class="mini-body">
             <div class="label">فواتير مقفلة</div>
@@ -1000,11 +1189,21 @@
         </div>
       </div>
 
+      <!-- ✨ Active Filters Summary -->
+      <div class="filters-summary" id="filtersSummary">
+        <span class="lbl"><i data-lucide="filter" style="width:14px;height:14px;display:inline-block;vertical-align:middle;"></i> الفلاتر النشطة:</span>
+        <div id="filtersChips" style="display:flex;gap:6px;flex-wrap:wrap;flex:1;"></div>
+        <button class="btn btn-outline btn-sm" id="clearSummaryFiltersBtn" type="button">
+          <i data-lucide="x"></i> مسح
+        </button>
+      </div>
+
       <!-- Toolbar -->
       <div class="toolbar">
         <div class="search-input">
-          <input type="text" id="searchInput" placeholder="ابحث برقم الفاتورة أو رقم الطلب أو اسم المورد...">
+          <input type="text" id="searchInput" placeholder="ابحث برقم الفاتورة أو اسم المورد... (Ctrl+K)">
           <i data-lucide="search"></i>
+          <kbd>Ctrl+K</kbd>
         </div>
         <div class="select-wrap">
           <select id="filterStatus">
@@ -1020,6 +1219,11 @@
             <option value="">كل الموردين</option>
           </select>
         </div>
+        <div class="select-wrap">
+          <select id="filterWarehouse">
+            <option value="">كل المخازن</option>
+          </select>
+        </div>
       </div>
 
       <!-- Advanced Filters -->
@@ -1030,6 +1234,7 @@
           <button type="button" class="quick-filter-btn" data-quick="week">آخر 7 أيام</button>
           <button type="button" class="quick-filter-btn" data-quick="month">هذا الشهر</button>
           <button type="button" class="quick-filter-btn" data-quick="unpaid">غير مسدد</button>
+          <button type="button" class="quick-filter-btn" data-quick="bonus">ببونص</button>
           <button type="button" class="quick-filter-btn" data-quick="locked">مقفلة</button>
         </div>
         <div class="date-range-group">
@@ -1051,6 +1256,7 @@
               <tr>
                 <th>رقم الفاتورة</th>
                 <th>المورد</th>
+                <th>المخزن</th>
                 <th>التاريخ</th>
                 <th>الأصناف</th>
                 <th>الإجمالي</th>
@@ -1069,7 +1275,7 @@
     </main>
   </div>
 
-  <!-- Side Panel: Receipt Details -->
+  <!-- Side Panel -->
   <div class="side-panel-backdrop" id="panelBackdrop"></div>
   <aside class="side-panel" id="detailPanel">
     <div class="side-panel-header">
@@ -1079,11 +1285,78 @@
     <div class="side-panel-body" id="panelBody"></div>
   </aside>
 
+  <!-- ✨ Quick Search Overlay -->
+  <div class="quick-search-overlay" id="quickSearchOverlay">
+    <div class="quick-search-box">
+      <div class="quick-search-input-wrap">
+        <input type="text" class="quick-search-input" id="quickSearchInput" placeholder="ابحث برقم الفاتورة أو اسم المورد..." autocomplete="off">
+        <i data-lucide="search"></i>
+        <span class="quick-search-kbd">ESC</span>
+      </div>
+      <div class="quick-search-results" id="quickSearchResults">
+        <div class="quick-search-empty">اكتب للبحث السريع...</div>
+      </div>
+      <div class="quick-search-footer">
+        <span><kbd>↑</kbd> <kbd>↓</kbd> للتنقل</span>
+        <span><kbd>Enter</kbd> للفتح</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       SCRIPTS — الترتيب مهم جداً
+       ============================================================ -->
   <script src="refad-core.js"></script>
   <script src="refad-auth.js"></script>
-    <script>
+  <script src="refad-theme-sync.js"></script>
+  <script src="refad-settings.js"></script>
+  <script src="refad-warehouse.js"></script>
+
+  <script>
     (function () {
       'use strict';
+
+      // ============================================================
+      // 0) Safe Settings Wrapper
+      // ============================================================
+      const SafeSettings = {
+        locale: {
+          formatMoney: function (v) {
+            try {
+              if (window.RefadSettings?.locale?.formatMoney) {
+                return RefadSettings.locale.formatMoney(v);
+              }
+            } catch (e) {}
+            return Refad.format.money(v);
+          }
+        },
+        identity: {
+          getSystemName: function () {
+            try {
+              if (window.RefadSettings?.identity?.getSystemName) {
+                return RefadSettings.identity.getSystemName();
+              }
+            } catch (e) {}
+            return 'رفاد';
+          },
+          getTagline: function () {
+            try {
+              if (window.RefadSettings?.identity?.getTagline) {
+                return RefadSettings.identity.getTagline();
+              }
+            } catch (e) {}
+            return 'نظام إدارة الأدوية';
+          },
+          getLogoUrl: function () {
+            try {
+              if (window.RefadSettings?.identity?.getLogoUrl) {
+                return RefadSettings.identity.getLogoUrl();
+              }
+            } catch (e) {}
+            return null;
+          }
+        }
+      };
 
       // ============================================================
       // 1) Guard
@@ -1095,68 +1368,44 @@
       const canDelete = Refad.Session.has('purchases.edit');
 
       // ============================================================
-      // 2) Sidebar MENU
+      // 2) Safe helpers
       // ============================================================
-      const MENU = [
-        { section: 'الرئيسية', items: [
-          { label: 'لوحة التحكم', icon: 'layout-dashboard', href: 'dashboard.html' },
-          { label: 'الشات', icon: 'message-circle', href: 'chat.html', permission: 'chat.use' },
-          { label: 'الإشعارات', icon: 'bell', href: 'notifications.html', permission: 'notifications.view' }
-        ]},
-        { section: 'العمليات', items: [
-          { label: 'الأصناف', icon: 'package', href: 'products.html', permission: 'products.view' },
-          { label: 'المخزون', icon: 'warehouse', href: 'inventory.html', permission: 'inventory.view' },
-          { label: 'طلبات الشراء', icon: 'clipboard-list', href: 'purchase-requests.html', permission: 'purchases.view' },
-          { label: 'الاستلامات', icon: 'package-check', href: 'receipts.html', permission: 'purchases.receive' },
-          { label: 'طلبات البيع', icon: 'shopping-cart', href: 'sales-orders.html', permission: 'sales.view' },
-          { label: 'نقطة البيع', icon: 'scan-barcode', href: 'pos.html', permission: 'sales.pos', badge: 'POS', badgeClass: 'teal' },
-          { label: 'الفواتير', icon: 'receipt', href: 'invoices.html', permission: 'sales.view' }
-        ]},
-        { section: 'الأطراف', items: [
-          { label: 'الموردين', icon: 'truck', href: 'suppliers.html', permission: 'suppliers.view' },
-          { label: 'العملاء', icon: 'users', href: 'customers.html', permission: 'customers.view' }
-        ]},
-        { section: 'المخزون', items: [
-          { label: 'الجرد', icon: 'clipboard-check', href: 'stocktake.html', permission: 'inventory.stocktake' },
-          { label: 'التسويات', icon: 'sliders-horizontal', href: 'adjustments.html', permission: 'inventory.adjust' }
-        ]},
-        { section: 'الموارد البشرية', items: [
-          { label: 'الموظفين', icon: 'user-cog', href: 'employees.html', permission: 'employees.view' },
-          { label: 'الصلاحيات', icon: 'shield-check', href: 'permissions.html', permission: 'permissions.manage' },
-          { label: 'الحضور', icon: 'calendar-check', href: 'attendance.html', permission: 'attendance.view' },
-          { label: 'الرواتب', icon: 'wallet', href: 'payroll.html', permission: 'payroll.view' }
-        ]},
-        { section: 'المالية', items: [
-          { label: 'الحسابات', icon: 'landmark', href: 'accounts.html', permission: 'company.owner' },
-          { label: 'المصاريف', icon: 'banknote', href: 'expenses.html', permission: 'expenses.view' },
-          { label: 'التقارير', icon: 'bar-chart-3', href: 'reports.html', permission: 'reports.view' }
-        ]},
-        { section: 'النظام', items: [
-          { label: 'إعدادات الشركة', icon: 'settings', href: 'company-settings.html', permission: 'settings.view' },
-          { label: 'شاشة الأدمن', icon: 'shield', href: 'admin.html', permission: 'admin.full', badge: 'Admin', badgeClass: 'gold' }
-        ]}
-      ];
+      function esc(s) {
+        if (typeof Refad.escapeHtml === 'function') return Refad.escapeHtml(s);
+        if (s === null || s === undefined) return '';
+        return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+      }
+      function fmtMoney(v) { return SafeSettings.locale.formatMoney(v); }
+      function fmtNumber(v) {
+        if (typeof Refad.format?.number === 'function') return Refad.format.number(v);
+        return String(v || 0);
+      }
+      function fmtDate(v) {
+        if (typeof Refad.format?.date === 'function') return Refad.format.date(v);
+        if (!v) return '—';
+        return String(v).slice(0, 10);
+      }
 
-      function buildSidebar() {
-        const nav = document.getElementById('sidebarNav');
-        const currentPage = 'receipts.html';
-        const frag = document.createDocumentFragment();
-        MENU.forEach(group => {
-          const allowed = group.items.filter(it => !it.permission || Refad.Session.has(it.permission));
-          if (!allowed.length) return;
-          frag.appendChild(Refad.el('div', { class: 'nav-section' }, group.section));
-          allowed.forEach(item => {
-            const a = Refad.el('a', {
-              href: item.href,
-              class: 'nav-item' + (item.href === currentPage ? ' active' : '')
-            });
-            a.innerHTML = `<i data-lucide="${item.icon}"></i><span>${Refad.escapeHtml(item.label)}</span>${item.badge ? `<span class="badge ${item.badgeClass || ''}">${item.badge}</span>` : ''}`;
-            frag.appendChild(a);
-          });
-        });
-        nav.innerHTML = '';
-        nav.appendChild(frag);
-        if (window.lucide) lucide.createIcons();
+      // ✨ Copy to clipboard
+      async function copyText(text, btn) {
+        try {
+          await navigator.clipboard.writeText(text);
+          if (btn) {
+            btn.classList.add('copied');
+            const icon = btn.querySelector('i');
+            if (icon) icon.setAttribute('data-lucide', 'check');
+            if (window.lucide) lucide.createIcons();
+            setTimeout(() => {
+              btn.classList.remove('copied');
+              if (icon) icon.setAttribute('data-lucide', 'copy');
+              if (window.lucide) lucide.createIcons();
+            }, 1200);
+          }
+          Refad.toast.success('تم النسخ');
+        } catch (e) {
+          Refad.toast.error('فشل النسخ');
+        }
       }
 
       // ============================================================
@@ -1165,10 +1414,31 @@
       function fillUser() {
         const av = document.getElementById('userAvatar');
         const initial = (session.full_name || '؟').trim().charAt(0);
-        if (session.avatar_url) av.innerHTML = `<img src="${Refad.escapeHtml(session.avatar_url)}" alt="">`;
+        if (session.avatar_url) av.innerHTML = `<img src="${esc(session.avatar_url)}" alt="">`;
         else av.textContent = initial;
-        document.getElementById('userName').textContent = session.full_name;
+        document.getElementById('userName').textContent = session.full_name || '—';
         document.getElementById('userRole').textContent = Refad.Session.has('company.owner') ? 'صاحب الشركة' : 'موظف';
+      }
+
+      function applyIdentity() {
+        const name = SafeSettings.identity.getSystemName();
+        const tagline = SafeSettings.identity.getTagline();
+        const logoUrl = SafeSettings.identity.getLogoUrl();
+
+        const brandName = document.getElementById('sidebarBrandName');
+        const brandDesc = document.getElementById('sidebarBrandDesc');
+        const logoImg = document.getElementById('sidebarLogoImg');
+
+        if (brandName) brandName.textContent = name;
+        if (brandDesc) brandDesc.textContent = tagline;
+        if (logoImg && logoUrl) {
+          logoImg.src = logoUrl;
+          logoImg.onerror = function () {
+            this.style.display = 'none';
+            const parent = this.parentElement;
+            if (parent) parent.innerHTML = '<span class="fallback">' + (name.charAt(0) || 'R') + '</span>';
+          };
+        }
       }
 
       function setupTheme() {
@@ -1213,6 +1483,12 @@
         });
       }
 
+      function setupRealtimeTheme() {
+        window.addEventListener('refad:theme-changed', () => {
+          applyIdentity();
+        });
+      }
+
       // ============================================================
       // 4) State
       // ============================================================
@@ -1220,20 +1496,57 @@
         all: [],
         filtered: [],
         suppliers: [],
+        warehouses: [],
+        activeWarehouseId: null,
+        selectedWarehouseId: '',
         page: 1,
         perPage: 15,
         search: '',
         filterStatus: '',
         filterSupplier: '',
+        filterWarehouse: '',
         quickFilter: 'all',
         dateFrom: '',
         dateTo: '',
         loadError: '',
-        selectedReceipt: null
+        selectedReceipt: null,
+        quickSearchIndex: -1,
+        quickSearchResults: []
       };
 
       // ============================================================
-      // 5) Load suppliers filter
+      // 5) Load Warehouses
+      // ============================================================
+      async function loadWarehouses() {
+        try {
+          await Refad.Warehouse.ensureLoaded();
+          state.warehouses = Refad.Warehouse.getActiveList();
+          state.activeWarehouseId = Refad.Warehouse.getActiveId();
+
+          const filterSel = document.getElementById('filterWarehouse');
+          filterSel.innerHTML = '<option value="">كل المخازن</option>' +
+            state.warehouses.map(w => `<option value="${w.id}">${esc(w.name)}</option>`).join('');
+
+          const whSel = document.getElementById('whSelect');
+          whSel.innerHTML = state.warehouses.map(w =>
+            `<option value="${w.id}"${Number(w.id) === Number(state.activeWarehouseId) ? ' selected' : ''}>${esc(w.name)}${w.is_default ? ' (افتراضي)' : ''}</option>`
+          ).join('');
+
+          updateActiveWhDisplay();
+        } catch (e) {
+          console.warn('[Receipts] warehouses failed:', e.message);
+          state.warehouses = [];
+        }
+      }
+
+      function updateActiveWhDisplay() {
+        const wh = state.warehouses.find(w => Number(w.id) === Number(state.selectedWarehouseId || state.activeWarehouseId));
+        const nameEl = document.getElementById('activeWhName');
+        if (nameEl) nameEl.textContent = wh ? wh.name : '—';
+      }
+
+      // ============================================================
+      // 6) Load suppliers filter
       // ============================================================
       async function loadSuppliersFilter() {
         try {
@@ -1244,6 +1557,7 @@
           });
           state.suppliers = rows;
           const sel = document.getElementById('filterSupplier');
+          sel.innerHTML = '<option value="">كل الموردين</option>';
           rows.forEach(s => {
             const opt = document.createElement('option');
             opt.value = s.id;
@@ -1256,60 +1570,60 @@
       }
 
       // ============================================================
-      // 6) Load receipts — TWO-STEP (no embedding)
+      // 7) Load receipts
       // ============================================================
       async function loadReceipts(silent) {
         state.loadError = '';
         if (!silent) renderSkeleton();
 
         try {
-          // ----------------------------------------------------------
-          // Step 1: جلب الفواتير (بدون receipt_items)
-          // ----------------------------------------------------------
           let receipts;
+          const baseColumns = `id, receipt_number, invoice_number, receipt_date, total_amount, 
+                               paid_amount, status, notes, is_locked, locked_at,
+                               supplier_id, request_id, warehouse_id`;
+
           try {
             receipts = await Refad.db.select('receipts', {
-              columns: `id, receipt_number, invoice_number, receipt_date, total_amount, 
-                        paid_amount, status, notes, is_locked, locked_at,
-                        supplier_id, request_id`,
+              columns: baseColumns,
               eq: { company_id: session.company_id },
               order: { column: 'created_at', ascending: false },
               limit: 500
             });
           } catch (e) {
-            // Fallback: بدون is_locked
-            if (/is_locked/i.test(e.message || '')) {
-              receipts = await Refad.db.select('receipts', {
+            console.warn('[Receipts] Full columns failed, trying fallback:', e.message);
+
+            const fallbackColumns = /warehouse_id/i.test(e.message)
+              ? `id, receipt_number, invoice_number, receipt_date, total_amount, 
+                 paid_amount, status, notes, is_locked, locked_at, supplier_id, request_id`
+              : `id, receipt_number, invoice_number, receipt_date, total_amount, 
+                 paid_amount, status, notes, supplier_id, request_id, warehouse_id`;
+
+            receipts = await Refad.db.select('receipts', {
+              columns: fallbackColumns,
+              eq: { company_id: session.company_id },
+              order: { column: 'created_at', ascending: false },
+              limit: 500
+            }).catch(async () => {
+              return await Refad.db.select('receipts', {
                 columns: `id, receipt_number, invoice_number, receipt_date, total_amount, 
-                          paid_amount, status, notes,
-                          supplier_id, request_id`,
+                          paid_amount, status, notes, supplier_id, request_id`,
                 eq: { company_id: session.company_id },
                 order: { column: 'created_at', ascending: false },
                 limit: 500
               });
-              Refad.toast.warning('عمود is_locked غير موجود — بعض الميزات معطلة');
-            } else {
-              throw e;
-            }
+            });
           }
 
-          // ----------------------------------------------------------
-          // Step 2: جلب الموردين وطلبات الشراء يدوياً
-          // ----------------------------------------------------------
           const supplierIds = [...new Set(receipts.map(r => r.supplier_id).filter(Boolean))];
           const requestIds = [...new Set(receipts.map(r => r.request_id).filter(Boolean))];
 
-          let suppliers = [];
-          let purchaseRequests = [];
-
+          let suppliers = [], purchaseRequests = [];
           if (supplierIds.length) {
             suppliers = await Refad.db.select('suppliers', {
               columns: 'id, name, phone',
-              eq: { company_id: session.company_id },
               in: { id: supplierIds }
             }).catch(() => []);
           }
-
           if (requestIds.length) {
             purchaseRequests = await Refad.db.select('purchase_requests', {
               columns: 'id, request_number',
@@ -1320,33 +1634,22 @@
           const supplierById = new Map(suppliers.map(s => [String(s.id), s]));
           const requestById = new Map(purchaseRequests.map(p => [String(p.id), p]));
 
-          // ----------------------------------------------------------
-          // Step 3: جلب كل الأصناف لهذه الفواتير
-          // ----------------------------------------------------------
           let allItems = [];
           if (receipts.length) {
             const ids = receipts.map(r => r.id);
             try {
               allItems = await Refad.db.select('receipt_items', {
-                columns: 'id, receipt_id, quantity, item_type, product_id',
+                columns: 'id, receipt_id, quantity, item_type, product_id, bonus_qty',
                 in: { receipt_id: ids }
               });
             } catch (e) {
-              // Fallback: بدون item_type
-              if (/item_type/i.test(e.message || '')) {
-                allItems = await Refad.db.select('receipt_items', {
-                  columns: 'id, receipt_id, quantity, product_id',
-                  in: { receipt_id: ids }
-                }).catch(() => []);
-              } else {
-                allItems = [];
-              }
+              allItems = await Refad.db.select('receipt_items', {
+                columns: 'id, receipt_id, quantity, item_type, product_id',
+                in: { receipt_id: ids }
+              }).catch(() => []);
             }
           }
 
-          // ----------------------------------------------------------
-          // Step 4: جلب أسماء الأصناف (Products)
-          // ----------------------------------------------------------
           const productIds = [...new Set(allItems.map(i => i.product_id).filter(Boolean))];
           let products = [];
           if (productIds.length) {
@@ -1357,9 +1660,6 @@
           }
           const productById = new Map(products.map(p => [String(p.id), p]));
 
-          // ----------------------------------------------------------
-          // Step 5: ربط كل شيء
-          // ----------------------------------------------------------
           const itemsByReceipt = new Map();
           allItems.forEach(item => {
             const key = String(item.receipt_id);
@@ -1379,7 +1679,6 @@
 
           applyFilters();
           renderStats();
-
         } catch (e) {
           console.error('[Receipts] load failed:', e);
           Refad.toast.error('تعذّر التحميل: ' + e.message);
@@ -1389,7 +1688,7 @@
       }
 
       // ============================================================
-      // 7) Stats
+      // 8) Stats
       // ============================================================
       function renderStats() {
         const total = state.all.length;
@@ -1403,27 +1702,33 @@
         const totalDue = state.all.reduce((s, r) =>
           s + Math.max(0, (Number(r.total_amount) || 0) - (Number(r.paid_amount) || 0)), 0);
 
-        document.getElementById('statTotal').textContent = Refad.format.number(total);
-        document.getElementById('statCompleted').textContent = Refad.format.number(completed);
-        document.getElementById('statPartial').textContent = Refad.format.number(partial);
-        document.getElementById('statPending').textContent = Refad.format.number(pending);
-        document.getElementById('statValue').textContent = Refad.format.money(totalValue);
-        document.getElementById('statDue').textContent = Refad.format.money(totalDue);
-        document.getElementById('statLocked').textContent = Refad.format.number(locked);
+        const totalBonus = state.all.reduce((sum, r) => {
+          return sum + (r.receipt_items || []).reduce((s, item) =>
+            s + (Number(item.bonus_qty) || 0), 0);
+        }, 0);
 
-        // Sub texts
+        document.getElementById('statTotal').textContent = fmtNumber(total);
+        document.getElementById('statCompleted').textContent = fmtNumber(completed);
+        document.getElementById('statPartial').textContent = fmtNumber(partial);
+        document.getElementById('statPending').textContent = fmtNumber(pending);
+        document.getElementById('statValue').textContent = fmtMoney(totalValue);
+        document.getElementById('statDue').textContent = fmtMoney(totalDue);
+        document.getElementById('statBonus').textContent = fmtNumber(totalBonus);
+        document.getElementById('statLocked').textContent = fmtNumber(locked);
+
         const totalItems = state.all.reduce((s, r) => s + ((r.receipt_items || []).length), 0);
-        document.getElementById('statTotalSub').textContent = `${Refad.format.number(totalItems)} صنف`;
+        document.getElementById('statTotalSub').textContent = `${fmtNumber(totalItems)} صنف`;
         document.getElementById('statCompletedSub').textContent = total ? Math.round((completed / total) * 100) + '%' : '—';
         document.getElementById('statPartialSub').textContent = total ? Math.round((partial / total) * 100) + '%' : '—';
         document.getElementById('statPendingSub').textContent = total ? Math.round((pending / total) * 100) + '%' : '—';
-        document.getElementById('statValueSub').textContent = `مدفوع: ${Refad.format.money(totalPaid)}`;
+        document.getElementById('statValueSub').textContent = `مدفوع: ${fmtMoney(totalPaid)}`;
         document.getElementById('statDueSub').textContent = totalValue > 0 ? Math.round((totalDue / totalValue) * 100) + '% من الإجمالي' : '—';
+        document.getElementById('statBonusSub').textContent = totalItems > 0 ? `${Math.round((totalBonus / totalItems) * 100)}% من الأصناف` : '—';
         document.getElementById('statLockedSub').textContent = total ? Math.round((locked / total) * 100) + '% من الفواتير' : '—';
       }
 
       // ============================================================
-      // 8) Filters
+      // 9) Filters
       // ============================================================
       function applyFilters() {
         const q = state.search.toLowerCase().trim();
@@ -1432,6 +1737,7 @@
         state.filtered = state.all.filter(r => {
           if (state.filterStatus && r.status !== state.filterStatus) return false;
           if (state.filterSupplier && String(r.suppliers?.id) !== String(state.filterSupplier)) return false;
+          if (state.filterWarehouse && String(r.warehouse_id) !== String(state.filterWarehouse)) return false;
 
           if (state.dateFrom && r.receipt_date < state.dateFrom) return false;
           if (state.dateTo && r.receipt_date > state.dateTo) return false;
@@ -1449,6 +1755,10 @@
             const remaining = (Number(r.total_amount) || 0) - (Number(r.paid_amount) || 0);
             if (remaining <= 0) return false;
           }
+          if (state.quickFilter === 'bonus') {
+            const hasBonus = (r.receipt_items || []).some(it => (Number(it.bonus_qty) || 0) > 0);
+            if (!hasBonus) return false;
+          }
           if (state.quickFilter === 'locked' && r.is_locked !== true) return false;
 
           if (!q) return true;
@@ -1464,10 +1774,50 @@
 
         state.page = 1;
         renderTable();
+        renderFiltersSummary();
+      }
+
+      // ✨ Filters Summary
+      function renderFiltersSummary() {
+        const summary = document.getElementById('filtersSummary');
+        const chips = document.getElementById('filtersChips');
+        const active = [];
+
+        if (state.search) active.push({ label: `بحث: ${state.search}`, key: 'search' });
+        if (state.filterStatus) {
+          const map = { completed: 'مكتمل', partial: 'جزئي', pending: 'معلق', cancelled: 'ملغي' };
+          active.push({ label: `الحالة: ${map[state.filterStatus] || state.filterStatus}`, key: 'status' });
+        }
+        if (state.filterSupplier) {
+          const sup = state.suppliers.find(s => String(s.id) === String(state.filterSupplier));
+          if (sup) active.push({ label: `المورد: ${sup.name}`, key: 'supplier' });
+        }
+        if (state.filterWarehouse) {
+          const wh = state.warehouses.find(w => String(w.id) === String(state.filterWarehouse));
+          if (wh) active.push({ label: `المخزن: ${wh.name}`, key: 'warehouse' });
+        }
+        if (state.dateFrom) active.push({ label: `من: ${fmtDate(state.dateFrom)}`, key: 'dateFrom' });
+        if (state.dateTo) active.push({ label: `إلى: ${fmtDate(state.dateTo)}`, key: 'dateTo' });
+        if (state.quickFilter !== 'all') {
+          const map = { today: 'اليوم', week: 'آخر 7 أيام', month: 'هذا الشهر', unpaid: 'غير مسدد', bonus: 'ببونص', locked: 'مقفلة' };
+          active.push({ label: map[state.quickFilter] || state.quickFilter, key: 'quick' });
+        }
+
+        if (active.length === 0) {
+          summary.classList.remove('show');
+          return;
+        }
+
+        summary.classList.add('show');
+        chips.innerHTML = active.map(a =>
+          `<span class="chip">${esc(a.label)}</span>`
+        ).join('');
+
+        if (window.lucide) lucide.createIcons();
       }
 
       // ============================================================
-      // 9) Skeleton
+      // 10) Skeleton
       // ============================================================
       function renderSkeleton() {
         const tbody = document.getElementById('tableBody');
@@ -1475,6 +1825,7 @@
           <tr class="skeleton-row">
             <td><div class="skeleton-bar" style="width:90px"></div></td>
             <td><div class="skeleton-bar" style="width:60%"></div></td>
+            <td><div class="skeleton-bar" style="width:80px"></div></td>
             <td><div class="skeleton-bar" style="width:80px"></div></td>
             <td><div class="skeleton-bar" style="width:100px"></div></td>
             <td><div class="skeleton-bar" style="width:80px"></div></td>
@@ -1487,8 +1838,13 @@
       }
 
       // ============================================================
-      // 10) Render Table
+      // 11) Render Table
       // ============================================================
+      function getWhName(id) {
+        const w = state.warehouses.find(x => Number(x.id) === Number(id));
+        return w ? w.name : null;
+      }
+
       function renderTable() {
         const tbody = document.getElementById('tableBody');
         const pag = Refad.paginate(state.filtered, state.page, state.perPage);
@@ -1497,9 +1853,9 @@
           if (state.loadError) {
             tbody.innerHTML = `
               <tr class="empty-row">
-                <td colspan="9">
+                <td colspan="10">
                   <i data-lucide="triangle-alert"></i>
-                  <p>تعذّر تحميل الاستلامات: ${Refad.escapeHtml(state.loadError)}</p>
+                  <p>تعذّر تحميل الاستلامات: ${esc(state.loadError)}</p>
                   <button type="button" class="btn btn-outline btn-sm" data-action="retry">
                     <i data-lucide="refresh-cw"></i> إعادة المحاولة
                   </button>
@@ -1514,7 +1870,7 @@
             : 'لا توجد نتائج مطابقة للفلاتر الحالية.';
           tbody.innerHTML = `
             <tr class="empty-row">
-              <td colspan="9">
+              <td colspan="10">
                 <i data-lucide="package-check"></i>
                 <p>${msg}</p>
               </td>
@@ -1544,39 +1900,50 @@
           const items = r.receipt_items || [];
           const itemCount = items.length;
           const totalQty = items.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0);
+          const totalBonus = items.reduce((sum, item) => sum + (Number(item.bonus_qty) || 0), 0);
           const itemNames = items.slice(0, 2).map(item => item.products?.name).filter(Boolean);
           const hasReturns = items.some(it => it.item_type === 'return');
+          const whName = getWhName(r.warehouse_id);
+          const receiptNumEsc = esc(r.receipt_number || '—');
 
           return `
-            <tr class="receipt-clickable-row ${isLocked ? 'row-locked' : ''}" data-open-receipt="${r.id}" tabindex="0" aria-label="فتح فاتورة الشراء ${Refad.escapeHtml(r.receipt_number)}">
+            <tr class="receipt-clickable-row ${isLocked ? 'row-locked' : ''}" data-open-receipt="${r.id}" tabindex="0">
               <td>
-                <span class="receipt-number">
-                  ${Refad.escapeHtml(r.receipt_number)}
+                <span class="receipt-number-wrap">
+                  <button class="copy-btn" data-copy="${receiptNumEsc}" title="نسخ رقم الفاتورة"><i data-lucide="copy"></i></button>
+                  <span class="receipt-number">${receiptNumEsc}</span>
                   ${isLocked ? '<i data-lucide="lock" class="lock-icon" title="مقفلة"></i>' : ''}
                 </span>
-                ${r.invoice_number ? `<div class="supplier-sub">فاتورة: ${Refad.escapeHtml(r.invoice_number)}</div>` : ''}
-                ${r.purchase_requests?.request_number ? `<div class="supplier-sub">طلب شراء: ${Refad.escapeHtml(r.purchase_requests.request_number)}</div>` : ''}
+                ${r.invoice_number ? `<div class="supplier-sub">فاتورة: ${esc(r.invoice_number)}</div>` : ''}
+                ${r.purchase_requests?.request_number ? `<div class="supplier-sub">طلب: ${esc(r.purchase_requests.request_number)}</div>` : ''}
                 ${hasReturns ? `<div class="supplier-sub"><span class="badge-tag gold" style="padding:1px 6px;font-size:9px;">مرتجع</span></div>` : ''}
               </td>
               <td>
                 ${r.suppliers ? `
-                  <div class="supplier-name-cell">${Refad.escapeHtml(r.suppliers.name)}</div>
-                  ${r.suppliers.phone ? `<div class="supplier-sub">${Refad.escapeHtml(r.suppliers.phone)}</div>` : ''}
+                  <div class="supplier-name-cell">${esc(r.suppliers.name)}</div>
+                  ${r.suppliers.phone ? `<div class="supplier-sub">${esc(r.suppliers.phone)}</div>` : ''}
                 ` : '<span style="color:var(--text-muted);">—</span>'}
               </td>
-              <td>${Refad.format.date(r.receipt_date)}</td>
               <td>
-                <strong>${Refad.format.number(itemCount)} أصناف</strong>
-                <div class="supplier-sub">${Refad.format.number(totalQty)} وحدة${itemNames.length ? ` • ${itemNames.map(Refad.escapeHtml).join('، ')}` : ''}${itemCount > itemNames.length ? '…' : ''}</div>
+                ${whName
+                  ? `<span class="wh-badge-sm"><i data-lucide="warehouse"></i> ${esc(whName)}</span>`
+                  : '<span style="color:var(--text-muted);font-size:11px;">—</span>'
+                }
               </td>
-              <td class="money-cell">${Refad.format.money(totalAmt)}</td>
+              <td>${fmtDate(r.receipt_date)}</td>
+              <td>
+                <strong>${fmtNumber(itemCount)} أصناف</strong>
+                ${totalBonus > 0 ? `<span class="badge-tag purple" style="padding:1px 6px;font-size:9px;margin-right:4px;"><i data-lucide="gift" style="width:9px;height:9px;"></i> +${fmtNumber(totalBonus)}</span>` : ''}
+                <div class="supplier-sub">${fmtNumber(totalQty)} وحدة${itemNames.length ? ` • ${itemNames.map(esc).join('، ')}` : ''}${itemCount > itemNames.length ? '…' : ''}</div>
+              </td>
+              <td class="money-cell">${fmtMoney(totalAmt)}</td>
               <td class="money-cell paid">
-                ${Refad.format.money(paidAmt)}
+                ${fmtMoney(paidAmt)}
                 <div class="progress-mini"><div style="width:${paidPct}%"></div></div>
               </td>
-              <td class="money-cell ${remainingCls}">${Refad.format.money(remaining)}</td>
+              <td class="money-cell ${remainingCls}">${fmtMoney(remaining)}</td>
               <td>
-                <span class="badge-tag ${st.cls}">${Refad.escapeHtml(st.label)}</span>
+                <span class="badge-tag ${st.cls}">${esc(st.label)}</span>
                 ${isLocked ? '<span class="badge-tag gold" style="margin-top:4px;display:inline-flex;"><i data-lucide="lock" style="width:10px;height:10px;"></i> مقفلة</span>' : ''}
               </td>
               <td>
@@ -1594,10 +1961,18 @@
 
         if (window.lucide) lucide.createIcons();
         renderPagination(pag);
+
+        // Copy buttons
+        tbody.querySelectorAll('[data-copy]').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            copyText(btn.dataset.copy, btn);
+          });
+        });
       }
 
       // ============================================================
-      // 11) Pagination
+      // 12) Pagination
       // ============================================================
       function renderPagination(pag) {
         const el = document.getElementById('pagination');
@@ -1645,8 +2020,9 @@
 
         if (window.lucide) lucide.createIcons();
       }
-            // ============================================================
-      // 12) Side Panel — Details (Two-step loading)
+
+      // ============================================================
+      // 13) Side Panel — Details
       // ============================================================
       async function openDetailPanel(receiptId) {
         const r = state.all.find(x => x.id === receiptId);
@@ -1663,35 +2039,27 @@
         document.getElementById('panelBackdrop').classList.add('show');
         document.getElementById('detailPanel').classList.add('show');
 
-        // ----------------------------------------------------------
-        // جلب تفاصيل الأصناف (بدون embedding)
-        // ----------------------------------------------------------
         let items = [];
         try {
           let rawItems;
           try {
             rawItems = await Refad.db.select('receipt_items', {
-              columns: `id, product_id, quantity, unit_price, purchase_discount, 
-                        expiry_date, batch_number, batch_barcode, item_type, 
+              columns: `id, product_id, quantity, bonus_qty, unit_price, 
+                        effective_unit_cost, purchase_discount, 
+                        expiry_date, batch_number, item_type, 
                         return_reason, total`,
               eq: { receipt_id: receiptId },
               order: { column: 'id', ascending: true }
             });
           } catch (e) {
-            // Fallback: بدون item_type و batch_barcode
-            if (/item_type|batch_barcode/i.test(e.message || '')) {
-              rawItems = await Refad.db.select('receipt_items', {
-                columns: `id, product_id, quantity, unit_price, purchase_discount, 
-                          expiry_date, batch_number, total`,
-                eq: { receipt_id: receiptId },
-                order: { column: 'id', ascending: true }
-              });
-            } else {
-              throw e;
-            }
+            rawItems = await Refad.db.select('receipt_items', {
+              columns: `id, product_id, quantity, unit_price, purchase_discount, 
+                        expiry_date, batch_number, total`,
+              eq: { receipt_id: receiptId },
+              order: { column: 'id', ascending: true }
+            });
           }
 
-          // جلب المنتجات منفصلة
           const pids = [...new Set(rawItems.map(i => i.product_id).filter(Boolean))];
           let productsData = [];
           if (pids.length) {
@@ -1711,9 +2079,6 @@
           items = [];
         }
 
-        // ----------------------------------------------------------
-        // Render Panel
-        // ----------------------------------------------------------
         const statusMap = {
           'completed': { label: 'مكتمل', cls: 'green' },
           'partial': { label: 'جزئي', cls: 'gold' },
@@ -1728,74 +2093,85 @@
         const receiptsItems = items.filter(it => it.item_type !== 'return');
         const returnsItems = items.filter(it => it.item_type === 'return');
         const returnsValue = returnsItems.reduce((s, it) => s + (Number(it.total) || 0), 0);
+        const totalBonus = items.reduce((s, it) => s + (Number(it.bonus_qty) || 0), 0);
+
+        const whName = getWhName(r.warehouse_id);
 
         body.innerHTML = `
-          <!-- Summary Cards -->
           <div class="panel-summary-grid">
             <div class="panel-summary-card">
               <div class="label">الإجمالي</div>
-              <div class="value accent">${Refad.format.money(totalAmt)}</div>
+              <div class="value accent">${fmtMoney(totalAmt)}</div>
             </div>
             <div class="panel-summary-card">
               <div class="label">المدفوع</div>
-              <div class="value success">${Refad.format.money(paidAmt)}</div>
+              <div class="value success">${fmtMoney(paidAmt)}</div>
             </div>
             <div class="panel-summary-card">
               <div class="label">المتبقي</div>
-              <div class="value ${remaining > 0 ? 'danger' : ''}">${Refad.format.money(remaining)}</div>
+              <div class="value ${remaining > 0 ? 'danger' : ''}">${fmtMoney(remaining)}</div>
             </div>
             <div class="panel-summary-card">
               <div class="label">المرتجعات</div>
-              <div class="value gold">${Refad.format.money(returnsValue)}</div>
+              <div class="value gold">${fmtMoney(returnsValue)}</div>
             </div>
           </div>
 
-          <!-- Info -->
+          ${totalBonus > 0 ? `
+            <div class="panel-summary-card" style="background:linear-gradient(135deg, rgba(139,92,246,0.06), rgba(139,92,246,0.02));border-color:rgba(139,92,246,0.3);margin-bottom:18px;">
+              <div class="label" style="color:var(--purple);">🎁 إجمالي البونص</div>
+              <div class="value purple">${fmtNumber(totalBonus)} وحدة</div>
+            </div>
+          ` : ''}
+
           <div class="detail-section">
             <div class="detail-section-title"><i data-lucide="info"></i> معلومات أساسية</div>
-            <div class="detail-row"><span class="lbl">رقم الفاتورة</span><span class="val">${Refad.escapeHtml(r.receipt_number)}</span></div>
-            ${r.invoice_number ? `<div class="detail-row"><span class="lbl">رقم فاتورة المورد</span><span class="val">${Refad.escapeHtml(r.invoice_number)}</span></div>` : ''}
-            <div class="detail-row"><span class="lbl">التاريخ</span><span class="val">${Refad.format.date(r.receipt_date)}</span></div>
-            <div class="detail-row"><span class="lbl">الحالة</span><span class="val"><span class="badge-tag ${st.cls}">${Refad.escapeHtml(st.label)}</span></span></div>
+            <div class="detail-row"><span class="lbl">رقم الفاتورة</span><span class="val">${esc(r.receipt_number)}</span></div>
+            ${r.invoice_number ? `<div class="detail-row"><span class="lbl">رقم فاتورة المورد</span><span class="val">${esc(r.invoice_number)}</span></div>` : ''}
+            <div class="detail-row"><span class="lbl">التاريخ</span><span class="val">${fmtDate(r.receipt_date)}</span></div>
+            <div class="detail-row"><span class="lbl">الحالة</span><span class="val"><span class="badge-tag ${st.cls}">${esc(st.label)}</span></span></div>
+            ${whName ? `<div class="detail-row"><span class="lbl">المخزن</span><span class="val"><span class="wh-badge-sm"><i data-lucide="warehouse"></i> ${esc(whName)}</span></span></div>` : ''}
             ${r.is_locked ? `<div class="detail-row"><span class="lbl">مقفلة</span><span class="val gold"><i data-lucide="lock" style="width:12px;height:12px;display:inline;"></i> نعم</span></div>` : ''}
-            ${r.purchase_requests?.request_number ? `<div class="detail-row"><span class="lbl">طلب الشراء</span><span class="val">${Refad.escapeHtml(r.purchase_requests.request_number)}</span></div>` : ''}
+            ${r.purchase_requests?.request_number ? `<div class="detail-row"><span class="lbl">طلب الشراء</span><span class="val">${esc(r.purchase_requests.request_number)}</span></div>` : ''}
           </div>
 
-          <!-- Supplier -->
           ${r.suppliers ? `
             <div class="detail-section">
               <div class="detail-section-title"><i data-lucide="truck"></i> المورد</div>
-              <div class="detail-row"><span class="lbl">الاسم</span><span class="val">${Refad.escapeHtml(r.suppliers.name)}</span></div>
-              ${r.suppliers.phone ? `<div class="detail-row"><span class="lbl">الهاتف</span><span class="val">${Refad.escapeHtml(r.suppliers.phone)}</span></div>` : ''}
+              <div class="detail-row"><span class="lbl">الاسم</span><span class="val">${esc(r.suppliers.name)}</span></div>
+              ${r.suppliers.phone ? `<div class="detail-row"><span class="lbl">الهاتف</span><span class="val">${esc(r.suppliers.phone)}</span></div>` : ''}
             </div>
           ` : ''}
 
-          <!-- Notes -->
           ${r.notes ? `
             <div class="detail-section">
               <div class="detail-section-title"><i data-lucide="file-text"></i> ملاحظات</div>
-              <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;font-size:13px;line-height:1.7;">${Refad.escapeHtml(r.notes)}</div>
+              <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;font-size:13px;line-height:1.7;">${esc(r.notes)}</div>
             </div>
           ` : ''}
 
-          <!-- Items -->
           <div class="detail-section">
             <div class="detail-section-title"><i data-lucide="package"></i> الأصناف (${items.length})</div>
             ${items.length ? `
               <div class="detail-items-list">
                 ${items.map(it => {
                   const isReturn = it.item_type === 'return';
+                  const hasBonus = (Number(it.bonus_qty) || 0) > 0;
+                  const bonusCls = hasBonus ? 'is-bonus' : (isReturn ? 'is-return' : '');
+                  const effCost = it.effective_unit_cost || it.unit_price;
                   return `
-                    <div class="detail-item-row ${isReturn ? 'is-return' : ''}">
+                    <div class="detail-item-row ${bonusCls}">
                       <div style="flex:1;min-width:0;">
-                        <div class="item-name">${Refad.escapeHtml(it.products?.name || '—')}</div>
+                        <div class="item-name">${esc(it.products?.name || '—')}</div>
                         <div class="item-sub">
-                          ${it.batch_number ? `تشغيلة: ${Refad.escapeHtml(it.batch_number)}` : ''}
-                          ${it.expiry_date ? ` • صلاحية: ${Refad.format.date(it.expiry_date)}` : ''}
-                          ${it.unit_price ? ` • ${Refad.format.money(it.unit_price)}` : ''}
+                          ${it.batch_number ? `تشغيلة: ${esc(it.batch_number)}` : ''}
+                          ${it.expiry_date ? ` • صلاحية: ${fmtDate(it.expiry_date)}` : ''}
+                          ${it.unit_price ? ` • ${fmtMoney(it.unit_price)}` : ''}
+                          ${hasBonus ? ` • <span style="color:var(--purple);font-weight:700;">🎁 +${fmtNumber(it.bonus_qty)} بونص</span>` : ''}
+                          ${hasBonus && effCost ? ` • تكلفة فعلية: ${fmtMoney(effCost)}` : ''}
                         </div>
                       </div>
-                      <div class="item-qty">${isReturn ? '-' : ''}${Refad.format.number(it.quantity)}</div>
+                      <div class="item-qty">${isReturn ? '-' : ''}${fmtNumber(it.quantity)}</div>
                     </div>
                   `;
                 }).join('')}
@@ -1803,7 +2179,6 @@
             ` : '<div style="text-align:center;padding:20px;color:var(--text-muted);font-size:13px;">لا توجد أصناف</div>'}
           </div>
 
-          <!-- Actions -->
           <div class="detail-section">
             <div class="detail-section-title"><i data-lucide="zap"></i> إجراءات</div>
             <div style="display:flex;gap:8px;flex-wrap:wrap;">
@@ -1811,11 +2186,9 @@
                 <i data-lucide="${r.is_locked ? 'eye' : 'pencil'}"></i>
                 ${r.is_locked ? 'عرض الفاتورة' : 'تعديل الفاتورة'}
               </a>
-              ${!r.is_locked && canCreate ? `
-                <a href="returns.html?type=purchase&receipt_id=${r.id}" class="btn btn-outline btn-sm" style="flex:1;justify-content:center;">
-                  <i data-lucide="undo-2"></i> إنشاء مرتجع
-                </a>
-              ` : ''}
+              <button type="button" class="btn btn-outline btn-sm" data-action="print" data-id="${r.id}" style="flex:1;justify-content:center;">
+                <i data-lucide="printer"></i> طباعة
+              </button>
             </div>
           </div>
         `;
@@ -1830,7 +2203,76 @@
       }
 
       // ============================================================
-      // 13) Delete
+      // 14) Print Receipt (fallback)
+      // ============================================================
+      function printReceipt(id) {
+        const r = state.all.find(x => x.id === id);
+        if (!r) return;
+
+        const items = r.receipt_items || [];
+        const company = { name: 'الشركة', phone: '' };
+        const totalAmt = Number(r.total_amount) || 0;
+        const paidAmt = Number(r.paid_amount) || 0;
+        const remaining = Math.max(0, totalAmt - paidAmt);
+
+        const w = window.open('', '_blank');
+        if (!w) { Refad.toast.warning('اسمح بالنوافذ المنبثقة'); return; }
+
+        const itemsHtml = items.map(it => `
+          <tr>
+            <td>${esc(it.products?.name || '—')}</td>
+            <td style="text-align:center;">${fmtNumber(it.quantity)}</td>
+            <td style="text-align:right;">${fmtMoney(it.unit_price || 0)}</td>
+          </tr>
+        `).join('');
+
+        w.document.write(`<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">
+          <title>طباعة ${esc(r.receipt_number)}</title>
+          <style>
+            @page { size: A4; margin: 10mm; }
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { font-family: 'Cairo', Arial, sans-serif; color: #0f172a; padding: 15px; }
+            .header { text-align: center; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 3px solid #0B2C4D; }
+            .header h1 { color: #0B2C4D; font-size: 22px; margin-bottom: 4px; }
+            .header p { color: #64748b; font-size: 11px; }
+            .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; font-size: 12px; }
+            .info-grid > div { padding: 6px 0; border-bottom: 1px dashed #cbd5e1; }
+            .info-grid strong { color: #0B2C4D; }
+            table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 16px; }
+            th { background: #0B2C4D; color: white; padding: 8px; text-align: right; }
+            td { padding: 8px; border-bottom: 1px solid #e2e8f0; }
+            tbody tr:nth-child(even) { background: #f8fafc; }
+            .totals { margin-top: 16px; padding-top: 10px; border-top: 2px solid #0B2C4D; font-size: 14px; }
+            .totals .row { display: flex; justify-content: space-between; padding: 5px 0; }
+            .totals .grand { font-size: 18px; color: #14B8A6; font-weight: 800; border-top: 1px solid #ccc; padding-top: 8px; margin-top: 6px; }
+          </style>
+        </head><body>
+          <div class="header">
+            <h1>${esc(company.name)}</h1>
+            <p>فاتورة استلام</p>
+          </div>
+          <div class="info-grid">
+            <div><strong>رقم الفاتورة:</strong> ${esc(r.receipt_number)}</div>
+            <div><strong>التاريخ:</strong> ${fmtDate(r.receipt_date)}</div>
+            ${r.invoice_number ? `<div><strong>رقم فاتورة المورد:</strong> ${esc(r.invoice_number)}</div>` : ''}
+            ${r.suppliers ? `<div><strong>المورد:</strong> ${esc(r.suppliers.name)}</div>` : ''}
+          </div>
+          <table>
+            <thead><tr><th>الصنف</th><th style="text-align:center;">الكمية</th><th style="text-align:right;">السعر</th></tr></thead>
+            <tbody>${itemsHtml || '<tr><td colspan="3" style="text-align:center;color:#94a3b8;">لا توجد أصناف</td></tr>'}</tbody>
+          </table>
+          <div class="totals">
+            <div class="row"><span>الإجمالي:</span><b>${fmtMoney(totalAmt)}</b></div>
+            <div class="row"><span>المدفوع:</span><b style="color:#10b981;">${fmtMoney(paidAmt)}</b></div>
+            <div class="row grand"><span>المتبقي:</span><b>${fmtMoney(remaining)}</b></div>
+          </div>
+          <script>window.onload=()=>setTimeout(()=>window.print(),300);<\/script>
+        </body></html>`);
+        w.document.close();
+      }
+
+      // ============================================================
+      // 15) Delete
       // ============================================================
       async function deleteReceipt(id, num) {
         const r = state.all.find(x => x.id === id);
@@ -1847,11 +2289,8 @@
         if (!ok) return;
 
         try {
-          // حذف العناصر
           await Refad.db.removeWhere('receipt_items', { receipt_id: id });
-          // حذف التشغيلات المرتبطة
           await Refad.db.removeWhere('batches', { receipt_id: id });
-          // حذف الاستلام
           await Refad.db.remove('receipts', id);
 
           await Refad.logActivity('delete_receipt', 'receipts', `حذف استلام: ${num}`, id);
@@ -1864,17 +2303,134 @@
       }
 
       // ============================================================
-      // 14) Events
+      // 16) Quick Search
+      // ============================================================
+      function openQuickSearch() {
+        const overlay = document.getElementById('quickSearchOverlay');
+        overlay.classList.add('show');
+        const input = document.getElementById('quickSearchInput');
+        input.value = '';
+        input.focus();
+        state.quickSearchIndex = -1;
+        state.quickSearchResults = [];
+        renderQuickSearchResults('');
+      }
+
+      function closeQuickSearch() {
+        document.getElementById('quickSearchOverlay').classList.remove('show');
+      }
+
+      function renderQuickSearchResults(query) {
+        const container = document.getElementById('quickSearchResults');
+        const q = (query || '').toLowerCase().trim();
+
+        if (!q) {
+          container.innerHTML = '<div class="quick-search-empty">اكتب للبحث السريع...</div>';
+          state.quickSearchResults = [];
+          return;
+        }
+
+        const results = state.all.filter(r =>
+          (r.receipt_number || '').toLowerCase().includes(q) ||
+          (r.invoice_number || '').toLowerCase().includes(q) ||
+          (r.suppliers?.name || '').toLowerCase().includes(q)
+        ).slice(0, 10).map(r => ({
+          type: 'receipt',
+          id: r.id,
+          name: r.receipt_number,
+          sub: `${r.suppliers?.name || '—'} • ${fmtMoney(r.total_amount)} • ${fmtDate(r.receipt_date)}`,
+          initial: (r.receipt_number || '?').charAt(0)
+        }));
+
+        state.quickSearchResults = results;
+        state.quickSearchIndex = results.length ? 0 : -1;
+
+        if (!results.length) {
+          container.innerHTML = '<div class="quick-search-empty">لا توجد نتائج</div>';
+          return;
+        }
+
+        container.innerHTML = results.map((r, i) => `
+          <div class="quick-search-item ${i === 0 ? 'selected' : ''}" data-idx="${i}">
+            <div class="qs-icon">${esc(r.initial)}</div>
+            <div class="qs-body">
+              <div class="qs-name">${esc(r.name)}</div>
+              <div class="qs-sub">${esc(r.sub)}</div>
+            </div>
+            <i data-lucide="arrow-left" style="width:16px;height:16px;color:var(--text-muted);"></i>
+          </div>
+        `).join('');
+
+        if (window.lucide) lucide.createIcons();
+
+        container.querySelectorAll('.quick-search-item').forEach(el => {
+          el.addEventListener('click', () => {
+            const idx = Number(el.dataset.idx);
+            navigateQuickSearch(idx);
+          });
+        });
+      }
+
+      function navigateQuickSearch(idx) {
+        const r = state.quickSearchResults[idx];
+        if (!r) return;
+        closeQuickSearch();
+        openDetailPanel(r.id);
+      }
+
+      function updateQuickSearchSelection() {
+        const container = document.getElementById('quickSearchResults');
+        container.querySelectorAll('.quick-search-item').forEach((el, i) => {
+          el.classList.toggle('selected', i === state.quickSearchIndex);
+        });
+        const selected = container.querySelector('.quick-search-item.selected');
+        if (selected) selected.scrollIntoView({ block: 'nearest' });
+      }
+
+      function setupQuickSearch() {
+        const overlay = document.getElementById('quickSearchOverlay');
+        const input = document.getElementById('quickSearchInput');
+
+        overlay.addEventListener('click', e => {
+          if (e.target === overlay) closeQuickSearch();
+        });
+
+        input.addEventListener('input', e => renderQuickSearchResults(e.target.value));
+
+        input.addEventListener('keydown', e => {
+          if (e.key === 'Escape') {
+            e.preventDefault();
+            closeQuickSearch();
+          } else if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            if (state.quickSearchResults.length) {
+              state.quickSearchIndex = Math.min(state.quickSearchIndex + 1, state.quickSearchResults.length - 1);
+              updateQuickSearchSelection();
+            }
+          } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            if (state.quickSearchResults.length) {
+              state.quickSearchIndex = Math.max(state.quickSearchIndex - 1, 0);
+              updateQuickSearchSelection();
+            }
+          } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (state.quickSearchIndex >= 0) navigateQuickSearch(state.quickSearchIndex);
+            else if (state.quickSearchResults.length) navigateQuickSearch(0);
+          }
+        });
+      }
+
+      // ============================================================
+      // 17) Events
       // ============================================================
       function bindEvents() {
-        // Search
         const searchHandler = Refad.debounce(v => {
           state.search = v;
           applyFilters();
         }, 250);
         document.getElementById('searchInput').addEventListener('input', e => searchHandler(e.target.value));
 
-        // Filters
         document.getElementById('filterStatus').addEventListener('change', e => {
           state.filterStatus = e.target.value;
           applyFilters();
@@ -1882,6 +2438,11 @@
 
         document.getElementById('filterSupplier').addEventListener('change', e => {
           state.filterSupplier = e.target.value;
+          applyFilters();
+        });
+
+        document.getElementById('filterWarehouse').addEventListener('change', e => {
+          state.filterWarehouse = e.target.value;
           applyFilters();
         });
 
@@ -1895,7 +2456,14 @@
           applyFilters();
         });
 
-        // Quick filters
+        document.getElementById('whSelect').addEventListener('change', e => {
+          state.selectedWarehouseId = Number(e.target.value);
+          updateActiveWhDisplay();
+          state.filterWarehouse = '';
+          document.getElementById('filterWarehouse').value = '';
+          applyFilters();
+        });
+
         document.querySelectorAll('.quick-filter-btn').forEach(btn => {
           btn.addEventListener('click', () => {
             document.querySelectorAll('.quick-filter-btn').forEach(b => b.classList.remove('active'));
@@ -1905,32 +2473,70 @@
           });
         });
 
-        // Clear filters
-        document.getElementById('clearFiltersBtn').addEventListener('click', () => {
+        // Stat cards click → filter
+        document.querySelectorAll('.mini-card').forEach(card => {
+          card.addEventListener('click', () => {
+            const filter = card.dataset.statFilter;
+            if (!filter) return;
+            document.querySelectorAll('.mini-card').forEach(c => c.classList.remove('active'));
+            card.classList.add('active');
+
+            // Reset other filters
+            state.filterStatus = '';
+            state.quickFilter = 'all';
+            document.getElementById('filterStatus').value = '';
+            document.querySelectorAll('.quick-filter-btn').forEach(b => b.classList.remove('active'));
+
+            if (filter === 'completed' || filter === 'partial' || filter === 'pending' || filter === 'cancelled') {
+              state.filterStatus = filter;
+              document.getElementById('filterStatus').value = filter;
+            } else if (filter === 'unpaid' || filter === 'bonus' || filter === 'locked') {
+              state.quickFilter = filter;
+              const btn = document.querySelector(`.quick-filter-btn[data-quick="${filter}"]`);
+              if (btn) btn.classList.add('active');
+            } else if (filter === 'all') {
+              document.querySelector('.quick-filter-btn[data-quick="all"]').classList.add('active');
+            }
+
+            applyFilters();
+          });
+        });
+
+        function resetFilters() {
           state.search = '';
           state.filterStatus = '';
           state.filterSupplier = '';
+          state.filterWarehouse = '';
           state.quickFilter = 'all';
           state.dateFrom = '';
           state.dateTo = '';
           document.getElementById('searchInput').value = '';
           document.getElementById('filterStatus').value = '';
           document.getElementById('filterSupplier').value = '';
+          document.getElementById('filterWarehouse').value = '';
           document.getElementById('dateFrom').value = '';
           document.getElementById('dateTo').value = '';
           document.querySelectorAll('.quick-filter-btn').forEach(b => b.classList.remove('active'));
           document.querySelector('.quick-filter-btn[data-quick="all"]').classList.add('active');
+          document.querySelectorAll('.mini-card').forEach(c => c.classList.remove('active'));
           applyFilters();
+        }
+
+        document.getElementById('clearFiltersBtn').addEventListener('click', () => {
+          resetFilters();
           Refad.toast.info('تم مسح الفلاتر');
         });
 
-        // Refresh
+        document.getElementById('clearSummaryFiltersBtn').addEventListener('click', () => {
+          resetFilters();
+          Refad.toast.info('تم مسح الفلاتر');
+        });
+
         document.getElementById('refreshBtn').addEventListener('click', async () => {
           await loadReceipts();
           Refad.toast.success('تم التحديث');
         });
 
-        // Add
         if (canCreate) {
           document.getElementById('addBtn').addEventListener('click', () => {
             location.href = 'receipt-form.html';
@@ -1941,7 +2547,6 @@
           b.title = 'ليس لديك صلاحية';
         }
 
-        // Table click
         document.getElementById('tableBody').addEventListener('click', e => {
           const btn = e.target.closest('[data-action]');
           if (btn) {
@@ -1976,11 +2581,39 @@
           }
         });
 
-        // Side panel close
         document.getElementById('closePanelBtn').addEventListener('click', closeDetailPanel);
         document.getElementById('panelBackdrop').addEventListener('click', closeDetailPanel);
+
+        // Panel buttons (event delegation)
+        document.getElementById('panelBody').addEventListener('click', e => {
+          const btn = e.target.closest('[data-action]');
+          if (btn && btn.dataset.action === 'print') {
+            printReceipt(parseInt(btn.dataset.id, 10));
+          }
+        });
+
         document.addEventListener('keydown', e => {
-          if (e.key === 'Escape' && state.selectedReceipt) closeDetailPanel();
+          if (e.key === 'Escape') {
+            if (document.getElementById('quickSearchOverlay').classList.contains('show')) {
+              closeQuickSearch();
+              return;
+            }
+            if (state.selectedReceipt) closeDetailPanel();
+          }
+          if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+            e.preventDefault();
+            openQuickSearch();
+          }
+          if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+            e.preventDefault();
+            const addBtn = document.getElementById('addBtn');
+            if (addBtn && !addBtn.disabled) addBtn.click();
+          }
+          if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
+            e.preventDefault();
+            const refreshBtn = document.getElementById('refreshBtn');
+            if (refreshBtn) refreshBtn.click();
+          }
         });
 
         // Export
@@ -1997,9 +2630,11 @@
             'رقم الفاتورة': r.receipt_number,
             'رقم فاتورة المورد': r.invoice_number || '',
             'المورد': r.suppliers?.name || '',
-            'التاريخ': Refad.format.date(r.receipt_date),
+            'المخزن': getWhName(r.warehouse_id) || '',
+            'التاريخ': fmtDate(r.receipt_date),
             'عدد الأصناف': (r.receipt_items || []).length,
             'إجمالي الوحدات': (r.receipt_items || []).reduce((sum, item) => sum + (Number(item.quantity) || 0), 0),
+            'إجمالي البونص': (r.receipt_items || []).reduce((sum, item) => sum + (Number(item.bonus_qty) || 0), 0),
             'الإجمالي': Number(r.total_amount) || 0,
             'المدفوع': Number(r.paid_amount) || 0,
             'المتبقي': Math.max(0, (Number(r.total_amount) || 0) - (Number(r.paid_amount) || 0)),
@@ -2013,47 +2648,44 @@
           Refad.toast.success('تم التصدير');
         });
 
-        // Keyboard shortcuts
-        document.addEventListener('keydown', e => {
-          // Ctrl+K → Focus search
-          if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-            e.preventDefault();
-            const searchInput = document.getElementById('searchInput');
-            if (searchInput) { searchInput.focus(); searchInput.select(); }
-          }
-
-          // Ctrl+N → Add new
-          if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
-            e.preventDefault();
-            const addBtn = document.getElementById('addBtn');
-            if (addBtn && !addBtn.disabled) addBtn.click();
-          }
-
-          // Ctrl+R → Refresh
-          if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
-            e.preventDefault();
-            const refreshBtn = document.getElementById('refreshBtn');
-            if (refreshBtn) refreshBtn.click();
-          }
-        });
+        setupQuickSearch();
       }
 
       // ============================================================
-      // 15) Init
+      // 18) Init
       // ============================================================
       async function init() {
-        buildSidebar();
+        // ✨ 1) Menu + Identity
+        Refad.buildMenu('receipts.html');
         fillUser();
+        applyIdentity();
         setupTheme();
         setupSidebarMobile();
         setupUserMenu();
         setupNotifBtn();
+        setupRealtimeTheme();
         bindEvents();
+
+        // ✨ 2) Data
+        await loadWarehouses();
+
+        if (typeof Refad.Warehouse.onChange === 'function') {
+          Refad.Warehouse.onChange(() => {
+            state.activeWarehouseId = Refad.Warehouse.getActiveId();
+            const whSel = document.getElementById('whSelect');
+            if (whSel) whSel.value = String(state.activeWarehouseId);
+            updateActiveWhDisplay();
+          });
+        }
+
+        try { Refad.Warehouse.injectSelector(); } catch (e) {}
 
         await loadSuppliersFilter();
         await loadReceipts();
 
-        Refad.registerServiceWorker();
+        try { Refad.registerServiceWorker(); } catch (e) {}
+
+        console.log('%c[Refad] Receipts v3 ready (Theme Sync + Settings + Quick Search)', 'color:#14B8A6;font-weight:bold;font-size:14px');
       }
 
       if (document.readyState === 'loading') {
@@ -2066,8 +2698,6 @@
       const spinnerStyle = document.createElement('style');
       spinnerStyle.textContent = '@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }';
       document.head.appendChild(spinnerStyle);
-
-      console.log('%c[Refad] Receipts ready (Two-step loading)', 'color:#14B8A6;font-weight:bold');
 
     })();
   </script>

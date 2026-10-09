@@ -39,6 +39,7 @@
       --success: #10b981;
       --warning: #f59e0b;
       --info: #3b82f6;
+      --purple: #8b5cf6;
       --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
       --shadow: 0 4px 20px rgba(11, 44, 77, 0.08);
       --shadow-lg: 0 10px 40px rgba(11, 44, 77, 0.12);
@@ -46,11 +47,20 @@
       --radius-sm: 10px;
     }
 
+    [data-theme="dark"] {
+      --bg: #0a1628;
+      --card: #0f2137;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --border: #1e3a5f;
+    }
+
     html, body {
       min-height: 100vh;
       font-family: 'Cairo', sans-serif;
       background: var(--bg);
       color: var(--text);
+      transition: background 0.3s, color 0.3s;
     }
 
     body {
@@ -60,7 +70,6 @@
       position: relative;
     }
 
-    /* Background */
     body::before {
       content: '';
       position: fixed;
@@ -71,9 +80,7 @@
         radial-gradient(circle at 90% 90%, rgba(11, 44, 77, 0.08), transparent 40%);
     }
 
-    /* ============================================================
-       Header
-       ============================================================ */
+    /* ============ Header ============ */
     .shared-header {
       background: linear-gradient(135deg, var(--primary), var(--primary-light));
       color: white;
@@ -89,18 +96,14 @@
       position: relative;
       overflow: hidden;
     }
-
     .shared-header::before {
       content: '';
       position: absolute;
-      top: -40px;
-      left: -40px;
-      width: 180px;
-      height: 180px;
+      top: -40px; left: -40px;
+      width: 180px; height: 180px;
       background: radial-gradient(circle, rgba(20,184,166,0.4), transparent 70%);
       border-radius: 50%;
     }
-
     .header-left {
       display: flex;
       align-items: center;
@@ -108,15 +111,11 @@
       position: relative;
       z-index: 1;
     }
-
     .header-logo {
-      width: 60px;
-      height: 60px;
+      width: 60px; height: 60px;
       background: linear-gradient(135deg, var(--accent), var(--accent-dark));
       border-radius: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: flex; align-items: center; justify-content: center;
       font-size: 26px;
       font-weight: 800;
       color: white;
@@ -125,7 +124,6 @@
       overflow: hidden;
     }
     .header-logo img { width: 70%; height: 70%; object-fit: contain; }
-
     .header-info h1 {
       font-size: 20px;
       font-weight: 800;
@@ -136,7 +134,6 @@
       font-size: 13px;
       opacity: 0.85;
     }
-
     .header-actions {
       display: flex;
       gap: 8px;
@@ -144,7 +141,6 @@
       position: relative;
       z-index: 1;
     }
-
     .header-actions .btn {
       background: rgba(255,255,255,0.15);
       color: white;
@@ -155,9 +151,107 @@
     }
     .header-actions .btn:hover { background: rgba(255,255,255,0.25); transform: translateY(-2px); }
 
-    /* ============================================================
-       Cards
-       ============================================================ */
+    /* ============ Summary Cards ============ */
+    .summary-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .summary-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: all 0.2s;
+      box-shadow: var(--shadow-sm);
+    }
+    .summary-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+    .summary-icon {
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      color: white;
+    }
+    .summary-icon i { width: 20px; height: 20px; }
+    .summary-icon.blue   { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+    .summary-icon.green  { background: linear-gradient(135deg, #10b981, #047857); }
+    .summary-icon.gold   { background: linear-gradient(135deg, #F59E0B, #d97706); }
+    .summary-icon.purple { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
+    .summary-icon.red    { background: linear-gradient(135deg, #ef4444, #b91c1c); }
+    .summary-icon.teal   { background: linear-gradient(135deg, #14B8A6, #0d9488); }
+    .summary-body { flex: 1; min-width: 0; }
+    .summary-body .label {
+      font-size: 10px;
+      color: var(--text-muted);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      margin-bottom: 3px;
+    }
+    .summary-body .value {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1;
+      overflow-wrap: anywhere;
+    }
+    .summary-body .sub {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 3px;
+    }
+
+    /* ============ Progress Bar ============ */
+    .progress-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow-sm);
+    }
+    .progress-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+    .progress-header h4 {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .progress-header h4 i { width: 16px; height: 16px; color: var(--accent); }
+    .progress-header .pct {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--accent);
+    }
+    .progress-track {
+      height: 8px;
+      background: var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--success));
+      border-radius: 4px;
+      transition: width 0.4s;
+      min-width: 0;
+    }
+
+    /* ============ Card ============ */
     .card {
       background: var(--card);
       border: 1px solid var(--border);
@@ -166,7 +260,6 @@
       overflow: hidden;
       margin-bottom: 16px;
     }
-
     .card-header {
       padding: 14px 20px;
       border-bottom: 1px solid var(--border);
@@ -176,18 +269,30 @@
       gap: 12px;
       flex-wrap: wrap;
     }
-    .card-header h3 { font-size: 15px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px; }
+    .card-header h3 {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
     .card-header h3 i { width: 18px; height: 18px; color: var(--accent); }
-
+    .card-header .hint {
+      font-size: 12px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
     .card-body { padding: 20px; }
 
-    /* Info grid */
+    /* ============ Info grid ============ */
     .info-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
       gap: 14px;
     }
-
     .info-item {
       background: var(--bg);
       border: 1px solid var(--border);
@@ -208,19 +313,94 @@
       font-weight: 700;
       word-break: break-word;
     }
+    .info-item .value .warehouse-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      background: rgba(20,184,166,0.12);
+      color: var(--accent);
+    }
+    .info-item .value .warehouse-pill i { width: 12px; height: 12px; }
 
-    /* Table */
+    /* ============ Quick Actions ============ */
+    .quick-actions-row {
+      display: flex;
+      gap: 8px;
+      padding: 10px 16px;
+      background: linear-gradient(135deg, rgba(20,184,166,0.05), rgba(11,44,77,0.03));
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .quick-action-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 12px;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .quick-action-btn:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
+    .quick-action-btn i { width: 14px; height: 14px; }
+    .quick-action-btn.primary {
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: white;
+      border: none;
+    }
+    .quick-action-btn.primary:hover { box-shadow: 0 4px 12px rgba(20,184,166,0.35); color: white; }
+    .quick-action-btn.success {
+      background: rgba(16,185,129,0.1);
+      color: var(--success);
+      border-color: rgba(16,185,129,0.3);
+    }
+    .quick-action-btn.success:hover { background: var(--success); color: white; border-color: var(--success); }
+    .quick-action-btn.danger {
+      background: rgba(239,68,68,0.08);
+      color: var(--danger);
+      border-color: rgba(239,68,68,0.25);
+    }
+    .quick-action-btn.danger:hover { background: var(--danger); color: white; border-color: var(--danger); }
+    .quick-action-btn.warning {
+      background: rgba(245,158,11,0.08);
+      color: var(--warning);
+      border-color: rgba(245,158,11,0.25);
+    }
+    .quick-action-btn.warning:hover { background: var(--warning); color: white; border-color: var(--warning); }
+    .quick-action-btn input[type="number"] {
+      width: 60px;
+      padding: 3px 6px;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      text-align: center;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      color: var(--text);
+      outline: none;
+    }
+
+    /* ============ Table ============ */
     .table-wrap { overflow-x: auto; }
-
     table {
       width: 100%;
       border-collapse: collapse;
       font-size: 13px;
-      min-width: 900px;
+      min-width: 1250px;
     }
-
     thead { background: var(--bg); border-bottom: 1px solid var(--border); }
-
     th {
       text-align: right;
       padding: 12px 10px;
@@ -231,10 +411,12 @@
       letter-spacing: 0.4px;
       white-space: nowrap;
     }
-
     tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
     tbody tr:hover { background: var(--bg); }
-
+    tbody tr.row-available    { background: rgba(16,185,129,0.05); }
+    tbody tr.row-partial      { background: rgba(245,158,11,0.05); }
+    tbody tr.row-unavailable  { background: rgba(239,68,68,0.06); opacity: 0.85; }
+    tbody tr.row-error        { background: rgba(239,68,68,0.1) !important; }
     td { padding: 10px; color: var(--text); vertical-align: middle; }
 
     .product-cell { font-weight: 700; color: var(--text); }
@@ -243,7 +425,9 @@
     .num-cell { font-weight: 700; text-align: center; }
 
     input.price-input,
-    input.discount-input {
+    input.discount-input,
+    input.qty-input,
+    input.bonus-input {
       width: 100%;
       min-width: 90px;
       padding: 8px 10px;
@@ -259,7 +443,9 @@
       transition: all 0.2s;
     }
     input.price-input:focus,
-    input.discount-input:focus {
+    input.discount-input:focus,
+    input.qty-input:focus,
+    input.bonus-input:focus {
       border-color: var(--accent);
       background: var(--card);
       box-shadow: 0 0 0 3px rgba(20,184,166,0.1);
@@ -268,8 +454,62 @@
       background: rgba(20,184,166,0.06);
       border-color: rgba(20,184,166,0.3);
     }
+    input.qty-input {
+      background: rgba(245,158,11,0.06);
+      border-color: rgba(245,158,11,0.3);
+    }
+    input.bonus-input {
+      background: rgba(139,92,246,0.06);
+      border-color: rgba(139,92,246,0.3);
+    }
+    input:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      background: var(--border);
+    }
+    input::placeholder { color: var(--text-muted); font-weight: 500; }
 
-    /* Status */
+    .total-cell {
+      font-weight: 800;
+      color: var(--accent);
+      font-family: 'Courier New', monospace;
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    /* ============ Availability Buttons (Segmented) ============ */
+    .avail-group {
+      display: inline-flex;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 3px;
+      gap: 2px;
+    }
+    .avail-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      padding: 6px 10px;
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 700;
+      border-radius: 7px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .avail-btn i { width: 13px; height: 13px; }
+    .avail-btn:hover { color: var(--text); }
+    .avail-btn.active[data-status="available"] { background: var(--success); color: white; box-shadow: 0 2px 6px rgba(16,185,129,0.35); }
+    .avail-btn.active[data-status="partial"]   { background: var(--warning); color: white; box-shadow: 0 2px 6px rgba(245,158,11,0.35); }
+    .avail-btn.active[data-status="unavailable"] { background: var(--danger); color: white; box-shadow: 0 2px 6px rgba(239,68,68,0.35); }
+
+    /* ============ Status Badges ============ */
     .status-badge {
       display: inline-flex;
       align-items: center;
@@ -285,8 +525,9 @@
     .status-badge.partial   { background: rgba(245,158,11,0.12); color: var(--warning); }
     .status-badge.received  { background: rgba(16,185,129,0.12); color: var(--success); }
     .status-badge.cancelled { background: rgba(239,68,68,0.12); color: var(--danger); }
+    .status-badge i { width: 14px; height: 14px; }
 
-    /* Empty / Loading */
+    /* ============ Empty / Loading ============ */
     .empty-state {
       padding: 60px 20px;
       text-align: center;
@@ -295,20 +536,10 @@
     .empty-state i { width: 48px; height: 48px; opacity: 0.4; margin-bottom: 12px; }
     .empty-state h2 { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
     .empty-state p { font-size: 14px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner { animation: spin 1s linear infinite; }
 
-    .skeleton {
-      background: linear-gradient(90deg, var(--border) 25%, var(--bg) 50%, var(--border) 75%);
-      background-size: 200% 100%;
-      animation: shimmer 1.4s infinite;
-      border-radius: 6px;
-      color: transparent !important;
-    }
-    @keyframes shimmer {
-      0% { background-position: 200% 0; }
-      100% { background-position: -200% 0; }
-    }
-
-    /* Buttons */
+    /* ============ Buttons ============ */
     .btn {
       display: inline-flex;
       align-items: center;
@@ -326,22 +557,18 @@
     }
     .btn:disabled { opacity: 0.6; cursor: not-allowed; }
     .btn i { width: 16px; height: 16px; }
-
     .btn-primary { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; }
     .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(20,184,166,0.35); }
-
     .btn-success { background: var(--success); color: white; }
     .btn-success:hover:not(:disabled) { background: #047857; }
-
     .btn-outline { background: var(--card); color: var(--text); border: 1px solid var(--border); }
     .btn-outline:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
-
     .btn-sm { padding: 6px 12px; font-size: 12px; }
 
-    /* Floating actions bar (bottom) */
+    /* ============ Floating actions ============ */
     .floating-actions {
       position: sticky;
-      bottom: 0;
+      bottom: 12px;
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: var(--radius);
@@ -355,15 +582,18 @@
       flex-wrap: wrap;
       z-index: 10;
     }
-
     .floating-info {
       font-size: 13px;
       color: var(--text-muted);
       font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
+    .floating-info i { width: 14px; height: 14px; }
     .floating-info strong { color: var(--text); }
 
-    /* Footer */
+    /* ============ Footer ============ */
     .shared-footer {
       text-align: center;
       margin-top: 20px;
@@ -371,24 +601,64 @@
       color: var(--text-muted);
       padding: 20px;
     }
+    .shared-footer strong { color: var(--accent); }
 
-    /* Responsive */
-    @media (max-width: 640px) {
+    /* ============ Notice ============ */
+    .notice-banner {
+      padding: 12px 16px;
+      border-radius: var(--radius-sm);
+      margin-bottom: 16px;
+      font-size: 12.5px;
+      line-height: 1.7;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      background: rgba(59,130,246,0.08);
+      color: var(--info);
+      border: 1px solid rgba(59,130,246,0.2);
+    }
+    .notice-banner i { width: 18px; height: 18px; flex-shrink: 0; margin-top: 2px; }
+    .notice-banner strong { color: var(--info); font-weight: 800; }
+    .notice-banner .steps {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+      font-size: 12px;
+    }
+    .notice-banner .steps span {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(59,130,246,0.12);
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-weight: 700;
+    }
+    .notice-banner .steps span i { width: 12px; height: 12px; margin: 0; }
+
+    /* ============ Responsive ============ */
+    @media (max-width: 768px) {
       body { padding: 12px; }
       .shared-header { padding: 18px; }
       .header-logo { width: 48px; height: 48px; font-size: 20px; }
       .header-info h1 { font-size: 17px; }
       .card-body { padding: 14px; }
+      .summary-cards { grid-template-columns: repeat(2, 1fr); }
       .floating-actions { flex-direction: column; align-items: stretch; }
       .floating-actions .btn { width: 100%; justify-content: center; }
+      .avail-btn { padding: 5px 8px; font-size: 10px; }
+      .avail-btn i { width: 11px; height: 11px; }
+    }
+    @media (max-width: 480px) {
+      .summary-cards { grid-template-columns: 1fr; }
+      .quick-action-btn { font-size: 11px; padding: 6px 10px; }
     }
   </style>
 </head>
 <body>
 
-  <!-- ============================================================
-       Header
-       ============================================================ -->
+  <!-- ============ Header ============ -->
   <div class="shared-header">
     <div class="header-left">
       <div class="header-logo" id="headerLogo">
@@ -409,16 +679,15 @@
     </div>
   </div>
 
-  <!-- ============================================================
-       Loading / Error States
-       ============================================================ -->
+  <!-- ============ Loading ============ -->
   <div id="loadingState" class="card">
     <div class="card-body" style="text-align:center;padding:60px 20px;">
-      <i data-lucide="loader-2" style="width:48px;height:48px;color:var(--accent);animation:spin 1s linear infinite;"></i>
+      <i data-lucide="loader-2" class="spinner" style="width:48px;height:48px;color:var(--accent);"></i>
       <p style="margin-top:12px;color:var(--text-muted);">جارٍ تحميل الطلب...</p>
     </div>
   </div>
 
+  <!-- ============ Error ============ -->
   <div id="errorState" class="card" style="display:none;">
     <div class="empty-state">
       <i data-lucide="alert-triangle" style="color:var(--danger);opacity:0.8;"></i>
@@ -427,17 +696,93 @@
     </div>
   </div>
 
-  <!-- ============================================================
-       Main Content
-       ============================================================ -->
+  <!-- ============ Main Content ============ -->
   <div id="contentWrap" style="display:none;">
+
+    <!-- Notice -->
+    <div class="notice-banner">
+      <i data-lucide="info"></i>
+      <div style="flex:1;">
+        <strong>مرحباً 👋</strong>
+        راجع الأصناف المطلوبة وحدّد <strong>حالة كل صنف</strong> وأدخل أسعارك وخصوماتك.
+        <div class="steps">
+          <span><i data-lucide="check-circle-2"></i> متوفر = عندي بالكامل</span>
+          <span><i data-lucide="alert-triangle"></i> جزئي = عندي كمية أقل</span>
+          <span><i data-lucide="x-circle"></i> غير متوفر = مش عندي</span>
+          <span><i data-lucide="gift"></i> بونص = هدية مع الطلب</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="summary-cards" id="summaryCards">
+      <div class="summary-card">
+        <div class="summary-icon blue"><i data-lucide="package"></i></div>
+        <div class="summary-body">
+          <div class="label">عدد الأصناف</div>
+          <div class="value" id="sumItems">—</div>
+          <div class="sub" id="sumItemsSub">في الطلب</div>
+        </div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-icon green"><i data-lucide="check-circle-2"></i></div>
+        <div class="summary-body">
+          <div class="label">متوفر</div>
+          <div class="value" id="sumAvailable">—</div>
+          <div class="sub" id="sumAvailableSub">صنف</div>
+        </div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-icon gold"><i data-lucide="alert-triangle"></i></div>
+        <div class="summary-body">
+          <div class="label">جزئي</div>
+          <div class="value" id="sumPartial">—</div>
+          <div class="sub" id="sumPartialSub">صنف</div>
+        </div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-icon red"><i data-lucide="x-circle"></i></div>
+        <div class="summary-body">
+          <div class="label">غير متوفر</div>
+          <div class="value" id="sumUnavailable">—</div>
+          <div class="sub" id="sumUnavailableSub">صنف</div>
+        </div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-icon purple"><i data-lucide="gift"></i></div>
+        <div class="summary-body">
+          <div class="label">البونص</div>
+          <div class="value" id="sumBonus">—</div>
+          <div class="sub">وحدة مجانية</div>
+        </div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-icon teal"><i data-lucide="banknote"></i></div>
+        <div class="summary-body">
+          <div class="label">القيمة الإجمالية</div>
+          <div class="value" id="sumValue">—</div>
+          <div class="sub">سعر × كمية متاحة</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Progress -->
+    <div class="progress-card">
+      <div class="progress-header">
+        <h4><i data-lucide="activity"></i> نسبة اكتمال الرد</h4>
+        <div class="pct" id="progressPct">0%</div>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="progressFill" style="width:0%;"></div>
+      </div>
+    </div>
 
     <!-- Order info -->
     <div class="card">
       <div class="card-header">
         <h3><i data-lucide="info"></i> بيانات الطلب</h3>
         <span id="statusBadge" class="status-badge draft">
-          <i data-lucide="file-edit" style="width:14px;height:14px;"></i>
+          <i data-lucide="file-edit"></i>
           <span id="statusText">مسودة</span>
         </span>
       </div>
@@ -456,12 +801,16 @@
             <div class="value" id="infoSupplier">—</div>
           </div>
           <div class="info-item">
+            <div class="label">المخزن المستهدف</div>
+            <div class="value" id="infoWarehouse">—</div>
+          </div>
+          <div class="info-item">
             <div class="label">عدد الأصناف</div>
             <div class="value" id="infoItemCount">—</div>
           </div>
         </div>
         <div id="notesBox" style="margin-top:14px;padding:12px 14px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);display:none;">
-          <div style="font-size:11px;color:var(--text-muted);font-weight:700;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px;">ملاحظات</div>
+          <div style="font-size:11px;color:var(--text-muted);font-weight:700;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px;">ملاحظات الشركة</div>
           <div id="notesText" style="font-size:13px;color:var(--text);line-height:1.7;"></div>
         </div>
       </div>
@@ -471,24 +820,51 @@
     <div class="card">
       <div class="card-header">
         <h3><i data-lucide="package"></i> الأصناف المطلوبة</h3>
-        <div style="font-size:12px;color:var(--text-muted);">
-          <i data-lucide="info" style="width:12px;height:12px;"></i>
-          يمكنك إدخال السعر والخصم لكل صنف
+        <div class="hint">
+          <i data-lucide="edit-3"></i>
+          حدّد الحالة وأدخل الأسعار
         </div>
       </div>
+
+      <!-- Bulk Quick Actions -->
+      <div class="quick-actions-row">
+        <button type="button" class="quick-action-btn success" id="markAllAvailableBtn">
+          <i data-lucide="check-circle-2"></i> الكل متوفر
+        </button>
+        <button type="button" class="quick-action-btn danger" id="markAllUnavailableBtn">
+          <i data-lucide="x-circle"></i> الكل غير متوفر
+        </button>
+        <div style="width:1px;height:24px;background:var(--border);margin:0 4px;"></div>
+        <button type="button" class="quick-action-btn" id="applyDefaultPriceBtn">
+          <i data-lucide="tags"></i> السعر الافتراضي
+        </button>
+        <div class="quick-action-btn">
+          <i data-lucide="percent"></i>
+          خصم موحّد:
+          <input type="number" id="bulkDiscountInput" min="0" max="100" step="0.1" placeholder="0">
+          <button type="button" id="applyBulkDiscountBtn" style="background:transparent;border:none;color:var(--accent);font-weight:800;cursor:pointer;padding:0 4px;">تطبيق</button>
+        </div>
+        <button type="button" class="quick-action-btn warning" id="clearAllBtn">
+          <i data-lucide="eraser"></i> مسح الكل
+        </button>
+      </div>
+
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
               <th style="width:40px;">#</th>
               <th>الصنف</th>
-              <th>الشكل</th>
               <th>الوحدة</th>
               <th>الكمية المطلوبة</th>
               <th>آخر خصم</th>
               <th>الخصم المطلوب</th>
-              <th>السعر (اختياري)</th>
-              <th>الخصم % (اختياري)</th>
+              <th>الحالة</th>
+              <th>الكمية المتاحة</th>
+              <th>البونص</th>
+              <th>سعرك للوحدة</th>
+              <th>خصمك %</th>
+              <th>الإجمالي</th>
             </tr>
           </thead>
           <tbody id="itemsBody"></tbody>
@@ -499,15 +875,15 @@
     <!-- Floating actions -->
     <div class="floating-actions">
       <div class="floating-info">
-        <i data-lucide="edit-3" style="width:14px;height:14px;display:inline-block;vertical-align:middle;"></i>
-        عدّل الأسعار والخصومات ثم اضغط حفظ
+        <i data-lucide="edit-3"></i>
+        راجع ردك ثم اضغط حفظ
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <button class="btn btn-outline btn-sm" id="clearBtn">
           <i data-lucide="x-circle"></i> مسح الكل
         </button>
         <button class="btn btn-success" id="saveBtn">
-          <i data-lucide="save"></i> <span id="saveBtnText">حفظ التعديلات</span>
+          <i data-lucide="save"></i> <span id="saveBtnText">حفظ الرد</span>
         </button>
       </div>
     </div>
@@ -516,12 +892,11 @@
 
   <!-- Footer -->
   <div class="shared-footer">
-    <div>هذه الصفحة مُنشأة من نظام <strong style="color:var(--accent);">رفاد</strong></div>
+    <div>هذه الصفحة مُنشأة من نظام <strong>رفاد</strong></div>
     <div style="margin-top:6px;">© <span id="footerYear"></span> جميع الحقوق محفوظة</div>
   </div>
 
   <script src="refad-core.js"></script>
-  <!-- لا نحمّل refad-auth.js — الصفحة عامة -->
 
   <script>
     (function () {
@@ -535,12 +910,20 @@
         request: null,
         company: null,
         supplier: null,
+        warehouse: null,
         items: []
       };
+
+      const AUTO_SAVE_KEY = 'refad_shared_request_draft_v3';
 
       // ============================================================
       // 2) Helpers
       // ============================================================
+      function esc(s) { return Refad.escapeHtml(s); }
+      function fmtMoney(v) { return Refad.format.money(v); }
+      function fmtNumber(v, d) { return Refad.format.number(v, d); }
+      function toNum(v) { return Number(v) || 0; }
+
       function showError(title, message) {
         document.getElementById('loadingState').style.display = 'none';
         document.getElementById('contentWrap').style.display = 'none';
@@ -570,11 +953,10 @@
       state.token = token;
 
       // ============================================================
-      // 4) Load request by token
+      // 4) Load Request
       // ============================================================
       async function loadRequest() {
         try {
-          // 1. جلب الطلب
           const req = await Refad.db.selectOne('purchase_requests', {
             eq: { share_token: token }
           });
@@ -586,45 +968,59 @@
 
           state.request = req;
 
-          // 2. جلب الشركة
+          // Company
           const company = await Refad.db.selectOne('companies', {
             columns: 'id, name, logo_url, phone, email, address',
             eq: { id: req.company_id }
-          }).catch(() => null);
+          }).catch(function () { return null; });
           state.company = company;
 
-          // 3. جلب المورد
+          // Supplier
           if (req.supplier_id) {
             const supplier = await Refad.db.selectOne('suppliers', {
               columns: 'id, name, phone',
               eq: { id: req.supplier_id }
-            }).catch(() => null);
+            }).catch(function () { return null; });
             state.supplier = supplier;
           }
 
-          // 4. جلب الأصناف
+          // Warehouse
+          if (req.warehouse_id) {
+            const warehouse = await Refad.db.selectOne('warehouses', {
+              columns: 'id, name, address, is_default',
+              eq: { id: req.warehouse_id }
+            }).catch(function () { return null; });
+            state.warehouse = warehouse;
+          }
+
+          // Items — include new columns
           const items = await Refad.db.select('purchase_request_items', {
-            columns: 'id, product_id, requested_qty, received_qty, avg_sale_rate, last_discount, requested_discount, supplier_price, supplier_discount, supplier_response_at, notes, products(id, name, name_en, form, unit)',
+            columns: 'id, product_id, requested_qty, received_qty, avg_sale_rate, last_discount, requested_discount, supplier_price, supplier_discount, supplier_qty, supplier_bonus_qty, supplier_availability, supplier_notes, supplier_response_at, notes, products(id, name, name_en, form, unit, default_price)',
             eq: { request_id: req.id },
             order: { column: 'id', ascending: true }
-          }).catch(() => []);
+          }).catch(function () { return []; });
 
-          state.items = items.filter(it => it.products);
+          state.items = items.filter(function (it) { return it.products; });
 
           renderHeader();
           renderInfo();
           renderItems();
+
+          // Restore local draft AFTER render
+          restoreLocalDraft();
+
+          updateSummaryAndProgress();
           showContent();
 
-          // زيادة عداد المشاهدات (اختياري، بدون انتظار)
+          // Views counter
           if (req.share_token) {
             Refad.db.selectOne('share_links', { eq: { token: req.share_token } })
-              .then(sl => {
+              .then(function (sl) {
                 if (sl) {
-                  Refad.db.update('share_links', sl.id, { views: (sl.views || 0) + 1 }).catch(() => {});
+                  Refad.db.update('share_links', sl.id, { views: (sl.views || 0) + 1 }).catch(function () {});
                 }
               })
-              .catch(() => {});
+              .catch(function () {});
           }
         } catch (e) {
           console.error('[Shared] load failed:', e);
@@ -639,82 +1035,117 @@
         const co = state.company;
         const logo = document.getElementById('headerLogo');
 
-        if (co?.logo_url) {
-          logo.innerHTML = `<img src="${Refad.escapeHtml(co.logo_url)}" alt="">`;
-        } else if (co?.name) {
+        if (co && co.logo_url) {
+          logo.innerHTML = '<img src="' + esc(co.logo_url) + '" alt="">';
+        } else if (co && co.name) {
           logo.textContent = co.name.charAt(0);
         } else {
           logo.textContent = 'R';
         }
 
-        document.getElementById('headerTitle').textContent = co?.name || 'طلب شراء';
-        document.getElementById('headerSub').textContent = `طلب شراء رقم ${state.request.request_number}`;
-        document.title = `طلب ${state.request.request_number} - ${co?.name || 'رفاد'}`;
+        document.getElementById('headerTitle').textContent = (co && co.name) || 'طلب شراء';
+        document.getElementById('headerSub').textContent = 'طلب شراء رقم ' + state.request.request_number;
+        document.title = 'طلب ' + state.request.request_number + ' - ' + ((co && co.name) || 'رفاد');
 
-        // Status badge
-        const labels = {
-          draft: 'مسودة', sent: 'مُرسل', partial: 'جزئي', received: 'مستلم', cancelled: 'ملغي'
-        };
-        const icons = {
-          draft: 'file-edit', sent: 'send', partial: 'clock', received: 'check-circle', cancelled: 'x-circle'
-        };
-        document.getElementById('statusBadge').className = 'status-badge ' + (state.request.status || 'draft');
+        const labels = { draft: 'مسودة', sent: 'مُرسل', partial: 'جزئي', received: 'مستلم', cancelled: 'ملغي' };
+        const icons = { draft: 'file-edit', sent: 'send', partial: 'clock', received: 'check-circle', cancelled: 'x-circle' };
+
+        const badge = document.getElementById('statusBadge');
+        badge.className = 'status-badge ' + (state.request.status || 'draft');
         document.getElementById('statusText').textContent = labels[state.request.status] || state.request.status;
-        document.getElementById('statusBadge').querySelector('i').setAttribute('data-lucide', icons[state.request.status] || 'file-edit');
+        badge.querySelector('i').setAttribute('data-lucide', icons[state.request.status] || 'file-edit');
       }
 
       function renderInfo() {
         const r = state.request;
+
         document.getElementById('infoReqNumber').textContent = r.request_number;
         document.getElementById('infoDate').textContent = Refad.format.date(r.created_at);
-        document.getElementById('infoSupplier').textContent = state.supplier?.name || '—';
-        document.getElementById('infoItemCount').textContent = Refad.format.number(state.items.length);
+        document.getElementById('infoSupplier').textContent = (state.supplier && state.supplier.name) || '—';
+
+        const whEl = document.getElementById('infoWarehouse');
+        if (state.warehouse) {
+          whEl.innerHTML = '<span class="warehouse-pill"><i data-lucide="warehouse"></i>' + esc(state.warehouse.name) + '</span>';
+        } else {
+          whEl.textContent = 'غير محدد';
+        }
+
+        document.getElementById('infoItemCount').textContent = fmtNumber(state.items.length);
 
         if (r.notes) {
           document.getElementById('notesBox').style.display = 'block';
           document.getElementById('notesText').textContent = r.notes;
         }
+        if (window.lucide) lucide.createIcons();
       }
 
       function renderItems() {
         const tbody = document.getElementById('itemsBody');
         if (!state.items.length) {
-          tbody.innerHTML = `
-            <tr>
-              <td colspan="9" style="text-align:center;padding:40px;color:var(--text-muted);">
-                لا توجد أصناف في هذا الطلب
-              </td>
-            </tr>`;
+          tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;padding:40px;color:var(--text-muted);">لا توجد أصناف في هذا الطلب</td></tr>';
           return;
         }
 
-        tbody.innerHTML = state.items.map((it, i) => {
+        tbody.innerHTML = state.items.map(function (it, i) {
           const legacyOffer = parseLegacyOffer(it.notes);
-          const defaultPrice = it.products?.default_price ?? it.supplier_price ?? legacyOffer.supplier_price ?? '';
-          const supplierPrice = it.supplier_price ?? defaultPrice ?? '';
-          const supplierDiscount = it.supplier_discount ?? legacyOffer.supplier_discount ?? it.requested_discount ?? '';
-          return `
-          <tr data-idx="${i}" data-item-id="${it.id}">
-            <td style="color:var(--text-muted);font-weight:700;text-align:center;">${i + 1}</td>
-            <td>
-              <div class="product-cell">${Refad.escapeHtml(it.products.name)}</div>
-              ${it.products.name_en ? `<div class="product-sub">${Refad.escapeHtml(it.products.name_en)}</div>` : ''}
-            </td>
-            <td>${Refad.escapeHtml(it.products.form || '—')}</td>
-            <td>${Refad.escapeHtml(it.products.unit || '—')}</td>
-            <td class="num-cell">${Refad.format.number(it.requested_qty)}</td>
-            <td class="num-cell" style="color:var(--info);">${Refad.format.number(it.last_discount || 0, 1)}%</td>
-            <td class="num-cell" style="color:var(--success);font-weight:700;">${Refad.format.number(it.requested_discount || 0, 1)}%</td>
-            <td>
-              <input type="number" class="price-input" min="0" step="0.01" placeholder="سعر الوحدة الافتراضي" value="${supplierPrice}" data-idx="${i}" data-field="price">
-            </td>
-            <td>
-              <input type="number" class="discount-input" min="0" max="100" step="0.1" placeholder="خصم المورد" value="${supplierDiscount}" data-idx="${i}" data-field="discount">
-            </td>
-          </tr>
-        `}).join('');
+          const defaultPrice = (it.products && it.products.default_price) || it.supplier_price || legacyOffer.supplier_price || '';
+          const supplierPrice = it.supplier_price != null ? it.supplier_price : defaultPrice;
+          const supplierDiscount = it.supplier_discount != null ? it.supplier_discount : (legacyOffer.supplier_discount != null ? legacyOffer.supplier_discount : (it.requested_discount || ''));
+
+          // Availability: default 'pending' → treat as 'available' for UX (unless explicitly set)
+          let availability = it.supplier_availability;
+          if (!availability || availability === 'pending') {
+            availability = (it.supplier_response_at && it.supplier_price != null) ? 'available' : 'available';
+          }
+
+          const supplierQty = it.supplier_qty != null
+            ? it.supplier_qty
+            : (availability === 'available' ? it.requested_qty : (availability === 'unavailable' ? 0 : ''));
+          const supplierBonus = it.supplier_bonus_qty != null ? it.supplier_bonus_qty : 0;
+
+          const rowClass =
+            availability === 'available'   ? 'row-available'   :
+            availability === 'partial'     ? 'row-partial'     :
+            availability === 'unavailable' ? 'row-unavailable' : '';
+
+          const isUnavailable = availability === 'unavailable';
+          const isPartial = availability === 'partial';
+
+          return '<tr data-idx="' + i + '" data-item-id="' + it.id + '" class="' + rowClass + '">' +
+            '<td style="color:var(--text-muted);font-weight:700;text-align:center;">' + (i + 1) + '</td>' +
+            '<td>' +
+              '<div class="product-cell">' + esc(it.products.name) + '</div>' +
+              (it.products.name_en ? '<div class="product-sub">' + esc(it.products.name_en) + '</div>' : '') +
+            '</td>' +
+            '<td>' + esc(it.products.unit || '—') + '</td>' +
+            '<td class="num-cell">' + fmtNumber(it.requested_qty) + '</td>' +
+            '<td class="num-cell" style="color:var(--info);">' + fmtNumber(it.last_discount || 0, 1) + '%</td>' +
+            '<td class="num-cell" style="color:var(--success);font-weight:700;">' + fmtNumber(it.requested_discount || 0, 1) + '%</td>' +
+            '<td>' +
+              '<div class="avail-group">' +
+                '<button type="button" class="avail-btn ' + (availability === 'available' ? 'active' : '') + '" data-status="available" data-idx="' + i + '" title="عندي بالكامل">' +
+                  '<i data-lucide="check"></i>' +
+                '</button>' +
+                '<button type="button" class="avail-btn ' + (availability === 'partial' ? 'active' : '') + '" data-status="partial" data-idx="' + i + '" title="عندي كمية أقل">' +
+                  '<i data-lucide="alert-triangle"></i>' +
+                '</button>' +
+                '<button type="button" class="avail-btn ' + (availability === 'unavailable' ? 'active' : '') + '" data-status="unavailable" data-idx="' + i + '" title="مش عندي">' +
+                  '<i data-lucide="x"></i>' +
+                '</button>' +
+              '</div>' +
+            '</td>' +
+            '<td><input type="number" class="qty-input" min="0" step="1" placeholder="' + (availability === 'available' ? it.requested_qty : (availability === 'unavailable' ? '0' : '')) + '" value="' + (supplierQty !== '' && supplierQty != null ? supplierQty : '') + '" data-idx="' + i + '" data-field="qty" ' + (availability === 'available' || isUnavailable ? '' : '') + '></td>' +
+            '<td><input type="number" class="bonus-input" min="0" step="1" placeholder="0" value="' + (supplierBonus || '') + '" data-idx="' + i + '" data-field="bonus" ' + (isUnavailable ? 'disabled' : '') + '></td>' +
+            '<td><input type="number" class="price-input" min="0" step="0.01" placeholder="0.00" value="' + (supplierPrice || '') + '" data-idx="' + i + '" data-field="price" ' + (isUnavailable ? 'disabled' : '') + '></td>' +
+            '<td><input type="number" class="discount-input" min="0" max="100" step="0.1" placeholder="0" value="' + (supplierDiscount || '') + '" data-idx="' + i + '" data-field="discount" ' + (isUnavailable ? 'disabled' : '') + '></td>' +
+            '<td class="total-cell" data-total="' + i + '">—</td>' +
+          '</tr>';
+        }).join('');
 
         if (window.lucide) lucide.createIcons();
+        attachItemEvents();
+        applyUnavailableVisuals();
+        updateAllRowTotals();
       }
 
       function parseLegacyOffer(notes) {
@@ -724,45 +1155,416 @@
             supplier_price: Number.isFinite(Number(parsed.supplier_price)) ? Number(parsed.supplier_price) : null,
             supplier_discount: Number.isFinite(Number(parsed.supplier_discount)) ? Number(parsed.supplier_discount) : null
           };
-        } catch (error) {
+        } catch (e) {
           return { supplier_price: null, supplier_discount: null };
         }
       }
 
       // ============================================================
-      // 6) Save changes
+      // 6) Availability handlers
       // ============================================================
-      async function saveChanges() {
-        const inputs = document.querySelectorAll('.price-input, .discount-input');
-        const updates = [];  // [{ id, sale_price?, discount? }]
-        let invalidInput = false;
+      function getItemAvailability(i) {
+        const active = document.querySelector('.avail-btn.active[data-idx="' + i + '"]');
+        return active ? active.dataset.status : 'available';
+      }
 
-        // نجمع التعديلات
-        state.items.forEach((it, i) => {
-          const priceInput = document.querySelector(`.price-input[data-idx="${i}"]`);
-          const discInput = document.querySelector(`.discount-input[data-idx="${i}"]`);
-          const price = priceInput.value.trim() === '' ? null : Refad.toNum(priceInput.value);
-          const discount = discInput.value.trim() === '' ? null : Refad.toNum(discInput.value);
-
-          if (price !== null || discount !== null) {
-            if ((price !== null && (!Number.isFinite(price) || price < 0)) ||
-                (discount !== null && (!Number.isFinite(discount) || discount < 0 || discount > 100))) {
-              Refad.toast.warning('راجع سعر الوحدة والخصم؛ الخصم يجب أن يكون من 0 إلى 100');
-              invalidInput = true;
-              return;
-            }
-            updates.push({
-              id: it.id,
-              product_id: it.product_id,
-              price,
-              discount
-            });
-          }
+      function setAvailability(i, status) {
+        document.querySelectorAll('.avail-btn[data-idx="' + i + '"]').forEach(function (b) {
+          b.classList.toggle('active', b.dataset.status === status);
         });
 
-        if (invalidInput) return;
+        const row = document.querySelector('tr[data-idx="' + i + '"]');
+        if (!row) return;
+
+        row.classList.remove('row-available', 'row-partial', 'row-unavailable');
+        if (status === 'available') row.classList.add('row-available');
+        else if (status === 'partial') row.classList.add('row-partial');
+        else if (status === 'unavailable') row.classList.add('row-unavailable');
+
+        const qtyInput = row.querySelector('.qty-input');
+        const bonusInput = row.querySelector('.bonus-input');
+        const priceInput = row.querySelector('.price-input');
+        const discInput = row.querySelector('.discount-input');
+
+        const reqQty = toNum(state.items[i].requested_qty);
+
+        if (status === 'available') {
+          if (qtyInput) {
+            qtyInput.disabled = false;
+            qtyInput.value = reqQty;
+            qtyInput.placeholder = reqQty;
+          }
+          if (bonusInput) bonusInput.disabled = false;
+          if (priceInput) priceInput.disabled = false;
+          if (discInput) discInput.disabled = false;
+        } else if (status === 'partial') {
+          if (qtyInput) {
+            qtyInput.disabled = false;
+            if (!qtyInput.value || toNum(qtyInput.value) >= reqQty) {
+              qtyInput.value = '';
+            }
+            qtyInput.placeholder = 'أقل من ' + reqQty;
+          }
+          if (bonusInput) bonusInput.disabled = false;
+          if (priceInput) priceInput.disabled = false;
+          if (discInput) discInput.disabled = false;
+        } else if (status === 'unavailable') {
+          if (qtyInput) { qtyInput.disabled = true; qtyInput.value = 0; }
+          if (bonusInput) { bonusInput.disabled = true; bonusInput.value = 0; }
+          if (priceInput) { priceInput.disabled = true; priceInput.value = ''; }
+          if (discInput) { discInput.disabled = true; discInput.value = ''; }
+        }
+
+        applyUnavailableVisuals();
+        updateAllRowTotals();
+        updateSummaryAndProgress();
+        saveLocalDraft();
+      }
+
+      function applyUnavailableVisuals() {
+        state.items.forEach(function (it, i) {
+          const status = getItemAvailability(i);
+          const row = document.querySelector('tr[data-idx="' + i + '"]');
+          if (!row) return;
+
+          const qtyInput = row.querySelector('.qty-input');
+          const bonusInput = row.querySelector('.bonus-input');
+          const priceInput = row.querySelector('.price-input');
+          const discInput = row.querySelector('.discount-input');
+
+          // Adjust placeholders dynamically
+          if (status === 'available' && qtyInput) {
+            qtyInput.placeholder = toNum(it.requested_qty);
+          } else if (status === 'partial' && qtyInput) {
+            qtyInput.placeholder = 'أقل من ' + toNum(it.requested_qty);
+          }
+          if (status === 'unavailable') {
+            if (qtyInput) qtyInput.placeholder = '0';
+            if (bonusInput) bonusInput.placeholder = '0';
+          } else {
+            if (bonusInput) bonusInput.placeholder = '0';
+          }
+        });
+      }
+
+      // ============================================================
+      // 7) Item Events & Totals
+      // ============================================================
+      function attachItemEvents() {
+        // Availability buttons
+        document.querySelectorAll('.avail-btn').forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            const idx = parseInt(btn.dataset.idx, 10);
+            setAvailability(idx, btn.dataset.status);
+          });
+        });
+
+        // Inputs
+        document.querySelectorAll('.price-input, .discount-input, .qty-input, .bonus-input').forEach(function (inp) {
+          inp.addEventListener('input', function () {
+            updateAllRowTotals();
+            updateSummaryAndProgress();
+            saveLocalDraft();
+          });
+          inp.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              const inputs = Array.from(document.querySelectorAll('.price-input, .discount-input, .qty-input, .bonus-input')).filter(function (i) { return !i.disabled; });
+              const idx = inputs.indexOf(inp);
+              if (idx >= 0 && idx < inputs.length - 1) {
+                inputs[idx + 1].focus();
+              } else {
+                saveChanges();
+              }
+            }
+          });
+          inp.addEventListener('focus', function () { inp.select(); });
+        });
+      }
+
+      function updateAllRowTotals() {
+        state.items.forEach(function (it, i) {
+          const row = document.querySelector('tr[data-idx="' + i + '"]');
+          if (!row) return;
+
+          const priceInput = row.querySelector('.price-input');
+          const discInput = row.querySelector('.discount-input');
+          const qtyInput = row.querySelector('.qty-input');
+
+          const status = getItemAvailability(i);
+          const price = priceInput && priceInput.value.trim() !== '' ? toNum(priceInput.value) : 0;
+          const discount = discInput && discInput.value.trim() !== '' ? toNum(discInput.value) : 0;
+
+          let qty = 0;
+          if (status === 'available') {
+            qty = toNum(it.requested_qty);
+          } else if (status === 'partial') {
+            qty = qtyInput && qtyInput.value.trim() !== '' ? toNum(qtyInput.value) : 0;
+          } else if (status === 'unavailable') {
+            qty = 0;
+          }
+
+          const total = price * qty * (1 - discount / 100);
+          const totalEl = row.querySelector('[data-total="' + i + '"]');
+          if (totalEl) {
+            totalEl.textContent = total > 0 ? fmtMoney(total) : '—';
+          }
+        });
+      }
+
+      function updateSummaryAndProgress() {
+        let available = 0, partial = 0, unavailable = 0;
+        let totalValue = 0;
+        let totalBonus = 0;
+
+        state.items.forEach(function (it, i) {
+          const row = document.querySelector('tr[data-idx="' + i + '"]');
+          if (!row) return;
+
+          const status = getItemAvailability(i);
+          if (status === 'available') available++;
+          else if (status === 'partial') partial++;
+          else if (status === 'unavailable') unavailable++;
+
+          const priceInput = row.querySelector('.price-input');
+          const discInput = row.querySelector('.discount-input');
+          const qtyInput = row.querySelector('.qty-input');
+          const bonusInput = row.querySelector('.bonus-input');
+
+          const price = priceInput && priceInput.value.trim() !== '' ? toNum(priceInput.value) : 0;
+          const discount = discInput && discInput.value.trim() !== '' ? toNum(discInput.value) : 0;
+          const bonus = bonusInput && bonusInput.value.trim() !== '' ? toNum(bonusInput.value) : 0;
+
+          let qty = 0;
+          if (status === 'available') qty = toNum(it.requested_qty);
+          else if (status === 'partial') qty = qtyInput && qtyInput.value.trim() !== '' ? toNum(qtyInput.value) : 0;
+
+          totalValue += price * qty * (1 - discount / 100);
+          totalBonus += bonus;
+        });
+
+        const responded = available + partial + unavailable;
+        const pct = state.items.length ? Math.round((responded / state.items.length) * 100) : 0;
+
+        document.getElementById('sumItems').textContent = fmtNumber(state.items.length);
+        document.getElementById('sumAvailable').textContent = fmtNumber(available);
+        document.getElementById('sumPartial').textContent = fmtNumber(partial);
+        document.getElementById('sumUnavailable').textContent = fmtNumber(unavailable);
+        document.getElementById('sumBonus').textContent = fmtNumber(totalBonus);
+        document.getElementById('sumValue').textContent = totalValue > 0 ? fmtMoney(totalValue) : '—';
+        document.getElementById('sumAvailableSub').textContent = pct > 0 ? Math.round((available / state.items.length) * 100) + '%' : 'صنف';
+        document.getElementById('sumPartialSub').textContent = pct > 0 ? Math.round((partial / state.items.length) * 100) + '%' : 'صنف';
+        document.getElementById('sumUnavailableSub').textContent = pct > 0 ? Math.round((unavailable / state.items.length) * 100) + '%' : 'صنف';
+        document.getElementById('progressPct').textContent = pct + '%';
+        document.getElementById('progressFill').style.width = pct + '%';
+      }
+
+      // ============================================================
+      // 8) Quick Actions
+      // ============================================================
+      function applyDefaultPrice() {
+        let count = 0;
+        state.items.forEach(function (it, i) {
+          const row = document.querySelector('tr[data-idx="' + i + '"]');
+          if (!row) return;
+          const priceInput = row.querySelector('.price-input');
+          if (priceInput && !priceInput.disabled && !priceInput.value.trim()) {
+            const defaultPrice = (it.products && it.products.default_price) || it.supplier_price || 0;
+            if (defaultPrice > 0) {
+              priceInput.value = defaultPrice;
+              count++;
+            }
+          }
+        });
+        updateAllRowTotals();
+        updateSummaryAndProgress();
+        saveLocalDraft();
+        if (count > 0) Refad.toast.success('تم تطبيق السعر الافتراضي على ' + count + ' صنف');
+        else Refad.toast.info('كل الأصناف لديها أسعار');
+      }
+
+      function applyBulkDiscount() {
+        const input = document.getElementById('bulkDiscountInput');
+        const value = toNum(input.value);
+        if (value < 0 || value > 100) {
+          Refad.toast.warning('الخصم يجب أن يكون من 0 إلى 100');
+          return;
+        }
+        if (!state.items.length) return;
+
+        let count = 0;
+        state.items.forEach(function (it, i) {
+          const row = document.querySelector('tr[data-idx="' + i + '"]');
+          if (!row) return;
+          const discInput = row.querySelector('.discount-input');
+          if (discInput && !discInput.disabled) {
+            discInput.value = value;
+            count++;
+          }
+        });
+        updateAllRowTotals();
+        updateSummaryAndProgress();
+        saveLocalDraft();
+        Refad.toast.success('تم تطبيق خصم ' + value + '% على ' + count + ' صنف');
+      }
+
+      function markAllAvailable() {
+        if (!state.items.length) return;
+        state.items.forEach(function (it, i) { setAvailability(i, 'available'); });
+        Refad.toast.success('تم تعليم كل الأصناف كمتوفرة');
+      }
+
+      function markAllUnavailable() {
+        if (!state.items.length) return;
+        Refad.alert.confirm('تعليم الكل كغير متوفر', 'هل أنت متأكد أنك لا تملك أي من هذه الأصناف؟', 'تأكيد').then(function (ok) {
+          if (!ok) return;
+          state.items.forEach(function (it, i) { setAvailability(i, 'unavailable'); });
+          Refad.toast.success('تم تعليم كل الأصناف كغير متوفرة');
+        });
+      }
+
+      function clearAllInputs() {
+        if (!state.items.length) return;
+        state.items.forEach(function (it, i) {
+          setAvailability(i, 'available');
+          const row = document.querySelector('tr[data-idx="' + i + '"]');
+          if (!row) return;
+          const qtyInput = row.querySelector('.qty-input');
+          const bonusInput = row.querySelector('.bonus-input');
+          const priceInput = row.querySelector('.price-input');
+          const discInput = row.querySelector('.discount-input');
+          if (qtyInput) qtyInput.value = toNum(it.requested_qty);
+          if (bonusInput) bonusInput.value = '';
+          if (priceInput) priceInput.value = '';
+          if (discInput) discInput.value = '';
+        });
+        document.getElementById('bulkDiscountInput').value = '';
+        updateAllRowTotals();
+        updateSummaryAndProgress();
+        clearLocalDraft();
+        Refad.toast.info('تم المسح');
+      }
+
+      // ============================================================
+      // 9) Local Draft (Auto Save)
+      // ============================================================
+      function saveLocalDraft() {
+        try {
+          const data = state.items.map(function (it, i) {
+            const row = document.querySelector('tr[data-idx="' + i + '"]');
+            if (!row) return { id: it.id, status: 'available', qty: '', bonus: '', price: '', discount: '' };
+            return {
+              id: it.id,
+              status: getItemAvailability(i),
+              qty: (row.querySelector('.qty-input') || {}).value || '',
+              bonus: (row.querySelector('.bonus-input') || {}).value || '',
+              price: (row.querySelector('.price-input') || {}).value || '',
+              discount: (row.querySelector('.discount-input') || {}).value || ''
+            };
+          });
+          localStorage.setItem(AUTO_SAVE_KEY + '_' + state.token, JSON.stringify({
+            at: Date.now(),
+            data: data
+          }));
+        } catch (e) {
+          console.warn('Local save failed:', e);
+        }
+      }
+
+      function restoreLocalDraft() {
+        try {
+          const raw = localStorage.getItem(AUTO_SAVE_KEY + '_' + state.token);
+          if (!raw) return;
+          const parsed = JSON.parse(raw);
+          if (!parsed || !Array.isArray(parsed.data)) return;
+          if (Date.now() - parsed.at > 7 * 24 * 60 * 60 * 1000) return;
+
+          parsed.data.forEach(function (d) {
+            const idx = state.items.findIndex(function (x) { return x.id === d.id; });
+            if (idx < 0) return;
+            const row = document.querySelector('tr[data-idx="' + idx + '"]');
+            if (!row) return;
+
+            if (d.status) setAvailability(idx, d.status);
+
+            const qtyInput = row.querySelector('.qty-input');
+            const bonusInput = row.querySelector('.bonus-input');
+            const priceInput = row.querySelector('.price-input');
+            const discInput = row.querySelector('.discount-input');
+
+            if (qtyInput && d.qty) qtyInput.value = d.qty;
+            if (bonusInput && d.bonus) bonusInput.value = d.bonus;
+            if (priceInput && d.price) priceInput.value = d.price;
+            if (discInput && d.discount) discInput.value = d.discount;
+          });
+
+          updateAllRowTotals();
+          updateSummaryAndProgress();
+          console.log('[Shared] Local draft restored');
+        } catch (e) {
+          console.warn('Local restore failed:', e);
+        }
+      }
+
+      function clearLocalDraft() {
+        try {
+          localStorage.removeItem(AUTO_SAVE_KEY + '_' + state.token);
+        } catch (e) {}
+      }
+
+      // ============================================================
+      // 10) Save Changes
+      // ============================================================
+      async function saveChanges() {
+        const updates = [];
+        let invalidInput = false;
+
+        state.items.forEach(function (it, i) {
+          const row = document.querySelector('tr[data-idx="' + i + '"]');
+          if (!row) return;
+
+          const status = getItemAvailability(i);
+          const priceInput = row.querySelector('.price-input');
+          const discInput = row.querySelector('.discount-input');
+          const qtyInput = row.querySelector('.qty-input');
+          const bonusInput = row.querySelector('.bonus-input');
+
+          const price = priceInput && priceInput.value.trim() !== '' ? toNum(priceInput.value) : null;
+          const discount = discInput && discInput.value.trim() !== '' ? toNum(discInput.value) : null;
+          const bonus = bonusInput && bonusInput.value.trim() !== '' ? toNum(bonusInput.value) : 0;
+
+          let qty = null;
+          if (status === 'available') qty = toNum(it.requested_qty);
+          else if (status === 'partial') qty = qtyInput && qtyInput.value.trim() !== '' ? toNum(qtyInput.value) : null;
+          else if (status === 'unavailable') qty = 0;
+
+          // Validation
+          if (price !== null && (price < 0 || !Number.isFinite(price))) { invalidInput = true; row.classList.add('row-error'); return; }
+          if (discount !== null && (discount < 0 || discount > 100 || !Number.isFinite(discount))) { invalidInput = true; row.classList.add('row-error'); return; }
+          if (status === 'partial' && (qty === null || qty < 0 || qty >= toNum(it.requested_qty))) {
+            // Allow partial to be < requested_qty
+            if (qty === null) { invalidInput = true; row.classList.add('row-error'); return; }
+          }
+          row.classList.remove('row-error');
+
+          updates.push({
+            id: it.id,
+            product_id: it.product_id,
+            status: status,
+            qty: qty,
+            bonus: bonus,
+            price: price,
+            discount: discount
+          });
+        });
+
+        if (invalidInput) {
+          Refad.toast.warning('راجع القيم؛ الخصم 0-100، الكمية الجزئية أقل من المطلوبة');
+          return;
+        }
+
         if (!updates.length) {
-          Refad.toast.warning('لم تقم بإدخال أي أسعار أو خصومات');
+          Refad.toast.warning('لم تقم بإدخال أي تعديلات');
           return;
         }
 
@@ -774,49 +1576,84 @@
         try {
           const submittedAt = new Date().toISOString();
           const historyRows = [];
+
           for (const u of updates) {
-            const item = state.items.find(x => x.id === u.id);
-            await Refad.db.update('purchase_request_items', u.id, {
+            const item = state.items.find(function (x) { return x.id === u.id; });
+            if (!item) continue;
+
+            const updatePayload = {
               supplier_price: u.price,
               supplier_discount: u.discount,
+              supplier_qty: u.qty,
+              supplier_bonus_qty: u.bonus || 0,
+              supplier_availability: u.status,
               supplier_response_at: submittedAt
-            });
+            };
 
-            item.supplier_price = u.price;
-            item.supplier_discount = u.discount;
-            item.supplier_response_at = submittedAt;
+            await Refad.db.update('purchase_request_items', u.id, updatePayload);
+
+            Object.assign(item, updatePayload);
+
             historyRows.push({
               request_id: state.request.id,
               product_id: u.product_id,
               supplier_id: state.request.supplier_id || null,
               supplier_price: u.price,
               supplier_discount: u.discount,
+              supplier_qty: u.qty,
+              supplier_bonus_qty: u.bonus || 0,
+              availability: u.status,
               submitted_at: submittedAt
             });
           }
-          await Refad.db.insertMany('purchase_request_responses', historyRows);
 
+          if (historyRows.length) {
+            try {
+              if (Refad.db.insertMany) {
+                await Refad.db.insertMany('purchase_request_responses', historyRows);
+              } else {
+                for (const row of historyRows) {
+                  await Refad.db.insert('purchase_request_responses', row).catch(function (err) {
+                    console.warn('History insert failed:', err);
+                  });
+                }
+              }
+            } catch (e) {
+              console.warn('History batch insert failed:', e);
+            }
+          }
+
+          // Notification
           try {
+            const stats = buildResponseStats(updates);
+            const summary = 'متوفر: ' + stats.available + ' • جزئي: ' + stats.partial + ' • غير متوفر: ' + stats.unavailable + ' • بونص: ' + stats.bonus + ' وحدة';
+
             await Refad.notifyCompany(
               state.request.company_id,
               'وصل رد المورد على طلب شراء',
-              `أرسل المورد تعديلات على طلب الشراء ${state.request.request_number}.`,
+              summary + ' — طلب ' + state.request.request_number,
               'purchase',
               state.request.id
             );
           } catch (notificationError) {
             console.error('[Shared] Notification failed:', notificationError);
-            Refad.toast.warning('تم حفظ عروضك، لكن تعذّر إرسال إشعار للشركة');
+            Refad.toast.warning('تم حفظ ردك، لكن تعذّر إرسال إشعار للشركة');
           }
 
+          clearLocalDraft();
           renderItems();
-          Refad.toast.success('تم حفظ عروض الأسعار والخصومات');
+          updateSummaryAndProgress();
+
+          Refad.toast.success('تم حفظ ردك بنجاح');
+
           btn.disabled = false;
           document.getElementById('saveBtnText').textContent = originalText;
 
-          // أخبر المستخدم
-          setTimeout(() => {
-            Refad.alert.success('شكراً لك', 'تم استلام أسعارك وخصوماتك. سيتواصل معك فريق الشركة قريباً.');
+          setTimeout(function () {
+            Refad.alert.success(
+              'شكراً لك 🙏',
+              'تم استلام ردك على الطلب. سيتواصل معك فريق الشركة قريباً.'
+            );
           }, 400);
 
         } catch (err) {
@@ -827,130 +1664,201 @@
         }
       }
 
-      // ============================================================
-      // 7) Clear all
-      // ============================================================
-      async function clearAll() {
-        const ok = await Refad.alert.confirm('مسح الكل', 'هل تريد مسح كل الأسعار والخصومات المدخلة؟', 'مسح');
-        if (!ok) return;
-        document.querySelectorAll('.price-input, .discount-input').forEach(inp => inp.value = '');
-        Refad.toast.info('تم المسح');
+      function buildResponseStats(updates) {
+        let available = 0, partial = 0, unavailable = 0, bonus = 0;
+        updates.forEach(function (u) {
+          if (u.status === 'available') available++;
+          else if (u.status === 'partial') partial++;
+          else if (u.status === 'unavailable') unavailable++;
+          bonus += toNum(u.bonus);
+        });
+        return { available: available, partial: partial, unavailable: unavailable, bonus: bonus };
       }
 
       // ============================================================
-      // 8) Export Excel
+      // 11) Export Excel
       // ============================================================
       function exportExcel() {
         if (!state.items.length) return;
-        const rows = state.items.map((it, i) => {
-          const priceInput = document.querySelector(`.price-input[data-idx="${i}"]`);
-          const discInput = document.querySelector(`.discount-input[data-idx="${i}"]`);
+        const rows = state.items.map(function (it, i) {
+          const row = document.querySelector('tr[data-idx="' + i + '"]');
+          if (!row) return null;
+
+          const status = getItemAvailability(i);
+          const priceInput = row.querySelector('.price-input');
+          const discInput = row.querySelector('.discount-input');
+          const qtyInput = row.querySelector('.qty-input');
+          const bonusInput = row.querySelector('.bonus-input');
+
+          const price = priceInput && priceInput.value.trim() !== '' ? toNum(priceInput.value) : 0;
+          const discount = discInput && discInput.value.trim() !== '' ? toNum(discInput.value) : 0;
+          const bonus = bonusInput && bonusInput.value.trim() !== '' ? toNum(bonusInput.value) : 0;
+
+          let qty = 0;
+          if (status === 'available') qty = toNum(it.requested_qty);
+          else if (status === 'partial') qty = qtyInput && qtyInput.value.trim() !== '' ? toNum(qtyInput.value) : 0;
+
+          const total = price * qty * (1 - discount / 100);
+          const statusLabels = { available: 'متوفر', partial: 'جزئي', unavailable: 'غير متوفر' };
+
           return {
             '#': i + 1,
             'الصنف': it.products.name,
-            'الشكل': it.products.form || '',
             'الوحدة': it.products.unit || '',
             'الكمية المطلوبة': it.requested_qty,
             'آخر خصم %': it.last_discount || 0,
             'الخصم المطلوب %': it.requested_discount || 0,
-            'السعر': priceInput?.value || '',
-            'الخصم %': discInput?.value || ''
+            'الحالة': statusLabels[status] || status,
+            'الكمية المتاحة': qty,
+            'البونص': bonus,
+            'سعر الوحدة': price,
+            'الخصم %': discount,
+            'الإجمالي': total
           };
-        });
+        }).filter(Boolean);
+
         const ws = XLSX.utils.json_to_sheet(rows);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'Request');
-        XLSX.writeFile(wb, `طلب-${state.request.request_number}.xlsx`);
+        XLSX.writeFile(wb, 'رد-مورد-' + state.request.request_number + '.xlsx');
         Refad.toast.success('تم التصدير');
       }
 
       // ============================================================
-      // 9) Print
+      // 12) Print
       // ============================================================
       function printRequest() {
         if (!state.items.length) return;
         const co = state.company;
         const r = state.request;
 
+        const statusLabels = { available: 'متوفر', partial: 'جزئي', unavailable: 'غير متوفر' };
+
         const w = window.open('', '_blank');
-        w.document.write(`
-          <!DOCTYPE html>
-          <html dir="rtl"><head><meta charset="UTF-8">
-          <title>طلب ${r.request_number}</title>
-          <style>
-            body { font-family: Cairo, Arial; padding: 30px; color: #0f172a; }
-            h1 { color: #0B2C4D; margin-bottom: 4px; font-size: 22px; }
-            .sub { color: #64748b; font-size: 13px; margin-bottom: 20px; }
-            .info { display: flex; gap: 30px; margin-bottom: 20px; flex-wrap: wrap; }
-            .info div { font-size: 13px; }
-            .info strong { color: #0B2C4D; }
-            table { width: 100%; border-collapse: collapse; font-size: 12px; }
-            th, td { border: 1px solid #cbd5e1; padding: 8px; text-align: right; }
-            th { background: #F1F5F9; font-weight: 700; }
-            .footer { margin-top: 30px; text-align: center; font-size: 11px; color: #94a3b8; }
-          </style></head><body>
-          <h1>${Refad.escapeHtml(co?.name || 'طلب شراء')}</h1>
-          <div class="sub">طلب شراء رقم ${Refad.escapeHtml(r.request_number)} - ${Refad.format.date(r.created_at)}</div>
-          <div class="info">
-            <div><strong>المورد:</strong> ${Refad.escapeHtml(state.supplier?.name || '—')}</div>
-            <div><strong>الهاتف:</strong> ${Refad.escapeHtml(state.supplier?.phone || '—')}</div>
-          </div>
-          <table>
-            <thead><tr>
-              <th>#</th><th>الصنف</th><th>الشكل</th><th>الوحدة</th><th>الكمية</th><th>آخر خصم</th>
-            </tr></thead>
-            <tbody>
-              ${state.items.map((it, i) => `
-                <tr>
-                  <td>${i + 1}</td>
-                  <td>${Refad.escapeHtml(it.products.name)}</td>
-                  <td>${Refad.escapeHtml(it.products.form || '—')}</td>
-                  <td>${Refad.escapeHtml(it.products.unit || '—')}</td>
-                  <td>${it.requested_qty}</td>
-                  <td>${Refad.format.number(it.last_discount || 0, 1)}%</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-          <div class="footer">تم إنشاء الطلب من نظام رفاد</div>
-          <script>window.onload = () => setTimeout(() => window.print(), 300);<\/script>
-          </body></html>
-        `);
+        w.document.write(
+          '<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8">' +
+          '<title>رد مورد - طلب ' + esc(r.request_number) + '</title>' +
+          '<style>' +
+            'body { font-family: Cairo, Arial; padding: 30px; color: #0f172a; }' +
+            'h1 { color: #0B2C4D; margin-bottom: 4px; font-size: 22px; }' +
+            '.sub { color: #64748b; font-size: 13px; margin-bottom: 20px; }' +
+            '.info { display: flex; gap: 30px; margin-bottom: 20px; flex-wrap: wrap; }' +
+            '.info div { font-size: 13px; }' +
+            '.info strong { color: #0B2C4D; }' +
+            'table { width: 100%; border-collapse: collapse; font-size: 11px; }' +
+            'th, td { border: 1px solid #cbd5e1; padding: 6px 8px; text-align: right; }' +
+            'th { background: #F1F5F9; font-weight: 700; font-size: 10px; }' +
+            '.ok { color: #10b981; font-weight: 700; }' +
+            '.warn { color: #f59e0b; font-weight: 700; }' +
+            '.bad { color: #ef4444; font-weight: 700; }' +
+            '.bonus { color: #8b5cf6; font-weight: 700; }' +
+            '.footer { margin-top: 30px; text-align: center; font-size: 11px; color: #94a3b8; }' +
+          '</style></head><body>' +
+          '<h1>' + esc((co && co.name) || 'طلب شراء') + '</h1>' +
+          '<div class="sub">رد المورد على طلب شراء رقم ' + esc(r.request_number) + ' - ' + Refad.format.date(new Date()) + '</div>' +
+          '<div class="info">' +
+            '<div><strong>المورد:</strong> ' + esc((state.supplier && state.supplier.name) || '—') + '</div>' +
+            '<div><strong>الهاتف:</strong> ' + esc((state.supplier && state.supplier.phone) || '—') + '</div>' +
+            (state.warehouse ? '<div><strong>المخزن:</strong> ' + esc(state.warehouse.name) + '</div>' : '') +
+          '</div>' +
+          '<table><thead><tr>' +
+            '<th>#</th><th>الصنف</th><th>الوحدة</th><th>مطلوب</th><th>آخر خصم</th><th>خصم مطلوب</th><th>الحالة</th><th>متاح</th><th>بونص</th><th>سعر</th><th>خصم</th><th>الإجمالي</th>' +
+          '</tr></thead><tbody>' +
+            state.items.map(function (it, i) {
+              const row = document.querySelector('tr[data-idx="' + i + '"]');
+              if (!row) return '';
+              const status = getItemAvailability(i);
+              const priceInput = row.querySelector('.price-input');
+              const discInput = row.querySelector('.discount-input');
+              const qtyInput = row.querySelector('.qty-input');
+              const bonusInput = row.querySelector('.bonus-input');
+
+              const price = priceInput && priceInput.value.trim() !== '' ? toNum(priceInput.value) : 0;
+              const discount = discInput && discInput.value.trim() !== '' ? toNum(discInput.value) : 0;
+              const bonus = bonusInput && bonusInput.value.trim() !== '' ? toNum(bonusInput.value) : 0;
+
+              let qty = 0;
+              if (status === 'available') qty = toNum(it.requested_qty);
+              else if (status === 'partial') qty = qtyInput && qtyInput.value.trim() !== '' ? toNum(qtyInput.value) : 0;
+
+              const total = price * qty * (1 - discount / 100);
+
+              const statusCls = status === 'available' ? 'ok' : status === 'partial' ? 'warn' : 'bad';
+
+              return '<tr>' +
+                '<td>' + (i + 1) + '</td>' +
+                '<td>' + esc(it.products.name) + '</td>' +
+                '<td>' + esc(it.products.unit || '—') + '</td>' +
+                '<td>' + it.requested_qty + '</td>' +
+                '<td>' + Refad.format.number(it.last_discount || 0, 1) + '%</td>' +
+                '<td>' + Refad.format.number(it.requested_discount || 0, 1) + '%</td>' +
+                '<td class="' + statusCls + '">' + (statusLabels[status] || status) + '</td>' +
+                '<td>' + qty + '</td>' +
+                '<td class="bonus">' + (bonus > 0 ? bonus : '—') + '</td>' +
+                '<td>' + (price > 0 ? Refad.format.money(price) : '—') + '</td>' +
+                '<td>' + (discount > 0 ? Refad.format.number(discount, 1) + '%' : '—') + '</td>' +
+                '<td>' + (total > 0 ? Refad.format.money(total) : '—') + '</td>' +
+              '</tr>';
+            }).join('') +
+          '</tbody></table>' +
+          '<div class="footer">تم إنشاء الرد من نظام رفاد</div>' +
+          '<script>window.onload = function(){ setTimeout(function(){ window.print(); }, 300); };<\/script>' +
+          '</body></html>'
+        );
         w.document.close();
       }
 
       // ============================================================
-      // 10) Events
+      // 13) Events
       // ============================================================
       function bindEvents() {
         document.getElementById('saveBtn').addEventListener('click', saveChanges);
-        document.getElementById('clearBtn').addEventListener('click', clearAll);
+        document.getElementById('clearBtn').addEventListener('click', async function () {
+          const ok = await Refad.alert.confirm('مسح الكل', 'هل تريد مسح كل الأسعار والخصومات والردود؟', 'مسح');
+          if (ok) clearAllInputs();
+        });
         document.getElementById('exportBtn').addEventListener('click', exportExcel);
         document.getElementById('printBtn').addEventListener('click', printRequest);
 
-        // Enter في الحقول → يحفظ
-        document.querySelectorAll('.price-input, .discount-input').forEach(inp => {
-          inp.addEventListener('keydown', e => {
-            if (e.key === 'Enter') {
-              e.preventDefault();
-              saveChanges();
-            }
+        document.getElementById('applyDefaultPriceBtn').addEventListener('click', applyDefaultPrice);
+        document.getElementById('applyBulkDiscountBtn').addEventListener('click', applyBulkDiscount);
+        document.getElementById('markAllAvailableBtn').addEventListener('click', markAllAvailable);
+        document.getElementById('markAllUnavailableBtn').addEventListener('click', markAllUnavailable);
+        document.getElementById('clearAllBtn').addEventListener('click', async function () {
+          const ok = await Refad.alert.confirm('مسح الكل', 'هل تريد مسح كل الأسعار والخصومات والردود؟', 'مسح');
+          if (ok) clearAllInputs();
+        });
+
+        // Auto-save every 3s
+        setInterval(saveLocalDraft, 3000);
+
+        // Warn on leave if unsaved
+        window.addEventListener('beforeunload', function (e) {
+          const hasInput = state.items.some(function (it, i) {
+            const row = document.querySelector('tr[data-idx="' + i + '"]');
+            if (!row) return false;
+            const priceInput = row.querySelector('.price-input');
+            return priceInput && priceInput.value.trim() !== '';
           });
+          if (hasInput) {
+            e.preventDefault();
+            e.returnValue = '';
+          }
         });
       }
 
       // ============================================================
-      // 11) Init
+      // 14) Init
       // ============================================================
       async function init() {
-        // إخفاء صور/إعدادات
         document.getElementById('footerYear').textContent = new Date().getFullYear();
 
         await loadRequest();
         bindEvents();
 
-        // Theme
-        Refad.theme.init();
+        if (Refad.theme && Refad.theme.init) {
+          try { Refad.theme.init(); } catch (e) {}
+        }
       }
 
       if (document.readyState === 'loading') {
@@ -959,8 +1867,7 @@
         init();
       }
 
-      console.log('%c[Refad] Shared request page ready', 'color:#14B8A6;font-weight:bold');
-
+      console.log('%c[Refad] Shared Request v3 ready (Availability + Bonus + Partial Qty)', 'color:#14B8A6;font-weight:bold');
     })();
   </script>
 

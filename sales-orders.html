@@ -19,6 +19,7 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -38,6 +39,7 @@
       --success: #10b981;
       --warning: #f59e0b;
       --info: #3b82f6;
+      --purple: #8b5cf6;
       --sidebar-bg: #0B2C4D;
       --sidebar-text: #cbd5e1;
       --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
@@ -59,6 +61,14 @@
       --sidebar-text: #94a3b8;
     }
 
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
     html, body {
       height: 100%;
       font-family: 'Cairo', sans-serif;
@@ -69,70 +79,44 @@
 
     body { display: flex; min-height: 100vh; overflow-x: hidden; }
 
-    /* ============================================================
-       Sidebar
-       ============================================================ */
+    /* Sidebar */
     .sidebar {
-      width: var(--sidebar-w);
-      height: 100vh;
-      background: var(--sidebar-bg);
-      color: var(--sidebar-text);
-      position: fixed;
-      top: 0;
-      right: 0;
-      z-index: 100;
-      display: flex;
-      flex-direction: column;
+      width: var(--sidebar-w); height: 100vh;
+      background: var(--sidebar-bg); color: var(--sidebar-text);
+      position: fixed; top: 0; right: 0; z-index: 100;
+      display: flex; flex-direction: column;
       transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       box-shadow: -4px 0 20px rgba(0,0,0,0.1);
     }
-
     .sidebar-header {
       padding: 20px 22px;
       border-bottom: 1px solid rgba(255,255,255,0.08);
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      height: var(--topbar-h);
-      box-sizing: border-box;
+      display: flex; align-items: center; gap: 14px;
+      height: var(--topbar-h); box-sizing: border-box;
     }
-
     .sidebar-logo {
-      width: 40px;
-      height: 40px;
+      width: 40px; height: 40px;
       background: linear-gradient(135deg, var(--accent), var(--accent-dark));
       border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: flex; align-items: center; justify-content: center;
       flex-shrink: 0;
       box-shadow: 0 4px 12px rgba(20,184,166,0.4);
+      overflow: hidden;
     }
     .sidebar-logo img { width: 70%; height: 70%; object-fit: contain; }
     .sidebar-logo .fallback { color: white; font-weight: 800; font-size: 18px; }
-
     .sidebar-brand h2 { color: white; font-size: 20px; font-weight: 800; letter-spacing: -0.5px; line-height: 1.2; }
     .sidebar-brand p { font-size: 10px; color: var(--sidebar-text); opacity: 0.7; font-weight: 500; margin-top: 2px; }
-
-    .sidebar-nav { flex: 1; overflow-y: auto; padding: 12px 0; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.15) transparent; }
+    .sidebar-nav { flex: 1; overflow-y: auto; padding: 12px 0; }
     .sidebar-nav::-webkit-scrollbar { width: 5px; }
     .sidebar-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 10px; }
-
     .nav-section { padding: 8px 20px 4px; font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 1px; margin-top: 8px; }
-
     .nav-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 11px 22px;
-      color: var(--sidebar-text);
-      text-decoration: none;
-      font-size: 14px;
-      font-weight: 500;
-      border-right: 3px solid transparent;
-      transition: all 0.2s;
-      position: relative;
-      cursor: pointer;
+      display: flex; align-items: center; gap: 12px;
+      padding: 11px 22px; color: var(--sidebar-text);
+      text-decoration: none; font-size: 14px; font-weight: 500;
+      border-right: 3px solid transparent; transition: all 0.2s;
+      position: relative; cursor: pointer;
     }
     .nav-item:hover { background: rgba(255,255,255,0.05); color: white; border-right-color: rgba(20,184,166,0.5); }
     .nav-item.active { background: rgba(20,184,166,0.12); color: white; border-right-color: var(--accent); font-weight: 600; }
@@ -141,82 +125,49 @@
     .nav-item .badge { margin-right: auto; background: var(--danger); color: white; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
     .nav-item .badge.teal { background: var(--accent); }
     .nav-item .badge.gold { background: var(--gold); }
+    .nav-item .badge.new { background: var(--purple); }
 
-    /* ============================================================
-       Main
-       ============================================================ */
+    /* Main */
     .main { flex: 1; margin-right: var(--sidebar-w); min-width: 0; display: flex; flex-direction: column; }
-
     .topbar {
-      height: var(--topbar-h);
-      background: var(--card);
+      height: var(--topbar-h); background: var(--card);
       border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      padding: 0 24px;
-      position: sticky;
-      top: 0;
-      z-index: 50;
+      display: flex; align-items: center; gap: 16px;
+      padding: 0 24px; position: sticky; top: 0; z-index: 50;
       box-shadow: var(--shadow-sm);
     }
-
     .menu-toggle { display: none; background: transparent; border: none; color: var(--text); cursor: pointer; padding: 8px; border-radius: 8px; }
     .menu-toggle:hover { background: var(--bg); }
-
     .topbar-title { font-size: 18px; font-weight: 700; color: var(--text); flex-shrink: 0; }
     .topbar-actions { display: flex; align-items: center; gap: 8px; margin-right: auto; }
-
     .icon-btn {
-      width: 40px;
-      height: 40px;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      background: var(--card);
-      color: var(--text);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-      transition: all 0.2s;
+      width: 40px; height: 40px; border-radius: 10px;
+      border: 1px solid var(--border); background: var(--card);
+      color: var(--text); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      position: relative; transition: all 0.2s;
     }
     .icon-btn:hover { border-color: var(--accent); color: var(--accent); }
     .icon-btn i, .icon-btn svg { width: 18px; height: 18px; }
     .icon-btn .dot { position: absolute; top: 8px; left: 8px; width: 8px; height: 8px; background: var(--danger); border-radius: 50%; border: 2px solid var(--card); }
-
     .user-menu {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 5px 12px 5px 5px;
-      border-radius: 10px;
-      cursor: pointer;
-      transition: background 0.2s;
-      border: 1px solid var(--border);
-      background: var(--card);
+      display: flex; align-items: center; gap: 10px;
+      padding: 5px 12px 5px 5px; border-radius: 10px;
+      cursor: pointer; transition: background 0.2s;
+      border: 1px solid var(--border); background: var(--card);
     }
     .user-menu:hover { background: var(--bg); }
-
     .user-avatar {
-      width: 34px;
-      height: 34px;
-      border-radius: 9px;
+      width: 34px; height: 34px; border-radius: 9px;
       background: linear-gradient(135deg, var(--primary), var(--accent));
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-weight: 700;
-      font-size: 14px;
-      flex-shrink: 0;
-      overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-weight: 700; font-size: 14px;
+      flex-shrink: 0; overflow: hidden;
     }
     .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
     .user-info { display: flex; flex-direction: column; line-height: 1.2; }
     .user-info .name { font-size: 13px; font-weight: 700; color: var(--text); }
     .user-info .role { font-size: 11px; color: var(--text-muted); }
-
     .dropdown { position: absolute; top: calc(100% + 8px); left: 0; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: var(--shadow-lg); min-width: 200px; padding: 6px; opacity: 0; visibility: hidden; transform: translateY(-8px); transition: all 0.2s; z-index: 100; }
     .dropdown.show { opacity: 1; visibility: visible; transform: translateY(0); }
     .dropdown-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; color: var(--text); font-size: 13px; font-weight: 500; cursor: pointer; transition: background 0.15s; text-decoration: none; }
@@ -226,77 +177,49 @@
     .dropdown-item i { width: 16px; height: 16px; }
     .dropdown-divider { height: 1px; background: var(--border); margin: 6px 0; }
 
-    /* ============================================================
-       Content
-       ============================================================ */
+    /* Content */
     .content { padding: 24px; flex: 1; }
-
     .page-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 16px; margin-bottom: 20px; flex-wrap: wrap;
     }
-
     .page-head h1 { font-size: 24px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
     .page-head p { font-size: 13px; color: var(--text-muted); }
 
     .btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 10px 18px;
-      font-family: inherit;
-      font-size: 14px;
-      font-weight: 600;
-      border-radius: var(--radius-sm);
-      border: none;
-      cursor: pointer;
-      transition: all 0.2s;
-      text-decoration: none;
-      white-space: nowrap;
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 18px; font-family: inherit;
+      font-size: 14px; font-weight: 600;
+      border-radius: var(--radius-sm); border: none;
+      cursor: pointer; transition: all 0.2s;
+      text-decoration: none; white-space: nowrap;
     }
     .btn:disabled { opacity: 0.6; cursor: not-allowed; }
     .btn i { width: 16px; height: 16px; }
-
     .btn-primary { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; }
     .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(20,184,166,0.35); }
-
     .btn-outline { background: var(--card); color: var(--text); border: 1px solid var(--border); }
     .btn-outline:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
-
     .btn-sm { padding: 6px 12px; font-size: 12px; }
 
     /* Mini stats */
     .mini-stats {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 12px;
-      margin-bottom: 20px;
+      gap: 12px; margin-bottom: 20px;
     }
-
     .mini-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 14px 16px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      transition: all 0.2s;
-      box-shadow: var(--shadow-sm);
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 14px 16px;
+      display: flex; align-items: center; gap: 12px;
+      transition: all 0.2s; box-shadow: var(--shadow-sm);
+      cursor: pointer;
     }
     .mini-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: var(--shadow); }
-
+    .mini-card.active { border-color: var(--accent); background: linear-gradient(135deg, rgba(20,184,166,0.06), rgba(20,184,166,0.02)); }
     .mini-icon {
-      width: 42px;
-      height: 42px;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      width: 42px; height: 42px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
       flex-shrink: 0;
     }
     .mini-icon i { width: 20px; height: 20px; color: white; }
@@ -306,153 +229,164 @@
     .mini-icon.green  { background: linear-gradient(135deg, #10b981, #047857); }
     .mini-icon.gray   { background: linear-gradient(135deg, #94a3b8, #64748b); }
     .mini-icon.purple { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
-
+    .mini-icon.red    { background: linear-gradient(135deg, #ef4444, #b91c1c); }
     .mini-body { flex: 1; min-width: 0; }
     .mini-body .label { font-size: 11px; color: var(--text-muted); font-weight: 600; margin-bottom: 2px; }
     .mini-body .value { font-size: 18px; font-weight: 800; color: var(--text); line-height: 1; }
+    .mini-body .sub { font-size: 10px; color: var(--text-muted); margin-top: 3px; }
+
+    /* Warehouse Info Box */
+    .wh-info-box {
+      background: rgba(59,130,246,0.06);
+      border: 1.5px solid rgba(59,130,246,0.25);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      display: flex; align-items: center; gap: 10px;
+      font-size: 13px; margin-bottom: 16px; flex-wrap: wrap;
+    }
+    .wh-info-box i { width: 18px; height: 18px; color: var(--info); flex-shrink: 0; }
+    .wh-info-box strong { color: var(--primary); }
+    .wh-info-box select {
+      padding: 6px 12px; font-family: inherit;
+      font-size: 13px; font-weight: 600;
+      background: var(--card); border: 1.5px solid var(--border);
+      border-radius: 6px; color: var(--text);
+      outline: none; cursor: pointer; margin-right: auto;
+    }
 
     /* Toolbar */
     .toolbar {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 14px 16px;
-      margin-bottom: 16px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 14px 16px;
+      margin-bottom: 16px; display: flex;
+      align-items: center; gap: 12px; flex-wrap: wrap;
       box-shadow: var(--shadow-sm);
     }
-
     .search-input { position: relative; flex: 1; min-width: 220px; }
     .search-input input {
-      width: 100%;
-      padding: 10px 42px 10px 14px;
-      font-family: inherit;
-      font-size: 14px;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      color: var(--text);
-      outline: none;
-      transition: all 0.2s;
+      width: 100%; padding: 10px 42px 10px 14px;
+      font-family: inherit; font-size: 14px;
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); color: var(--text);
+      outline: none; transition: all 0.2s;
     }
     .search-input input:focus { border-color: var(--accent); background: var(--card); box-shadow: 0 0 0 3px rgba(20,184,166,0.1); }
     .search-input i { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--text-muted); pointer-events: none; }
-
+    .search-input kbd {
+      position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+      font-family: 'Courier New', monospace; font-size: 10px;
+      padding: 2px 6px; background: var(--border); color: var(--text-muted);
+      border-radius: 4px; font-weight: 700; pointer-events: none;
+    }
     .select-wrap { position: relative; min-width: 150px; }
     .select-wrap select {
-      width: 100%;
-      padding: 10px 14px 10px 32px;
-      font-family: inherit;
-      font-size: 14px;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      color: var(--text);
-      outline: none;
-      cursor: pointer;
-      appearance: none;
-      transition: all 0.2s;
+      width: 100%; padding: 10px 14px 10px 32px;
+      font-family: inherit; font-size: 14px;
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); color: var(--text);
+      outline: none; cursor: pointer; appearance: none; transition: all 0.2s;
     }
     .select-wrap select:focus { border-color: var(--accent); background: var(--card); }
     .select-wrap::after {
-      content: '';
-      position: absolute;
-      left: 12px;
-      top: 50%;
+      content: ''; position: absolute; left: 12px; top: 50%;
       transform: translateY(-50%);
-      width: 0;
-      height: 0;
+      width: 0; height: 0;
       border-left: 5px solid transparent;
       border-right: 5px solid transparent;
       border-top: 5px solid var(--text-muted);
       pointer-events: none;
     }
 
+    /* Advanced filters */
+    .filters-advanced {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 12px 16px;
+      margin-bottom: 16px; display: flex;
+      align-items: center; gap: 12px; flex-wrap: wrap;
+      box-shadow: var(--shadow-sm);
+    }
+    .quick-filters { display: flex; gap: 6px; flex-wrap: wrap; }
+    .quick-filter-btn {
+      padding: 6px 12px; font-size: 12px; font-weight: 600;
+      border-radius: 20px; border: 1px solid var(--border);
+      background: var(--card); color: var(--text-muted);
+      cursor: pointer; transition: all 0.2s; font-family: inherit;
+    }
+    .quick-filter-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .quick-filter-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+
     /* Table */
     .table-wrap {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow-sm);
-      overflow: hidden;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); box-shadow: var(--shadow-sm); overflow: hidden;
     }
-
     .table-scroll { overflow-x: auto; }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 14px;
-      min-width: 900px;
-    }
-
+    table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 1100px; }
     thead { background: var(--bg); border-bottom: 1px solid var(--border); }
-
     th {
-      text-align: right;
-      padding: 14px 16px;
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      white-space: nowrap;
+      text-align: right; padding: 14px 16px;
+      font-size: 12px; font-weight: 700; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;
     }
-
-    tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
+    tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; cursor: pointer; }
     tbody tr:last-child { border-bottom: none; }
     tbody tr:hover { background: var(--bg); }
-
+    tbody tr.row-overdue { background: rgba(239,68,68,0.03); }
+    tbody tr.row-overdue:hover { background: rgba(239,68,68,0.06); }
     td { padding: 14px 16px; color: var(--text); vertical-align: middle; }
 
+    .order-number-wrap {
+      display: inline-flex; align-items: center; gap: 6px;
+    }
     .order-number {
-      font-weight: 800;
-      color: var(--accent);
-      cursor: pointer;
-      font-family: 'Courier New', monospace;
+      font-weight: 800; color: var(--accent);
+      cursor: pointer; font-family: 'Courier New', monospace;
       letter-spacing: 0.5px;
     }
     .order-number:hover { text-decoration: underline; }
 
+    .copy-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 22px; height: 22px; border-radius: 6px;
+      border: none; background: transparent; color: var(--text-muted);
+      cursor: pointer; transition: all 0.2s;
+    }
+    .copy-btn:hover { background: var(--accent); color: white; }
+    .copy-btn i { width: 12px; height: 12px; }
+    .copy-btn.copied { background: var(--success); color: white; }
+
     .customer-name-cell { font-weight: 600; color: var(--text); }
     .customer-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
-
     .money-cell { font-weight: 700; }
     .money-cell.profit { color: var(--success); }
 
     .badge-tag {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      padding: 4px 10px;
-      font-size: 11px;
-      font-weight: 600;
-      border-radius: 20px;
-      white-space: nowrap;
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 4px 10px; font-size: 11px; font-weight: 600;
+      border-radius: 20px; white-space: nowrap;
     }
     .badge-tag.green  { background: rgba(16,185,129,0.12); color: var(--success); }
     .badge-tag.red    { background: rgba(239,68,68,0.12); color: var(--danger); }
     .badge-tag.gold   { background: rgba(245,158,11,0.12); color: var(--warning); }
     .badge-tag.gray   { background: rgba(148,163,184,0.15); color: var(--text-muted); }
     .badge-tag.blue   { background: rgba(59,130,246,0.12); color: var(--info); }
-    .badge-tag.purple { background: rgba(139,92,246,0.12); color: #8b5cf6; }
+    .badge-tag.purple { background: rgba(139,92,246,0.12); color: var(--purple); }
+
+    .wh-badge-sm {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 8px; border-radius: 15px;
+      background: rgba(11,44,77,0.06);
+      color: var(--text-muted); font-size: 11px; font-weight: 600;
+    }
+    [data-theme="dark"] .wh-badge-sm { background: rgba(148,163,184,0.12); }
+    .wh-badge-sm i { width: 11px; height: 11px; }
 
     .actions-cell { display: flex; gap: 6px; justify-content: flex-end; }
-
     .action-btn {
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      background: var(--card);
-      color: var(--text-muted);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      width: 32px; height: 32px; border-radius: 8px;
+      border: 1px solid var(--border); background: var(--card);
+      color: var(--text-muted); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
       transition: all 0.2s;
     }
     .action-btn:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
@@ -478,41 +412,117 @@
 
     /* Pagination */
     .pagination {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 14px 20px;
-      border-top: 1px solid var(--border);
-      font-size: 13px;
-      color: var(--text-muted);
-      gap: 12px;
-      flex-wrap: wrap;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 20px; border-top: 1px solid var(--border);
+      font-size: 13px; color: var(--text-muted);
+      gap: 12px; flex-wrap: wrap;
     }
     .pagination .controls { display: flex; gap: 6px; align-items: center; }
-
     .page-btn {
-      min-width: 34px;
-      height: 34px;
-      padding: 0 10px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      background: var(--card);
-      color: var(--text);
-      font-family: inherit;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
+      min-width: 34px; height: 34px; padding: 0 10px;
+      border-radius: 8px; border: 1px solid var(--border);
+      background: var(--card); color: var(--text);
+      font-family: inherit; font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: all 0.2s;
     }
     .page-btn:hover:not(:disabled):not(.active) { border-color: var(--accent); color: var(--accent); }
     .page-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
     .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
-    /* Overlay (mobile) */
     .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; opacity: 0; transition: opacity 0.3s; }
     .overlay.show { display: block; opacity: 1; }
 
-    /* Responsive */
+    /* ✨ Quick Search */
+    .quick-search-overlay {
+      position: fixed; inset: 0;
+      z-index: 600;
+      display: none;
+      align-items: flex-start; justify-content: center;
+      padding: 80px 20px 20px;
+      background: rgba(15,23,42,0.6);
+      backdrop-filter: blur(6px);
+      animation: qsFadeIn 0.2s;
+    }
+    .quick-search-overlay.show { display: flex; }
+    @keyframes qsFadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes qsSlideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .quick-search-box {
+      width: min(600px, 100%);
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+      animation: qsSlideUp 0.25s;
+    }
+    .quick-search-input-wrap { position: relative; }
+    .quick-search-input {
+      width: 100%;
+      padding: 18px 60px 18px 18px;
+      font-family: inherit;
+      font-size: 16px; font-weight: 600;
+      background: var(--card);
+      border: none;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+      outline: none;
+    }
+    .quick-search-input-wrap > i {
+      position: absolute; right: 20px; top: 50%;
+      transform: translateY(-50%);
+      width: 22px; height: 22px;
+      color: var(--accent);
+      pointer-events: none;
+    }
+    .quick-search-kbd {
+      position: absolute; left: 18px; top: 50%;
+      transform: translateY(-50%);
+      font-size: 10px;
+      padding: 3px 8px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-muted);
+      font-family: 'Courier New', monospace;
+      font-weight: 700;
+    }
+    .quick-search-results { max-height: 400px; overflow-y: auto; padding: 8px; }
+    .quick-search-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .quick-search-item:hover, .quick-search-item.selected { background: rgba(20,184,166,0.1); }
+    .quick-search-item .qs-icon {
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: white;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 15px;
+      flex-shrink: 0;
+    }
+    .quick-search-item .qs-body { flex: 1; min-width: 0; }
+    .quick-search-item .qs-name { font-weight: 700; font-size: 14px; color: var(--text); }
+    .quick-search-item .qs-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .quick-search-empty { text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 13px; }
+    .quick-search-footer {
+      padding: 10px 16px;
+      border-top: 1px solid var(--border);
+      background: var(--bg);
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 11px; color: var(--text-muted);
+    }
+    .quick-search-footer kbd {
+      font-family: 'Courier New', monospace;
+      padding: 2px 6px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-weight: 700;
+    }
+
     @media (max-width: 1024px) {
       .sidebar { transform: translateX(100%); }
       .sidebar.open { transform: translateX(0); }
@@ -520,7 +530,6 @@
       .menu-toggle { display: flex; }
       .user-info { display: none; }
     }
-
     @media (max-width: 640px) {
       .content { padding: 16px; }
       .topbar { padding: 0 14px; gap: 10px; }
@@ -529,20 +538,22 @@
       .page-head h1 { font-size: 20px; }
       .toolbar { padding: 12px; }
       .search-input { min-width: 100%; }
+      .search-input kbd { display: none; }
+      .filters-advanced { padding: 10px; }
+      .quick-search-overlay { padding: 20px 10px; }
     }
   </style>
 </head>
 <body>
 
-  <!-- Sidebar -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
-      <div class="sidebar-logo">
-        <img src="logo.png" alt="رفاد" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=fallback>R</span>';">
+      <div class="sidebar-logo" id="sidebarLogo">
+        <img src="logo.png" alt="رفاد" id="sidebarLogoImg" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=fallback>R</span>';">
       </div>
       <div class="sidebar-brand">
-        <h2>رفاد</h2>
-        <p>نظام إدارة الأدوية</p>
+        <h2 id="sidebarBrandName">رفاد</h2>
+        <p id="sidebarBrandDesc">نظام إدارة الأدوية</p>
       </div>
     </div>
     <nav class="sidebar-nav" id="sidebarNav"></nav>
@@ -550,14 +561,12 @@
 
   <div class="overlay" id="overlay"></div>
 
-  <!-- Main -->
   <div class="main">
-
     <header class="topbar">
       <button class="menu-toggle" id="menuToggle"><i data-lucide="menu"></i></button>
       <div class="topbar-title">طلبات البيع</div>
       <div class="topbar-actions">
-        <button class="icon-btn" id="themeToggle" title="الوضع الليلي/النهاري">
+        <button class="icon-btn" id="themeToggle" title="الوضع الليلي">
           <i data-lucide="moon" id="themeIcon"></i>
         </button>
         <button class="icon-btn" id="notifBtn" title="الإشعارات" style="position:relative;">
@@ -591,6 +600,9 @@
           <p>إدارة طلبات البيع والعملاء</p>
         </div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn btn-outline" id="refreshBtn">
+            <i data-lucide="refresh-cw"></i> تحديث
+          </button>
           <button class="btn btn-outline" id="exportBtn">
             <i data-lucide="download"></i> تصدير
           </button>
@@ -600,34 +612,62 @@
         </div>
       </div>
 
+      <!-- Warehouse Info -->
+      <div class="wh-info-box" id="whInfoBox">
+        <i data-lucide="warehouse"></i>
+        <span>البيع من مخزن:</span>
+        <strong id="activeWhName">—</strong>
+        <select id="whSelect"></select>
+      </div>
+
       <!-- Mini stats -->
       <div class="mini-stats">
-        <div class="mini-card">
+        <div class="mini-card active" data-stat-filter="all">
           <div class="mini-icon blue"><i data-lucide="shopping-cart"></i></div>
           <div class="mini-body">
             <div class="label">إجمالي الطلبات</div>
             <div class="value" id="statTotal">—</div>
+            <div class="sub" id="statTotalSub">—</div>
           </div>
         </div>
-        <div class="mini-card">
+        <div class="mini-card" data-stat-filter="draft">
           <div class="mini-icon gray"><i data-lucide="file-edit"></i></div>
           <div class="mini-body">
             <div class="label">مسودات</div>
             <div class="value" id="statDraft">—</div>
+            <div class="sub" id="statDraftSub">—</div>
           </div>
         </div>
-        <div class="mini-card">
+        <div class="mini-card" data-stat-filter="confirmed">
           <div class="mini-icon teal"><i data-lucide="check-circle-2"></i></div>
           <div class="mini-body">
             <div class="label">مؤكدة</div>
             <div class="value" id="statConfirmed">—</div>
+            <div class="sub" id="statConfirmedSub">—</div>
           </div>
         </div>
-        <div class="mini-card">
+        <div class="mini-card" data-stat-filter="invoiced">
           <div class="mini-icon green"><i data-lucide="receipt"></i></div>
           <div class="mini-body">
             <div class="label">مفوترة</div>
             <div class="value" id="statInvoiced">—</div>
+            <div class="sub" id="statInvoicedSub">—</div>
+          </div>
+        </div>
+        <div class="mini-card" data-stat-filter="bonus">
+          <div class="mini-icon purple"><i data-lucide="gift"></i></div>
+          <div class="mini-body">
+            <div class="label">إجمالي البونص</div>
+            <div class="value" id="statBonus">—</div>
+            <div class="sub" id="statBonusSub">—</div>
+          </div>
+        </div>
+        <div class="mini-card" data-stat-filter="overdue">
+          <div class="mini-icon red"><i data-lucide="clock"></i></div>
+          <div class="mini-body">
+            <div class="label">متأخرة</div>
+            <div class="value" id="statOverdue">—</div>
+            <div class="sub" id="statOverdueSub">—</div>
           </div>
         </div>
       </div>
@@ -637,6 +677,7 @@
         <div class="search-input">
           <input type="text" id="searchInput" placeholder="ابحث برقم الطلب أو اسم العميل...">
           <i data-lucide="search"></i>
+          <kbd>Ctrl+K</kbd>
         </div>
         <div class="select-wrap">
           <select id="filterStatus">
@@ -652,6 +693,23 @@
             <option value="">كل العملاء</option>
           </select>
         </div>
+        <div class="select-wrap">
+          <select id="filterWarehouse">
+            <option value="">كل المخازن</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Advanced Filters -->
+      <div class="filters-advanced">
+        <div class="quick-filters">
+          <button type="button" class="quick-filter-btn active" data-quick="all">الكل</button>
+          <button type="button" class="quick-filter-btn" data-quick="today">اليوم</button>
+          <button type="button" class="quick-filter-btn" data-quick="week">آخر 7 أيام</button>
+          <button type="button" class="quick-filter-btn" data-quick="month">هذا الشهر</button>
+          <button type="button" class="quick-filter-btn" data-quick="bonus">ببونص</button>
+          <button type="button" class="quick-filter-btn" data-quick="overdue">متأخرة</button>
+        </div>
       </div>
 
       <!-- Table -->
@@ -662,6 +720,7 @@
               <tr>
                 <th>رقم الطلب</th>
                 <th>العميل</th>
+                <th>المخزن</th>
                 <th>التاريخ</th>
                 <th>الأصناف</th>
                 <th>الإجمالي</th>
@@ -679,11 +738,78 @@
     </main>
   </div>
 
+  <!-- ✨ Quick Search Overlay -->
+  <div class="quick-search-overlay" id="quickSearchOverlay">
+    <div class="quick-search-box">
+      <div class="quick-search-input-wrap">
+        <input type="text" class="quick-search-input" id="quickSearchInput" placeholder="ابحث برقم الطلب أو اسم العميل..." autocomplete="off">
+        <i data-lucide="search"></i>
+        <span class="quick-search-kbd">ESC</span>
+      </div>
+      <div class="quick-search-results" id="quickSearchResults">
+        <div class="quick-search-empty">اكتب للبحث السريع...</div>
+      </div>
+      <div class="quick-search-footer">
+        <span><kbd>↑</kbd> <kbd>↓</kbd> للتنقل</span>
+        <span><kbd>Enter</kbd> للفتح</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       SCRIPTS — الترتيب مهم جداً
+       ============================================================ -->
   <script src="refad-core.js"></script>
   <script src="refad-auth.js"></script>
+  <script src="refad-theme-sync.js"></script>
+  <script src="refad-settings.js"></script>
+  <script src="refad-warehouse.js"></script>
+
   <script>
     (function () {
       'use strict';
+
+      // ============================================================
+      // 0) Safe Settings Wrapper
+      // ============================================================
+      const SafeSettings = {
+        locale: {
+          formatMoney: function (v) {
+            try {
+              if (window.RefadSettings?.locale?.formatMoney) {
+                return RefadSettings.locale.formatMoney(v);
+              }
+            } catch (e) {}
+            return Refad.format.money(v);
+          }
+        },
+        identity: {
+          getSystemName: function () {
+            try {
+              if (window.RefadSettings?.identity?.getSystemName) {
+                return RefadSettings.identity.getSystemName();
+              }
+            } catch (e) {}
+            return 'رفاد';
+          },
+          getTagline: function () {
+            try {
+              if (window.RefadSettings?.identity?.getTagline) {
+                return RefadSettings.identity.getTagline();
+              }
+            } catch (e) {}
+            return 'نظام إدارة الأدوية';
+          },
+          getLogoUrl: function () {
+            try {
+              if (window.RefadSettings?.identity?.getLogoUrl) {
+                return RefadSettings.identity.getLogoUrl();
+              }
+            } catch (e) {}
+            return null;
+          }
+        }
+      };
 
       // ============================================================
       // 1) Guard
@@ -695,67 +821,44 @@
       const canDelete = Refad.Session.has('sales.create');
 
       // ============================================================
-      // 2) Sidebar
+      // 2) Helpers
       // ============================================================
-      const MENU = [
-        { section: 'الرئيسية', items: [
-          { label: 'لوحة التحكم', icon: 'layout-dashboard', href: 'dashboard.html' },
-          { label: 'الشات', icon: 'message-circle', href: 'chat.html', permission: 'chat.use' },
-          { label: 'الإشعارات', icon: 'bell', href: 'notifications.html', permission: 'notifications.view' }
-        ]},
-        { section: 'العمليات', items: [
-          { label: 'الأصناف', icon: 'package', href: 'products.html', permission: 'products.view' },
-          { label: 'المخزون', icon: 'warehouse', href: 'inventory.html', permission: 'inventory.view' },
-          { label: 'طلبات الشراء', icon: 'clipboard-list', href: 'purchase-requests.html', permission: 'purchases.view' },
-          { label: 'الاستلامات', icon: 'package-check', href: 'receipts.html', permission: 'purchases.receive' },
-          { label: 'طلبات البيع', icon: 'shopping-cart', href: 'sales-orders.html', permission: 'sales.view' },
-          { label: 'نقطة البيع', icon: 'scan-barcode', href: 'pos.html', permission: 'sales.pos', badge: 'POS', badgeClass: 'teal' },
-          { label: 'الفواتير', icon: 'receipt', href: 'invoices.html', permission: 'sales.view' }
-        ]},
-        { section: 'الأطراف', items: [
-          { label: 'الموردين', icon: 'truck', href: 'suppliers.html', permission: 'suppliers.view' },
-          { label: 'العملاء', icon: 'users', href: 'customers.html', permission: 'customers.view' }
-        ]},
-        { section: 'المخزون', items: [
-          { label: 'الجرد', icon: 'clipboard-check', href: 'stocktake.html', permission: 'inventory.stocktake' },
-          { label: 'التسويات', icon: 'sliders-horizontal', href: 'adjustments.html', permission: 'inventory.adjust' }
-        ]},
-        { section: 'الموارد البشرية', items: [
-          { label: 'الموظفين', icon: 'user-cog', href: 'employees.html', permission: 'employees.view' },
-          { label: 'الصلاحيات', icon: 'shield-check', href: 'permissions.html', permission: 'permissions.manage' },
-          { label: 'الحضور', icon: 'calendar-check', href: 'attendance.html', permission: 'attendance.view' },
-          { label: 'الرواتب', icon: 'wallet', href: 'payroll.html', permission: 'payroll.view' }
-        ]},
-        { section: 'المالية', items: [
-          { label: 'المصاريف', icon: 'banknote', href: 'expenses.html', permission: 'expenses.view' },
-          { label: 'التقارير', icon: 'bar-chart-3', href: 'reports.html', permission: 'reports.view' }
-        ]},
-        { section: 'النظام', items: [
-          { label: 'إعدادات الشركة', icon: 'settings', href: 'company-settings.html', permission: 'settings.view' },
-          { label: 'شاشة الأدمن', icon: 'shield', href: 'admin.html', permission: 'admin.full', badge: 'Admin', badgeClass: 'gold' }
-        ]}
-      ];
+      function esc(s) {
+        if (typeof Refad.escapeHtml === 'function') return Refad.escapeHtml(s);
+        if (s === null || s === undefined) return '';
+        return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+      }
+      function fmtMoney(v) { return SafeSettings.locale.formatMoney(v); }
+      function fmtNumber(v) {
+        if (typeof Refad.format?.number === 'function') return Refad.format.number(v);
+        return String(v || 0);
+      }
+      function fmtDate(v) {
+        if (typeof Refad.format?.date === 'function') return Refad.format.date(v);
+        if (!v) return '—';
+        return String(v).slice(0, 10);
+      }
 
-      function buildSidebar() {
-        const nav = document.getElementById('sidebarNav');
-        const currentPage = 'sales-orders.html';
-        const frag = document.createDocumentFragment();
-        MENU.forEach(group => {
-          const allowed = group.items.filter(it => !it.permission || Refad.Session.has(it.permission));
-          if (!allowed.length) return;
-          frag.appendChild(Refad.el('div', { class: 'nav-section' }, group.section));
-          allowed.forEach(item => {
-            const a = Refad.el('a', {
-              href: item.href,
-              class: 'nav-item' + (item.href === currentPage ? ' active' : '')
-            });
-            a.innerHTML = `<i data-lucide="${item.icon}"></i><span>${Refad.escapeHtml(item.label)}</span>${item.badge ? `<span class="badge ${item.badgeClass || ''}">${item.badge}</span>` : ''}`;
-            frag.appendChild(a);
-          });
-        });
-        nav.innerHTML = '';
-        nav.appendChild(frag);
-        if (window.lucide) lucide.createIcons();
+      // ✨ Copy to clipboard
+      async function copyText(text, btn) {
+        try {
+          await navigator.clipboard.writeText(text);
+          if (btn) {
+            btn.classList.add('copied');
+            const icon = btn.querySelector('i');
+            if (icon) icon.setAttribute('data-lucide', 'check');
+            if (window.lucide) lucide.createIcons();
+            setTimeout(() => {
+              btn.classList.remove('copied');
+              if (icon) icon.setAttribute('data-lucide', 'copy');
+              if (window.lucide) lucide.createIcons();
+            }, 1200);
+          }
+          Refad.toast.success('تم النسخ');
+        } catch (e) {
+          Refad.toast.error('فشل النسخ');
+        }
       }
 
       // ============================================================
@@ -764,10 +867,31 @@
       function fillUser() {
         const av = document.getElementById('userAvatar');
         const initial = (session.full_name || '؟').trim().charAt(0);
-        if (session.avatar_url) av.innerHTML = `<img src="${Refad.escapeHtml(session.avatar_url)}" alt="">`;
+        if (session.avatar_url) av.innerHTML = `<img src="${esc(session.avatar_url)}" alt="">`;
         else av.textContent = initial;
         document.getElementById('userName').textContent = session.full_name;
         document.getElementById('userRole').textContent = Refad.Session.has('company.owner') ? 'صاحب الشركة' : 'موظف';
+      }
+
+      function applyIdentity() {
+        const name = SafeSettings.identity.getSystemName();
+        const tagline = SafeSettings.identity.getTagline();
+        const logoUrl = SafeSettings.identity.getLogoUrl();
+
+        const brandName = document.getElementById('sidebarBrandName');
+        const brandDesc = document.getElementById('sidebarBrandDesc');
+        const logoImg = document.getElementById('sidebarLogoImg');
+
+        if (brandName) brandName.textContent = name;
+        if (brandDesc) brandDesc.textContent = tagline;
+        if (logoImg && logoUrl) {
+          logoImg.src = logoUrl;
+          logoImg.onerror = function () {
+            this.style.display = 'none';
+            const parent = this.parentElement;
+            if (parent) parent.innerHTML = '<span class="fallback">' + (name.charAt(0) || 'R') + '</span>';
+          };
+        }
       }
 
       function setupTheme() {
@@ -812,6 +936,12 @@
         });
       }
 
+      function setupRealtimeTheme() {
+        window.addEventListener('refad:theme-changed', () => {
+          applyIdentity();
+        });
+      }
+
       // ============================================================
       // 4) State
       // ============================================================
@@ -819,20 +949,58 @@
         all: [],
         filtered: [],
         customers: [],
+        warehouses: [],
+        activeWarehouseId: null,
+        selectedWarehouseId: '',
         page: 1,
         perPage: 15,
         search: '',
         filterStatus: '',
-        filterCustomer: ''
+        filterCustomer: '',
+        filterWarehouse: '',
+        quickFilter: 'all',
+        quickSearchIndex: -1,
+        quickSearchResults: []
       };
 
       // ============================================================
-      // 5) Load customers for filter
+      // 5) Load warehouses
+      // ============================================================
+      async function loadWarehouses() {
+        try {
+          await Refad.Warehouse.ensureLoaded();
+          state.warehouses = Refad.Warehouse.getActiveList();
+          state.activeWarehouseId = Refad.Warehouse.getActiveId();
+
+          const filterSel = document.getElementById('filterWarehouse');
+          filterSel.innerHTML = '<option value="">كل المخازن</option>' +
+            state.warehouses.map(w => `<option value="${w.id}">${esc(w.name)}</option>`).join('');
+
+          const whSel = document.getElementById('whSelect');
+          whSel.innerHTML = state.warehouses.map(w =>
+            `<option value="${w.id}"${Number(w.id) === Number(state.activeWarehouseId) ? ' selected' : ''}>${esc(w.name)}${w.is_default ? ' (افتراضي)' : ''}</option>`
+          ).join('');
+
+          updateActiveWhDisplay();
+        } catch (e) {
+          console.warn('[SalesOrders] warehouses failed:', e.message);
+          state.warehouses = [];
+        }
+      }
+
+      function updateActiveWhDisplay() {
+        const wh = state.warehouses.find(w => Number(w.id) === Number(state.selectedWarehouseId || state.activeWarehouseId));
+        const nameEl = document.getElementById('activeWhName');
+        if (nameEl) nameEl.textContent = wh ? wh.name : '—';
+      }
+
+      // ============================================================
+      // 6) Load customers filter
       // ============================================================
       async function loadCustomersFilter() {
         try {
           const rows = await Refad.db.select('customers', {
-            columns: 'id, name',
+            columns: 'id, name, phone, credit_limit, payment_terms_days, balance',
             eq: { company_id: session.company_id, is_active: true },
             order: { column: 'name', ascending: true }
           });
@@ -850,31 +1018,42 @@
       }
 
       // ============================================================
-      // 6) Load sales orders
+      // 7) Load orders
       // ============================================================
       async function loadOrders(silent) {
         if (!silent) renderSkeleton();
         try {
-          const [rows, suppliers] = await Promise.all([
-            Refad.db.select('sales_orders', {
-            columns: `id, order_number, status, total_amount, total_profit, notes, created_at,
-                      customer_id, supplier_id, customers(id, name, phone),
-                      sales_order_items(id, quantity)`,
-            eq: { company_id: session.company_id },
-            order: { column: 'created_at', ascending: false },
-            limit: 500
-            }),
-            Refad.db.select('suppliers', {
-              columns: 'id, name, phone',
+          let rows;
+          try {
+            rows = await Refad.db.select('sales_orders', {
+              columns: `id, order_number, status, total_amount, total_profit, notes, created_at,
+                        customer_id, supplier_id, warehouse_id,
+                        customers(id, name, phone),
+                        sales_order_items(id, quantity, bonus_qty)`,
               eq: { company_id: session.company_id },
-              order: { column: 'name', ascending: true }
-            })
-          ]);
-          const suppliersById = new Map(suppliers.map(supplier => [String(supplier.id), supplier]));
-          state.all = rows.map(order => ({
-            ...order,
-            suppliers: suppliersById.get(String(order.supplier_id)) || null
-          }));
+              order: { column: 'created_at', ascending: false },
+              limit: 500
+            });
+          } catch (e) {
+            console.warn('[SalesOrders] Full columns failed, fallback:', e.message);
+            rows = await Refad.db.select('sales_orders', {
+              columns: `id, order_number, status, total_amount, total_profit, notes, created_at,
+                        customer_id, supplier_id, customers(id, name, phone),
+                        sales_order_items(id, quantity)`,
+              eq: { company_id: session.company_id },
+              order: { column: 'created_at', ascending: false },
+              limit: 500
+            }).catch(async () => {
+              return await Refad.db.select('sales_orders', {
+                columns: 'id, order_number, status, total_amount, total_profit, notes, created_at, customer_id, supplier_id',
+                eq: { company_id: session.company_id },
+                order: { column: 'created_at', ascending: false },
+                limit: 500
+              });
+            });
+          }
+
+          state.all = rows || [];
           applyFilters();
           renderStats();
         } catch (e) {
@@ -885,43 +1064,101 @@
         }
       }
 
+      // ============================================================
+      // 8) Stats
+      // ============================================================
       function renderStats() {
         const total = state.all.length;
         const draft = state.all.filter(r => r.status === 'draft').length;
         const confirmed = state.all.filter(r => r.status === 'confirmed').length;
         const invoiced = state.all.filter(r => r.status === 'invoiced').length;
 
-        document.getElementById('statTotal').textContent = Refad.format.number(total);
-        document.getElementById('statDraft').textContent = Refad.format.number(draft);
-        document.getElementById('statConfirmed').textContent = Refad.format.number(confirmed);
-        document.getElementById('statInvoiced').textContent = Refad.format.number(invoiced);
+        const totalBonus = state.all.reduce((sum, r) =>
+          sum + (r.sales_order_items || []).reduce((s, it) => s + (Number(it.bonus_qty) || 0), 0), 0);
+
+        const today = new Date();
+        const overdue = state.all.filter(r => {
+          if (r.status !== 'confirmed') return false;
+          const created = new Date(r.created_at);
+          const days = Math.floor((today - created) / (1000 * 60 * 60 * 24));
+          return days > 30;
+        }).length;
+
+        document.getElementById('statTotal').textContent = fmtNumber(total);
+        document.getElementById('statDraft').textContent = fmtNumber(draft);
+        document.getElementById('statConfirmed').textContent = fmtNumber(confirmed);
+        document.getElementById('statInvoiced').textContent = fmtNumber(invoiced);
+        document.getElementById('statBonus').textContent = fmtNumber(totalBonus);
+        document.getElementById('statOverdue').textContent = fmtNumber(overdue);
+
+        const totalItems = state.all.reduce((s, r) => s + ((r.sales_order_items || []).length), 0);
+        document.getElementById('statTotalSub').textContent = `${fmtNumber(totalItems)} صنف`;
+        document.getElementById('statDraftSub').textContent = total ? Math.round((draft / total) * 100) + '%' : '—';
+        document.getElementById('statConfirmedSub').textContent = total ? Math.round((confirmed / total) * 100) + '%' : '—';
+        document.getElementById('statInvoicedSub').textContent = total ? Math.round((invoiced / total) * 100) + '%' : '—';
+        document.getElementById('statBonusSub').textContent = totalItems > 0 ? `${Math.round((totalBonus / totalItems) * 100)}% من الأصناف` : '—';
+        document.getElementById('statOverdueSub').textContent = overdue > 0 ? 'يحتاج متابعة' : 'مفيش متأخرات';
       }
 
       // ============================================================
-      // 7) Filters + Pagination
+      // 9) Filters
       // ============================================================
       function applyFilters() {
         const q = state.search.toLowerCase().trim();
+        const today = Refad.date.today();
+
         state.filtered = state.all.filter(r => {
           if (state.filterStatus && r.status !== state.filterStatus) return false;
           if (state.filterCustomer && String(r.customers?.id) !== String(state.filterCustomer)) return false;
+          if (state.filterWarehouse && String(r.warehouse_id) !== String(state.filterWarehouse)) return false;
+
+          if (state.quickFilter === 'today') {
+            const createdDate = String(r.created_at || '').slice(0, 10);
+            if (createdDate !== today) return false;
+          }
+          if (state.quickFilter === 'week') {
+            const weekAgo = Refad.date.addDays(today, -7);
+            const createdDate = String(r.created_at || '').slice(0, 10);
+            if (createdDate < weekAgo) return false;
+          }
+          if (state.quickFilter === 'month') {
+            const monthStart = Refad.date.startOfMonth();
+            const createdDate = String(r.created_at || '').slice(0, 10);
+            if (createdDate < monthStart) return false;
+          }
+          if (state.quickFilter === 'bonus') {
+            const hasBonus = (r.sales_order_items || []).some(it => (Number(it.bonus_qty) || 0) > 0);
+            if (!hasBonus) return false;
+          }
+          if (state.quickFilter === 'overdue') {
+            if (r.status !== 'confirmed') return false;
+            const created = new Date(r.created_at);
+            const days = Math.floor((today - created) / (1000 * 60 * 60 * 24));
+            if (days <= 30) return false;
+          }
+
           if (!q) return true;
           return (
-            (r.order_number || '').toLowerCase().includes(q) ||
-            (r.customers?.name || r.suppliers?.name || '').toLowerCase().includes(q) ||
-            (r.notes || '').toLowerCase().includes(q)
+            String(r.order_number || '').toLowerCase().includes(q) ||
+            String(r.customers?.name || '').toLowerCase().includes(q) ||
+            String(r.notes || '').toLowerCase().includes(q)
           );
         });
+
         state.page = 1;
         renderTable();
       }
 
+      // ============================================================
+      // 10) Skeleton
+      // ============================================================
       function renderSkeleton() {
         const tbody = document.getElementById('tableBody');
         tbody.innerHTML = Array(6).fill(0).map(() => `
           <tr class="skeleton-row">
             <td><div class="skeleton-bar" style="width:90px"></div></td>
             <td><div class="skeleton-bar" style="width:60%"></div></td>
+            <td><div class="skeleton-bar" style="width:80px"></div></td>
             <td><div class="skeleton-bar" style="width:80px"></div></td>
             <td><div class="skeleton-bar" style="width:50px"></div></td>
             <td><div class="skeleton-bar" style="width:80px"></div></td>
@@ -932,6 +1169,14 @@
         `).join('');
       }
 
+      function getWhName(id) {
+        const w = state.warehouses.find(x => Number(x.id) === Number(id));
+        return w ? w.name : null;
+      }
+
+      // ============================================================
+      // 11) Render Table
+      // ============================================================
       function renderTable() {
         const tbody = document.getElementById('tableBody');
         const pag = Refad.paginate(state.filtered, state.page, state.perPage);
@@ -942,7 +1187,7 @@
             : 'لا توجد نتائج مطابقة.';
           tbody.innerHTML = `
             <tr class="empty-row">
-              <td colspan="8">
+              <td colspan="9">
                 <i data-lucide="shopping-cart"></i>
                 <p>${msg}</p>
               </td>
@@ -960,27 +1205,48 @@
           'cancelled':  { label: 'ملغي',   cls: 'red' }
         };
 
+        const today = new Date();
+
         tbody.innerHTML = pag.data.map(r => {
           const st = STATUS[r.status] || { label: r.status, cls: 'gray' };
           const itemCount = r.sales_order_items?.length || 0;
+          const totalBonus = (r.sales_order_items || []).reduce((s, it) => s + (Number(it.bonus_qty) || 0), 0);
+          const whName = getWhName(r.warehouse_id);
+
+          const created = new Date(r.created_at);
+          const daysOld = Math.floor((today - created) / (1000 * 60 * 60 * 24));
+          const isOverdue = r.status === 'confirmed' && daysOld > 30;
+          const orderNumEsc = esc(r.order_number || '—');
+
           return `
-            <tr class="order-clickable-row" data-open-order="${r.id}" tabindex="0" style="cursor:pointer" aria-label="فتح طلب البيع ${Refad.escapeHtml(r.order_number)}">
+            <tr class="order-clickable-row ${isOverdue ? 'row-overdue' : ''}" data-open-order="${r.id}" tabindex="0">
               <td>
-                <span class="order-number" onclick="location.href='sales-order-form.html?id=${r.id}'">
-                  ${Refad.escapeHtml(r.order_number)}
+                <span class="order-number-wrap">
+                  <button class="copy-btn" data-copy="${orderNumEsc}" title="نسخ رقم الطلب"><i data-lucide="copy"></i></button>
+                  <span class="order-number">${orderNumEsc}</span>
                 </span>
+                ${isOverdue ? `<div class="customer-sub" style="color:var(--danger);font-weight:700;"><i data-lucide="clock" style="width:10px;height:10px;"></i> متأخر ${daysOld} يوم</div>` : ''}
               </td>
               <td>
-                ${r.customers || r.suppliers ? `
-                  <div class="customer-name-cell">${Refad.escapeHtml(r.customers?.name || r.suppliers?.name)}</div>
-                  <div class="customer-sub">${r.suppliers ? 'مورد' : 'عميل'}${(r.customers?.phone || r.suppliers?.phone) ? ` • ${Refad.escapeHtml(r.customers?.phone || r.suppliers?.phone)}` : ''}</div>
+                ${r.customers ? `
+                  <div class="customer-name-cell">${esc(r.customers.name)}</div>
+                  ${r.customers.phone ? `<div class="customer-sub">${esc(r.customers.phone)}</div>` : ''}
                 ` : '<span style="color:var(--text-muted);">عميل نقدي</span>'}
               </td>
-              <td>${Refad.format.date(r.created_at)}</td>
-              <td>${Refad.format.number(itemCount)}</td>
-              <td class="money-cell">${Refad.format.money(r.total_amount || 0)}</td>
-              <td class="money-cell profit">${Refad.format.money(r.total_profit || 0)}</td>
-              <td><span class="badge-tag ${st.cls}">${Refad.escapeHtml(st.label)}</span></td>
+              <td>
+                ${whName
+                  ? `<span class="wh-badge-sm"><i data-lucide="warehouse"></i> ${esc(whName)}</span>`
+                  : '<span style="color:var(--text-muted);font-size:11px;">—</span>'
+                }
+              </td>
+              <td>${fmtDate(r.created_at)}</td>
+              <td>
+                <strong>${fmtNumber(itemCount)}</strong>
+                ${totalBonus > 0 ? `<span class="badge-tag purple" style="padding:1px 6px;font-size:9px;margin-right:4px;"><i data-lucide="gift" style="width:9px;height:9px;"></i> +${fmtNumber(totalBonus)}</span>` : ''}
+              </td>
+              <td class="money-cell">${fmtMoney(r.total_amount || 0)}</td>
+              <td class="money-cell profit">${fmtMoney(r.total_profit || 0)}</td>
+              <td><span class="badge-tag ${st.cls}">${esc(st.label)}</span></td>
               <td>
                 <div class="actions-cell">
                   <button class="action-btn" data-action="view" data-id="${r.id}" title="عرض">
@@ -995,8 +1261,19 @@
 
         if (window.lucide) lucide.createIcons();
         renderPagination(pag);
+
+        // Copy buttons
+        tbody.querySelectorAll('[data-copy]').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            copyText(btn.dataset.copy, btn);
+          });
+        });
       }
 
+      // ============================================================
+      // 12) Pagination
+      // ============================================================
       function renderPagination(pag) {
         const el = document.getElementById('pagination');
         const { page, pages, total, perPage } = pag;
@@ -1045,7 +1322,7 @@
       }
 
       // ============================================================
-      // 8) Delete
+      // 13) Delete
       // ============================================================
       async function deleteOrder(id, num) {
         const ok = await Refad.alert.confirm(
@@ -1068,7 +1345,125 @@
       }
 
       // ============================================================
-      // 9) Events
+      // 14) Quick Search
+      // ============================================================
+      function openQuickSearch() {
+        const overlay = document.getElementById('quickSearchOverlay');
+        overlay.classList.add('show');
+        const input = document.getElementById('quickSearchInput');
+        input.value = '';
+        input.focus();
+        state.quickSearchIndex = -1;
+        state.quickSearchResults = [];
+        renderQuickSearchResults('');
+      }
+
+      function closeQuickSearch() {
+        document.getElementById('quickSearchOverlay').classList.remove('show');
+      }
+
+      function renderQuickSearchResults(query) {
+        const container = document.getElementById('quickSearchResults');
+        const q = (query || '').toLowerCase().trim();
+
+        if (!q) {
+          container.innerHTML = '<div class="quick-search-empty">اكتب للبحث السريع...</div>';
+          state.quickSearchResults = [];
+          return;
+        }
+
+        const results = state.all.filter(r =>
+          (r.order_number || '').toLowerCase().includes(q) ||
+          (r.customers?.name || '').toLowerCase().includes(q)
+        ).slice(0, 10).map(r => ({
+          type: 'order',
+          id: r.id,
+          name: r.order_number,
+          sub: `${r.customers?.name || 'نقدي'} • ${fmtMoney(r.total_amount)} • ${fmtDate(r.created_at)}`,
+          initial: (r.order_number || '?').charAt(0)
+        }));
+
+        state.quickSearchResults = results;
+        state.quickSearchIndex = results.length ? 0 : -1;
+
+        if (!results.length) {
+          container.innerHTML = '<div class="quick-search-empty">لا توجد نتائج</div>';
+          return;
+        }
+
+        container.innerHTML = results.map((r, i) => `
+          <div class="quick-search-item ${i === 0 ? 'selected' : ''}" data-idx="${i}">
+            <div class="qs-icon">${esc(r.initial)}</div>
+            <div class="qs-body">
+              <div class="qs-name">${esc(r.name)}</div>
+              <div class="qs-sub">${esc(r.sub)}</div>
+            </div>
+            <i data-lucide="arrow-left" style="width:16px;height:16px;color:var(--text-muted);"></i>
+          </div>
+        `).join('');
+
+        if (window.lucide) lucide.createIcons();
+
+        container.querySelectorAll('.quick-search-item').forEach(el => {
+          el.addEventListener('click', () => {
+            const idx = Number(el.dataset.idx);
+            navigateQuickSearch(idx);
+          });
+        });
+      }
+
+      function navigateQuickSearch(idx) {
+        const r = state.quickSearchResults[idx];
+        if (!r) return;
+        closeQuickSearch();
+        location.href = `sales-order-form.html?id=${r.id}`;
+      }
+
+      function updateQuickSearchSelection() {
+        const container = document.getElementById('quickSearchResults');
+        container.querySelectorAll('.quick-search-item').forEach((el, i) => {
+          el.classList.toggle('selected', i === state.quickSearchIndex);
+        });
+        const selected = container.querySelector('.quick-search-item.selected');
+        if (selected) selected.scrollIntoView({ block: 'nearest' });
+      }
+
+      function setupQuickSearch() {
+        const overlay = document.getElementById('quickSearchOverlay');
+        const input = document.getElementById('quickSearchInput');
+
+        overlay.addEventListener('click', e => {
+          if (e.target === overlay) closeQuickSearch();
+        });
+
+        input.addEventListener('input', e => renderQuickSearchResults(e.target.value));
+
+        input.addEventListener('keydown', e => {
+          if (e.key === 'Escape') {
+            e.preventDefault();
+            closeQuickSearch();
+          } else if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            if (state.quickSearchResults.length) {
+              state.quickSearchIndex = Math.min(state.quickSearchIndex + 1, state.quickSearchResults.length - 1);
+              updateQuickSearchSelection();
+            }
+          } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            if (state.quickSearchResults.length) {
+              state.quickSearchIndex = Math.max(state.quickSearchIndex - 1, 0);
+              updateQuickSearchSelection();
+            }
+          } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (state.quickSearchIndex >= 0) navigateQuickSearch(state.quickSearchIndex);
+            else if (state.quickSearchResults.length) navigateQuickSearch(0);
+          }
+        });
+      }
+
+      // ============================================================
+      // 15) Events
       // ============================================================
       function bindEvents() {
         const searchHandler = Refad.debounce(v => {
@@ -1085,6 +1480,57 @@
           state.filterCustomer = e.target.value;
           applyFilters();
         });
+        document.getElementById('filterWarehouse').addEventListener('change', e => {
+          state.filterWarehouse = e.target.value;
+          applyFilters();
+        });
+
+        document.querySelectorAll('.quick-filter-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            document.querySelectorAll('.quick-filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            state.quickFilter = btn.dataset.quick;
+            applyFilters();
+          });
+        });
+
+        // Stat cards click → filter
+        document.querySelectorAll('.mini-card').forEach(card => {
+          card.addEventListener('click', () => {
+            const filter = card.dataset.statFilter;
+            if (!filter) return;
+
+            document.querySelectorAll('.mini-card').forEach(c => c.classList.remove('active'));
+            card.classList.add('active');
+
+            // Reset filters
+            state.filterStatus = '';
+            state.quickFilter = 'all';
+            document.getElementById('filterStatus').value = '';
+            document.querySelectorAll('.quick-filter-btn').forEach(b => b.classList.remove('active'));
+
+            if (filter === 'draft' || filter === 'confirmed' || filter === 'invoiced') {
+              state.filterStatus = filter;
+              document.getElementById('filterStatus').value = filter;
+            } else if (filter === 'bonus' || filter === 'overdue') {
+              state.quickFilter = filter;
+              const btn = document.querySelector(`.quick-filter-btn[data-quick="${filter}"]`);
+              if (btn) btn.classList.add('active');
+            } else if (filter === 'all') {
+              document.querySelector('.quick-filter-btn[data-quick="all"]').classList.add('active');
+            }
+
+            applyFilters();
+          });
+        });
+
+        document.getElementById('whSelect').addEventListener('change', e => {
+          state.selectedWarehouseId = Number(e.target.value);
+          updateActiveWhDisplay();
+          state.filterWarehouse = '';
+          document.getElementById('filterWarehouse').value = '';
+          applyFilters();
+        });
 
         if (canCreate) {
           document.getElementById('addBtn').addEventListener('click', () => {
@@ -1099,6 +1545,7 @@
         document.getElementById('tableBody').addEventListener('click', e => {
           const btn = e.target.closest('[data-action]');
           if (btn) {
+            e.stopPropagation();
             const action = btn.dataset.action;
             const id = parseInt(btn.dataset.id, 10);
             const r = state.all.find(x => x.id === id);
@@ -1108,7 +1555,7 @@
             return;
           }
           const row = e.target.closest('[data-open-order]');
-          if (row && !e.target.closest('a, input, select, textarea, label')) {
+          if (row && !e.target.closest('a, input, select, textarea, label, [data-copy]')) {
             location.href = `sales-order-form.html?id=${row.dataset.openOrder}`;
           }
         });
@@ -1120,45 +1567,92 @@
           }
         });
 
-        // Export
+        document.getElementById('refreshBtn').addEventListener('click', async () => {
+          Refad.toast.info('جارٍ التحديث...');
+          await loadOrders();
+          Refad.toast.success('تم التحديث');
+        });
+
         document.getElementById('exportBtn').addEventListener('click', () => {
           if (!state.filtered.length) {
             Refad.toast.warning('لا توجد بيانات للتصدير');
             return;
           }
-          const rows = state.filtered.map(r => ({
-            'رقم الطلب': r.order_number,
-            'المشتري': r.customers?.name || r.suppliers?.name || 'نقدي',
-            'التاريخ': Refad.format.date(r.created_at),
-            'عدد الأصناف': r.sales_order_items?.length || 0,
-            'الإجمالي': r.total_amount || 0,
-            'الربح': r.total_profit || 0,
-            'الحالة': r.status
-          }));
+          if (typeof XLSX === 'undefined') {
+            Refad.toast.error('مكتبة Excel غير محمّلة');
+            return;
+          }
+          const rows = state.filtered.map(r => {
+            const itemCount = (r.sales_order_items || []).length;
+            const totalBonus = (r.sales_order_items || []).reduce((s, it) => s + (Number(it.bonus_qty) || 0), 0);
+            return {
+              'رقم الطلب': r.order_number,
+              'العميل': r.customers?.name || 'نقدي',
+              'المخزن': getWhName(r.warehouse_id) || '',
+              'التاريخ': fmtDate(r.created_at),
+              'عدد الأصناف': itemCount,
+              'إجمالي البونص': totalBonus,
+              'الإجمالي': r.total_amount || 0,
+              'الربح': r.total_profit || 0,
+              'الحالة': r.status
+            };
+          });
           const ws = XLSX.utils.json_to_sheet(rows);
           const wb = XLSX.utils.book_new();
           XLSX.utils.book_append_sheet(wb, ws, 'SalesOrders');
           XLSX.writeFile(wb, `sales-orders-${Refad.date.today()}.xlsx`);
           Refad.toast.success('تم التصدير');
         });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', e => {
+          if (e.key === 'Escape') {
+            if (document.getElementById('quickSearchOverlay').classList.contains('show')) {
+              closeQuickSearch();
+            }
+          }
+          if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+            e.preventDefault();
+            openQuickSearch();
+          }
+        });
+
+        setupQuickSearch();
       }
 
       // ============================================================
-      // 10) Init
+      // 16) Init
       // ============================================================
       async function init() {
-        buildSidebar();
+        Refad.buildMenu('sales-orders.html');
         fillUser();
+        applyIdentity();
         setupTheme();
         setupSidebarMobile();
         setupUserMenu();
         setupNotifBtn();
+        setupRealtimeTheme();
         bindEvents();
+
+        await loadWarehouses();
+
+        if (typeof Refad.Warehouse.onChange === 'function') {
+          Refad.Warehouse.onChange(() => {
+            state.activeWarehouseId = Refad.Warehouse.getActiveId();
+            const whSel = document.getElementById('whSelect');
+            if (whSel) whSel.value = String(state.activeWarehouseId);
+            updateActiveWhDisplay();
+          });
+        }
+
+        try { Refad.Warehouse.injectSelector(); } catch (e) {}
 
         await loadCustomersFilter();
         await loadOrders();
 
-        Refad.registerServiceWorker();
+        if (Refad.registerServiceWorker) Refad.registerServiceWorker();
+
+        console.log('%c[Refad] Sales Orders v3 ready (Theme Sync + Settings + Quick Search)', 'color:#14B8A6;font-weight:bold;font-size:14px');
       }
 
       if (document.readyState === 'loading') {
@@ -1167,12 +1661,8 @@
         init();
       }
 
-      console.log('%c[Refad] Sales orders ready', 'color:#14B8A6;font-weight:bold');
-
     })();
   </script>
-
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 </body>
 </html>

@@ -61,6 +61,15 @@
       --sidebar-text: #94a3b8;
     }
 
+    /* ✨ Reduced-motion */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
     html, body {
       height: 100%;
       font-family: 'Cairo', sans-serif;
@@ -71,7 +80,7 @@
 
     body { display: flex; min-height: 100vh; overflow-x: hidden; }
 
-    /* Sidebar */
+    /* ============ Sidebar ============ */
     .sidebar {
       width: var(--sidebar-w);
       height: 100vh;
@@ -107,6 +116,7 @@
       justify-content: center;
       flex-shrink: 0;
       box-shadow: 0 4px 12px rgba(20,184,166,0.4);
+      overflow: hidden;
     }
     .sidebar-logo img { width: 70%; height: 70%; object-fit: contain; }
     .sidebar-logo .fallback { color: white; font-weight: 800; font-size: 18px; }
@@ -141,8 +151,9 @@
     .nav-item .badge { margin-right: auto; background: var(--danger); color: white; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
     .nav-item .badge.teal { background: var(--accent); }
     .nav-item .badge.gold { background: var(--gold); }
+    .nav-item .badge.new { background: var(--purple); }
 
-    /* Main */
+    /* ============ Main ============ */
     .main { flex: 1; margin-right: var(--sidebar-w); min-width: 0; display: flex; flex-direction: column; }
 
     .topbar {
@@ -224,7 +235,7 @@
     .dropdown-item i { width: 16px; height: 16px; }
     .dropdown-divider { height: 1px; background: var(--border); margin: 6px 0; }
 
-    /* Content */
+    /* ============ Content ============ */
     .content { padding: 24px; flex: 1; }
 
     .back-bar {
@@ -894,7 +905,102 @@
       margin-top: 4px;
     }
 
-    /* Responsive */
+    /* ✨ Quick Search Overlay */
+    .quick-search-overlay {
+      position: fixed; inset: 0;
+      z-index: 600;
+      display: none;
+      align-items: flex-start; justify-content: center;
+      padding: 80px 20px 20px;
+      background: rgba(15,23,42,0.6);
+      backdrop-filter: blur(6px);
+      animation: qsFadeIn 0.2s;
+    }
+    .quick-search-overlay.show { display: flex; }
+    @keyframes qsFadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes qsSlideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .quick-search-box {
+      width: min(600px, 100%);
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+      animation: qsSlideUp 0.25s;
+    }
+    .quick-search-input-wrap { position: relative; }
+    .quick-search-input {
+      width: 100%;
+      padding: 18px 60px 18px 18px;
+      font-family: inherit;
+      font-size: 16px; font-weight: 600;
+      background: var(--card);
+      border: none;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+      outline: none;
+    }
+    .quick-search-input-wrap > i {
+      position: absolute; right: 20px; top: 50%;
+      transform: translateY(-50%);
+      width: 22px; height: 22px;
+      color: var(--accent);
+      pointer-events: none;
+    }
+    .quick-search-kbd {
+      position: absolute; left: 18px; top: 50%;
+      transform: translateY(-50%);
+      font-size: 10px;
+      padding: 3px 8px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-muted);
+      font-family: 'Courier New', monospace;
+      font-weight: 700;
+    }
+    .quick-search-results { max-height: 400px; overflow-y: auto; padding: 8px; }
+    .quick-search-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .quick-search-item:hover, .quick-search-item.selected { background: rgba(20,184,166,0.1); }
+    .quick-search-item .qs-icon {
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: white;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 15px;
+      flex-shrink: 0;
+    }
+    .quick-search-item .qs-body { flex: 1; min-width: 0; }
+    .quick-search-item .qs-name { font-weight: 700; font-size: 14px; color: var(--text); }
+    .quick-search-item .qs-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .quick-search-empty { text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 13px; }
+    .quick-search-footer {
+      padding: 10px 16px;
+      border-top: 1px solid var(--border);
+      background: var(--bg);
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 11px; color: var(--text-muted);
+    }
+    .quick-search-footer kbd {
+      font-family: 'Courier New', monospace;
+      padding: 2px 6px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-weight: 700;
+    }
+
+    /* Spinner */
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    .spin { animation: spin 1s linear infinite; }
+
+    /* ============ Responsive ============ */
     @media (max-width: 1024px) {
       .sidebar { transform: translateX(100%); }
       .sidebar.open { transform: translateX(0); }
@@ -915,20 +1021,20 @@
       .modal-footer .btn { width: 100%; justify-content: center; }
       .tabs { padding: 4px; }
       .tab { padding: 8px 12px; font-size: 12px; }
+      .quick-search-overlay { padding: 20px 10px; }
     }
   </style>
-</head>
-<body>
+</head><body>
 
   <!-- Sidebar -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
-      <div class="sidebar-logo">
-        <img src="logo.png" alt="رفاد" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=fallback>R</span>';">
+      <div class="sidebar-logo" id="sidebarLogo">
+        <img src="logo.png" alt="رفاد" id="sidebarLogoImg" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=fallback>R</span>';">
       </div>
       <div class="sidebar-brand">
-        <h2>رفاد</h2>
-        <p>نظام إدارة الأدوية</p>
+        <h2 id="sidebarBrandName">رفاد</h2>
+        <p id="sidebarBrandDesc">نظام إدارة الأدوية</p>
       </div>
     </div>
     <nav class="sidebar-nav" id="sidebarNav"></nav>
@@ -1446,11 +1552,75 @@
     </div>
   </div>
 
+  <!-- ✨ Quick Search Overlay -->
+  <div class="quick-search-overlay" id="quickSearchOverlay">
+    <div class="quick-search-box">
+      <div class="quick-search-input-wrap">
+        <input type="text" class="quick-search-input" id="quickSearchInput" placeholder="ابحث في الحركات أو التشغيلات..." autocomplete="off">
+        <i data-lucide="search"></i>
+        <span class="quick-search-kbd">ESC</span>
+      </div>
+      <div class="quick-search-results" id="quickSearchResults">
+        <div class="quick-search-empty">اكتب للبحث السريع...</div>
+      </div>
+      <div class="quick-search-footer">
+        <span><kbd>↑</kbd> <kbd>↓</kbd> للتنقل</span>
+        <span><kbd>Enter</kbd> للفتح</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       SCRIPTS
+       ============================================================ -->
   <script src="refad-core.js"></script>
   <script src="refad-auth.js"></script>
-    <script>
+  <script src="refad-theme-sync.js"></script>
+  <script src="refad-settings.js"></script>  <script>
     (function () {
       'use strict';
+
+      // ============================================================
+      // 0) Safe Settings Wrapper
+      // ============================================================
+      const SafeSettings = {
+        locale: {
+          formatMoney: function (v) {
+            try {
+              if (window.RefadSettings?.locale?.formatMoney) {
+                return RefadSettings.locale.formatMoney(v);
+              }
+            } catch (e) {}
+            return Refad.format.money(v);
+          }
+        },
+        identity: {
+          getSystemName: function () {
+            try {
+              if (window.RefadSettings?.identity?.getSystemName) {
+                return RefadSettings.identity.getSystemName();
+              }
+            } catch (e) {}
+            return 'رفاد';
+          },
+          getTagline: function () {
+            try {
+              if (window.RefadSettings?.identity?.getTagline) {
+                return RefadSettings.identity.getTagline();
+              }
+            } catch (e) {}
+            return 'نظام إدارة الأدوية';
+          },
+          getLogoUrl: function () {
+            try {
+              if (window.RefadSettings?.identity?.getLogoUrl) {
+                return RefadSettings.identity.getLogoUrl();
+              }
+            } catch (e) {}
+            return null;
+          }
+        }
+      };
 
       // ============================================================
       // 1) Guard
@@ -1462,7 +1632,7 @@
       const canDelete = Refad.Session.has('products.delete');
 
       // ============================================================
-      // 2) Product ID from URL
+      // 2) Product ID
       // ============================================================
       const productId = parseInt(Refad.getParam('id'), 10);
       if (!productId || isNaN(productId)) {
@@ -1490,74 +1660,12 @@
         supplierStats: {},
         customerStats: {},
         salesInvoicesRef: new Map(),
-        salesItemsRaw: []
+        salesItemsRaw: [],
+        realtimeChannel: null
       };
 
       // ============================================================
-      // 4) Sidebar
-      // ============================================================
-      const MENU = [
-        { section: 'الرئيسية', items: [
-          { label: 'لوحة التحكم', icon: 'layout-dashboard', href: 'dashboard.html' },
-          { label: 'الشات', icon: 'message-circle', href: 'chat.html', permission: 'chat.use' },
-          { label: 'الإشعارات', icon: 'bell', href: 'notifications.html', permission: 'notifications.view' }
-        ]},
-        { section: 'العمليات', items: [
-          { label: 'الأصناف', icon: 'package', href: 'products.html', permission: 'products.view' },
-          { label: 'المخزون', icon: 'warehouse', href: 'inventory.html', permission: 'inventory.view' },
-          { label: 'طلبات الشراء', icon: 'clipboard-list', href: 'purchase-requests.html', permission: 'purchases.view' },
-          { label: 'الاستلامات', icon: 'package-check', href: 'receipts.html', permission: 'purchases.receive' },
-          { label: 'طلبات البيع', icon: 'shopping-cart', href: 'sales-orders.html', permission: 'sales.view' },
-          { label: 'نقطة البيع', icon: 'scan-barcode', href: 'pos.html', permission: 'sales.pos', badge: 'POS', badgeClass: 'teal' },
-          { label: 'الفواتير', icon: 'receipt', href: 'invoices.html', permission: 'sales.view' }
-        ]},
-        { section: 'الأطراف', items: [
-          { label: 'الموردين', icon: 'truck', href: 'suppliers.html', permission: 'suppliers.view' },
-          { label: 'العملاء', icon: 'users', href: 'customers.html', permission: 'customers.view' }
-        ]},
-        { section: 'المخزون', items: [
-          { label: 'الجرد', icon: 'clipboard-check', href: 'stocktake.html', permission: 'inventory.stocktake' },
-          { label: 'التسويات', icon: 'sliders-horizontal', href: 'adjustments.html', permission: 'inventory.adjust' }
-        ]},
-        { section: 'الموارد البشرية', items: [
-          { label: 'الموظفين', icon: 'user-cog', href: 'employees.html', permission: 'employees.view' },
-          { label: 'الصلاحيات', icon: 'shield-check', href: 'permissions.html', permission: 'permissions.manage' },
-          { label: 'الحضور', icon: 'calendar-check', href: 'attendance.html', permission: 'attendance.view' },
-          { label: 'الرواتب', icon: 'wallet', href: 'payroll.html', permission: 'payroll.view' }
-        ]},
-        { section: 'المالية', items: [
-          { label: 'المصاريف', icon: 'banknote', href: 'expenses.html', permission: 'expenses.view' },
-          { label: 'التقارير', icon: 'bar-chart-3', href: 'reports.html', permission: 'reports.view' }
-        ]},
-        { section: 'النظام', items: [
-          { label: 'إعدادات الشركة', icon: 'settings', href: 'company-settings.html', permission: 'settings.view' },
-          { label: 'شاشة الأدمن', icon: 'shield', href: 'admin.html', permission: 'admin.full', badge: 'Admin', badgeClass: 'gold' }
-        ]}
-      ];
-
-      function buildSidebar() {
-        const nav = document.getElementById('sidebarNav');
-        const frag = document.createDocumentFragment();
-        MENU.forEach(group => {
-          const allowed = group.items.filter(it => !it.permission || Refad.Session.has(it.permission));
-          if (!allowed.length) return;
-          frag.appendChild(Refad.el('div', { class: 'nav-section' }, group.section));
-          allowed.forEach(item => {
-            const a = Refad.el('a', {
-              href: item.href,
-              class: 'nav-item' + (item.href === 'products.html' ? ' active' : '')
-            });
-            a.innerHTML = `<i data-lucide="${item.icon}"></i><span>${Refad.escapeHtml(item.label)}</span>${item.badge ? `<span class="badge ${item.badgeClass || ''}">${item.badge}</span>` : ''}`;
-            frag.appendChild(a);
-          });
-        });
-        nav.innerHTML = '';
-        nav.appendChild(frag);
-        if (window.lucide) lucide.createIcons();
-      }
-
-      // ============================================================
-      // 5) UI Helpers
+      // 4) UI Helpers
       // ============================================================
       function fillUser() {
         const av = document.getElementById('userAvatar');
@@ -1566,6 +1674,26 @@
         else av.textContent = initial;
         document.getElementById('userName').textContent = session.full_name;
         document.getElementById('userRole').textContent = Refad.Session.has('company.owner') ? 'صاحب الشركة' : 'موظف';
+      }
+
+      // ✨ Apply Identity
+      function applyIdentity() {
+        const name = SafeSettings.identity.getSystemName();
+        const tagline = SafeSettings.identity.getTagline();
+        const logoUrl = SafeSettings.identity.getLogoUrl();
+        const brandName = document.getElementById('sidebarBrandName');
+        const brandDesc = document.getElementById('sidebarBrandDesc');
+        const logoImg = document.getElementById('sidebarLogoImg');
+        if (brandName) brandName.textContent = name;
+        if (brandDesc) brandDesc.textContent = tagline;
+        if (logoImg && logoUrl) {
+          logoImg.src = logoUrl;
+          logoImg.onerror = function () {
+            this.style.display = 'none';
+            const parent = this.parentElement;
+            if (parent) parent.innerHTML = '<span class="fallback">' + (name.charAt(0) || 'R') + '</span>';
+          };
+        }
       }
 
       function setupTheme() {
@@ -1610,8 +1738,15 @@
         });
       }
 
+      // ✨ Realtime Theme
+      function setupRealtimeTheme() {
+        window.addEventListener('refad:theme-changed', () => {
+          applyIdentity();
+        });
+      }
+
       // ============================================================
-      // 6) Load product data
+      // 5) Load product
       // ============================================================
       async function loadProduct() {
         try {
@@ -1642,7 +1777,7 @@
         const tags = [];
         if (p.form) tags.push({ icon: 'pill', text: p.form });
         if (p.unit) tags.push({ icon: 'package', text: p.unit });
-        if (p.default_price) tags.push({ icon: 'tag', text: Refad.format.money(p.default_price) });
+        if (p.default_price) tags.push({ icon: 'tag', text: SafeSettings.locale.formatMoney(p.default_price) });
         tags.push({
           icon: p.is_active ? 'check-circle' : 'x-circle',
           text: p.is_active ? 'نشط' : 'غير نشط'
@@ -1663,7 +1798,7 @@
           ['الشكل الدوائي', p.form || '—'],
           ['الوحدة', p.unit || '—'],
           ['التصنيف', p.category || '—'],
-          ['السعر الافتراضي', Refad.format.money(p.default_price)],
+          ['السعر الافتراضي', SafeSettings.locale.formatMoney(p.default_price)],
           ['الحد الأدنى للطلب', Refad.format.number(p.min_order_qty || 1)],
           ['حد إعادة الطلب', Refad.format.number(p.reorder_level || 0)],
           ['الحالة', p.is_active ? 'نشط' : 'غير نشط'],
@@ -1688,7 +1823,7 @@
       }
 
       // ============================================================
-      // 7) Load all related data
+      // 6) Load related
       // ============================================================
       async function loadRelated() {
         try {
@@ -1747,7 +1882,7 @@
       }
 
       // ============================================================
-      // 7.1) ABC Classification
+      // 6.1) ABC
       // ============================================================
       async function loadAbcClassification() {
         try {
@@ -1765,10 +1900,9 @@
       }
 
       // ============================================================
-      // 7.2) Parties Stats
+      // 6.2) Parties stats
       // ============================================================
       async function loadPartiesStats() {
-        // Suppliers from batches
         const supplierTotals = new Map();
         state.batchesRaw.forEach(b => {
           if (!b.supplier_id) return;
@@ -1795,7 +1929,6 @@
           }
         }
 
-        // Customers from sales invoices
         try {
           const invoiceItems = await Refad.db.select('sales_invoice_items', {
             columns: 'invoice_id, quantity, unit_price, total',
@@ -1845,12 +1978,11 @@
       }
 
       // ============================================================
-      // 8) Returns Loader
+      // 7) Returns loader
       // ============================================================
       async function loadReturns() {
         const allReturns = [];
 
-        // Purchase returns from receipt_items
         try {
           const purchaseReturns = await Refad.db.select('receipt_items', {
             columns: 'id, receipt_id, quantity, unit_price, total, return_reason, created_at',
@@ -1890,7 +2022,6 @@
           console.warn('Purchase returns load failed:', e.message);
         }
 
-        // Sale returns from sales_invoice_items
         try {
           const salesReturns = await Refad.db.select('sales_invoice_items', {
             columns: 'id, invoice_id, quantity, unit_price, total, created_at',
@@ -1946,7 +2077,7 @@
       }
 
       // ============================================================
-      // 9) MERGE BATCHES ALGORITHM
+      // 8) Merge batches
       // ============================================================
       function mergeBatches(batches) {
         const groups = new Map();
@@ -2011,20 +2142,16 @@
       }
 
       // ============================================================
-      // 10) ANALYTICS ENGINE (مُحسّن بالكامل)
+      // 9) Analytics engine
       // ============================================================
       function computeAnalytics() {
         const batches = state.batchesRaw || [];
         const movements = state.movements || [];
         const returns = state.returns || [];
 
-        // ============ 1) المستلم ============
         const totalReceived = batches.reduce((s, x) => s + (Number(x.quantity_in) || 0), 0);
-
-        // ============ 2) المخزون الحالي ============
         const totalLeft = batches.reduce((s, x) => s + (Number(x.quantity_left) || 0), 0);
 
-        // ============ 3) تصنيف الحركات ============
         const outMovements = movements.filter(m => m.movement_type === 'out');
         const totalOut = outMovements.reduce((s, x) => s + Math.abs(Number(x.quantity) || 0), 0);
 
@@ -2037,7 +2164,6 @@
         const returnMovements = movements.filter(m => m.movement_type === 'return');
         const totalReturnMovements = returnMovements.reduce((s, x) => s + Math.abs(Number(x.quantity) || 0), 0);
 
-        // ============ 4) المرتجعات ============
         const saleReturns = returns.filter(r => r.type === 'sale_return');
         const purchaseReturns = returns.filter(r => r.type === 'purchase_return');
 
@@ -2045,35 +2171,25 @@
         const totalPurchaseReturns = purchaseReturns.reduce((s, x) => s + (Number(x.quantity) || 0), 0);
         const totalReturns = Math.max(totalReturnMovements, totalSaleReturns + totalPurchaseReturns);
 
-        // ============ 5) المبيعات الصافية ============
         const netSales = Math.max(0, totalOut - totalSaleReturns);
 
-        // ============ 6) المعدلات ============
         const grossSaleRate = totalReceived > 0
           ? Math.min(100, Math.round((totalOut / totalReceived) * 100)) : 0;
-
         const netSaleRate = totalReceived > 0
           ? Math.min(100, Math.round((netSales / totalReceived) * 100)) : 0;
-
         const returnRate = totalOut > 0
           ? Math.round((totalReturns / totalOut) * 100) : 0;
-
         const lossRate = totalReceived > 0
           ? Math.round((totalLoss / totalReceived) * 100) : 0;
 
-        // ============ 7) القيم المالية ============
         const inventoryValue = batches.reduce((s, x) =>
           s + (Number(x.quantity_left) || 0) * (Number(x.cost_price) || 0), 0);
-
         const retailValue = batches.reduce((s, x) =>
           s + (Number(x.quantity_left) || 0) * (Number(x.sale_price) || 0), 0);
-
         const potentialProfit = retailValue - inventoryValue;
-
         const inventoryMargin = retailValue > 0
           ? Math.round((potentialProfit / retailValue) * 100) : 0;
 
-        // ============ 8) متوسط الأسعار ============
         let totalSalesValue = 0;
         let totalSalesQty = 0;
         Object.values(state.customerStats).forEach(c => {
@@ -2090,19 +2206,16 @@
           ? Math.round(((avgSellingPrice - avgCostPrice) / avgCostPrice) * 100)
           : 0;
 
-        // ============ 9) COGS ============
         const cogs = outMovements.reduce((s, x) => {
           const unitCost = Number(x.unit_cost) || avgCostPrice;
           return s + Math.abs(Number(x.quantity) || 0) * unitCost;
         }, 0);
 
-        // ============ 10) الصلاحية ============
         const expiringSoon = batches.filter(x => {
           if (!x.expiry_date || !x.quantity_left) return false;
           const d = Refad.format.daysLeft(x.expiry_date);
           return d !== null && d >= 0 && d <= 90;
         });
-
         const expired = batches.filter(x => {
           if (!x.expiry_date || !x.quantity_left) return false;
           const d = Refad.format.daysLeft(x.expiry_date);
@@ -2111,31 +2224,23 @@
 
         const expiringValue = expiringSoon.reduce((s, x) =>
           s + (Number(x.quantity_left) || 0) * (Number(x.cost_price) || 0), 0);
-
         const expiredValue = expired.reduce((s, x) =>
           s + (Number(x.quantity_left) || 0) * (Number(x.cost_price) || 0), 0);
 
-        // ============ 11) معدل الدوران ============
         const avgInventoryUnits = (totalReceived + totalLeft) / 2;
         const turnoverRate = avgInventoryUnits > 0
-          ? Math.round((netSales / avgInventoryUnits) * 100) / 100
-          : 0;
-
+          ? Math.round((netSales / avgInventoryUnits) * 100) / 100 : 0;
         const daysOfInventory = turnoverRate > 0
-          ? Math.round(365 / turnoverRate)
-          : 999;
+          ? Math.round(365 / turnoverRate) : 999;
 
-        // ============ 12) توقع نهاية المخزون ============
         const firstMovement = movements.length ? movements[movements.length - 1] : null;
         const daysSinceFirst = firstMovement
           ? Math.max(1, Math.round((Date.now() - new Date(firstMovement.created_at).getTime()) / (1000 * 60 * 60 * 24)))
           : 1;
         const dailySalesRate = netSales / daysSinceFirst;
         const daysUntilStockout = dailySalesRate > 0
-          ? Math.round(totalLeft / dailySalesRate)
-          : 999;
+          ? Math.round(totalLeft / dailySalesRate) : 999;
 
-        // ============ 13) معدل النمو الشهري ============
         const monthlySales = {};
         outMovements.forEach(m => {
           const key = m.created_at ? m.created_at.slice(0, 7) : null;
@@ -2148,12 +2253,9 @@
         if (sortedMonths.length >= 2) {
           const current = sortedMonths[0][1];
           const previous = sortedMonths[1][1];
-          if (previous > 0) {
-            monthlyGrowth = Math.round(((current - previous) / previous) * 100);
-          }
+          if (previous > 0) monthlyGrowth = Math.round(((current - previous) / previous) * 100);
         }
 
-        // ============ 14) ABC ============
         let abcClass = 'C';
         let abcCumulative = 0;
         if (state.abcClassification) {
@@ -2168,14 +2270,11 @@
           abcCumulative = share;
         }
 
-        // ============ 15) الأفضل ============
         const topSupplier = Object.values(state.supplierStats)
           .sort((a, b) => b.qty - a.qty)[0] || null;
-
         const topCustomer = Object.values(state.customerStats)
           .sort((a, b) => b.value - a.value)[0] || null;
 
-        // ============ الحفظ ============
         state.analytics = {
           totalReceived, totalOut, netSales, totalLeft,
           totalAdjust, totalLoss, totalReturns,
@@ -2191,97 +2290,27 @@
           abcClass, abcCumulative,
           topSupplier, topCustomer
         };
-      }      // ============================================================
-      // 11) Render Stats (12 بطاقة)
+      }
+
+      // ============================================================
+      // 10) Render stats
       // ============================================================
       function renderStats() {
         const a = state.analytics;
 
         const cards = [
-          {
-            label: 'إجمالي المستلم',
-            value: Refad.format.number(a.totalReceived),
-            icon: 'package-plus',
-            cls: 'blue',
-            sub: `${state.batchesRaw.length} تشغيلة`
-          },
-          {
-            label: 'المخزون الحالي',
-            value: Refad.format.number(a.totalLeft),
-            icon: 'package',
-            cls: 'teal',
-            sub: `قيمة: ${Refad.format.money(a.inventoryValue)}`
-          },
-          {
-            label: 'صافي المبيعات',
-            value: Refad.format.number(a.netSales),
-            icon: 'shopping-cart',
-            cls: 'green',
-            sub: `معدل: ${a.netSaleRate}%`
-          },
-          {
-            label: 'المرتجعات',
-            value: Refad.format.number(a.totalReturns),
-            icon: 'undo-2',
-            cls: 'gold',
-            sub: `معدل: ${a.returnRate}%`
-          },
-          {
-            label: 'معدل الدوران',
-            value: `${a.turnoverRate}x`,
-            icon: 'refresh-cw',
-            cls: a.turnoverRate > 2 ? 'green' : (a.turnoverRate > 1 ? 'gold' : 'red'),
-            sub: a.daysOfInventory < 999 ? `${a.daysOfInventory} يوم مخزون` : 'بطيء'
-          },
-          {
-            label: 'الربح المتوقع',
-            value: Refad.format.money(a.potentialProfit),
-            icon: 'trending-up',
-            cls: 'purple',
-            sub: `هامش: ${a.inventoryMargin}%`
-          },
-          {
-            label: 'متوسط سعر البيع',
-            value: Refad.format.money(a.avgSellingPrice),
-            icon: 'tag',
-            cls: 'green',
-            sub: `هامش: ${a.realProfitMargin}%`
-          },
-          {
-            label: 'متوسط سعر الشراء',
-            value: Refad.format.money(a.avgCostPrice),
-            icon: 'shopping-bag',
-            cls: 'blue',
-            sub: 'للفترة'
-          },
-          {
-            label: 'قريبة الانتهاء',
-            value: Refad.format.number(a.expiringSoon),
-            icon: 'alert-triangle',
-            cls: 'gold',
-            sub: `قيمة: ${Refad.format.money(a.expiringValue)}`
-          },
-          {
-            label: 'منتهية الصلاحية',
-            value: Refad.format.number(a.expired),
-            icon: 'x-octagon',
-            cls: 'red',
-            sub: `قيمة: ${Refad.format.money(a.expiredValue)}`
-          },
-          {
-            label: 'نفاد المخزون',
-            value: a.daysUntilStockout < 999 ? `${a.daysUntilStockout} يوم` : '—',
-            icon: 'calendar-x',
-            cls: a.daysUntilStockout < 14 ? 'red' : (a.daysUntilStockout < 60 ? 'gold' : 'green'),
-            sub: `معدل يومي: ${a.dailySalesRate.toFixed(1)}`
-          },
-          {
-            label: 'نمو شهري',
-            value: `${a.monthlyGrowth > 0 ? '+' : ''}${a.monthlyGrowth}%`,
-            icon: a.monthlyGrowth >= 0 ? 'trending-up' : 'trending-down',
-            cls: a.monthlyGrowth >= 0 ? 'green' : 'red',
-            sub: 'مقارنة بالشهر السابق'
-          }
+          { label: 'إجمالي المستلم', value: Refad.format.number(a.totalReceived), icon: 'package-plus', cls: 'blue', sub: `${state.batchesRaw.length} تشغيلة` },
+          { label: 'المخزون الحالي', value: Refad.format.number(a.totalLeft), icon: 'package', cls: 'teal', sub: `قيمة: ${SafeSettings.locale.formatMoney(a.inventoryValue)}` },
+          { label: 'صافي المبيعات', value: Refad.format.number(a.netSales), icon: 'shopping-cart', cls: 'green', sub: `معدل: ${a.netSaleRate}%` },
+          { label: 'المرتجعات', value: Refad.format.number(a.totalReturns), icon: 'undo-2', cls: 'gold', sub: `معدل: ${a.returnRate}%` },
+          { label: 'معدل الدوران', value: `${a.turnoverRate}x`, icon: 'refresh-cw', cls: a.turnoverRate > 2 ? 'green' : (a.turnoverRate > 1 ? 'gold' : 'red'), sub: a.daysOfInventory < 999 ? `${a.daysOfInventory} يوم مخزون` : 'بطيء' },
+          { label: 'الربح المتوقع', value: SafeSettings.locale.formatMoney(a.potentialProfit), icon: 'trending-up', cls: 'purple', sub: `هامش: ${a.inventoryMargin}%` },
+          { label: 'متوسط سعر البيع', value: SafeSettings.locale.formatMoney(a.avgSellingPrice), icon: 'tag', cls: 'green', sub: `هامش: ${a.realProfitMargin}%` },
+          { label: 'متوسط سعر الشراء', value: SafeSettings.locale.formatMoney(a.avgCostPrice), icon: 'shopping-bag', cls: 'blue', sub: 'للفترة' },
+          { label: 'قريبة الانتهاء', value: Refad.format.number(a.expiringSoon), icon: 'alert-triangle', cls: 'gold', sub: `قيمة: ${SafeSettings.locale.formatMoney(a.expiringValue)}` },
+          { label: 'منتهية الصلاحية', value: Refad.format.number(a.expired), icon: 'x-octagon', cls: 'red', sub: `قيمة: ${SafeSettings.locale.formatMoney(a.expiredValue)}` },
+          { label: 'نفاد المخزون', value: a.daysUntilStockout < 999 ? `${a.daysUntilStockout} يوم` : '—', icon: 'calendar-x', cls: a.daysUntilStockout < 14 ? 'red' : (a.daysUntilStockout < 60 ? 'gold' : 'green'), sub: `معدل يومي: ${a.dailySalesRate.toFixed(1)}` },
+          { label: 'نمو شهري', value: `${a.monthlyGrowth > 0 ? '+' : ''}${a.monthlyGrowth}%`, icon: a.monthlyGrowth >= 0 ? 'trending-up' : 'trending-down', cls: a.monthlyGrowth >= 0 ? 'green' : 'red', sub: 'مقارنة بالشهر السابق' }
         ];
 
         document.getElementById('statsGrid').innerHTML = cards.map(c => `
@@ -2298,23 +2327,21 @@
       }
 
       // ============================================================
-      // 12) Render Overview (6 بطاقات)
+      // 11) Render overview
       // ============================================================
       async function renderOverview() {
         const a = state.analytics;
         const p = state.product;
 
-        // ===== ملخص مالي =====
         document.getElementById('financialSummary').innerHTML = `
-          <div class="info-item"><span class="label">قيمة المخزون (بسعر التكلفة)</span><span class="value">${Refad.format.money(a.inventoryValue)}</span></div>
-          <div class="info-item"><span class="label">قيمة المخزون (بسعر البيع)</span><span class="value">${Refad.format.money(a.retailValue)}</span></div>
-          <div class="info-item"><span class="label">الربح المتوقع</span><span class="value" style="color:var(--success)">${Refad.format.money(a.potentialProfit)}</span></div>
+          <div class="info-item"><span class="label">قيمة المخزون (بسعر التكلفة)</span><span class="value">${SafeSettings.locale.formatMoney(a.inventoryValue)}</span></div>
+          <div class="info-item"><span class="label">قيمة المخزون (بسعر البيع)</span><span class="value">${SafeSettings.locale.formatMoney(a.retailValue)}</span></div>
+          <div class="info-item"><span class="label">الربح المتوقع</span><span class="value" style="color:var(--success)">${SafeSettings.locale.formatMoney(a.potentialProfit)}</span></div>
           <div class="info-item"><span class="label">هامش الربح على المخزون</span><span class="value">${a.inventoryMargin}%</span></div>
-          <div class="info-item"><span class="label">تكلفة المبيعات (COGS)</span><span class="value">${Refad.format.money(a.cogs)}</span></div>
-          <div class="info-item"><span class="label">السعر الافتراضي</span><span class="value">${Refad.format.money(p.default_price)}</span></div>
+          <div class="info-item"><span class="label">تكلفة المبيعات (COGS)</span><span class="value">${SafeSettings.locale.formatMoney(a.cogs)}</span></div>
+          <div class="info-item"><span class="label">السعر الافتراضي</span><span class="value">${SafeSettings.locale.formatMoney(p.default_price)}</span></div>
         `;
 
-        // ===== ABC =====
         document.getElementById('abcAnalysis').innerHTML = `
           <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;">
             <div class="abc-badge abc-${a.abcClass}">${a.abcClass}</div>
@@ -2333,7 +2360,6 @@
           <div class="info-item"><span class="label">معدل الدوران</span><span class="value">${a.turnoverRate}x</span></div>
         `;
 
-        // ===== أداء المبيعات =====
         document.getElementById('salesPerformance').innerHTML = `
           <div class="kpi-grid">
             <div class="kpi-box">
@@ -2359,31 +2385,28 @@
           </div>
         `;
 
-        // ===== توقع المخزون =====
         const stockoutClass = a.daysUntilStockout < 14 ? 'danger' : (a.daysUntilStockout < 60 ? 'gold' : 'success');
         const stockoutText = a.daysUntilStockout < 999 ? `${a.daysUntilStockout} يوم` : 'لا يوجد';
         document.getElementById('stockForecast').innerHTML = `
           <div style="text-align:center;padding:16px 0;">
-            <div style="font-size:42px;font-weight:800;color:var(--${stockoutClass === 'danger' ? 'danger' : stockoutClass === 'gold' ? 'gold' : 'success'});">${stockoutText}</div>
+            <div style="font-size:42px;font-weight:800;color:var(--${stockoutClass});">${stockoutText}</div>
             <div style="font-size:13px;color:var(--text-muted);margin-top:8px;">حتى نفاد المخزون</div>
           </div>
           <div class="info-item"><span class="label">المخزون الحالي</span><span class="value">${Refad.format.number(a.totalLeft)} وحدة</span></div>
           <div class="info-item"><span class="label">معدل البيع اليومي</span><span class="value">${a.dailySalesRate.toFixed(1)} وحدة/يوم</span></div>
           <div class="info-item"><span class="label">حد إعادة الطلب</span><span class="value">${Refad.format.number(p.reorder_level || 0)} وحدة</span></div>
-          <div class="info-item"><span class="label">التوصية</span><span class="value" style="color:var(--${stockoutClass === 'danger' ? 'danger' : stockoutClass === 'gold' ? 'gold' : 'success'});">
+          <div class="info-item"><span class="label">التوصية</span><span class="value" style="color:var(--${stockoutClass});">
             ${a.daysUntilStockout < 14 ? '⚠️ اطلب الآن' :
               a.daysUntilStockout < 60 ? 'راقب المخزون' :
               'المخزون كافي'}
           </span></div>
         `;
 
-        // ===== Top Customers/Suppliers =====
         renderTopParties();
         if (window.lucide) lucide.createIcons();
       }
 
       function renderTopParties() {
-        // Top Customers (10)
         const customers = Object.values(state.customerStats)
           .sort((a, b) => b.value - a.value)
           .slice(0, 10);
@@ -2391,18 +2414,15 @@
         document.getElementById('topCustomers').innerHTML = customers.length
           ? customers.map((c, i) => `
               <div class="info-item">
-                <span class="label">
-                  ${i + 1}. ${Refad.escapeHtml(c.name)}
-                </span>
+                <span class="label">${i + 1}. ${Refad.escapeHtml(c.name)}</span>
                 <span class="value">
-                  ${Refad.format.money(c.value)}
+                  ${SafeSettings.locale.formatMoney(c.value)}
                   <span style="font-size:11px;color:var(--text-muted);font-weight:500;"> (${Refad.format.number(c.qty)})</span>
                 </span>
               </div>
             `).join('')
           : '<div class="empty-state"><i data-lucide="users"></i><p>لا توجد بيانات</p></div>';
 
-        // Top Suppliers (10)
         const suppliers = Object.values(state.supplierStats)
           .sort((a, b) => b.value - a.value)
           .slice(0, 10);
@@ -2410,9 +2430,7 @@
         document.getElementById('topSuppliers').innerHTML = suppliers.length
           ? suppliers.map((s, i) => `
               <div class="info-item">
-                <span class="label">
-                  ${i + 1}. ${Refad.escapeHtml(s.name)}
-                </span>
+                <span class="label">${i + 1}. ${Refad.escapeHtml(s.name)}</span>
                 <span class="value">
                   ${Refad.format.number(s.qty)}
                   <span style="font-size:11px;color:var(--text-muted);font-weight:500;"> وحدة</span>
@@ -2425,12 +2443,11 @@
       }
 
       // ============================================================
-      // 13) Render Analytics
+      // 12) Render analytics
       // ============================================================
       function renderAnalytics() {
         const a = state.analytics;
 
-        // ===== معدلات البيع =====
         document.getElementById('salesRates').innerHTML = `
           <div class="progress-bar">
             <div class="progress-track">
@@ -2463,7 +2480,6 @@
           <div class="info-item"><span class="label">الفاقد</span><span class="value">${Refad.format.number(a.totalLoss)}</span></div>
         `;
 
-        // ===== معدل الدوران =====
         document.getElementById('turnoverRate').innerHTML = `
           <div style="text-align:center;padding:20px 0;">
             <div style="font-size:48px;font-weight:800;color:var(--accent);">${a.turnoverRate}x</div>
@@ -2479,16 +2495,9 @@
           <div class="info-item"><span class="label">معدل البيع اليومي</span><span class="value">${a.dailySalesRate.toFixed(1)} وحدة/يوم</span></div>
         `;
 
-        // ===== المبيعات الشهرية =====
         renderMonthlySales();
-
-        // ===== تنبيهات =====
         renderSmartAlerts();
-
-        // ===== مقارنة الأسعار =====
         renderPriceComparison();
-
-        // ===== تحليل النمو =====
         renderGrowthAnalysis();
       }
 
@@ -2526,37 +2535,17 @@
         const p = state.product;
         const alerts = [];
 
-        if (a.expired > 0) {
-          alerts.push({ type: 'error', icon: 'x-octagon', msg: `يوجد ${a.expired} تشغيلة منتهية الصلاحية - بقيمة ${Refad.format.money(a.expiredValue)} - يجب إتلافها` });
-        }
-        if (a.expiringSoon > 0) {
-          alerts.push({ type: 'warning', icon: 'alert-triangle', msg: `يوجد ${a.expiringSoon} تشغيلة قاربت على الانتهاء (بقيمة ${Refad.format.money(a.expiringValue)})` });
-        }
-        if (a.returnRate > 10) {
-          alerts.push({ type: 'warning', icon: 'undo-2', msg: `معدل المرتجع مرتفع (${a.returnRate}%) - راجع جودة المنتج` });
-        }
-        if (a.netSaleRate < 30 && a.totalReceived > 0) {
-          alerts.push({ type: 'info', icon: 'trending-down', msg: `معدل البيع منخفض (${a.netSaleRate}%) - قد يحتاج عروض ترويجية` });
-        }
-        if (a.totalLeft <= (p.reorder_level || 0)) {
-          alerts.push({ type: 'error', icon: 'shopping-cart', msg: `المخزون (${a.totalLeft}) أقل من حد إعادة الطلب (${p.reorder_level}) - اطلب المزيد` });
-        }
-        if (a.totalLeft > 0 && a.netSaleRate > 80) {
-          alerts.push({ type: 'success', icon: 'check-circle', msg: 'منتج سريع الحركة - تأكد من توفر مخزون كافٍ' });
-        }
-        if (a.daysUntilStockout < 14 && a.daysUntilStockout < 999) {
-          alerts.push({ type: 'error', icon: 'calendar-x', msg: `المخزون سينفد خلال ${a.daysUntilStockout} يوم - اطلب الآن` });
-        }
-        if (a.monthlyGrowth > 20) {
-          alerts.push({ type: 'success', icon: 'trending-up', msg: `نمو ممتاز ${a.monthlyGrowth}% مقارنة بالشهر السابق` });
-        } else if (a.monthlyGrowth < -20) {
-          alerts.push({ type: 'warning', icon: 'trending-down', msg: `انخفاض ${Math.abs(a.monthlyGrowth)}% مقارنة بالشهر السابق` });
-        }
-        if (a.realProfitMargin > 30) {
-          alerts.push({ type: 'success', icon: 'award', msg: `هامش ربح ممتاز (${a.realProfitMargin}%)` });
-        } else if (a.realProfitMargin < 5 && a.avgSellingPrice > 0) {
-          alerts.push({ type: 'warning', icon: 'alert-circle', msg: `هامش ربح منخفض (${a.realProfitMargin}%) - راجع التسعير` });
-        }
+        if (a.expired > 0) alerts.push({ type: 'error', icon: 'x-octagon', msg: `يوجد ${a.expired} تشغيلة منتهية الصلاحية - بقيمة ${SafeSettings.locale.formatMoney(a.expiredValue)} - يجب إتلافها` });
+        if (a.expiringSoon > 0) alerts.push({ type: 'warning', icon: 'alert-triangle', msg: `يوجد ${a.expiringSoon} تشغيلة قاربت على الانتهاء (بقيمة ${SafeSettings.locale.formatMoney(a.expiringValue)})` });
+        if (a.returnRate > 10) alerts.push({ type: 'warning', icon: 'undo-2', msg: `معدل المرتجع مرتفع (${a.returnRate}%) - راجع جودة المنتج` });
+        if (a.netSaleRate < 30 && a.totalReceived > 0) alerts.push({ type: 'info', icon: 'trending-down', msg: `معدل البيع منخفض (${a.netSaleRate}%) - قد يحتاج عروض ترويجية` });
+        if (a.totalLeft <= (p.reorder_level || 0)) alerts.push({ type: 'error', icon: 'shopping-cart', msg: `المخزون (${a.totalLeft}) أقل من حد إعادة الطلب (${p.reorder_level}) - اطلب المزيد` });
+        if (a.totalLeft > 0 && a.netSaleRate > 80) alerts.push({ type: 'success', icon: 'check-circle', msg: 'منتج سريع الحركة - تأكد من توفر مخزون كافٍ' });
+        if (a.daysUntilStockout < 14 && a.daysUntilStockout < 999) alerts.push({ type: 'error', icon: 'calendar-x', msg: `المخزون سينفد خلال ${a.daysUntilStockout} يوم - اطلب الآن` });
+        if (a.monthlyGrowth > 20) alerts.push({ type: 'success', icon: 'trending-up', msg: `نمو ممتاز ${a.monthlyGrowth}% مقارنة بالشهر السابق` });
+        else if (a.monthlyGrowth < -20) alerts.push({ type: 'warning', icon: 'trending-down', msg: `انخفاض ${Math.abs(a.monthlyGrowth)}% مقارنة بالشهر السابق` });
+        if (a.realProfitMargin > 30) alerts.push({ type: 'success', icon: 'award', msg: `هامش ربح ممتاز (${a.realProfitMargin}%)` });
+        else if (a.realProfitMargin < 5 && a.avgSellingPrice > 0) alerts.push({ type: 'warning', icon: 'alert-circle', msg: `هامش ربح منخفض (${a.realProfitMargin}%) - راجع التسعير` });
 
         if (!alerts.length) {
           document.getElementById('smartAlerts').innerHTML = '<div class="empty-state"><i data-lucide="check-circle"></i><p>لا توجد تنبيهات</p></div>';
@@ -2576,27 +2565,24 @@
         const a = state.analytics;
         const p = state.product;
 
-        const costDiff = a.avgCostPrice - (p.default_price * 0.7);
-        const sellDiff = a.avgSellingPrice - p.default_price;
-
         document.getElementById('priceComparison').innerHTML = `
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
             <div style="padding:12px;background:var(--bg);border-radius:var(--radius-sm);text-align:center;">
               <div style="font-size:11px;color:var(--text-muted);font-weight:700;text-transform:uppercase;">سعر الشراء</div>
-              <div style="font-size:18px;font-weight:800;color:var(--info);margin-top:4px;">${Refad.format.money(a.avgCostPrice)}</div>
+              <div style="font-size:18px;font-weight:800;color:var(--info);margin-top:4px;">${SafeSettings.locale.formatMoney(a.avgCostPrice)}</div>
               <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">متوسط فعلي</div>
             </div>
             <div style="padding:12px;background:var(--bg);border-radius:var(--radius-sm);text-align:center;">
               <div style="font-size:11px;color:var(--text-muted);font-weight:700;text-transform:uppercase;">سعر البيع</div>
-              <div style="font-size:18px;font-weight:800;color:var(--success);margin-top:4px;">${Refad.format.money(a.avgSellingPrice)}</div>
+              <div style="font-size:18px;font-weight:800;color:var(--success);margin-top:4px;">${SafeSettings.locale.formatMoney(a.avgSellingPrice)}</div>
               <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">متوسط فعلي</div>
             </div>
           </div>
 
-          <div class="info-item"><span class="label">السعر الافتراضي</span><span class="value">${Refad.format.money(p.default_price)}</span></div>
-          <div class="info-item"><span class="label">متوسط البيع الفعلي</span><span class="value">${Refad.format.money(a.avgSellingPrice)}</span></div>
-          <div class="info-item"><span class="label">متوسط الشراء الفعلي</span><span class="value">${Refad.format.money(a.avgCostPrice)}</span></div>
-          <div class="info-item"><span class="label">الربح للوحدة</span><span class="value" style="color:var(--success);">${Refad.format.money(a.avgSellingPrice - a.avgCostPrice)}</span></div>
+          <div class="info-item"><span class="label">السعر الافتراضي</span><span class="value">${SafeSettings.locale.formatMoney(p.default_price)}</span></div>
+          <div class="info-item"><span class="label">متوسط البيع الفعلي</span><span class="value">${SafeSettings.locale.formatMoney(a.avgSellingPrice)}</span></div>
+          <div class="info-item"><span class="label">متوسط الشراء الفعلي</span><span class="value">${SafeSettings.locale.formatMoney(a.avgCostPrice)}</span></div>
+          <div class="info-item"><span class="label">الربح للوحدة</span><span class="value" style="color:var(--success);">${SafeSettings.locale.formatMoney(a.avgSellingPrice - a.avgCostPrice)}</span></div>
           <div class="info-item"><span class="label">هامش الربح الحقيقي</span><span class="value" style="color:${a.realProfitMargin > 20 ? 'var(--success)' : a.realProfitMargin > 10 ? 'var(--gold)' : 'var(--danger)'};">${a.realProfitMargin}%</span></div>
         `;
       }
@@ -2659,7 +2645,7 @@
       }
 
       // ============================================================
-      // 14) Discounts
+      // 13) Discounts
       // ============================================================
       function renderDiscounts() {
         const d = state.discounts || {
@@ -2749,7 +2735,7 @@
       }
 
       // ============================================================
-      // 15) Barcodes
+      // 14) Barcodes
       // ============================================================
       function renderBarcodes() {
         const body = document.getElementById('barcodesBody');
@@ -2928,7 +2914,7 @@
       }
 
       // ============================================================
-      // 16) Batches (with margin column)
+      // 15) Batches
       // ============================================================
       function renderBatches() {
         const body = document.getElementById('batchesBody');
@@ -2966,7 +2952,6 @@
             ? b.batch_barcodes.filter(Boolean).map(c => `<div style="font-family:monospace;font-size:11px;">${Refad.escapeHtml(c)}</div>`).join('')
             : '<span style="color:var(--text-muted);">—</span>';
 
-          // حساب هامش الربح
           const cost = Number(b.cost_price) || 0;
           const sale = Number(b.sale_price) || 0;
           const margin = cost > 0 ? Math.round(((sale - cost) / cost) * 100) : 0;
@@ -2987,8 +2972,8 @@
               </td>
               <td>${Refad.format.number(b.quantity_in || 0)}</td>
               <td><strong style="color:${b.quantity_left > 0 ? 'var(--success)' : 'var(--text-muted)'}">${Refad.format.number(b.quantity_left || 0)}</strong></td>
-              <td>${Refad.format.money(b.cost_price)}</td>
-              <td>${Refad.format.money(b.sale_price)}</td>
+              <td>${SafeSettings.locale.formatMoney(b.cost_price)}</td>
+              <td>${SafeSettings.locale.formatMoney(b.sale_price)}</td>
               <td>${marginTag}</td>
               <td>${Refad.format.date(b.expiry_date)}</td>
               <td>${expiryTag}</td>
@@ -3074,7 +3059,7 @@
       }
 
       // ============================================================
-      // 17) Merge Modal
+      // 16) Merge modal
       // ============================================================
       function openMergeModal() {
         const merged = state.batches.filter(b => b.merged);
@@ -3102,8 +3087,8 @@
               <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;font-size:12px;">
                 <div><span style="color:var(--text-muted);">الكمية الكلية:</span> <strong>${Refad.format.number(g.quantity_in)}</strong></div>
                 <div><span style="color:var(--text-muted);">المتبقي:</span> <strong>${Refad.format.number(g.quantity_left)}</strong></div>
-                <div><span style="color:var(--text-muted);">سعر الشراء:</span> <strong>${Refad.format.money(g.cost_price)}</strong></div>
-                <div><span style="color:var(--text-muted);">سعر البيع:</span> <strong>${Refad.format.money(g.sale_price)}</strong></div>
+                <div><span style="color:var(--text-muted);">سعر الشراء:</span> <strong>${SafeSettings.locale.formatMoney(g.cost_price)}</strong></div>
+                <div><span style="color:var(--text-muted);">سعر البيع:</span> <strong>${SafeSettings.locale.formatMoney(g.sale_price)}</strong></div>
                 <div><span style="color:var(--text-muted);">الصلاحية:</span> <strong>${Refad.format.date(g.expiry_date)}</strong></div>
               </div>
               <div style="margin-top:10px;font-size:11px;color:var(--text-muted);">
@@ -3126,7 +3111,7 @@
       }
 
       // ============================================================
-      // 18) Movements
+      // 17) Movements
       // ============================================================
       async function loadMovementReferences(movements) {
         const references = new Map();
@@ -3221,7 +3206,7 @@
               <td>${Refad.format.datetime(m.created_at)}</td>
               <td><span class="badge-tag ${t.cls}">${Refad.escapeHtml(t.label)}</span></td>
               <td><strong>${m.quantity > 0 ? '+' : ''}${Refad.format.number(m.quantity)}</strong></td>
-              <td>${m.unit_cost ? Refad.format.money(m.unit_cost) : '—'}</td>
+              <td>${m.unit_cost ? SafeSettings.locale.formatMoney(m.unit_cost) : '—'}</td>
               <td>${Refad.escapeHtml(reference?.party || '—')}</td>
               <td>${referenceLabel}</td>
               <td>${Refad.escapeHtml(m.notes || '—')}</td>
@@ -3231,13 +3216,12 @@
       }
 
       // ============================================================
-      // 19) Returns
+      // 18) Returns
       // ============================================================
       function renderReturns() {
         const body = document.getElementById('returnsBody');
         const r = state.returns || [];
 
-        // تحديث الإحصائيات
         const saleReturns = r.filter(x => x.type === 'sale_return');
         const purchaseReturns = r.filter(x => x.type === 'purchase_return');
 
@@ -3271,8 +3255,8 @@
               <td>${Refad.format.datetime(item.date)}</td>
               <td><span class="badge-tag ${t.cls}">${Refad.escapeHtml(t.label)}</span></td>
               <td><strong>${Refad.format.number(item.quantity)}</strong></td>
-              <td>${Refad.format.money(item.price)}</td>
-              <td>${Refad.format.money(item.total)}</td>
+              <td>${SafeSettings.locale.formatMoney(item.price)}</td>
+              <td>${SafeSettings.locale.formatMoney(item.total)}</td>
               <td>${item.reference ? Refad.escapeHtml(item.reference) : '—'}</td>
               <td>${Refad.escapeHtml(item.reason || '—')}</td>
             </tr>
@@ -3281,7 +3265,7 @@
       }
 
       // ============================================================
-      // 20) Edit product
+      // 19) Edit product
       // ============================================================
       function openEditModal() {
         const p = state.product;
@@ -3325,7 +3309,7 @@
       }
 
       // ============================================================
-      // 21) Modal helpers
+      // 20) Modal helpers
       // ============================================================
       function closeAllModals() {
         document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.remove('show'));
@@ -3335,9 +3319,6 @@
         document.querySelectorAll('[data-close]').forEach(btn => {
           btn.addEventListener('click', closeAllModals);
         });
-        document.addEventListener('keydown', e => {
-          if (e.key === 'Escape') closeAllModals();
-        });
         document.querySelectorAll('.modal-backdrop').forEach(m => {
           m.addEventListener('click', e => {
             if (e.target === m) closeAllModals();
@@ -3346,7 +3327,7 @@
       }
 
       // ============================================================
-      // 22) Tabs
+      // 21) Tabs
       // ============================================================
       function setupTabs() {
         document.querySelectorAll('.tab').forEach(tab => {
@@ -3361,7 +3342,205 @@
       }
 
       // ============================================================
-      // 23) Events
+      // 22) ✨ Quick Search
+      // ============================================================
+      const qsState = { index: -1, results: [] };
+
+      function openQuickSearch() {
+        const overlay = document.getElementById('quickSearchOverlay');
+        if (!overlay) return;
+        overlay.classList.add('show');
+        const input = document.getElementById('quickSearchInput');
+        input.value = '';
+        input.focus();
+        qsState.index = -1;
+        qsState.results = [];
+        renderQuickSearchResults('');
+      }
+
+      function closeQuickSearch() {
+        const overlay = document.getElementById('quickSearchOverlay');
+        if (overlay) overlay.classList.remove('show');
+      }
+
+      function renderQuickSearchResults(query) {
+        const container = document.getElementById('quickSearchResults');
+        if (!container) return;
+        const q = (query || '').toLowerCase().trim();
+
+        if (!q) {
+          container.innerHTML = '<div class="quick-search-empty">اكتب للبحث السريع...</div>';
+          qsState.results = [];
+          return;
+        }
+
+        // البحث في الحركات
+        const movementResults = state.movements
+          .filter(m =>
+            (m.notes || '').toLowerCase().includes(q) ||
+            (m.reference_type || '').toLowerCase().includes(q) ||
+            (m.movement_type || '').toLowerCase().includes(q)
+          )
+          .slice(0, 5)
+          .map(m => ({
+            type: 'movement',
+            id: m.id,
+            name: m.notes || m.movement_type,
+            sub: `${Refad.format.date(m.created_at)} • ${Refad.format.number(m.quantity)}`,
+            initial: '📦'
+          }));
+
+        // البحث في التشغيلات
+        const batchResults = state.batchesRaw
+          .filter(b =>
+            (b.batch_number || '').toLowerCase().includes(q) ||
+            (b.batch_barcode || '').toLowerCase().includes(q)
+          )
+          .slice(0, 5)
+          .map(b => ({
+            type: 'batch',
+            id: b.id,
+            name: b.batch_number || 'بدون رقم',
+            sub: `${Refad.format.number(b.quantity_left)} متبقي • ${SafeSettings.locale.formatMoney(b.cost_price)}`,
+            initial: '🗂️'
+          }));
+
+        // البحث في الباركود
+        const barcodeResults = state.barcodes
+          .filter(b => (b.barcode || '').toLowerCase().includes(q))
+          .slice(0, 3)
+          .map(b => ({
+            type: 'barcode',
+            id: b.id,
+            name: b.barcode,
+            sub: 'باركود المنتج',
+            initial: '🔖'
+          }));
+
+        qsState.results = [...movementResults, ...batchResults, ...barcodeResults];
+        qsState.index = qsState.results.length ? 0 : -1;
+
+        if (!qsState.results.length) {
+          container.innerHTML = '<div class="quick-search-empty">لا توجد نتائج</div>';
+          return;
+        }
+
+        container.innerHTML = qsState.results.map((r, i) => `
+          <div class="quick-search-item ${i === 0 ? 'selected' : ''}" data-idx="${i}">
+            <div class="qs-icon">${Refad.escapeHtml(r.initial)}</div>
+            <div class="qs-body">
+              <div class="qs-name">${Refad.escapeHtml(r.name)}</div>
+              <div class="qs-sub">${Refad.escapeHtml(r.sub)}</div>
+            </div>
+            <i data-lucide="arrow-left" style="width:16px;height:16px;color:var(--text-muted);"></i>
+          </div>
+        `).join('');
+
+        if (window.lucide) lucide.createIcons();
+        container.querySelectorAll('.quick-search-item').forEach(el => {
+          el.addEventListener('click', () => navigateQuickSearch(Number(el.dataset.idx)));
+        });
+      }
+
+      function navigateQuickSearch(idx) {
+        const r = qsState.results[idx];
+        if (!r) return;
+        closeQuickSearch();
+
+        if (r.type === 'movement') {
+          document.querySelector('.tab[data-tab="movements"]').click();
+        } else if (r.type === 'batch') {
+          document.querySelector('.tab[data-tab="batches"]').click();
+        } else if (r.type === 'barcode') {
+          document.querySelector('.tab[data-tab="barcodes"]').click();
+        }
+      }
+
+      function updateQuickSearchSelection() {
+        const container = document.getElementById('quickSearchResults');
+        if (!container) return;
+        container.querySelectorAll('.quick-search-item').forEach((el, i) => {
+          el.classList.toggle('selected', i === qsState.index);
+        });
+        const selected = container.querySelector('.quick-search-item.selected');
+        if (selected) selected.scrollIntoView({ block: 'nearest' });
+      }
+
+      function setupQuickSearch() {
+        const overlay = document.getElementById('quickSearchOverlay');
+        const input = document.getElementById('quickSearchInput');
+        if (!overlay || !input) return;
+
+        overlay.addEventListener('click', e => {
+          if (e.target === overlay) closeQuickSearch();
+        });
+
+        input.addEventListener('input', e => renderQuickSearchResults(e.target.value));
+
+        input.addEventListener('keydown', e => {
+          if (e.key === 'Escape') {
+            e.preventDefault();
+            closeQuickSearch();
+          } else if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            if (qsState.results.length) {
+              qsState.index = Math.min(qsState.index + 1, qsState.results.length - 1);
+              updateQuickSearchSelection();
+            }
+          } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            if (qsState.results.length) {
+              qsState.index = Math.max(qsState.index - 1, 0);
+              updateQuickSearchSelection();
+            }
+          } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (qsState.index >= 0) navigateQuickSearch(qsState.index);
+            else if (qsState.results.length) navigateQuickSearch(0);
+          }
+        });
+      }
+
+      // ============================================================
+      // 23) ✨ Realtime
+      // ============================================================
+      function setupRealtime() {
+        try {
+          state.realtimeChannel = Refad.sb
+            .channel('product-details-changes-' + productId)
+            .on('postgres_changes', {
+              event: '*', schema: 'public', table: 'products',
+              filter: 'id=eq.' + productId
+            }, () => { loadProduct().then(() => loadRelated()); })
+            .on('postgres_changes', {
+              event: '*', schema: 'public', table: 'batches',
+              filter: 'product_id=eq.' + productId
+            }, () => { loadRelated(); })
+            .on('postgres_changes', {
+              event: '*', schema: 'public', table: 'inventory_movements',
+              filter: 'product_id=eq.' + productId
+            }, () => { loadRelated(); })
+            .on('postgres_changes', {
+              event: '*', schema: 'public', table: 'product_barcodes',
+              filter: 'product_id=eq.' + productId
+            }, () => { loadRelated(); })
+            .subscribe();
+        } catch (e) {
+          console.warn('Realtime not available:', e.message);
+        }
+      }
+
+      function cleanupRealtime() {
+        try {
+          if (state.realtimeChannel) {
+            Refad.sb.removeChannel(state.realtimeChannel);
+            state.realtimeChannel = null;
+          }
+        } catch (e) {}
+      }
+
+      // ============================================================
+      // 24) Bind events
       // ============================================================
       function bindEvents() {
         document.getElementById('editProductBtn').addEventListener('click', openEditModal);
@@ -3419,6 +3598,24 @@
           renderBatches();
         });
 
+        // ✨ Global keyboard shortcuts
+        document.addEventListener('keydown', e => {
+          if (e.key === 'Escape') {
+            if (document.getElementById('quickSearchOverlay').classList.contains('show')) {
+              closeQuickSearch();
+              return;
+            }
+            closeAllModals();
+          }
+          if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+            e.preventDefault();
+            openQuickSearch();
+          }
+        });
+
+        setupQuickSearch();
+        window.addEventListener('beforeunload', cleanupRealtime);
+
         if (!canEdit) {
           document.getElementById('editProductBtn').style.display = 'none';
           document.getElementById('editPurchaseDiscount').style.display = 'none';
@@ -3428,15 +3625,17 @@
       }
 
       // ============================================================
-      // 24) Init
+      // 25) Init
       // ============================================================
       async function init() {
-        buildSidebar();
+        Refad.buildMenu('products.html');
         fillUser();
+        applyIdentity();
         setupTheme();
         setupSidebarMobile();
         setupUserMenu();
         setupNotifBtn();
+        setupRealtimeTheme();
         setupTabs();
         setupModals();
         bindEvents();
@@ -3445,22 +3644,17 @@
         if (!state.product) return;
         document.title = `${state.product.name} - رفاد`;
         await loadRelated();
+        setupRealtime();
 
-        Refad.registerServiceWorker();
+        if (Refad.registerServiceWorker) Refad.registerServiceWorker();
 
-        console.log('%c[Refad] Product details PRO ready', 'color:#14B8A6;font-weight:bold;font-size:14px');
-        console.log('%c[Refad] الميزات المُضافة:', 'color:#0B2C4D;font-weight:bold');
+        console.log('%c[Refad] Product Details v3 ready (Theme Sync + Settings + Quick Search + Realtime)', 'color:#14B8A6;font-weight:bold;font-size:14px');
+        console.log('%c[Refad] الميزات:', 'color:#0B2C4D;font-weight:bold');
         console.log('  ✅ 12 بطاقة إحصائية');
         console.log('  ✅ 6 بطاقات نظرة عامة');
         console.log('  ✅ تحليل ABC نسبي');
-        console.log('  ✅ معدل دوران دقيق');
-        console.log('  ✅ توقع نفاد المخزون');
-        console.log('  ✅ معدل النمو الشهري');
-        console.log('  ✅ مقارنة الأسعار');
-        console.log('  ✅ Top 10 عملاء وموردين');
-        console.log('  ✅ تنبيهات ذكية محسّنة');
-        console.log('  ✅ هامش ربح حقيقي');
-        console.log('  ✅ قيم المخزون المُجمّدة');
+        console.log('  ✅ Quick Search (Ctrl+K)');
+        console.log('  ✅ Realtime Sync');
       }
 
       if (document.readyState === 'loading') {

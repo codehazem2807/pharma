@@ -38,6 +38,7 @@
       --success: #10b981;
       --warning: #f59e0b;
       --info: #3b82f6;
+      --purple: #8b5cf6;
       --sidebar-bg: #0B2C4D;
       --sidebar-text: #cbd5e1;
       --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
@@ -59,6 +60,14 @@
       --sidebar-text: #94a3b8;
     }
 
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
     html, body {
       height: 100%;
       font-family: 'Cairo', sans-serif;
@@ -69,66 +78,49 @@
 
     body { display: flex; min-height: 100vh; overflow-x: hidden; }
 
-    /* ============================================================
-       Sidebar
-       ============================================================ */
+    /* ============ Sidebar ============ */
     .sidebar {
       width: var(--sidebar-w);
       height: 100vh;
       background: var(--sidebar-bg);
       color: var(--sidebar-text);
       position: fixed;
-      top: 0;
-      right: 0;
+      top: 0; right: 0;
       z-index: 100;
-      display: flex;
-      flex-direction: column;
+      display: flex; flex-direction: column;
       transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       box-shadow: -4px 0 20px rgba(0,0,0,0.1);
     }
-
     .sidebar-header {
       padding: 20px 22px;
       border-bottom: 1px solid rgba(255,255,255,0.08);
-      display: flex;
-      align-items: center;
-      gap: 14px;
+      display: flex; align-items: center; gap: 14px;
       height: var(--topbar-h);
       box-sizing: border-box;
     }
-
     .sidebar-logo {
-      width: 40px;
-      height: 40px;
+      width: 40px; height: 40px;
       background: linear-gradient(135deg, var(--accent), var(--accent-dark));
       border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: flex; align-items: center; justify-content: center;
       flex-shrink: 0;
       box-shadow: 0 4px 12px rgba(20,184,166,0.4);
+      overflow: hidden;
     }
     .sidebar-logo img { width: 70%; height: 70%; object-fit: contain; }
     .sidebar-logo .fallback { color: white; font-weight: 800; font-size: 18px; }
-
-    .sidebar-brand h2 { color: white; font-size: 20px; font-weight: 800; letter-spacing: -0.5px; line-height: 1.2; }
+    .sidebar-brand h2 { color: white; font-size: 20px; font-weight: 800; line-height: 1.2; }
     .sidebar-brand p { font-size: 10px; color: var(--sidebar-text); opacity: 0.7; font-weight: 500; margin-top: 2px; }
-
     .sidebar-nav { flex: 1; overflow-y: auto; padding: 12px 0; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.15) transparent; }
     .sidebar-nav::-webkit-scrollbar { width: 5px; }
     .sidebar-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 10px; }
-
     .nav-section { padding: 8px 20px 4px; font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 1px; margin-top: 8px; }
-
     .nav-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
+      display: flex; align-items: center; gap: 12px;
       padding: 11px 22px;
       color: var(--sidebar-text);
       text-decoration: none;
-      font-size: 14px;
-      font-weight: 500;
+      font-size: 14px; font-weight: 500;
       border-right: 3px solid transparent;
       transition: all 0.2s;
       position: relative;
@@ -141,54 +133,40 @@
     .nav-item .badge { margin-right: auto; background: var(--danger); color: white; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
     .nav-item .badge.teal { background: var(--accent); }
     .nav-item .badge.gold { background: var(--gold); }
+    .nav-item .badge.new { background: var(--purple); }
 
-    /* ============================================================
-       Main
-       ============================================================ */
+    /* ============ Main ============ */
     .main { flex: 1; margin-right: var(--sidebar-w); min-width: 0; display: flex; flex-direction: column; }
-
     .topbar {
       height: var(--topbar-h);
       background: var(--card);
       border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      gap: 16px;
+      display: flex; align-items: center; gap: 16px;
       padding: 0 24px;
-      position: sticky;
-      top: 0;
+      position: sticky; top: 0;
       z-index: 50;
       box-shadow: var(--shadow-sm);
     }
-
     .menu-toggle { display: none; background: transparent; border: none; color: var(--text); cursor: pointer; padding: 8px; border-radius: 8px; }
     .menu-toggle:hover { background: var(--bg); }
-
     .topbar-title { font-size: 18px; font-weight: 700; color: var(--text); flex-shrink: 0; }
     .topbar-actions { display: flex; align-items: center; gap: 8px; margin-right: auto; }
-
     .icon-btn {
-      width: 40px;
-      height: 40px;
+      width: 40px; height: 40px;
       border-radius: 10px;
       border: 1px solid var(--border);
       background: var(--card);
       color: var(--text);
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: flex; align-items: center; justify-content: center;
       position: relative;
       transition: all 0.2s;
     }
     .icon-btn:hover { border-color: var(--accent); color: var(--accent); }
     .icon-btn i, .icon-btn svg { width: 18px; height: 18px; }
     .icon-btn .dot { position: absolute; top: 8px; left: 8px; width: 8px; height: 8px; background: var(--danger); border-radius: 50%; border: 2px solid var(--card); }
-
     .user-menu {
-      display: flex;
-      align-items: center;
-      gap: 10px;
+      display: flex; align-items: center; gap: 10px;
       padding: 5px 12px 5px 5px;
       border-radius: 10px;
       cursor: pointer;
@@ -197,26 +175,18 @@
       background: var(--card);
     }
     .user-menu:hover { background: var(--bg); }
-
     .user-avatar {
-      width: 34px;
-      height: 34px;
+      width: 34px; height: 34px;
       border-radius: 9px;
       background: linear-gradient(135deg, var(--primary), var(--accent));
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-weight: 700;
-      font-size: 14px;
-      flex-shrink: 0;
-      overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-weight: 700; font-size: 14px;
+      flex-shrink: 0; overflow: hidden;
     }
     .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
     .user-info { display: flex; flex-direction: column; line-height: 1.2; }
     .user-info .name { font-size: 13px; font-weight: 700; color: var(--text); }
     .user-info .role { font-size: 11px; color: var(--text-muted); }
-
     .dropdown { position: absolute; top: calc(100% + 8px); left: 0; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: var(--shadow-lg); min-width: 200px; padding: 6px; opacity: 0; visibility: hidden; transform: translateY(-8px); transition: all 0.2s; z-index: 100; }
     .dropdown.show { opacity: 1; visibility: visible; transform: translateY(0); }
     .dropdown-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; color: var(--text); font-size: 13px; font-weight: 500; cursor: pointer; transition: background 0.15s; text-decoration: none; }
@@ -226,31 +196,22 @@
     .dropdown-item i { width: 16px; height: 16px; }
     .dropdown-divider { height: 1px; background: var(--border); margin: 6px 0; }
 
-    /* ============================================================
-       Content
-       ============================================================ */
+    /* ============ Content ============ */
     .content { padding: 24px; flex: 1; }
-
     .page-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      display: flex; align-items: center; justify-content: space-between;
       gap: 16px;
       margin-bottom: 20px;
       flex-wrap: wrap;
     }
-
     .page-head h1 { font-size: 24px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
     .page-head p { font-size: 13px; color: var(--text-muted); }
 
     .btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
+      display: inline-flex; align-items: center; gap: 8px;
       padding: 10px 18px;
       font-family: inherit;
-      font-size: 14px;
-      font-weight: 600;
+      font-size: 14px; font-weight: 600;
       border-radius: var(--radius-sm);
       border: none;
       cursor: pointer;
@@ -260,31 +221,60 @@
     }
     .btn:disabled { opacity: 0.6; cursor: not-allowed; }
     .btn i { width: 16px; height: 16px; }
-
     .btn-primary { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; }
     .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(20,184,166,0.35); }
-
     .btn-outline { background: var(--card); color: var(--text); border: 1px solid var(--border); }
     .btn-outline:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
-
     .btn-danger { background: var(--danger); color: white; }
     .btn-danger:hover:not(:disabled) { background: #b91c1c; }
-
     .btn-success { background: var(--success); color: white; }
     .btn-success:hover:not(:disabled) { background: #047857; }
-
     .btn-sm { padding: 6px 12px; font-size: 12px; }
 
-    /* ============================================================
-       Layout: Roles + Permissions
-       ============================================================ */
+    /* Stats */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      display: flex; align-items: center; gap: 12px;
+      transition: all 0.2s;
+      box-shadow: var(--shadow-sm);
+      cursor: pointer;
+    }
+    .stat-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: var(--shadow); }
+    .stat-card.active { border-color: var(--accent); background: linear-gradient(135deg, rgba(20,184,166,0.06), rgba(20,184,166,0.02)); }
+    .stat-icon {
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .stat-icon i { width: 20px; height: 20px; color: white; }
+    .stat-icon.blue   { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+    .stat-icon.teal   { background: linear-gradient(135deg, #14B8A6, #0d9488); }
+    .stat-icon.gold   { background: linear-gradient(135deg, #F59E0B, #d97706); }
+    .stat-icon.purple { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
+    .stat-body { flex: 1; min-width: 0; }
+    .stat-body .label { font-size: 10px; color: var(--text-muted); font-weight: 700; margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.4px; }
+    .stat-body .value { font-size: 20px; font-weight: 800; color: var(--text); line-height: 1; }
+    .stat-body .sub { font-size: 10px; color: var(--text-muted); margin-top: 3px; }
+
+    /* Layout */
     .perm-layout {
       display: grid;
-      grid-template-columns: 300px 1fr;
+      grid-template-columns: 320px 1fr;
       gap: 16px;
+      height: calc(100vh - var(--topbar-h) - 48px - 200px);
+      min-height: 500px;
     }
 
-    /* Roles List */
     .roles-card {
       background: var(--card);
       border: 1px solid var(--border);
@@ -292,7 +282,6 @@
       box-shadow: var(--shadow-sm);
       display: flex;
       flex-direction: column;
-      max-height: calc(100vh - var(--topbar-h) - 48px - 80px);
       overflow: hidden;
     }
 
@@ -302,10 +291,40 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 10px;
       flex-shrink: 0;
     }
     .roles-header h3 { font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
     .roles-header h3 i { width: 16px; height: 16px; color: var(--accent); }
+    .roles-header .count { font-size: 11px; color: var(--text-muted); font-weight: 700; }
+
+    .roles-search {
+      position: relative;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .roles-search input {
+      width: 100%;
+      padding: 8px 34px 8px 12px;
+      font-family: inherit;
+      font-size: 12.5px;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: 9px;
+      color: var(--text);
+      outline: none;
+      transition: all 0.2s;
+    }
+    .roles-search input:focus { border-color: var(--accent); background: var(--card); box-shadow: 0 0 0 3px rgba(20,184,166,0.1); }
+    .roles-search i { position: absolute; right: 22px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; color: var(--text-muted); pointer-events: none; }
+    .roles-search kbd {
+      position: absolute; left: 22px; top: 50%; transform: translateY(-50%);
+      font-family: 'Courier New', monospace; font-size: 9px;
+      padding: 1px 5px; background: var(--card); color: var(--text-muted);
+      border-radius: 4px; font-weight: 700; pointer-events: none;
+      border: 1px solid var(--border);
+    }
 
     .roles-list {
       flex: 1;
@@ -317,7 +336,7 @@
     .roles-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
 
     .role-item {
-      padding: 12px 14px;
+      padding: 10px 12px;
       border-radius: var(--radius-sm);
       cursor: pointer;
       transition: all 0.15s;
@@ -326,39 +345,60 @@
       align-items: center;
       gap: 10px;
       margin-bottom: 4px;
+      position: relative;
     }
     .role-item:hover { background: var(--bg); border-color: var(--border); }
     .role-item.active { background: rgba(20,184,166,0.08); border-color: var(--accent); }
     .role-item.active .role-item-name { color: var(--accent); }
 
     .role-icon {
-      width: 36px;
-      height: 36px;
+      width: 36px; height: 36px;
       border-radius: 9px;
       background: linear-gradient(135deg, var(--primary), var(--primary-light));
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: flex; align-items: center; justify-content: center;
       flex-shrink: 0;
     }
     .role-icon i { width: 18px; height: 18px; color: white; }
     .role-icon.admin { background: linear-gradient(135deg, #F59E0B, #d97706); }
     .role-icon.system { background: linear-gradient(135deg, #94a3b8, #64748b); }
+    .role-icon.custom { background: linear-gradient(135deg, var(--accent), var(--accent-dark)); }
 
     .role-item-body { flex: 1; min-width: 0; }
     .role-item-name { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
-    .role-item-sub { font-size: 11px; color: var(--text-muted); }
+    .role-item-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .role-item-sub .users-count {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 10px;
+      background: rgba(59,130,246,0.1);
+      color: var(--info);
+      padding: 1px 6px;
+      border-radius: 8px;
+      font-weight: 700;
+    }
+    .role-item-sub .users-count i { width: 9px; height: 9px; }
 
     .role-item-badge {
-      font-size: 10px;
-      font-weight: 700;
+      font-size: 9px;
+      font-weight: 800;
       padding: 2px 6px;
       border-radius: 8px;
       background: rgba(245,158,11,0.15);
       color: var(--warning);
+      letter-spacing: 0.5px;
+    }
+    .role-item-badge.system {
+      background: rgba(148,163,184,0.15);
+      color: var(--text-muted);
     }
 
-    /* Permissions Panel */
     .perms-card {
       background: var(--card);
       border: 1px solid var(--border);
@@ -366,12 +406,11 @@
       box-shadow: var(--shadow-sm);
       display: flex;
       flex-direction: column;
-      max-height: calc(100vh - var(--topbar-h) - 48px - 80px);
       overflow: hidden;
     }
 
     .perms-header {
-      padding: 16px 20px;
+      padding: 14px 18px;
       border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
@@ -380,8 +419,9 @@
       flex-shrink: 0;
       flex-wrap: wrap;
     }
+    .perms-header .info { flex: 1; min-width: 200px; }
     .perms-header .info h3 {
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 800;
       color: var(--text);
       display: flex;
@@ -393,24 +433,44 @@
     .perms-header .info p {
       font-size: 12px;
       color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .perms-header .info p .progress-mini {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .perms-header .info p .progress-mini .bar {
+      width: 80px;
+      height: 5px;
+      background: var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .perms-header .info p .progress-mini .bar > div {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--success));
+      transition: width 0.3s;
     }
 
     .perms-actions {
       display: flex;
-      gap: 8px;
+      gap: 6px;
       flex-wrap: wrap;
     }
 
     .perms-body {
       flex: 1;
       overflow-y: auto;
-      padding: 16px 20px;
+      padding: 16px 18px;
       min-height: 0;
     }
     .perms-body::-webkit-scrollbar { width: 8px; }
     .perms-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
 
-    /* Empty state */
     .perms-empty {
       display: flex;
       flex-direction: column;
@@ -432,7 +492,9 @@
       border-radius: var(--radius-sm);
       margin-bottom: 14px;
       overflow: hidden;
+      transition: all 0.2s;
     }
+    .perm-group:hover { border-color: var(--accent); }
 
     .perm-group-header {
       padding: 12px 16px;
@@ -442,7 +504,11 @@
       gap: 12px;
       border-bottom: 1px solid var(--border);
       background: var(--card);
+      cursor: pointer;
+      user-select: none;
     }
+    .perm-group.collapsed .perm-group-header { border-bottom: none; }
+    .perm-group.collapsed .perm-group-body { display: none; }
 
     .perm-group-title {
       display: flex;
@@ -451,28 +517,49 @@
       font-weight: 700;
       font-size: 14px;
       color: var(--text);
+      flex: 1;
+      min-width: 0;
     }
 
     .perm-group-icon {
-      width: 32px;
-      height: 32px;
+      width: 32px; height: 32px;
       border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: flex; align-items: center; justify-content: center;
       background: linear-gradient(135deg, var(--primary), var(--accent));
+      flex-shrink: 0;
     }
     .perm-group-icon i { width: 16px; height: 16px; color: white; }
 
+    .perm-group-count {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .perm-group-progress {
+      width: 60px;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .perm-group-progress > div {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--success));
+      transition: width 0.3s;
+    }
+
     .perm-group-actions {
       display: flex;
-      gap: 6px;
+      gap: 4px;
+      flex-shrink: 0;
     }
 
     .mini-btn {
-      padding: 4px 10px;
+      padding: 4px 8px;
       font-family: inherit;
-      font-size: 11px;
+      font-size: 10.5px;
       font-weight: 700;
       border-radius: 6px;
       border: 1px solid var(--border);
@@ -482,8 +569,9 @@
       transition: all 0.2s;
       white-space: nowrap;
     }
-    .mini-btn:hover { border-color: var(--accent); color: var(--accent); }
-    .mini-btn.danger:hover { border-color: var(--danger); color: var(--danger); }
+    .mini-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+    .mini-btn.danger:hover:not(:disabled) { border-color: var(--danger); color: var(--danger); }
+    .mini-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
     .perm-group-body {
       padding: 8px;
@@ -492,7 +580,6 @@
       gap: 6px;
     }
 
-    /* Permission Item */
     .perm-item {
       display: flex;
       align-items: center;
@@ -535,37 +622,11 @@
     }
 
     .perm-item.disabled {
-      opacity: 0.5;
+      opacity: 0.55;
       cursor: not-allowed;
+      background: rgba(148,163,184,0.05);
     }
     .perm-item.disabled:hover { border-color: var(--border); }
-
-    /* Stats bar */
-    .stats-bar {
-      display: flex;
-      gap: 16px;
-      padding: 12px 16px;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      margin-bottom: 12px;
-      flex-wrap: wrap;
-    }
-    .stat-mini { display: flex; align-items: center; gap: 8px; }
-    .stat-mini .icon {
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .stat-mini .icon i { width: 16px; height: 16px; color: white; }
-    .stat-mini .icon.teal { background: linear-gradient(135deg, #14B8A6, #0d9488); }
-    .stat-mini .icon.blue { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
-    .stat-mini .icon.gold { background: linear-gradient(135deg, #F59E0B, #d97706); }
-    .stat-mini .body .value { font-size: 16px; font-weight: 800; color: var(--text); line-height: 1; }
-    .stat-mini .body .label { font-size: 10px; color: var(--text-muted); font-weight: 600; margin-top: 2px; }
 
     /* Modal */
     .modal-backdrop {
@@ -575,14 +636,12 @@
       backdrop-filter: blur(4px);
       z-index: 200;
       display: none;
-      align-items: center;
-      justify-content: center;
+      align-items: center; justify-content: center;
       padding: 20px;
       opacity: 0;
       transition: opacity 0.2s;
     }
     .modal-backdrop.show { display: flex; opacity: 1; }
-
     .modal {
       background: var(--card);
       border-radius: var(--radius);
@@ -590,59 +649,41 @@
       width: 100%;
       max-width: 500px;
       max-height: 90vh;
-      display: flex;
-      flex-direction: column;
+      display: flex; flex-direction: column;
       transform: scale(0.95);
       transition: transform 0.2s;
       overflow: hidden;
     }
+    .modal.modal-lg { max-width: 700px; }
     .modal-backdrop.show .modal { transform: scale(1); }
-
     .modal-header {
       padding: 16px 20px;
       border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      display: flex; align-items: center; justify-content: space-between;
       gap: 12px;
       flex-shrink: 0;
     }
     .modal-header h3 { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
     .modal-header h3 i { width: 18px; height: 18px; color: var(--accent); }
-
     .modal-close {
-      width: 32px;
-      height: 32px;
+      width: 32px; height: 32px;
       border-radius: 8px;
       border: none;
       background: transparent;
       color: var(--text-muted);
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: flex; align-items: center; justify-content: center;
       transition: all 0.2s;
     }
     .modal-close:hover { background: var(--bg); color: var(--danger); }
     .modal-close i { width: 18px; height: 18px; }
-
-    .modal-body {
-      padding: 20px;
-      overflow-y: auto;
-      flex: 1;
-      min-height: 0;
-      scrollbar-width: thin;
-      scrollbar-color: var(--border) transparent;
-    }
+    .modal-body { padding: 20px; overflow-y: auto; flex: 1; min-height: 0; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
     .modal-body::-webkit-scrollbar { width: 8px; }
     .modal-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
-
     .modal-footer {
       padding: 14px 20px;
       border-top: 1px solid var(--border);
-      display: flex;
-      gap: 10px;
-      justify-content: flex-end;
+      display: flex; gap: 10px; justify-content: flex-end;
       background: var(--bg);
       flex-shrink: 0;
     }
@@ -657,7 +698,8 @@
     }
     .form-group label .req { color: var(--danger); }
     .form-group input,
-    .form-group textarea {
+    .form-group textarea,
+    .form-group select {
       width: 100%;
       padding: 10px 14px;
       font-family: inherit;
@@ -670,16 +712,144 @@
       transition: all 0.2s;
     }
     .form-group input:focus,
-    .form-group textarea:focus {
+    .form-group textarea:focus,
+    .form-group select:focus {
       border-color: var(--accent);
       background: var(--card);
       box-shadow: 0 0 0 3px rgba(20,184,166,0.1);
     }
     .form-group textarea { resize: vertical; min-height: 70px; }
+    .form-hint { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
 
-    /* Overlay (mobile) */
+    .preset-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .preset-card {
+      padding: 10px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: 9px;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-align: center;
+      background: var(--card);
+      position: relative;
+    }
+    .preset-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+    .preset-card.selected { border-color: var(--accent); background: rgba(20,184,166,0.06); }
+    .preset-card .icon {
+      width: 34px; height: 34px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 6px;
+    }
+    .preset-card .icon i { width: 16px; height: 16px; color: white; }
+    .preset-card .name { font-size: 12px; font-weight: 800; color: var(--text); }
+    .preset-card .sub { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+    .preset-card .mods {
+      font-size: 9px;
+      color: var(--accent);
+      margin-top: 4px;
+      font-weight: 700;
+    }
+
+    /* Overlay */
     .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; opacity: 0; transition: opacity 0.3s; }
     .overlay.show { display: block; opacity: 1; }
+
+    /* Quick Search */
+    .quick-search-overlay {
+      position: fixed; inset: 0;
+      z-index: 600;
+      display: none;
+      align-items: flex-start; justify-content: center;
+      padding: 80px 20px 20px;
+      background: rgba(15,23,42,0.6);
+      backdrop-filter: blur(6px);
+      animation: qsFadeIn 0.2s;
+    }
+    .quick-search-overlay.show { display: flex; }
+    @keyframes qsFadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes qsSlideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .quick-search-box {
+      width: min(600px, 100%);
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+      animation: qsSlideUp 0.25s;
+    }
+    .quick-search-input-wrap { position: relative; }
+    .quick-search-input {
+      width: 100%;
+      padding: 18px 60px 18px 18px;
+      font-family: inherit;
+      font-size: 16px; font-weight: 600;
+      background: var(--card);
+      border: none;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+      outline: none;
+    }
+    .quick-search-input-wrap > i {
+      position: absolute; right: 20px; top: 50%;
+      transform: translateY(-50%);
+      width: 22px; height: 22px;
+      color: var(--accent);
+      pointer-events: none;
+    }
+    .quick-search-kbd {
+      position: absolute; left: 18px; top: 50%;
+      transform: translateY(-50%);
+      font-size: 10px;
+      padding: 3px 8px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-muted);
+      font-family: 'Courier New', monospace;
+      font-weight: 700;
+    }
+    .quick-search-results { max-height: 400px; overflow-y: auto; padding: 8px; }
+    .quick-search-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .quick-search-item:hover, .quick-search-item.selected { background: rgba(20,184,166,0.1); }
+    .quick-search-item .qs-icon {
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: white;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 15px;
+      flex-shrink: 0;
+    }
+    .quick-search-item .qs-body { flex: 1; min-width: 0; }
+    .quick-search-item .qs-name { font-weight: 700; font-size: 14px; color: var(--text); }
+    .quick-search-item .qs-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .quick-search-empty { text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 13px; }
+    .quick-search-footer {
+      padding: 10px 16px;
+      border-top: 1px solid var(--border);
+      background: var(--bg);
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 11px; color: var(--text-muted);
+    }
+    .quick-search-footer kbd {
+      font-family: 'Courier New', monospace;
+      padding: 2px 6px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-weight: 700;
+    }
 
     /* Responsive */
     @media (max-width: 1024px) {
@@ -688,19 +858,23 @@
       .main { margin-right: 0; }
       .menu-toggle { display: flex; }
       .user-info { display: none; }
-      .perm-layout { grid-template-columns: 1fr; }
-      .roles-card, .perms-card { max-height: none; }
+      .perm-layout { grid-template-columns: 1fr; height: auto; }
+      .roles-card { max-height: 400px; }
     }
-
     @media (max-width: 640px) {
       .content { padding: 16px; }
       .topbar { padding: 0 14px; gap: 10px; }
       .topbar-title { font-size: 15px; }
       .page-head { flex-direction: column; align-items: stretch; }
       .page-head h1 { font-size: 20px; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
       .modal-footer { flex-direction: column-reverse; }
       .modal-footer .btn { width: 100%; justify-content: center; }
       .perm-group-body { grid-template-columns: 1fr; }
+      .perms-actions { width: 100%; }
+      .perms-actions .btn { flex: 1; justify-content: center; }
+      .roles-search kbd { display: none; }
+      .quick-search-overlay { padding: 20px 10px; }
     }
   </style>
 </head>
@@ -709,12 +883,12 @@
   <!-- Sidebar -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
-      <div class="sidebar-logo">
-        <img src="logo.png" alt="رفاد" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=fallback>R</span>';">
+      <div class="sidebar-logo" id="sidebarLogo">
+        <img src="logo.png" alt="رفاد" id="sidebarLogoImg" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=fallback>R</span>';">
       </div>
       <div class="sidebar-brand">
-        <h2>رفاد</h2>
-        <p>نظام إدارة الأدوية</p>
+        <h2 id="sidebarBrandName">رفاد</h2>
+        <p id="sidebarBrandDesc">نظام إدارة الأدوية</p>
       </div>
     </div>
     <nav class="sidebar-nav" id="sidebarNav"></nav>
@@ -724,7 +898,6 @@
 
   <!-- Main -->
   <div class="main">
-
     <header class="topbar">
       <button class="menu-toggle" id="menuToggle"><i data-lucide="menu"></i></button>
       <div class="topbar-title">الصلاحيات</div>
@@ -763,9 +936,51 @@
           <p>إدارة الأدوار وتحديد صلاحيات كل دور</p>
         </div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn btn-outline btn-sm" id="exportBtn">
+            <i data-lucide="download"></i> تصدير
+          </button>
+          <button class="btn btn-outline btn-sm" id="importBtn">
+            <i data-lucide="upload"></i> استيراد
+          </button>
           <button class="btn btn-primary" id="addRoleBtn">
             <i data-lucide="plus"></i> دور جديد
           </button>
+        </div>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="stats-grid">
+        <div class="stat-card" data-stat-filter="all">
+          <div class="stat-icon blue"><i data-lucide="shield"></i></div>
+          <div class="stat-body">
+            <div class="label">عدد الأدوار</div>
+            <div class="value" id="statRoles">0</div>
+            <div class="sub" id="statRolesSub">—</div>
+          </div>
+        </div>
+        <div class="stat-card" data-stat-filter="perms">
+          <div class="stat-icon teal"><i data-lucide="key"></i></div>
+          <div class="stat-body">
+            <div class="label">الصلاحيات المتاحة</div>
+            <div class="value" id="statPerms">0</div>
+            <div class="sub">في النظام</div>
+          </div>
+        </div>
+        <div class="stat-card" data-stat-filter="users">
+          <div class="stat-icon gold"><i data-lucide="users"></i></div>
+          <div class="stat-body">
+            <div class="label">إجمالي الموظفين</div>
+            <div class="value" id="statUsers">0</div>
+            <div class="sub">بأدوار</div>
+          </div>
+        </div>
+        <div class="stat-card" data-stat-filter="norole">
+          <div class="stat-icon purple"><i data-lucide="user-check"></i></div>
+          <div class="stat-body">
+            <div class="label">بدون دور</div>
+            <div class="value" id="statNoRole">0</div>
+            <div class="sub">يحتاج تعيين</div>
+          </div>
         </div>
       </div>
 
@@ -775,7 +990,12 @@
         <div class="roles-card">
           <div class="roles-header">
             <h3><i data-lucide="shield"></i> الأدوار</h3>
-            <span id="rolesCount" style="font-size:12px;color:var(--text-muted);font-weight:700;">—</span>
+            <span class="count" id="rolesCount">—</span>
+          </div>
+          <div class="roles-search">
+            <input type="text" id="roleSearchInput" placeholder="ابحث في الأدوار...">
+            <i data-lucide="search"></i>
+            <kbd>Ctrl+K</kbd>
           </div>
           <div class="roles-list" id="rolesList">
             <div style="padding:30px 20px;text-align:center;color:var(--text-muted);font-size:13px;">
@@ -792,6 +1012,9 @@
               <p id="permsRoleDesc">—</p>
             </div>
             <div class="perms-actions">
+              <button class="btn btn-outline btn-sm" id="copyFromBtn" title="نسخ من دور آخر">
+                <i data-lucide="copy"></i> نسخ من
+              </button>
               <button class="btn btn-outline btn-sm" id="selectAllBtn">
                 <i data-lucide="check-square"></i> تحديد الكل
               </button>
@@ -833,7 +1056,7 @@
           <div class="form-group">
             <label>الاسم بالإنجليزية <span class="req">*</span></label>
             <input type="text" name="name" required maxlength="60" dir="ltr" placeholder="cashier">
-            <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">يُستخدم في النظام (بدون مسافات)</div>
+            <div class="form-hint">يُستخدم في النظام (بدون مسافات)</div>
           </div>
           <div class="form-group">
             <label>الاسم بالعربية <span class="req">*</span></label>
@@ -842,6 +1065,11 @@
           <div class="form-group">
             <label>الوصف</label>
             <textarea name="description" maxlength="200" placeholder="وصف مختصر للدور..."></textarea>
+          </div>
+
+          <div class="form-group" id="presetGroup">
+            <label>ابدأ من قالب جاهز (اختياري)</label>
+            <div class="preset-grid" id="presetGrid"></div>
           </div>
         </div>
         <div class="modal-footer">
@@ -854,11 +1082,110 @@
     </div>
   </div>
 
+  <!-- Modal: Copy from -->
+  <div class="modal-backdrop" id="copyModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3><i data-lucide="copy"></i> نسخ الصلاحيات من دور آخر</h3>
+        <button class="modal-close" data-close><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px;">
+          اختر الدور اللي عايز تنسخ صلاحياته. سيتم استبدال صلاحيات الدور الحالي.
+        </p>
+        <div id="copyFromList"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" data-close>إلغاء</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Import -->
+  <div class="modal-backdrop" id="importModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3><i data-lucide="upload"></i> استيراد صلاحيات</h3>
+        <button class="modal-close" data-close><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px;">
+          الصق محتوى JSON اللي تم تصديره سابقاً.
+        </p>
+        <div class="form-group">
+          <textarea id="importText" rows="10" placeholder='{"roles": [...]}' style="font-family:monospace;font-size:11px;"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" data-close>إلغاء</button>
+        <button type="button" class="btn btn-primary" id="doImportBtn">
+          <i data-lucide="check"></i> استيراد
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ✨ Quick Search Overlay -->
+  <div class="quick-search-overlay" id="quickSearchOverlay">
+    <div class="quick-search-box">
+      <div class="quick-search-input-wrap">
+        <input type="text" class="quick-search-input" id="quickSearchInput" placeholder="ابحث في الأدوار..." autocomplete="off">
+        <i data-lucide="search"></i>
+        <span class="quick-search-kbd">ESC</span>
+      </div>
+      <div class="quick-search-results" id="quickSearchResults">
+        <div class="quick-search-empty">اكتب للبحث السريع...</div>
+      </div>
+      <div class="quick-search-footer">
+        <span><kbd>↑</kbd> <kbd>↓</kbd> للتنقل</span>
+        <span><kbd>Enter</kbd> للفتح</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       SCRIPTS — الترتيب مهم جداً
+       ============================================================ -->
   <script src="refad-core.js"></script>
   <script src="refad-auth.js"></script>
+  <script src="refad-theme-sync.js"></script>
+  <script src="refad-settings.js"></script>
+
   <script>
     (function () {
       'use strict';
+
+      // ============================================================
+      // 0) Safe Settings Wrapper
+      // ============================================================
+      const SafeSettings = {
+        identity: {
+          getSystemName: function () {
+            try {
+              if (window.RefadSettings?.identity?.getSystemName) {
+                return RefadSettings.identity.getSystemName();
+              }
+            } catch (e) {}
+            return 'رفاد';
+          },
+          getTagline: function () {
+            try {
+              if (window.RefadSettings?.identity?.getTagline) {
+                return RefadSettings.identity.getTagline();
+              }
+            } catch (e) {}
+            return 'نظام إدارة الأدوية';
+          },
+          getLogoUrl: function () {
+            try {
+              if (window.RefadSettings?.identity?.getLogoUrl) {
+                return RefadSettings.identity.getLogoUrl();
+              }
+            } catch (e) {}
+            return null;
+          }
+        }
+      };
 
       // ============================================================
       // 1) Guard
@@ -872,12 +1199,21 @@
       const state = {
         roles: [],
         permissions: [],
-        rolePermissions: {},   // { role_id: Set(permission_id) }
+        rolePermissions: {},
+        roleUsersCount: {},
         selectedRoleId: null,
-        editingRoleId: null
+        editingRoleId: null,
+        searchTerm: '',
+        selectedPreset: null,
+        lastSelectedRole: localStorage.getItem('refad_last_selected_role'),
+        quickSearchIndex: -1,
+        quickSearchResults: [],
+        realtimeChannel: null,
+        totalUsers: 0,
+        noRoleUsers: 0
       };
 
-      // Module icons
+      // Module config
       const MODULE_ICONS = {
         'products': 'package',
         'purchases': 'clipboard-list',
@@ -892,7 +1228,14 @@
         'reports': 'bar-chart-3',
         'chat': 'message-circle',
         'settings': 'settings',
-        'admin': 'shield'
+        'admin': 'shield',
+        'notifications': 'bell',
+        'cheques': 'file-check-2',
+        'payments': 'banknote',
+        'accounts': 'landmark',
+        'sales_reps': 'user-check',
+        'returns': 'undo-2',
+        'credit_notes': 'file-text'
       };
 
       const MODULE_NAMES_AR = {
@@ -909,104 +1252,106 @@
         'reports': 'التقارير',
         'chat': 'الشات',
         'settings': 'الإعدادات',
-        'admin': 'الأدمن'
+        'admin': 'الأدمن',
+        'notifications': 'الإشعارات',
+        'cheques': 'الشيكات',
+        'payments': 'المدفوعات',
+        'accounts': 'الحسابات',
+        'sales_reps': 'المندوبين',
+        'returns': 'المرتجعات',
+        'credit_notes': 'الإشعارات الدائنة'
+      };
+
+      // Presets
+      const PRESETS = {
+        cashier: {
+          label: 'كاشير',
+          icon: 'shopping-cart',
+          modules: ['sales', 'customers', 'products'],
+          description: 'يبيع في POS ويشوف العملاء'
+        },
+        accountant: {
+          label: 'محاسب',
+          icon: 'calculator',
+          modules: ['accounts', 'payments', 'cheques', 'credit_notes', 'expenses', 'reports'],
+          description: 'يدير الحسابات والمدفوعات'
+        },
+        warehouse: {
+          label: 'أمين مخزن',
+          icon: 'warehouse',
+          modules: ['inventory', 'products', 'purchases', 'suppliers'],
+          description: 'يدير المخزون والاستلامات'
+        },
+        pharmacist: {
+          label: 'صيدلي',
+          icon: 'pill',
+          modules: ['sales', 'products', 'customers', 'inventory'],
+          description: 'يبيع ويتعامل مع الأصناف'
+        },
+        hr: {
+          label: 'موارد بشرية',
+          icon: 'user-cog',
+          modules: ['employees', 'attendance', 'payroll'],
+          description: 'يدير الموظفين والحضور'
+        },
+        manager: {
+          label: 'مدير',
+          icon: 'briefcase',
+          modules: ['products', 'purchases', 'sales', 'inventory', 'suppliers', 'customers', 'employees', 'attendance', 'payroll', 'expenses', 'reports', 'chat', 'notifications', 'settings'],
+          description: 'كل شيء ما عدا الأدمن'
+        }
       };
 
       // ============================================================
-      // 3) Sidebar
-      // ============================================================
-      const MENU = [
-        { section: 'الرئيسية', items: [
-          { label: 'لوحة التحكم', icon: 'layout-dashboard', href: 'dashboard.html' },
-          { label: 'الشات', icon: 'message-circle', href: 'chat.html', permission: 'chat.use' },
-          { label: 'الإشعارات', icon: 'bell', href: 'notifications.html', permission: 'notifications.view' }
-        ]},
-        { section: 'العمليات', items: [
-          { label: 'الأصناف', icon: 'package', href: 'products.html', permission: 'products.view' },
-          { label: 'المخزون', icon: 'warehouse', href: 'inventory.html', permission: 'inventory.view' },
-          { label: 'طلبات الشراء', icon: 'clipboard-list', href: 'purchase-requests.html', permission: 'purchases.view' },
-          { label: 'الاستلامات', icon: 'package-check', href: 'receipts.html', permission: 'purchases.receive' },
-          { label: 'طلبات البيع', icon: 'shopping-cart', href: 'sales-orders.html', permission: 'sales.view' },
-          { label: 'نقطة البيع', icon: 'scan-barcode', href: 'pos.html', permission: 'sales.pos', badge: 'POS', badgeClass: 'teal' },
-          { label: 'الفواتير', icon: 'receipt', href: 'invoices.html', permission: 'sales.view' }
-        ]},
-        { section: 'الأطراف', items: [
-          { label: 'الموردين', icon: 'truck', href: 'suppliers.html', permission: 'suppliers.view' },
-          { label: 'العملاء', icon: 'users', href: 'customers.html', permission: 'customers.view' }
-        ]},
-        { section: 'المخزون', items: [
-          { label: 'الجرد', icon: 'clipboard-check', href: 'stocktake.html', permission: 'inventory.stocktake' },
-          { label: 'التسويات', icon: 'sliders-horizontal', href: 'adjustments.html', permission: 'inventory.adjust' }
-        ]},
-        { section: 'الموارد البشرية', items: [
-          { label: 'الموظفين', icon: 'user-cog', href: 'employees.html', permission: 'employees.view' },
-          { label: 'الصلاحيات', icon: 'shield-check', href: 'permissions.html', permission: 'permissions.manage' },
-          { label: 'الحضور', icon: 'calendar-check', href: 'attendance.html', permission: 'attendance.view' },
-          { label: 'الرواتب', icon: 'wallet', href: 'payroll.html', permission: 'payroll.view' }
-        ]},
-        { section: 'المالية', items: [
-          { label: 'المصاريف', icon: 'banknote', href: 'expenses.html', permission: 'expenses.view' },
-          { label: 'التقارير', icon: 'bar-chart-3', href: 'reports.html', permission: 'reports.view' }
-        ]},
-        { section: 'النظام', items: [
-          { label: 'إعدادات الشركة', icon: 'settings', href: 'company-settings.html', permission: 'settings.view' },
-          { label: 'شاشة الأدمن', icon: 'shield', href: 'admin.html', permission: 'admin.full', badge: 'Admin', badgeClass: 'gold' }
-        ]}
-      ];
-
-      function buildSidebar() {
-        const nav = document.getElementById('sidebarNav');
-        const currentPage = 'permissions.html';
-        const frag = document.createDocumentFragment();
-        MENU.forEach(group => {
-          const allowed = group.items.filter(it => !it.permission || Refad.Session.has(it.permission));
-          if (!allowed.length) return;
-          frag.appendChild(Refad.el('div', { class: 'nav-section' }, group.section));
-          allowed.forEach(item => {
-            const a = Refad.el('a', {
-              href: item.href,
-              class: 'nav-item' + (item.href === currentPage ? ' active' : '')
-            });
-            a.innerHTML = `<i data-lucide="${item.icon}"></i><span>${Refad.escapeHtml(item.label)}</span>${item.badge ? `<span class="badge ${item.badgeClass || ''}">${item.badge}</span>` : ''}`;
-            frag.appendChild(a);
-          });
-        });
-        nav.innerHTML = '';
-        nav.appendChild(frag);
-        if (window.lucide) lucide.createIcons();
-      }
-
-      // ============================================================
-      // 4) UI helpers
+      // 3) UI helpers
       // ============================================================
       function fillUser() {
         const av = document.getElementById('userAvatar');
         const initial = (session.full_name || '؟').trim().charAt(0);
-        if (session.avatar_url) av.innerHTML = `<img src="${Refad.escapeHtml(session.avatar_url)}" alt="">`;
+        if (session.avatar_url) av.innerHTML = '<img src="' + Refad.escapeHtml(session.avatar_url) + '" alt="">';
         else av.textContent = initial;
         document.getElementById('userName').textContent = session.full_name;
         document.getElementById('userRole').textContent = Refad.Session.has('company.owner') ? 'صاحب الشركة' : 'موظف';
       }
 
+      function applyIdentity() {
+        const name = SafeSettings.identity.getSystemName();
+        const tagline = SafeSettings.identity.getTagline();
+        const logoUrl = SafeSettings.identity.getLogoUrl();
+        const brandName = document.getElementById('sidebarBrandName');
+        const brandDesc = document.getElementById('sidebarBrandDesc');
+        const logoImg = document.getElementById('sidebarLogoImg');
+        if (brandName) brandName.textContent = name;
+        if (brandDesc) brandDesc.textContent = tagline;
+        if (logoImg && logoUrl) {
+          logoImg.src = logoUrl;
+          logoImg.onerror = function () {
+            this.style.display = 'none';
+            const parent = this.parentElement;
+            if (parent) parent.innerHTML = '<span class="fallback">' + (name.charAt(0) || 'R') + '</span>';
+          };
+        }
+      }
+
       function setupTheme() {
         const btn = document.getElementById('themeToggle');
         const icon = document.getElementById('themeIcon');
-        const refresh = () => {
+        const refresh = function () {
           const isDark = Refad.theme.get() === 'dark';
           icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
           if (window.lucide) lucide.createIcons();
         };
         refresh();
-        btn.addEventListener('click', () => { Refad.theme.toggle(); refresh(); });
+        btn.addEventListener('click', function () { Refad.theme.toggle(); refresh(); });
       }
 
       function setupSidebarMobile() {
         const sb = document.getElementById('sidebar');
         const ov = document.getElementById('overlay');
-        document.getElementById('menuToggle').addEventListener('click', () => {
+        document.getElementById('menuToggle').addEventListener('click', function () {
           sb.classList.add('open'); ov.classList.add('show');
         });
-        ov.addEventListener('click', () => {
+        ov.addEventListener('click', function () {
           sb.classList.remove('open'); ov.classList.remove('show');
         });
       }
@@ -1014,10 +1359,10 @@
       function setupUserMenu() {
         const m = document.getElementById('userMenu');
         const d = document.getElementById('userDropdown');
-        m.addEventListener('click', e => { e.stopPropagation(); d.classList.toggle('show'); });
-        document.addEventListener('click', () => d.classList.remove('show'));
-        d.addEventListener('click', e => e.stopPropagation());
-        document.getElementById('logoutBtn').addEventListener('click', async () => {
+        m.addEventListener('click', function (e) { e.stopPropagation(); d.classList.toggle('show'); });
+        document.addEventListener('click', function () { d.classList.remove('show'); });
+        d.addEventListener('click', function (e) { e.stopPropagation(); });
+        document.getElementById('logoutBtn').addEventListener('click', async function () {
           if (await Refad.alert.confirm('تسجيل الخروج', 'هل تريد الخروج؟', 'خروج')) {
             await Refad.Auth.logout();
           }
@@ -1025,17 +1370,23 @@
       }
 
       function setupNotifBtn() {
-        document.getElementById('notifBtn').addEventListener('click', () => {
+        document.getElementById('notifBtn').addEventListener('click', function () {
           window.location.href = 'notifications.html';
         });
       }
 
+      function setupRealtimeTheme() {
+        window.addEventListener('refad:theme-changed', () => {
+          applyIdentity();
+        });
+      }
+
       // ============================================================
-      // 5) Load data
+      // 4) Load data
       // ============================================================
-      async function loadAll() {
+      async function loadAll(silent) {
         try {
-          const [roles, permissions, rolePerms] = await Promise.all([
+          const results = await Promise.all([
             Refad.db.select('roles', {
               columns: 'id, name, name_ar, description, is_system, created_at',
               eq: { company_id: session.company_id },
@@ -1047,72 +1398,110 @@
             }),
             Refad.db.select('role_permissions', {
               columns: 'role_id, permission_id'
+            }),
+            Refad.db.select('users', {
+              columns: 'id, role_id, is_active',
+              eq: { company_id: session.company_id }
             })
           ]);
 
-          state.roles = roles;
-          state.permissions = permissions.filter(permission => permission.code !== 'admin.full');
+          state.roles = results[0];
+          state.permissions = results[1].filter(function (p) { return p.code !== 'admin.full'; });
 
-          // Group role_permissions by role_id
           state.rolePermissions = {};
-          rolePerms.forEach(rp => {
-            if (!state.rolePermissions[rp.role_id]) {
-              state.rolePermissions[rp.role_id] = new Set();
-            }
+          results[2].forEach(function (rp) {
+            if (!state.rolePermissions[rp.role_id]) state.rolePermissions[rp.role_id] = new Set();
             state.rolePermissions[rp.role_id].add(rp.permission_id);
           });
 
+          state.roleUsersCount = {};
+          state.totalUsers = 0;
+          state.noRoleUsers = 0;
+          results[3].forEach(function (u) {
+            if (u.is_active === false) return;
+            state.totalUsers++;
+            if (u.role_id) {
+              state.roleUsersCount[u.role_id] = (state.roleUsersCount[u.role_id] || 0) + 1;
+            } else {
+              state.noRoleUsers++;
+            }
+          });
+
+          renderStats();
           renderRolesList();
           updateRolesCount();
+
+          if (!silent && state.selectedRoleId) {
+            renderPermissionsPanel();
+          }
         } catch (e) {
           console.error('[Permissions] load failed:', e);
-          Refad.toast.error('تعذّر التحميل: ' + e.message);
+          if (!silent) Refad.toast.error('تعذّر التحميل: ' + e.message);
         }
+      }
+
+      function renderStats() {
+        document.getElementById('statRoles').textContent = Refad.format.number(state.roles.length);
+        document.getElementById('statRolesSub').textContent = state.roles.filter(function (r) { return !r.is_system; }).length + ' مخصص';
+        document.getElementById('statPerms').textContent = Refad.format.number(state.permissions.length);
+        document.getElementById('statUsers').textContent = Refad.format.number(state.totalUsers);
+        document.getElementById('statNoRole').textContent = Refad.format.number(state.noRoleUsers);
       }
 
       function updateRolesCount() {
-        document.getElementById('rolesCount').textContent = `${state.roles.length} دور`;
+        document.getElementById('rolesCount').textContent = state.roles.length + ' دور';
       }
 
       // ============================================================
-      // 6) Render roles list
+      // 5) Render roles list
       // ============================================================
       function renderRolesList() {
         const list = document.getElementById('rolesList');
-        if (!state.roles.length) {
-          list.innerHTML = `
-            <div style="padding:30px 20px;text-align:center;color:var(--text-muted);font-size:13px;">
-              لا توجد أدوار بعد
-            </div>
-          `;
+        const q = state.searchTerm.toLowerCase();
+
+        let roles = state.roles.slice();
+        if (q) {
+          roles = roles.filter(function (r) {
+            return (r.name || '').toLowerCase().includes(q) ||
+                   (r.name_ar || '').toLowerCase().includes(q) ||
+                   (r.description || '').toLowerCase().includes(q);
+          });
+        }
+
+        if (!roles.length) {
+          list.innerHTML = '<div style="padding:30px 20px;text-align:center;color:var(--text-muted);font-size:13px;">' +
+            (q ? 'لا توجد نتائج' : 'لا توجد أدوار بعد') +
+          '</div>';
           return;
         }
 
-        list.innerHTML = state.roles.map(r => {
+        list.innerHTML = roles.map(function (r) {
           const isAdmin = r.name === 'admin';
-          const iconCls = isAdmin ? 'admin' : (r.is_system ? 'system' : '');
-          const permCount = (state.rolePermissions[r.id]?.size) || 0;
+          const iconCls = isAdmin ? 'admin' : (r.is_system ? 'system' : 'custom');
+          const permCount = (state.rolePermissions[r.id] && state.rolePermissions[r.id].size) || 0;
           const totalPerms = state.permissions.length;
+          const usersCount = state.roleUsersCount[r.id] || 0;
+          const badge = isAdmin ? 'Admin' : (r.is_system ? 'نظام' : null);
 
-          return `
-            <div class="role-item ${state.selectedRoleId === r.id ? 'active' : ''}" data-role-id="${r.id}">
-              <div class="role-icon ${iconCls}">
-                <i data-lucide="${isAdmin ? 'shield' : 'shield-check'}"></i>
-              </div>
-              <div class="role-item-body">
-                <div class="role-item-name">${Refad.escapeHtml(r.name_ar || r.name)}</div>
-                <div class="role-item-sub">${permCount} / ${totalPerms} صلاحية</div>
-              </div>
-              ${isAdmin ? '<span class="role-item-badge">Admin</span>' : ''}
-            </div>
-          `;
+          return '<div class="role-item ' + (state.selectedRoleId === r.id ? 'active' : '') + '" data-role-id="' + r.id + '">' +
+            '<div class="role-icon ' + iconCls + '">' +
+              '<i data-lucide="' + (isAdmin ? 'shield' : (r.is_system ? 'lock' : 'shield-check')) + '"></i>' +
+            '</div>' +
+            '<div class="role-item-body">' +
+              '<div class="role-item-name">' + Refad.escapeHtml(r.name_ar || r.name) + '</div>' +
+              '<div class="role-item-sub">' +
+                '<span>' + permCount + ' / ' + totalPerms + ' صلاحية</span>' +
+                (usersCount > 0 ? '<span class="users-count"><i data-lucide="user"></i>' + usersCount + '</span>' : '') +
+              '</div>' +
+            '</div>' +
+            (badge ? '<span class="role-item-badge ' + (r.is_system && !isAdmin ? 'system' : '') + '">' + badge + '</span>' : '') +
+          '</div>';
         }).join('');
 
         if (window.lucide) lucide.createIcons();
 
-        // Bind click
-        list.querySelectorAll('.role-item').forEach(item => {
-          item.addEventListener('click', () => {
+        list.querySelectorAll('.role-item').forEach(function (item) {
+          item.addEventListener('click', function () {
             const roleId = parseInt(item.dataset.roleId, 10);
             selectRole(roleId);
           });
@@ -1120,37 +1509,45 @@
       }
 
       // ============================================================
-      // 7) Select role + render permissions
+      // 6) Select role + render permissions
       // ============================================================
       function selectRole(roleId) {
         state.selectedRoleId = roleId;
+        localStorage.setItem('refad_last_selected_role', String(roleId));
         renderRolesList();
         renderPermissionsPanel();
       }
 
       function renderPermissionsPanel() {
-        const role = state.roles.find(r => r.id === state.selectedRoleId);
+        const role = state.roles.find(function (r) { return r.id === state.selectedRoleId; });
         if (!role) {
           document.getElementById('permsHeader').style.display = 'none';
-          document.getElementById('permsBody').innerHTML = `
-            <div class="perms-empty">
-              <i data-lucide="key"></i>
-              <h2>اختر دوراً من القائمة</h2>
-              <p>لعرض وتعديل صلاحياته</p>
-            </div>
-          `;
+          document.getElementById('permsBody').innerHTML =
+            '<div class="perms-empty">' +
+              '<i data-lucide="key"></i>' +
+              '<h2>اختر دوراً من القائمة</h2>' +
+              '<p>لعرض وتعديل صلاحياته</p>' +
+            '</div>';
           if (window.lucide) lucide.createIcons();
           return;
         }
 
         const isAdmin = role.name === 'admin';
         const permsSet = state.rolePermissions[role.id] || new Set();
+        const totalPerms = state.permissions.length;
+        const pct = totalPerms ? Math.round((permsSet.size / totalPerms) * 100) : 0;
 
         document.getElementById('permsHeader').style.display = 'flex';
         document.getElementById('permsRoleName').textContent = role.name_ar || role.name;
-        document.getElementById('permsRoleDesc').textContent = role.description || `الدور: ${role.name} — ${permsSet.size} صلاحية مفعّلة`;
+        document.getElementById('permsRoleDesc').innerHTML =
+          '<span>' + (role.description ? Refad.escapeHtml(role.description) : 'الدور: ' + Refad.escapeHtml(role.name)) + '</span>' +
+          '<span class="progress-mini">' +
+            '<span>' + permsSet.size + ' / ' + totalPerms + '</span>' +
+            '<span class="bar"><div style="width:' + pct + '%"></div></span>' +
+            '<strong style="color:var(--accent);">' + pct + '%</strong>' +
+          '</span>';
 
-        // Hide edit/delete for admin or system
+        // Edit/delete visibility
         const editBtn = document.getElementById('editRoleBtn');
         const deleteBtn = document.getElementById('deleteRoleBtn');
         if (isAdmin || role.is_system) {
@@ -1161,9 +1558,13 @@
           deleteBtn.style.display = 'inline-flex';
         }
 
-        // Render permissions grouped by module
+        const copyFromBtn = document.getElementById('copyFromBtn');
+        copyFromBtn.style.display = state.roles.length > 1 ? 'inline-flex' : 'none';
+        copyFromBtn.disabled = isAdmin;
+
+        // Group by module
         const byModule = {};
-        state.permissions.forEach(p => {
+        state.permissions.forEach(function (p) {
           if (!byModule[p.module]) byModule[p.module] = [];
           byModule[p.module].push(p);
         });
@@ -1171,74 +1572,65 @@
         const body = document.getElementById('permsBody');
         const modules = Object.keys(byModule).sort();
 
-        body.innerHTML = modules.map(mod => {
+        body.innerHTML = modules.map(function (mod) {
           const perms = byModule[mod];
-          const checkedCount = perms.filter(p => permsSet.has(p.id)).length;
-          const allChecked = checkedCount === perms.length;
+          const checkedCount = perms.filter(function (p) { return permsSet.has(p.id); }).length;
+          const modPct = perms.length ? Math.round((checkedCount / perms.length) * 100) : 0;
           const icon = MODULE_ICONS[mod] || 'circle';
           const modName = MODULE_NAMES_AR[mod] || mod;
 
-          return `
-            <div class="perm-group" data-module="${mod}">
-              <div class="perm-group-header">
-                <div class="perm-group-title">
-                  <div class="perm-group-icon"><i data-lucide="${icon}"></i></div>
-                  <span>${Refad.escapeHtml(modName)}</span>
-                  <span style="font-size:11px;color:var(--text-muted);font-weight:600;" class="group-count">
-                    (${checkedCount}/${perms.length})
-                  </span>
-                </div>
-                <div class="perm-group-actions">
-                  <button class="mini-btn" data-group-action="all" data-module="${mod}" ${isAdmin ? 'disabled' : ''}>
-                    تحديد الكل
-                  </button>
-                  <button class="mini-btn danger" data-group-action="none" data-module="${mod}" ${isAdmin ? 'disabled' : ''}>
-                    إلغاء
-                  </button>
-                </div>
-              </div>
-              <div class="perm-group-body">
-                ${perms.map(p => `
-                  <label class="perm-item ${permsSet.has(p.id) ? 'checked' : ''} ${isAdmin ? 'disabled' : ''}">
-                    <input type="checkbox"
-                           data-perm-id="${p.id}"
-                           data-module="${mod}"
-                           ${permsSet.has(p.id) ? 'checked' : ''}
-                           ${isAdmin ? 'disabled' : ''}>
-                    <div class="perm-item-info">
-                      <div class="perm-item-name">${Refad.escapeHtml(p.name_ar)}</div>
-                      <div class="perm-item-code">${Refad.escapeHtml(p.code)}</div>
-                    </div>
-                  </label>
-                `).join('')}
-              </div>
-            </div>
-          `;
+          return '<div class="perm-group" data-module="' + mod + '">' +
+            '<div class="perm-group-header" data-toggle-group="' + mod + '">' +
+              '<div class="perm-group-title">' +
+                '<div class="perm-group-icon"><i data-lucide="' + icon + '"></i></div>' +
+                '<span>' + Refad.escapeHtml(modName) + '</span>' +
+                '<span class="perm-group-count group-count">(' + checkedCount + '/' + perms.length + ')</span>' +
+                '<div class="perm-group-progress"><div style="width:' + modPct + '%"></div></div>' +
+              '</div>' +
+              '<div class="perm-group-actions" onclick="event.stopPropagation();">' +
+                '<button class="mini-btn" data-group-action="all" data-module="' + mod + '" ' + (isAdmin ? 'disabled' : '') + '>تحديد الكل</button>' +
+                '<button class="mini-btn danger" data-group-action="none" data-module="' + mod + '" ' + (isAdmin ? 'disabled' : '') + '>إلغاء</button>' +
+              '</div>' +
+            '</div>' +
+            '<div class="perm-group-body">' +
+              perms.map(function (p) {
+                return '<label class="perm-item ' + (permsSet.has(p.id) ? 'checked' : '') + ' ' + (isAdmin ? 'disabled' : '') + '">' +
+                  '<input type="checkbox" data-perm-id="' + p.id + '" data-module="' + mod + '" ' + (permsSet.has(p.id) ? 'checked' : '') + ' ' + (isAdmin ? 'disabled' : '') + '>' +
+                  '<div class="perm-item-info">' +
+                    '<div class="perm-item-name">' + Refad.escapeHtml(p.name_ar) + '</div>' +
+                    '<div class="perm-item-code">' + Refad.escapeHtml(p.code) + '</div>' +
+                  '</div>' +
+                '</label>';
+              }).join('') +
+            '</div>' +
+          '</div>';
         }).join('');
 
         if (window.lucide) lucide.createIcons();
 
         // Bind checkbox changes
-        body.querySelectorAll('input[data-perm-id]').forEach(cb => {
-          cb.addEventListener('change', e => {
+        body.querySelectorAll('input[data-perm-id]').forEach(function (cb) {
+          cb.addEventListener('change', function (e) {
             const permId = parseInt(e.target.dataset.permId, 10);
             const checked = e.target.checked;
             togglePermission(role.id, permId, checked);
             e.target.closest('.perm-item').classList.toggle('checked', checked);
             updateGroupCount(e.target.dataset.module);
+            updateRoleProgress();
           });
         });
 
         // Bind group actions
-        body.querySelectorAll('[data-group-action]').forEach(btn => {
-          btn.addEventListener('click', () => {
+        body.querySelectorAll('[data-group-action]').forEach(function (btn) {
+          btn.addEventListener('click', function (e) {
+            e.stopPropagation();
             const mod = btn.dataset.module;
             const action = btn.dataset.groupAction;
             const checked = action === 'all';
             const perms = byModule[mod];
 
-            perms.forEach(p => {
-              const cb = body.querySelector(`input[data-perm-id="${p.id}"]`);
+            perms.forEach(function (p) {
+              const cb = body.querySelector('input[data-perm-id="' + p.id + '"]');
               if (cb && !cb.disabled) {
                 cb.checked = checked;
                 cb.closest('.perm-item').classList.toggle('checked', checked);
@@ -1246,28 +1638,57 @@
               }
             });
             updateGroupCount(mod);
+            updateRoleProgress();
           });
         });
 
-        // Update roles list to reflect new counts
+        // Toggle group collapse
+        body.querySelectorAll('[data-toggle-group]').forEach(function (h) {
+          h.addEventListener('click', function (e) {
+            if (e.target.closest('[data-group-action]')) return;
+            const group = h.closest('.perm-group');
+            group.classList.toggle('collapsed');
+          });
+        });
+
         renderRolesList();
       }
 
       function updateGroupCount(mod) {
-        const role = state.roles.find(r => r.id === state.selectedRoleId);
+        const role = state.roles.find(function (r) { return r.id === state.selectedRoleId; });
         if (!role) return;
-        const permsSet = state.rolePermissions[role.id] || new Set();
         const body = document.getElementById('permsBody');
-        const group = body.querySelector(`.perm-group[data-module="${mod}"]`);
+        const group = body.querySelector('.perm-group[data-module="' + mod + '"]');
         if (!group) return;
         const cbs = group.querySelectorAll('input[data-perm-id]');
-        const checkedCount = Array.from(cbs).filter(cb => cb.checked).length;
+        const checkedCount = Array.from(cbs).filter(function (cb) { return cb.checked; }).length;
         const countEl = group.querySelector('.group-count');
-        if (countEl) countEl.textContent = `(${checkedCount}/${cbs.length})`;
+        if (countEl) countEl.textContent = '(' + checkedCount + '/' + cbs.length + ')';
+        const prog = group.querySelector('.perm-group-progress > div');
+        if (prog) prog.style.width = (cbs.length ? Math.round((checkedCount / cbs.length) * 100) : 0) + '%';
+      }
+
+      function updateRoleProgress() {
+        const role = state.roles.find(function (r) { return r.id === state.selectedRoleId; });
+        if (!role) return;
+        const permsSet = state.rolePermissions[role.id] || new Set();
+        const total = state.permissions.length;
+        const pct = total ? Math.round((permsSet.size / total) * 100) : 0;
+
+        const desc = document.getElementById('permsRoleDesc');
+        const progress = desc.querySelector('.progress-mini');
+        if (progress) {
+          progress.innerHTML =
+            '<span>' + permsSet.size + ' / ' + total + '</span>' +
+            '<span class="bar"><div style="width:' + pct + '%"></div></span>' +
+            '<strong style="color:var(--accent);">' + pct + '%</strong>';
+        }
+
+        renderRolesList();
       }
 
       // ============================================================
-      // 8) Toggle permission (save to DB)
+      // 7) Toggle permission
       // ============================================================
       async function togglePermission(roleId, permId, checked) {
         try {
@@ -1283,17 +1704,7 @@
               role_id: roleId,
               permission_id: permId
             });
-            if (state.rolePermissions[roleId]) {
-              state.rolePermissions[roleId].delete(permId);
-            }
-          }
-
-          // Update selected role's desc
-          const role = state.roles.find(r => r.id === roleId);
-          if (role && state.selectedRoleId === roleId) {
-            const permsSet = state.rolePermissions[roleId] || new Set();
-            document.getElementById('permsRoleDesc').textContent =
-              role.description || `الدور: ${role.name} — ${permsSet.size} صلاحية مفعّلة`;
+            if (state.rolePermissions[roleId]) state.rolePermissions[roleId].delete(permId);
           }
         } catch (e) {
           console.error('Toggle permission failed:', e);
@@ -1302,32 +1713,29 @@
       }
 
       // ============================================================
-      // 9) Select all / Deselect all
+      // 8) Set all
       // ============================================================
       async function setAllPermissions(checked) {
-        const role = state.roles.find(r => r.id === state.selectedRoleId);
+        const role = state.roles.find(function (r) { return r.id === state.selectedRoleId; });
         if (!role) return;
         if (role.name === 'admin') return;
 
         const ok = await Refad.alert.confirm(
           checked ? 'تحديد كل الصلاحيات' : 'إلغاء كل الصلاحيات',
-          `سيتم ${checked ? 'تفعيل' : 'إلغاء'} كل الصلاحيات لهذا الدور. متابعة؟`,
+          'سيتم ' + (checked ? 'تفعيل' : 'إلغاء') + ' كل الصلاحيات لهذا الدور. متابعة؟',
           'متابعة'
         );
         if (!ok) return;
 
         try {
-          // 1. احذف كل الحالي
           await Refad.db.removeWhere('role_permissions', { role_id: role.id });
 
-          // 2. لو تحديد → أضف كل الصلاحيات
           if (checked) {
-            const inserts = state.permissions.map(p => ({
-              role_id: role.id,
-              permission_id: p.id
-            }));
+            const inserts = state.permissions.map(function (p) {
+              return { role_id: role.id, permission_id: p.id };
+            });
             await Refad.db.insertMany('role_permissions', inserts);
-            state.rolePermissions[role.id] = new Set(state.permissions.map(p => p.id));
+            state.rolePermissions[role.id] = new Set(state.permissions.map(function (p) { return p.id; }));
           } else {
             state.rolePermissions[role.id] = new Set();
           }
@@ -1335,7 +1743,7 @@
           await Refad.logActivity(
             checked ? 'grant_all_permissions' : 'revoke_all_permissions',
             'permissions',
-            `${checked ? 'تحديد' : 'إلغاء'} كل الصلاحيات لـ ${role.name_ar || role.name}`,
+            (checked ? 'تحديد' : 'إلغاء') + ' كل الصلاحيات لـ ' + (role.name_ar || role.name),
             role.id
           );
 
@@ -1348,10 +1756,89 @@
       }
 
       // ============================================================
+      // 9) Copy from another role
+      // ============================================================
+      function openCopyModal() {
+        const role = state.roles.find(function (r) { return r.id === state.selectedRoleId; });
+        if (!role || role.name === 'admin') return;
+
+        const list = document.getElementById('copyFromList');
+        const others = state.roles.filter(function (r) { return r.id !== role.id; });
+
+        list.innerHTML = others.map(function (r) {
+          const cnt = (state.rolePermissions[r.id] && state.rolePermissions[r.id].size) || 0;
+          return '<div class="role-item" data-copy-id="' + r.id + '" style="margin-bottom:6px;">' +
+            '<div class="role-icon ' + (r.name === 'admin' ? 'admin' : (r.is_system ? 'system' : 'custom')) + '">' +
+              '<i data-lucide="shield"></i>' +
+            '</div>' +
+            '<div class="role-item-body">' +
+              '<div class="role-item-name">' + Refad.escapeHtml(r.name_ar || r.name) + '</div>' +
+              '<div class="role-item-sub"><span>' + cnt + ' صلاحية</span></div>' +
+            '</div>' +
+            '<i data-lucide="arrow-left" style="width:16px;height:16px;color:var(--accent);"></i>' +
+          '</div>';
+        }).join('');
+
+        if (window.lucide) lucide.createIcons();
+        document.getElementById('copyModal').classList.add('show');
+
+        list.querySelectorAll('[data-copy-id]').forEach(function (el) {
+          el.addEventListener('click', async function () {
+            const fromId = parseInt(el.dataset.copyId, 10);
+            await copyPermissions(role.id, fromId);
+            document.getElementById('copyModal').classList.remove('show');
+          });
+        });
+      }
+
+      async function copyPermissions(toRoleId, fromRoleId) {
+        const toRole = state.roles.find(function (r) { return r.id === toRoleId; });
+        const fromRole = state.roles.find(function (r) { return r.id === fromRoleId; });
+
+        const ok = await Refad.alert.confirm(
+          'نسخ الصلاحيات',
+          'سيتم استبدال صلاحيات "' + (toRole.name_ar || toRole.name) + '" بصلاحيات "' + (fromRole.name_ar || fromRole.name) + '". متابعة؟',
+          'نسخ'
+        );
+        if (!ok) return;
+
+        try {
+          const fromPerms = Array.from(state.rolePermissions[fromRoleId] || []);
+
+          await Refad.db.removeWhere('role_permissions', { role_id: toRoleId });
+
+          if (fromPerms.length) {
+            const inserts = fromPerms.map(function (pid) {
+              return { role_id: toRoleId, permission_id: pid };
+            });
+            await Refad.db.insertMany('role_permissions', inserts);
+            state.rolePermissions[toRoleId] = new Set(fromPerms);
+          } else {
+            state.rolePermissions[toRoleId] = new Set();
+          }
+
+          await Refad.logActivity(
+            'copy_role_permissions',
+            'permissions',
+            'نسخ صلاحيات من ' + (fromRole.name_ar || fromRole.name) + ' إلى ' + (toRole.name_ar || toRole.name),
+            toRoleId
+          );
+
+          renderPermissionsPanel();
+          Refad.toast.success('تم نسخ الصلاحيات');
+        } catch (e) {
+          console.error('Copy failed:', e);
+          Refad.toast.error('فشل النسخ: ' + e.message);
+        }
+      }
+
+      // ============================================================
       // 10) Role modal (add/edit)
       // ============================================================
       function openRoleModal(role) {
         state.editingRoleId = role ? role.id : null;
+        state.selectedPreset = null;
+
         document.getElementById('roleModalTitle').textContent = role ? 'تعديل دور' : 'دور جديد';
         document.getElementById('saveRoleBtnText').textContent = role ? 'تحديث' : 'حفظ';
         document.getElementById('roleModalIcon').setAttribute('data-lucide', role ? 'shield-check' : 'shield-plus');
@@ -1364,18 +1851,47 @@
           form.name_ar.value = role.name_ar || '';
           form.description.value = role.description || '';
           form.name.disabled = role.is_system;
+          document.getElementById('presetGroup').style.display = 'none';
         } else {
           form.name.disabled = false;
+          document.getElementById('presetGroup').style.display = 'block';
+          renderPresets();
         }
 
         document.getElementById('roleModal').classList.add('show');
         if (window.lucide) lucide.createIcons();
-        setTimeout(() => form.name_ar.focus(), 100);
+        setTimeout(function () { form.name_ar.focus(); }, 100);
+      }
+
+      function renderPresets() {
+        const grid = document.getElementById('presetGrid');
+        grid.innerHTML = Object.keys(PRESETS).map(function (key) {
+          const p = PRESETS[key];
+          const mods = p.modules.map(function (m) { return MODULE_NAMES_AR[m] || m; });
+          const modsText = mods.length > 3 ? mods.slice(0, 3).join('، ') + '…' : mods.join('، ');
+          return '<div class="preset-card ' + (state.selectedPreset === key ? 'selected' : '') + '" data-preset="' + key + '">' +
+            '<div class="icon"><i data-lucide="' + p.icon + '"></i></div>' +
+            '<div class="name">' + p.label + '</div>' +
+            '<div class="sub">' + p.description + '</div>' +
+            '<div class="mods">' + modsText + '</div>' +
+          '</div>';
+        }).join('');
+
+        if (window.lucide) lucide.createIcons();
+
+        grid.querySelectorAll('.preset-card').forEach(function (el) {
+          el.addEventListener('click', function () {
+            grid.querySelectorAll('.preset-card').forEach(function (x) { x.classList.remove('selected'); });
+            el.classList.add('selected');
+            state.selectedPreset = el.dataset.preset;
+          });
+        });
       }
 
       function closeRoleModal() {
         document.getElementById('roleModal').classList.remove('show');
         state.editingRoleId = null;
+        state.selectedPreset = null;
       }
 
       async function saveRole(e) {
@@ -1398,37 +1914,54 @@
 
         try {
           if (state.editingRoleId) {
-            // Update
             await Refad.db.update('roles', state.editingRoleId, {
-              name,
-              name_ar,
-              description
+              name: name,
+              name_ar: name_ar,
+              description: description
             });
-            await Refad.logActivity('update_role', 'permissions', `تعديل دور: ${name_ar}`, state.editingRoleId);
+            await Refad.logActivity('update_role', 'permissions', 'تعديل دور: ' + name_ar, state.editingRoleId);
             Refad.toast.success('تم تحديث الدور');
           } else {
-            // Check name uniqueness
             const existing = await Refad.db.selectOne('roles', {
-              eq: { company_id: session.company_id, name }
+              eq: { company_id: session.company_id, name: name }
             });
             if (existing) throw new Error('اسم الدور موجود بالفعل');
 
             const created = await Refad.db.insert('roles', {
               company_id: session.company_id,
-              name,
-              name_ar,
-              description,
+              name: name,
+              name_ar: name_ar,
+              description: description,
               is_system: false
             });
-            await Refad.logActivity('create_role', 'permissions', `إنشاء دور: ${name_ar}`, created.id);
-            Refad.toast.success('تم إنشاء الدور');
+            await Refad.logActivity('create_role', 'permissions', 'إنشاء دور: ' + name_ar, created.id);
 
-            // Select the new role
             state.selectedRoleId = created.id;
+            localStorage.setItem('refad_last_selected_role', String(created.id));
+
+            if (state.selectedPreset) {
+              const preset = PRESETS[state.selectedPreset];
+              if (preset) {
+                const permIds = state.permissions
+                  .filter(function (p) { return preset.modules.indexOf(p.module) !== -1; })
+                  .map(function (p) { return p.id; });
+
+                if (permIds.length) {
+                  const inserts = permIds.map(function (pid) {
+                    return { role_id: created.id, permission_id: pid };
+                  });
+                  await Refad.db.insertMany('role_permissions', inserts);
+                  state.rolePermissions[created.id] = new Set(permIds);
+                }
+              }
+            }
+
+            Refad.toast.success('تم إنشاء الدور');
           }
 
           closeRoleModal();
-          await loadAll();
+          await loadAll(true);
+          if (state.selectedRoleId) selectRole(state.selectedRoleId);
         } catch (err) {
           console.error('Save role failed:', err);
           Refad.toast.error('فشل الحفظ: ' + err.message);
@@ -1442,30 +1975,22 @@
       // 11) Delete role
       // ============================================================
       async function deleteRole() {
-        const role = state.roles.find(r => r.id === state.selectedRoleId);
+        const role = state.roles.find(function (r) { return r.id === state.selectedRoleId; });
         if (!role) return;
         if (role.name === 'admin' || role.is_system) {
           Refad.toast.warning('لا يمكن حذف هذا الدور');
           return;
         }
 
-        // Check if any users use this role
-        try {
-          const usersCount = await Refad.db.count('users', {
-            eq: { role_id: role.id }
-          });
-
-          if (usersCount > 0) {
-            Refad.toast.error(`لا يمكن الحذف — يوجد ${usersCount} موظف بهذا الدور`);
-            return;
-          }
-        } catch (e) {
-          // continue
+        const usersCount = state.roleUsersCount[role.id] || 0;
+        if (usersCount > 0) {
+          Refad.toast.error('لا يمكن الحذف — يوجد ' + usersCount + ' موظف بهذا الدور');
+          return;
         }
 
         const ok = await Refad.alert.confirm(
           'حذف الدور',
-          `هل تريد حذف "${role.name_ar || role.name}"؟`,
+          'هل تريد حذف "' + (role.name_ar || role.name) + '"؟',
           'حذف'
         );
         if (!ok) return;
@@ -1473,9 +1998,10 @@
         try {
           await Refad.db.removeWhere('role_permissions', { role_id: role.id });
           await Refad.db.remove('roles', role.id);
-          await Refad.logActivity('delete_role', 'permissions', `حذف دور: ${role.name_ar || role.name}`, role.id);
+          await Refad.logActivity('delete_role', 'permissions', 'حذف دور: ' + (role.name_ar || role.name), role.id);
 
           state.selectedRoleId = null;
+          localStorage.removeItem('refad_last_selected_role');
           Refad.toast.success('تم الحذف');
           await loadAll();
         } catch (e) {
@@ -1485,55 +2011,390 @@
       }
 
       // ============================================================
-      // 12) Events
+      // 12) Export / Import
       // ============================================================
-      function bindEvents() {
-        document.getElementById('addRoleBtn').addEventListener('click', () => openRoleModal(null));
-        document.getElementById('editRoleBtn').addEventListener('click', () => {
-          const role = state.roles.find(r => r.id === state.selectedRoleId);
-          if (role) openRoleModal(role);
-        });
-        document.getElementById('deleteRoleBtn').addEventListener('click', deleteRole);
+      function exportPermissions() {
+        const data = {
+          exported_at: new Date().toISOString(),
+          company_id: session.company_id,
+          roles: state.roles.map(function (r) {
+            return {
+              name: r.name,
+              name_ar: r.name_ar,
+              description: r.description,
+              is_system: r.is_system,
+              permissions: Array.from(state.rolePermissions[r.id] || []).map(function (pid) {
+                const p = state.permissions.find(function (x) { return x.id === pid; });
+                return p ? p.code : null;
+              }).filter(Boolean)
+            };
+          })
+        };
 
-        document.getElementById('selectAllBtn').addEventListener('click', () => setAllPermissions(true));
-        document.getElementById('deselectAllBtn').addEventListener('click', () => setAllPermissions(false));
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'permissions-' + Refad.date.today() + '.json';
+        a.click();
+        URL.revokeObjectURL(url);
+        Refad.toast.success('تم التصدير');
+      }
 
-        // Role form
-        document.getElementById('roleForm').addEventListener('submit', saveRole);
+      function openImportModal() {
+        document.getElementById('importText').value = '';
+        document.getElementById('importModal').classList.add('show');
+        if (window.lucide) lucide.createIcons();
+      }
 
-        // Modal close
-        document.querySelectorAll('[data-close]').forEach(b => {
-          b.addEventListener('click', closeRoleModal);
+      async function doImport() {
+        const text = document.getElementById('importText').value.trim();
+        if (!text) { Refad.toast.warning('الصق البيانات أولاً'); return; }
+
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch (e) {
+          Refad.toast.error('صيغة JSON غير صحيحة');
+          return;
+        }
+
+        if (!data.roles || !Array.isArray(data.roles)) {
+          Refad.toast.error('البيانات لا تحتوي على roles');
+          return;
+        }
+
+        const ok = await Refad.alert.confirm(
+          'استيراد الصلاحيات',
+          'سيتم إنشاء/تحديث ' + data.roles.length + ' دور. متابعة؟',
+          'استيراد'
+        );
+        if (!ok) return;
+
+        try {
+          let imported = 0;
+
+          for (const roleData of data.roles) {
+            if (!roleData.name || !roleData.name_ar) continue;
+
+            const existing = state.roles.find(function (r) {
+              return r.name === roleData.name;
+            });
+
+            let roleId;
+
+            if (existing) {
+              if (existing.is_system) continue;
+              await Refad.db.update('roles', existing.id, {
+                name_ar: roleData.name_ar,
+                description: roleData.description || null
+              });
+              roleId = existing.id;
+            } else {
+              const created = await Refad.db.insert('roles', {
+                company_id: session.company_id,
+                name: roleData.name,
+                name_ar: roleData.name_ar,
+                description: roleData.description || null,
+                is_system: false
+              });
+              roleId = created.id;
+            }
+
+            await Refad.db.removeWhere('role_permissions', { role_id: roleId });
+
+            if (roleData.permissions && roleData.permissions.length) {
+              const permIds = roleData.permissions.map(function (code) {
+                const p = state.permissions.find(function (x) { return x.code === code; });
+                return p ? p.id : null;
+              }).filter(Boolean);
+
+              if (permIds.length) {
+                const inserts = permIds.map(function (pid) {
+                  return { role_id: roleId, permission_id: pid };
+                });
+                await Refad.db.insertMany('role_permissions', inserts);
+              }
+            }
+
+            imported++;
+          }
+
+          await Refad.logActivity('import_permissions', 'permissions', 'استيراد ' + imported + ' دور', null);
+          Refad.toast.success('تم استيراد ' + imported + ' دور');
+          document.getElementById('importModal').classList.remove('show');
+          await loadAll();
+        } catch (e) {
+          console.error('Import failed:', e);
+          Refad.toast.error('فشل الاستيراد: ' + e.message);
+        }
+      }
+
+      // ============================================================
+      // 13) Realtime
+      // ============================================================
+      function setupRealtime() {
+        try {
+          state.realtimeChannel = Refad.sb
+            .channel('role-permissions-changes')
+            .on('postgres_changes', {
+              event: '*',
+              schema: 'public',
+              table: 'role_permissions'
+            }, function () {
+              loadAll(true);
+            })
+            .on('postgres_changes', {
+              event: '*',
+              schema: 'public',
+              table: 'roles',
+              filter: 'company_id=eq.' + session.company_id
+            }, function () {
+              loadAll(true);
+            })
+            .subscribe();
+        } catch (e) {
+          console.warn('Realtime not available:', e.message);
+        }
+      }
+
+      function cleanupRealtime() {
+        try {
+          if (state.realtimeChannel) {
+            Refad.sb.removeChannel(state.realtimeChannel);
+            state.realtimeChannel = null;
+          }
+        } catch (e) {}
+      }
+
+      // ============================================================
+      // 14) Quick Search
+      // ============================================================
+      function openQuickSearch() {
+        const overlay = document.getElementById('quickSearchOverlay');
+        overlay.classList.add('show');
+        const input = document.getElementById('quickSearchInput');
+        input.value = '';
+        input.focus();
+        state.quickSearchIndex = -1;
+        state.quickSearchResults = [];
+        renderQuickSearchResults('');
+      }
+
+      function closeQuickSearch() {
+        document.getElementById('quickSearchOverlay').classList.remove('show');
+      }
+
+      function renderQuickSearchResults(query) {
+        const container = document.getElementById('quickSearchResults');
+        const q = (query || '').toLowerCase().trim();
+
+        if (!q) {
+          container.innerHTML = '<div class="quick-search-empty">اكتب للبحث السريع...</div>';
+          state.quickSearchResults = [];
+          return;
+        }
+
+        const results = state.roles.filter(r =>
+          (r.name || '').toLowerCase().includes(q) ||
+          (r.name_ar || '').toLowerCase().includes(q) ||
+          (r.description || '').toLowerCase().includes(q)
+        ).slice(0, 10).map(r => {
+          const permCount = (state.rolePermissions[r.id] && state.rolePermissions[r.id].size) || 0;
+          const usersCount = state.roleUsersCount[r.id] || 0;
+          return {
+            type: 'role',
+            id: r.id,
+            name: r.name_ar || r.name,
+            sub: `${permCount} صلاحية${usersCount ? ' • ' + usersCount + ' موظف' : ''}`,
+            initial: (r.name_ar || r.name || '?').charAt(0)
+          };
         });
-        document.getElementById('roleModal').addEventListener('click', e => {
-          if (e.target.id === 'roleModal') closeRoleModal();
+
+        state.quickSearchResults = results;
+        state.quickSearchIndex = results.length ? 0 : -1;
+
+        if (!results.length) {
+          container.innerHTML = '<div class="quick-search-empty">لا توجد نتائج</div>';
+          return;
+        }
+
+        container.innerHTML = results.map((r, i) => `
+          <div class="quick-search-item ${i === 0 ? 'selected' : ''}" data-idx="${i}">
+            <div class="qs-icon">${Refad.escapeHtml(r.initial)}</div>
+            <div class="qs-body">
+              <div class="qs-name">${Refad.escapeHtml(r.name)}</div>
+              <div class="qs-sub">${Refad.escapeHtml(r.sub)}</div>
+            </div>
+            <i data-lucide="arrow-left" style="width:16px;height:16px;color:var(--text-muted);"></i>
+          </div>
+        `).join('');
+
+        if (window.lucide) lucide.createIcons();
+
+        container.querySelectorAll('.quick-search-item').forEach(el => {
+          el.addEventListener('click', () => {
+            const idx = Number(el.dataset.idx);
+            navigateQuickSearch(idx);
+          });
         });
-        document.addEventListener('keydown', e => {
-          if (e.key === 'Escape') closeRoleModal();
+      }
+
+      function navigateQuickSearch(idx) {
+        const r = state.quickSearchResults[idx];
+        if (!r) return;
+        closeQuickSearch();
+        selectRole(r.id);
+      }
+
+      function updateQuickSearchSelection() {
+        const container = document.getElementById('quickSearchResults');
+        container.querySelectorAll('.quick-search-item').forEach((el, i) => {
+          el.classList.toggle('selected', i === state.quickSearchIndex);
+        });
+        const selected = container.querySelector('.quick-search-item.selected');
+        if (selected) selected.scrollIntoView({ block: 'nearest' });
+      }
+
+      function setupQuickSearch() {
+        const overlay = document.getElementById('quickSearchOverlay');
+        const input = document.getElementById('quickSearchInput');
+
+        overlay.addEventListener('click', e => {
+          if (e.target === overlay) closeQuickSearch();
+        });
+
+        input.addEventListener('input', e => renderQuickSearchResults(e.target.value));
+
+        input.addEventListener('keydown', e => {
+          if (e.key === 'Escape') {
+            e.preventDefault();
+            closeQuickSearch();
+          } else if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            if (state.quickSearchResults.length) {
+              state.quickSearchIndex = Math.min(state.quickSearchIndex + 1, state.quickSearchResults.length - 1);
+              updateQuickSearchSelection();
+            }
+          } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            if (state.quickSearchResults.length) {
+              state.quickSearchIndex = Math.max(state.quickSearchIndex - 1, 0);
+              updateQuickSearchSelection();
+            }
+          } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (state.quickSearchIndex >= 0) navigateQuickSearch(state.quickSearchIndex);
+            else if (state.quickSearchResults.length) navigateQuickSearch(0);
+          }
         });
       }
 
       // ============================================================
-      // 13) Init
+      // 15) Events
+      // ============================================================
+      function bindEvents() {
+        document.getElementById('addRoleBtn').addEventListener('click', function () { openRoleModal(null); });
+
+        document.getElementById('editRoleBtn').addEventListener('click', function () {
+          const role = state.roles.find(function (r) { return r.id === state.selectedRoleId; });
+          if (role) openRoleModal(role);
+        });
+
+        document.getElementById('deleteRoleBtn').addEventListener('click', deleteRole);
+        document.getElementById('selectAllBtn').addEventListener('click', function () { setAllPermissions(true); });
+        document.getElementById('deselectAllBtn').addEventListener('click', function () { setAllPermissions(false); });
+        document.getElementById('copyFromBtn').addEventListener('click', openCopyModal);
+
+        document.getElementById('exportBtn').addEventListener('click', exportPermissions);
+        document.getElementById('importBtn').addEventListener('click', openImportModal);
+        document.getElementById('doImportBtn').addEventListener('click', doImport);
+
+        document.getElementById('roleForm').addEventListener('submit', saveRole);
+
+        document.getElementById('roleSearchInput').addEventListener('input', Refad.debounce(function (e) {
+          state.searchTerm = e.target.value.trim();
+          renderRolesList();
+        }, 200));
+
+        // Stat cards click → filter
+        document.querySelectorAll('.stat-card').forEach(card => {
+          card.addEventListener('click', () => {
+            const filter = card.dataset.statFilter;
+            if (!filter || filter === 'perms' || filter === 'users' || filter === 'norole') return;
+            document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
+            card.classList.add('active');
+            state.searchTerm = '';
+            document.getElementById('roleSearchInput').value = '';
+            renderRolesList();
+          });
+        });
+
+        document.querySelectorAll('[data-close]').forEach(function (b) {
+          b.addEventListener('click', function () {
+            document.querySelectorAll('.modal-backdrop').forEach(function (m) { m.classList.remove('show'); });
+          });
+        });
+
+        document.querySelectorAll('.modal-backdrop').forEach(function (m) {
+          m.addEventListener('click', function (e) {
+            if (e.target === m) m.classList.remove('show');
+          });
+        });
+
+        document.addEventListener('keydown', function (e) {
+          if (e.key === 'Escape') {
+            if (document.getElementById('quickSearchOverlay').classList.contains('show')) {
+              closeQuickSearch();
+              return;
+            }
+            document.querySelectorAll('.modal-backdrop').forEach(function (m) { m.classList.remove('show'); });
+          }
+          if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+            e.preventDefault();
+            openQuickSearch();
+          }
+        });
+
+        setupQuickSearch();
+        window.addEventListener('beforeunload', cleanupRealtime);
+      }
+
+      // ============================================================
+      // 16) Init
       // ============================================================
       async function init() {
-        buildSidebar();
+        Refad.buildMenu('permissions.html');
         fillUser();
+        applyIdentity();
         setupTheme();
         setupSidebarMobile();
         setupUserMenu();
         setupNotifBtn();
+        setupRealtimeTheme();
         bindEvents();
 
         await loadAll();
+        setupRealtime();
 
-        // Auto-select first role (non-admin if possible)
         if (state.roles.length > 0) {
-          const firstNonAdmin = state.roles.find(r => r.name !== 'admin');
-          selectRole(firstNonAdmin ? firstNonAdmin.id : state.roles[0].id);
+          let toSelect = null;
+
+          if (state.lastSelectedRole) {
+            const lastId = parseInt(state.lastSelectedRole, 10);
+            toSelect = state.roles.find(function (r) { return r.id === lastId; });
+          }
+
+          if (!toSelect) {
+            toSelect = state.roles.find(function (r) { return r.name !== 'admin'; }) || state.roles[0];
+          }
+
+          if (toSelect) selectRole(toSelect.id);
         }
 
-        Refad.registerServiceWorker();
+        if (Refad.registerServiceWorker) Refad.registerServiceWorker();
+
+        console.log('%c[Refad] Permissions v3 ready (Theme Sync + Settings + Quick Search + Realtime)', 'color:#14B8A6;font-weight:bold;font-size:14px');
       }
 
       if (document.readyState === 'loading') {
@@ -1541,8 +2402,6 @@
       } else {
         init();
       }
-
-      console.log('%c[Refad] Permissions ready', 'color:#14B8A6;font-weight:bold');
 
     })();
   </script>

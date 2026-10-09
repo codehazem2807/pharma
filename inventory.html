@@ -23,627 +23,302 @@
 
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-
     :root {
-      --primary: #0B2C4D;
-      --primary-light: #1e4a73;
-      --accent: #14B8A6;
-      --accent-dark: #0d9488;
-      --gold: #F59E0B;
-      --bg: #F1F5F9;
-      --card: #ffffff;
-      --text: #0f172a;
-      --text-muted: #64748b;
-      --border: #e2e8f0;
-      --danger: #ef4444;
-      --success: #10b981;
-      --warning: #f59e0b;
-      --info: #3b82f6;
-      --sidebar-bg: #0B2C4D;
-      --sidebar-text: #cbd5e1;
+      --primary: #0B2C4D; --primary-light: #1e4a73; --accent: #14B8A6;
+      --accent-dark: #0d9488; --gold: #F59E0B; --bg: #F1F5F9;
+      --card: #ffffff; --text: #0f172a; --text-muted: #64748b;
+      --border: #e2e8f0; --danger: #ef4444; --success: #10b981;
+      --warning: #f59e0b; --info: #3b82f6; --purple: #8b5cf6;
+      --sidebar-bg: #0B2C4D; --sidebar-text: #cbd5e1;
       --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
-      --shadow: 0 4px 20px rgba(11, 44, 77, 0.08);
-      --shadow-lg: 0 10px 40px rgba(11, 44, 77, 0.12);
-      --radius: 14px;
-      --radius-sm: 10px;
-      --sidebar-w: 260px;
-      --topbar-h: 64px;
+      --shadow: 0 4px 20px rgba(11,44,77,0.08);
+      --shadow-lg: 0 10px 40px rgba(11,44,77,0.12);
+      --radius: 14px; --radius-sm: 10px;
+      --sidebar-w: 260px; --topbar-h: 64px;
     }
-
     [data-theme="dark"] {
-      --bg: #0a1628;
-      --card: #0f2137;
-      --text: #f1f5f9;
-      --text-muted: #94a3b8;
-      --border: #1e3a5f;
-      --sidebar-bg: #061a2e;
-      --sidebar-text: #94a3b8;
+      --bg: #0a1628; --card: #0f2137; --text: #f1f5f9;
+      --text-muted: #94a3b8; --border: #1e3a5f;
+      --sidebar-bg: #061a2e; --sidebar-text: #94a3b8;
     }
-
-    html, body {
-      height: 100%;
-      font-family: 'Cairo', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      transition: background 0.3s, color 0.3s;
-    }
-
+    html, body { height: 100%; font-family: 'Cairo', sans-serif; background: var(--bg); color: var(--text); transition: background .3s, color .3s; }
     body { display: flex; min-height: 100vh; overflow-x: hidden; }
 
-    /* ============================================================
-       Sidebar
-       ============================================================ */
-    .sidebar {
-      width: var(--sidebar-w);
-      height: 100vh;
-      background: var(--sidebar-bg);
-      color: var(--sidebar-text);
-      position: fixed;
-      top: 0;
-      right: 0;
-      z-index: 100;
-      display: flex;
-      flex-direction: column;
-      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      box-shadow: -4px 0 20px rgba(0,0,0,0.1);
-    }
-
-    .sidebar-header {
-      padding: 20px 22px;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      height: var(--topbar-h);
-      box-sizing: border-box;
-    }
-
-    .sidebar-logo {
-      width: 40px;
-      height: 40px;
-      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      box-shadow: 0 4px 12px rgba(20,184,166,0.4);
-    }
+    /* Sidebar */
+    .sidebar { width: var(--sidebar-w); height: 100vh; background: var(--sidebar-bg); color: var(--sidebar-text); position: fixed; top: 0; right: 0; z-index: 100; display: flex; flex-direction: column; transition: transform .3s; box-shadow: -4px 0 20px rgba(0,0,0,.1); }
+    .sidebar-header { padding: 20px 22px; border-bottom: 1px solid rgba(255,255,255,.08); display: flex; align-items: center; gap: 14px; height: var(--topbar-h); box-sizing: border-box; }
+    .sidebar-logo { width: 40px; height: 40px; background: linear-gradient(135deg, var(--accent), var(--accent-dark)); border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 12px rgba(20,184,166,.4); overflow: hidden; }
     .sidebar-logo img { width: 70%; height: 70%; object-fit: contain; }
     .sidebar-logo .fallback { color: white; font-weight: 800; font-size: 18px; }
-
-    .sidebar-brand h2 { color: white; font-size: 20px; font-weight: 800; letter-spacing: -0.5px; line-height: 1.2; }
-    .sidebar-brand p { font-size: 10px; color: var(--sidebar-text); opacity: 0.7; font-weight: 500; margin-top: 2px; }
-
-    .sidebar-nav { flex: 1; overflow-y: auto; padding: 12px 0; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.15) transparent; }
+    .sidebar-brand h2 { color: white; font-size: 20px; font-weight: 800; line-height: 1.2; }
+    .sidebar-brand p { font-size: 10px; opacity: .7; margin-top: 2px; }
+    .sidebar-nav { flex: 1; overflow-y: auto; padding: 12px 0; }
     .sidebar-nav::-webkit-scrollbar { width: 5px; }
-    .sidebar-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 10px; }
-
-    .nav-section { padding: 8px 20px 4px; font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 1px; margin-top: 8px; }
-
-    .nav-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 11px 22px;
-      color: var(--sidebar-text);
-      text-decoration: none;
-      font-size: 14px;
-      font-weight: 500;
-      border-right: 3px solid transparent;
-      transition: all 0.2s;
-      position: relative;
-      cursor: pointer;
-    }
-    .nav-item:hover { background: rgba(255,255,255,0.05); color: white; border-right-color: rgba(20,184,166,0.5); }
-    .nav-item.active { background: rgba(20,184,166,0.12); color: white; border-right-color: var(--accent); font-weight: 600; }
+    .sidebar-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,.15); border-radius: 10px; }
+    .nav-section { padding: 8px 20px 4px; font-size: 10px; font-weight: 700; color: rgba(255,255,255,.35); text-transform: uppercase; letter-spacing: 1px; margin-top: 8px; }
+    .nav-item { display: flex; align-items: center; gap: 12px; padding: 11px 22px; color: var(--sidebar-text); text-decoration: none; font-size: 14px; font-weight: 500; border-right: 3px solid transparent; transition: all .2s; cursor: pointer; position: relative; }
+    .nav-item:hover { background: rgba(255,255,255,.05); color: white; border-right-color: rgba(20,184,166,.5); }
+    .nav-item.active { background: rgba(20,184,166,.12); color: white; border-right-color: var(--accent); font-weight: 600; }
     .nav-item.active::before { content: ''; position: absolute; right: 0; top: 50%; transform: translateY(-50%); width: 3px; height: 60%; background: var(--accent); border-radius: 0 4px 4px 0; }
-    .nav-item i, .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; opacity: 0.85; }
+    .nav-item i { width: 18px; height: 18px; opacity: .85; flex-shrink: 0; }
     .nav-item .badge { margin-right: auto; background: var(--danger); color: white; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
     .nav-item .badge.teal { background: var(--accent); }
     .nav-item .badge.gold { background: var(--gold); }
+    .nav-item .badge.new { background: var(--purple); }
 
-    /* ============================================================
-       Main
-       ============================================================ */
+    /* Main */
     .main { flex: 1; margin-right: var(--sidebar-w); min-width: 0; display: flex; flex-direction: column; }
-
-    .topbar {
-      height: var(--topbar-h);
-      background: var(--card);
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      padding: 0 24px;
-      position: sticky;
-      top: 0;
-      z-index: 50;
-      box-shadow: var(--shadow-sm);
-    }
-
+    .topbar { height: var(--topbar-h); background: var(--card); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 16px; padding: 0 24px; position: sticky; top: 0; z-index: 50; box-shadow: var(--shadow-sm); }
     .menu-toggle { display: none; background: transparent; border: none; color: var(--text); cursor: pointer; padding: 8px; border-radius: 8px; }
-    .menu-toggle:hover { background: var(--bg); }
-
-    .topbar-title { font-size: 18px; font-weight: 700; color: var(--text); flex-shrink: 0; }
+    .topbar-title { font-size: 18px; font-weight: 700; }
     .topbar-actions { display: flex; align-items: center; gap: 8px; margin-right: auto; }
-
-    .icon-btn {
-      width: 40px;
-      height: 40px;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      background: var(--card);
-      color: var(--text);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-      transition: all 0.2s;
-    }
+    .icon-btn { width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--border); background: var(--card); color: var(--text); cursor: pointer; display: flex; align-items: center; justify-content: center; position: relative; transition: all .2s; }
     .icon-btn:hover { border-color: var(--accent); color: var(--accent); }
-    .icon-btn i, .icon-btn svg { width: 18px; height: 18px; }
+    .icon-btn i { width: 18px; height: 18px; }
     .icon-btn .dot { position: absolute; top: 8px; left: 8px; width: 8px; height: 8px; background: var(--danger); border-radius: 50%; border: 2px solid var(--card); }
-
-    .user-menu {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 5px 12px 5px 5px;
-      border-radius: 10px;
-      cursor: pointer;
-      transition: background 0.2s;
-      border: 1px solid var(--border);
-      background: var(--card);
-    }
-    .user-menu:hover { background: var(--bg); }
-
-    .user-avatar {
-      width: 34px;
-      height: 34px;
-      border-radius: 9px;
-      background: linear-gradient(135deg, var(--primary), var(--accent));
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-weight: 700;
-      font-size: 14px;
-      flex-shrink: 0;
-      overflow: hidden;
-    }
+    .user-menu { display: flex; align-items: center; gap: 10px; padding: 5px 12px 5px 5px; border-radius: 10px; cursor: pointer; border: 1px solid var(--border); background: var(--card); }
+    .user-avatar { width: 34px; height: 34px; border-radius: 9px; background: linear-gradient(135deg, var(--primary), var(--accent)); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 14px; overflow: hidden; }
     .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
     .user-info { display: flex; flex-direction: column; line-height: 1.2; }
-    .user-info .name { font-size: 13px; font-weight: 700; color: var(--text); }
+    .user-info .name { font-size: 13px; font-weight: 700; }
     .user-info .role { font-size: 11px; color: var(--text-muted); }
-
-    .dropdown { position: absolute; top: calc(100% + 8px); left: 0; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: var(--shadow-lg); min-width: 200px; padding: 6px; opacity: 0; visibility: hidden; transform: translateY(-8px); transition: all 0.2s; z-index: 100; }
+    .dropdown { position: absolute; top: calc(100% + 8px); left: 0; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: var(--shadow-lg); min-width: 200px; padding: 6px; opacity: 0; visibility: hidden; transform: translateY(-8px); transition: all .2s; z-index: 100; }
     .dropdown.show { opacity: 1; visibility: visible; transform: translateY(0); }
-    .dropdown-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; color: var(--text); font-size: 13px; font-weight: 500; cursor: pointer; transition: background 0.15s; text-decoration: none; }
+    .dropdown-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; color: var(--text); font-size: 13px; font-weight: 500; text-decoration: none; cursor: pointer; }
     .dropdown-item:hover { background: var(--bg); }
     .dropdown-item.danger { color: var(--danger); }
-    .dropdown-item.danger:hover { background: rgba(239,68,68,0.08); }
-    .dropdown-item i { width: 16px; height: 16px; }
     .dropdown-divider { height: 1px; background: var(--border); margin: 6px 0; }
 
-    /* ============================================================
-       Content
-       ============================================================ */
+    /* Content */
     .content { padding: 24px; flex: 1; }
-
-    .page-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
-    }
-
-    .page-head h1 { font-size: 24px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+    .page-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+    .page-head h1 { font-size: 24px; font-weight: 800; margin-bottom: 4px; }
     .page-head p { font-size: 13px; color: var(--text-muted); }
+    .wh-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 20px; background: rgba(20,184,166,.1); color: var(--accent); font-size: 12px; font-weight: 700; margin-top: 8px; }
+    .wh-badge i { width: 14px; height: 14px; }
 
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 10px 18px;
-      font-family: inherit;
-      font-size: 14px;
-      font-weight: 600;
-      border-radius: var(--radius-sm);
-      border: none;
-      cursor: pointer;
-      transition: all 0.2s;
-      text-decoration: none;
-      white-space: nowrap;
-    }
-    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; font-family: inherit; font-size: 14px; font-weight: 600; border-radius: var(--radius-sm); border: none; cursor: pointer; transition: all .2s; text-decoration: none; white-space: nowrap; }
+    .btn:disabled { opacity: .6; cursor: not-allowed; }
     .btn i { width: 16px; height: 16px; }
-
     .btn-primary { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; }
-    .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(20,184,166,0.35); }
-
+    .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(20,184,166,.35); }
     .btn-outline { background: var(--card); color: var(--text); border: 1px solid var(--border); }
     .btn-outline:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
-
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-danger:hover:not(:disabled) { background: #dc2626; }
+    .btn-warning { background: var(--warning); color: white; }
+    .btn-warning:hover:not(:disabled) { background: #d97706; }
     .btn-sm { padding: 6px 12px; font-size: 12px; }
 
+    /* ✨ NEW: Financial Summary Bar */
+    .finance-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 16px; }
+    .finance-card { background: linear-gradient(135deg, var(--card), rgba(20,184,166,.03)); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; display: flex; align-items: center; gap: 12px; box-shadow: var(--shadow-sm); }
+    .finance-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .finance-icon i { width: 18px; height: 18px; color: white; }
+    .finance-icon.cost { background: linear-gradient(135deg, #f59e0b, #d97706); }
+    .finance-icon.sale { background: linear-gradient(135deg, #10b981, #047857); }
+    .finance-icon.potential { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
+    .finance-body .label { font-size: 11px; color: var(--text-muted); font-weight: 600; }
+    .finance-body .value { font-size: 17px; font-weight: 800; color: var(--text); line-height: 1.2; margin-top: 2px; }
+
     /* Mini stats */
-    .mini-stats {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 12px;
-      margin-bottom: 20px;
-    }
-
-    .mini-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 14px 16px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      transition: all 0.2s;
-      box-shadow: var(--shadow-sm);
-      cursor: pointer;
-    }
+    .mini-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px; }
+    .mini-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; display: flex; align-items: center; gap: 12px; transition: all .2s; box-shadow: var(--shadow-sm); cursor: pointer; }
     .mini-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: var(--shadow); }
-    .mini-card.active { border-color: var(--accent); background: rgba(20,184,166,0.05); }
-
-    .mini-icon {
-      width: 42px;
-      height: 42px;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-    }
+    .mini-card.active { border-color: var(--accent); background: rgba(20,184,166,.05); }
+    .mini-icon { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .mini-icon i { width: 20px; height: 20px; color: white; }
-    .mini-icon.blue   { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
-    .mini-icon.teal   { background: linear-gradient(135deg, #14B8A6, #0d9488); }
-    .mini-icon.gold   { background: linear-gradient(135deg, #F59E0B, #d97706); }
-    .mini-icon.green  { background: linear-gradient(135deg, #10b981, #047857); }
-    .mini-icon.red    { background: linear-gradient(135deg, #ef4444, #b91c1c); }
-    .mini-icon.purple { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
-
+    .mini-icon.blue    { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+    .mini-icon.teal    { background: linear-gradient(135deg, #14B8A6, #0d9488); }
+    .mini-icon.gold    { background: linear-gradient(135deg, #F59E0B, #d97706); }
+    .mini-icon.green   { background: linear-gradient(135deg, #10b981, #047857); }
+    .mini-icon.red     { background: linear-gradient(135deg, #ef4444, #b91c1c); }
+    .mini-icon.purple  { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
+    .mini-icon.orange  { background: linear-gradient(135deg, #f97316, #ea580c); }
+    .mini-icon.darkred { background: linear-gradient(135deg, #7f1d1d, #b91c1c); }
     .mini-body { flex: 1; min-width: 0; }
     .mini-body .label { font-size: 11px; color: var(--text-muted); font-weight: 600; margin-bottom: 2px; }
-    .mini-body .value { font-size: 18px; font-weight: 800; color: var(--text); line-height: 1; }
+    .mini-body .value { font-size: 18px; font-weight: 800; line-height: 1; }
 
     /* Tabs */
-    .tabs {
-      display: flex;
-      gap: 4px;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 6px;
-      margin-bottom: 16px;
-      overflow-x: auto;
-      scrollbar-width: none;
-      box-shadow: var(--shadow-sm);
-    }
+    .tabs { display: flex; gap: 4px; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 6px; margin-bottom: 16px; overflow-x: auto; scrollbar-width: none; box-shadow: var(--shadow-sm); }
     .tabs::-webkit-scrollbar { display: none; }
-
-    .tab {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 10px 18px;
-      font-family: inherit;
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text-muted);
-      background: transparent;
-      border: none;
-      border-radius: var(--radius-sm);
-      cursor: pointer;
-      transition: all 0.2s;
-      white-space: nowrap;
-    }
+    .tab { display: flex; align-items: center; gap: 8px; padding: 10px 18px; font-family: inherit; font-size: 13px; font-weight: 600; color: var(--text-muted); background: transparent; border: none; border-radius: var(--radius-sm); cursor: pointer; transition: all .2s; white-space: nowrap; }
     .tab:hover { background: var(--bg); color: var(--text); }
-    .tab.active { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; box-shadow: 0 4px 12px rgba(20,184,166,0.3); }
+    .tab.active { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; box-shadow: 0 4px 12px rgba(20,184,166,.3); }
+    .tab.active.quarantine-tab { background: linear-gradient(135deg, #b91c1c, #ef4444); box-shadow: 0 4px 12px rgba(239,68,68,.3); }
+    .tab.active.blacklist-tab { background: linear-gradient(135deg, #7f1d1d, #991b1b); box-shadow: 0 4px 12px rgba(127,29,29,.3); }
     .tab i { width: 16px; height: 16px; }
-
+    .tab .tab-count { background: rgba(255,255,255,.25); padding: 1px 7px; border-radius: 10px; font-size: 10px; font-weight: 700; }
     .tab-panel { display: none; }
-    .tab-panel.active { display: block; animation: fadeIn 0.3s; }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(6px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
+    .tab-panel.active { display: block; animation: fadeIn .3s; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 
     /* Toolbar */
-    .toolbar {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 14px 16px;
-      margin-bottom: 16px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
-      box-shadow: var(--shadow-sm);
-    }
-
+    .toolbar { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; box-shadow: var(--shadow-sm); }
     .search-input { position: relative; flex: 1; min-width: 220px; }
-    .search-input input {
-      width: 100%;
-      padding: 10px 42px 10px 14px;
-      font-family: inherit;
-      font-size: 14px;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      color: var(--text);
-      outline: none;
-      transition: all 0.2s;
-    }
-    .search-input input:focus { border-color: var(--accent); background: var(--card); box-shadow: 0 0 0 3px rgba(20,184,166,0.1); }
+    .search-input input { width: 100%; padding: 10px 42px 10px 14px; font-family: inherit; font-size: 14px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); outline: none; transition: all .2s; }
+    .search-input input:focus { border-color: var(--accent); background: var(--card); box-shadow: 0 0 0 3px rgba(20,184,166,.1); }
     .search-input i { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--text-muted); pointer-events: none; }
-
+    .search-input kbd { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-family: 'Courier New', monospace; font-size: 10px; padding: 2px 6px; background: var(--border); color: var(--text-muted); border-radius: 4px; font-weight: 700; pointer-events: none; }
     .select-wrap { position: relative; min-width: 150px; }
-    .select-wrap select {
-      width: 100%;
-      padding: 10px 14px 10px 32px;
-      font-family: inherit;
-      font-size: 14px;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      color: var(--text);
-      outline: none;
-      cursor: pointer;
-      appearance: none;
-      transition: all 0.2s;
-    }
+    .select-wrap select { width: 100%; padding: 10px 32px 10px 14px; font-family: inherit; font-size: 14px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); outline: none; cursor: pointer; appearance: none; }
     .select-wrap select:focus { border-color: var(--accent); background: var(--card); }
-    .select-wrap::after {
-      content: '';
-      position: absolute;
-      left: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 0;
-      height: 0;
-      border-left: 5px solid transparent;
-      border-right: 5px solid transparent;
-      border-top: 5px solid var(--text-muted);
-      pointer-events: none;
-    }
+    .select-wrap::after { content: ''; position: absolute; left: 12px; top: 50%; transform: translateY(-50%); border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 5px solid var(--text-muted); pointer-events: none; }
 
     /* Table */
-    .table-wrap {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow-sm);
-      overflow: hidden;
-    }
-
+    .table-wrap { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-sm); overflow: hidden; }
     .table-scroll { overflow-x: auto; }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 14px;
-      min-width: 900px;
-    }
-
+    table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 900px; }
     thead { background: var(--bg); border-bottom: 1px solid var(--border); }
-
-    th {
-      text-align: right;
-      padding: 14px 16px;
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      white-space: nowrap;
-    }
-
-    tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
+    th { text-align: right; padding: 14px 16px; font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; white-space: nowrap; }
+    tbody tr { border-bottom: 1px solid var(--border); transition: background .15s; }
     tbody tr:last-child { border-bottom: none; }
     tbody tr:hover { background: var(--bg); }
-
-    td { padding: 14px 16px; color: var(--text); vertical-align: middle; }
-
+    tbody tr.row-quarantined { background: rgba(239,68,68,.05); }
+    tbody tr.row-quarantined:hover { background: rgba(239,68,68,.09); }
+    tbody tr.row-blacklist { background: rgba(127,29,29,.06); }
+    tbody tr.row-blacklist:hover { background: rgba(127,29,29,.1); }
+    td { padding: 14px 16px; vertical-align: middle; }
     .product-cell { display: flex; align-items: center; gap: 12px; cursor: pointer; }
     .product-cell:hover .product-name { color: var(--accent); }
-
-    .product-avatar {
-      width: 40px;
-      height: 40px;
-      border-radius: 10px;
-      background: linear-gradient(135deg, var(--primary), var(--accent));
-      color: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
-      font-size: 15px;
-      flex-shrink: 0;
-    }
-
-    .product-name { font-weight: 700; color: var(--text); transition: color 0.2s; }
+    .product-avatar { width: 40px; height: 40px; border-radius: 10px; background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; flex-shrink: 0; }
+    .product-name { font-weight: 700; transition: color .2s; }
     .product-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
-
-    .qty-value {
-      font-weight: 800;
-      font-size: 16px;
-      color: var(--text);
-    }
+    .qty-value { font-weight: 800; font-size: 16px; }
     .qty-value.ok { color: var(--success); }
     .qty-value.low { color: var(--warning); }
     .qty-value.out { color: var(--danger); }
 
-    .badge-tag {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      padding: 4px 10px;
-      font-size: 11px;
-      font-weight: 600;
-      border-radius: 20px;
-      white-space: nowrap;
+    .badge-tag { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; font-size: 11px; font-weight: 600; border-radius: 20px; white-space: nowrap; }
+    .badge-tag.green  { background: rgba(16,185,129,.12); color: var(--success); }
+    .badge-tag.red    { background: rgba(239,68,68,.12); color: var(--danger); }
+    .badge-tag.gold   { background: rgba(245,158,11,.12); color: var(--warning); }
+    .badge-tag.gray   { background: rgba(148,163,184,.15); color: var(--text-muted); }
+    .badge-tag.blue   { background: rgba(59,130,246,.12); color: var(--info); }
+    .badge-tag.purple { background: rgba(139,92,246,.12); color: var(--purple); }
+    .badge-tag.darkred { background: rgba(127,29,29,.15); color: #991b1b; }
+
+    .wh-badge-sm { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 15px; background: rgba(11,44,77,.06); color: var(--text-muted); font-size: 11px; font-weight: 600; }
+    [data-theme="dark"] .wh-badge-sm { background: rgba(148,163,184,.12); }
+    .wh-badge-sm i { width: 11px; height: 11px; }
+
+    .copy-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 22px; height: 22px; border-radius: 6px;
+      border: none; background: transparent; color: var(--text-muted);
+      cursor: pointer; transition: all .2s; margin-right: 4px;
+      vertical-align: middle;
     }
-    .badge-tag.green  { background: rgba(16,185,129,0.12); color: var(--success); }
-    .badge-tag.red    { background: rgba(239,68,68,0.12); color: var(--danger); }
-    .badge-tag.gold   { background: rgba(245,158,11,0.12); color: var(--warning); }
-    .badge-tag.gray   { background: rgba(148,163,184,0.15); color: var(--text-muted); }
-    .badge-tag.blue   { background: rgba(59,130,246,0.12); color: var(--info); }
+    .copy-btn:hover { background: var(--accent); color: white; }
+    .copy-btn i { width: 12px; height: 12px; }
+    .copy-btn.copied { background: var(--success); color: white; }
 
     .actions-cell { display: flex; gap: 6px; justify-content: flex-end; }
-
-    .action-btn {
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      background: var(--card);
-      color: var(--text-muted);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.2s;
-    }
+    .action-btn { width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .2s; }
     .action-btn:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
+    .action-btn.danger:hover { border-color: var(--danger); color: var(--danger); }
+    .action-btn.success:hover { border-color: var(--success); color: var(--success); }
+    .action-btn.warning:hover { border-color: var(--warning); color: var(--warning); }
     .action-btn i { width: 15px; height: 15px; }
 
     .empty-row td { padding: 60px 20px; text-align: center; color: var(--text-muted); }
-    .empty-row i { width: 48px; height: 48px; opacity: 0.4; margin-bottom: 10px; }
+    .empty-row i { width: 48px; height: 48px; opacity: .4; margin-bottom: 10px; }
     .empty-row p { font-size: 14px; font-weight: 500; }
 
     .skeleton-row td { padding: 18px 16px; }
-    .skeleton-bar {
-      height: 14px;
-      background: linear-gradient(90deg, var(--border) 25%, var(--bg) 50%, var(--border) 75%);
-      background-size: 200% 100%;
-      animation: shimmer 1.4s infinite;
-      border-radius: 6px;
-    }
-    @keyframes shimmer {
-      0% { background-position: 200% 0; }
-      100% { background-position: -200% 0; }
-    }
+    .skeleton-bar { height: 14px; background: linear-gradient(90deg, var(--border) 25%, var(--bg) 50%, var(--border) 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 6px; }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
     /* Pagination */
-    .pagination {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 14px 20px;
-      border-top: 1px solid var(--border);
-      font-size: 13px;
-      color: var(--text-muted);
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-    .pagination .controls { display: flex; gap: 6px; align-items: center; }
-
-    .page-btn {
-      min-width: 34px;
-      height: 34px;
-      padding: 0 10px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      background: var(--card);
-      color: var(--text);
-      font-family: inherit;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
+    .pagination { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-top: 1px solid var(--border); font-size: 13px; color: var(--text-muted); flex-wrap: wrap; gap: 12px; }
+    .pagination .controls { display: flex; gap: 6px; }
+    .page-btn { min-width: 34px; height: 34px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--text); font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; transition: all .2s; }
     .page-btn:hover:not(:disabled):not(.active) { border-color: var(--accent); color: var(--accent); }
     .page-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
-    .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .page-btn:disabled { opacity: .4; cursor: not-allowed; }
 
-    .batch-modal-backdrop {
-      position: fixed;
-      inset: 0;
-      z-index: 500;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 18px;
-      background: rgba(15, 23, 42, 0.55);
-    }
-    .batch-modal-backdrop.show { display: flex; }
-    .batch-modal {
-      width: min(620px, 100%);
-      max-height: min(90vh, 760px);
-      overflow-y: auto;
-      background: var(--card);
-      color: var(--text);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow-lg);
-    }
-    .batch-modal-header, .batch-modal-footer {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 16px 20px;
-      border-bottom: 1px solid var(--border);
-    }
-    .batch-modal-header h2 { font-size: 17px; }
-    .batch-modal-footer { justify-content: flex-start; border-top: 1px solid var(--border); border-bottom: 0; }
-    .batch-modal-body { padding: 20px; }
-    .batch-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
-    .batch-form-field { display: flex; flex-direction: column; gap: 6px; }
-    .batch-form-field.full { grid-column: 1 / -1; }
-    .batch-form-field label { color: var(--text-muted); font-size: 12px; font-weight: 700; }
-    .batch-form-field input, .batch-form-field select {
-      width: 100%;
-      min-height: 42px;
-      padding: 9px 12px;
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      color: var(--text);
-      background: var(--bg);
-      font: inherit;
-      outline: none;
-    }
-    .batch-form-field input:focus, .batch-form-field select:focus { border-color: var(--accent); }
-    .batch-modal-note { margin-top: 14px; color: var(--text-muted); font-size: 12px; line-height: 1.7; }
-    @media (max-width: 520px) {
-      .batch-form-grid { grid-template-columns: 1fr; }
-      .batch-form-field.full { grid-column: auto; }
-    }
+    /* Modal */
+    .modal-backdrop { position: fixed; inset: 0; z-index: 500; display: none; align-items: center; justify-content: center; padding: 18px; background: rgba(15,23,42,.55); animation: fadeIn .2s; }
+    .modal-backdrop.show { display: flex; }
+    .modal { width: min(640px, 100%); max-height: min(92vh, 800px); overflow-y: auto; background: var(--card); color: var(--text); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-lg); animation: slideUp .25s; }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .modal-header, .modal-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+    .modal-header h2 { font-size: 17px; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+    .modal-header h2 i { width: 20px; height: 20px; color: var(--accent); }
+    .modal-header.danger h2 i { color: var(--danger); }
+    .modal-header.darkred h2 i { color: #991b1b; }
+    .modal-header.warning h2 i { color: var(--warning); }
+    .modal-footer { justify-content: flex-end; border-top: 1px solid var(--border); border-bottom: 0; background: var(--bg); }
+    .modal-body { padding: 20px; }
+
+    .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+    .form-field { display: flex; flex-direction: column; gap: 6px; }
+    .form-field.full { grid-column: 1 / -1; }
+    .form-field label { color: var(--text-muted); font-size: 12px; font-weight: 700; }
+    .form-field label .req { color: var(--danger); }
+    .form-field input, .form-field select, .form-field textarea { width: 100%; min-height: 42px; padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); background: var(--bg); font: inherit; outline: none; transition: all .2s; }
+    .form-field input:focus, .form-field select:focus, .form-field textarea:focus { border-color: var(--accent); background: var(--card); box-shadow: 0 0 0 3px rgba(20,184,166,.1); }
+    .form-field textarea { min-height: 80px; resize: vertical; }
+    .form-field small { color: var(--text-muted); font-size: 11px; }
+
+    .form-note { background: rgba(20,184,166,.06); border: 1px solid rgba(20,184,166,.15); border-radius: 10px; padding: 10px 14px; font-size: 12px; color: var(--text); display: flex; gap: 8px; align-items: flex-start; line-height: 1.6; }
+    .form-note i { width: 16px; height: 16px; color: var(--accent); flex-shrink: 0; margin-top: 2px; }
+    .form-note.warning { background: rgba(245,158,11,.06); border-color: rgba(245,158,11,.2); }
+    .form-note.warning i { color: var(--warning); }
+    .form-note.danger { background: rgba(239,68,68,.06); border-color: rgba(239,68,68,.2); }
+    .form-note.danger i { color: var(--danger); }
+    .form-note.darkred { background: rgba(127,29,29,.06); border-color: rgba(127,29,29,.2); }
+    .form-note.darkred i { color: #991b1b; }
+
+    .batch-selected { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 12px; display: flex; align-items: center; gap: 12px; }
+    .batch-selected .icon { width: 40px; height: 40px; border-radius: 10px; background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0; }
+    .batch-selected .info { flex: 1; min-width: 0; }
+    .batch-selected .info .name { font-weight: 700; margin-bottom: 2px; }
+    .batch-selected .info .sub { font-size: 12px; color: var(--text-muted); }
+
+    .search-results { max-height: 220px; overflow-y: auto; border: 1px solid var(--border); border-radius: 10px; padding: 6px; background: var(--bg); }
+    .search-item { padding: 10px; border-radius: 8px; cursor: pointer; display: flex; gap: 10px; align-items: center; transition: background .15s; }
+    .search-item:hover { background: var(--card); }
+    .search-item .icon-sm { width: 36px; height: 36px; border-radius: 8px; background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0; font-size: 14px; }
+    .search-item .info { flex: 1; min-width: 0; }
+    .search-item .info .name { font-weight: 700; font-size: 13px; }
+    .search-item .info .sub { font-size: 11px; color: var(--text-muted); }
+
+    /* Transfer modal */
+    .transfer-info-box { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-bottom: 14px; }
+    .transfer-info-box .row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; }
+    .transfer-info-box .row + .row { border-top: 1px dashed var(--border); }
+    .transfer-info-box .row .label { color: var(--text-muted); font-weight: 600; }
+    .transfer-info-box .row .value { font-weight: 700; }
+
+    .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 99; opacity: 0; transition: opacity .3s; }
+    .overlay.show { display: block; opacity: 1; }
 
     /* Chart */
-    .chart-wrap {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 18px;
-      margin-bottom: 16px;
-      box-shadow: var(--shadow-sm);
-    }
-    .chart-wrap h3 {
-      font-size: 15px;
-      font-weight: 700;
-      color: var(--text);
-      margin-bottom: 14px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
+    .chart-wrap { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; margin-bottom: 16px; box-shadow: var(--shadow-sm); }
+    .chart-wrap h3 { font-size: 15px; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
     .chart-wrap h3 i { width: 18px; height: 18px; color: var(--accent); }
     .chart-inner { position: relative; height: 280px; }
 
-    /* Overlay (mobile) */
-    .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; opacity: 0; transition: opacity 0.3s; }
-    .overlay.show { display: block; opacity: 1; }
+    /* ✨ NEW: Quick Search Overlay */
+    .quick-search-overlay { position: fixed; inset: 0; z-index: 600; display: none; align-items: flex-start; justify-content: center; padding: 80px 20px 20px; background: rgba(15,23,42,.6); backdrop-filter: blur(6px); animation: fadeIn .2s; }
+    .quick-search-overlay.show { display: flex; }
+    .quick-search-box { width: min(600px, 100%); background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow-lg); overflow: hidden; animation: slideUp .25s; }
+    .quick-search-input { width: 100%; padding: 18px 60px 18px 18px; font-family: inherit; font-size: 16px; font-weight: 600; background: var(--card); border: none; border-bottom: 1px solid var(--border); color: var(--text); outline: none; }
+    .quick-search-input-wrap { position: relative; }
+    .quick-search-input-wrap > i { position: absolute; right: 20px; top: 50%; transform: translateY(-50%); width: 22px; height: 22px; color: var(--accent); pointer-events: none; }
+    .quick-search-kbd { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); font-size: 10px; padding: 3px 8px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text-muted); font-family: 'Courier New', monospace; font-weight: 700; }
+    .quick-search-results { max-height: 400px; overflow-y: auto; padding: 8px; }
+    .quick-search-item { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 10px; cursor: pointer; transition: background .15s; }
+    .quick-search-item:hover, .quick-search-item.selected { background: var(--accent-soft, rgba(20,184,166,.1)); }
+    .quick-search-item .qs-icon { width: 40px; height: 40px; border-radius: 10px; background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 15px; flex-shrink: 0; }
+    .quick-search-item .qs-body { flex: 1; min-width: 0; }
+    .quick-search-item .qs-name { font-weight: 700; font-size: 14px; color: var(--text); }
+    .quick-search-item .qs-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .quick-search-empty { text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 13px; }
+    .quick-search-footer { padding: 10px 16px; border-top: 1px solid var(--border); background: var(--bg); display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--text-muted); }
+    .quick-search-footer kbd { font-family: 'Courier New', monospace; padding: 2px 6px; background: var(--card); border: 1px solid var(--border); border-radius: 4px; font-weight: 700; }
 
     /* Responsive */
     @media (max-width: 1024px) {
@@ -653,7 +328,6 @@
       .menu-toggle { display: flex; }
       .user-info { display: none; }
     }
-
     @media (max-width: 640px) {
       .content { padding: 16px; }
       .topbar { padding: 0 14px; gap: 10px; }
@@ -662,22 +336,26 @@
       .page-head h1 { font-size: 20px; }
       .toolbar { padding: 12px; }
       .search-input { min-width: 100%; }
+      .search-input kbd { display: none; }
       .tabs { padding: 4px; }
       .tab { padding: 8px 12px; font-size: 12px; }
+      .form-grid { grid-template-columns: 1fr; }
+      .form-field.full { grid-column: auto; }
+      .finance-bar { grid-template-columns: 1fr; }
+      .quick-search-overlay { padding: 20px 10px; }
     }
   </style>
 </head>
 <body>
 
-  <!-- Sidebar -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
-      <div class="sidebar-logo">
-        <img src="logo.png" alt="رفاد" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=fallback>R</span>';">
+      <div class="sidebar-logo" id="sidebarLogo">
+        <img src="logo.png" alt="رفاد" id="sidebarLogoImg" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=fallback>R</span>';">
       </div>
       <div class="sidebar-brand">
-        <h2>رفاد</h2>
-        <p>نظام إدارة الأدوية</p>
+        <h2 id="sidebarBrandName">رفاد</h2>
+        <p id="sidebarBrandDesc">نظام إدارة الأدوية</p>
       </div>
     </div>
     <nav class="sidebar-nav" id="sidebarNav"></nav>
@@ -685,14 +363,13 @@
 
   <div class="overlay" id="overlay"></div>
 
-  <!-- Main -->
   <div class="main">
 
     <header class="topbar">
       <button class="menu-toggle" id="menuToggle"><i data-lucide="menu"></i></button>
       <div class="topbar-title">المخزون</div>
       <div class="topbar-actions">
-        <button class="icon-btn" id="themeToggle" title="الوضع الليلي/النهاري">
+        <button class="icon-btn" id="themeToggle" title="الوضع الليلي">
           <i data-lucide="moon" id="themeIcon"></i>
         </button>
         <button class="icon-btn" id="notifBtn" title="الإشعارات" style="position:relative;">
@@ -706,7 +383,7 @@
               <span class="name" id="userName">—</span>
               <span class="role" id="userRole">—</span>
             </div>
-            <i data-lucide="chevron-down" style="width:14px;height:14px;opacity:0.5;"></i>
+            <i data-lucide="chevron-down" style="width:14px;height:14px;opacity:.5;"></i>
           </div>
           <div class="dropdown" id="userDropdown">
             <a href="company-settings.html" class="dropdown-item"><i data-lucide="settings"></i> الإعدادات</a>
@@ -723,9 +400,16 @@
       <div class="page-head">
         <div>
           <h1>المخزون</h1>
-          <p>عرض شامل للمخزون والتشغيلات والحركات</p>
+          <p>عرض شامل للمخزون والتشغيلات والحركات والتشغيلات المحظورة</p>
+          <div class="wh-badge" id="activeWhBadge" style="display:none;">
+            <i data-lucide="warehouse"></i>
+            <span id="activeWhName">—</span>
+          </div>
         </div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <a href="warehouse-transfers.html" class="btn btn-outline">
+            <i data-lucide="repeat"></i> التحويلات
+          </a>
           <button class="btn btn-outline" id="printBtn">
             <i data-lucide="printer"></i> طباعة
           </button>
@@ -738,7 +422,32 @@
         </div>
       </div>
 
-      <!-- Mini stats (قابلة للنقر للفلترة) -->
+      <!-- ✨ NEW: Finance Summary -->
+      <div class="finance-bar">
+        <div class="finance-card">
+          <div class="finance-icon cost"><i data-lucide="coins"></i></div>
+          <div class="finance-body">
+            <div class="label">قيمة المخزون (تكلفة)</div>
+            <div class="value" id="financeCost">—</div>
+          </div>
+        </div>
+        <div class="finance-card">
+          <div class="finance-icon sale"><i data-lucide="banknote"></i></div>
+          <div class="finance-body">
+            <div class="label">قيمة المخزون (بيع)</div>
+            <div class="value" id="financeSale">—</div>
+          </div>
+        </div>
+        <div class="finance-card">
+          <div class="finance-icon potential"><i data-lucide="trending-up"></i></div>
+          <div class="finance-body">
+            <div class="label">الربح المتوقع</div>
+            <div class="value" id="financeProfit">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mini stats -->
       <div class="mini-stats">
         <div class="mini-card" data-filter="all">
           <div class="mini-icon blue"><i data-lucide="package"></i></div>
@@ -775,21 +484,44 @@
             <div class="value" id="statExpiring">—</div>
           </div>
         </div>
+        <div class="mini-card" data-filter="quarantined">
+          <div class="mini-icon orange"><i data-lucide="shield-off"></i></div>
+          <div class="mini-body">
+            <div class="label">تشغيلات محظورة</div>
+            <div class="value" id="statQuarantined">—</div>
+          </div>
+        </div>
+        <div class="mini-card" data-filter="blacklisted">
+          <div class="mini-icon darkred"><i data-lucide="ban"></i></div>
+          <div class="mini-body">
+            <div class="label">قايمة سوداء</div>
+            <div class="value" id="statBlacklisted">—</div>
+          </div>
+        </div>
       </div>
 
       <!-- Tabs -->
       <div class="tabs">
         <button class="tab active" data-tab="products"><i data-lucide="package"></i> الأصناف</button>
         <button class="tab" data-tab="batches"><i data-lucide="layers"></i> التشغيلات</button>
+        <button class="tab quarantine-tab" data-tab="quarantine">
+          <i data-lucide="shield-off"></i> محظورة داخلياً
+          <span class="tab-count" id="quarantineTabCount" style="display:none;">0</span>
+        </button>
+        <button class="tab blacklist-tab" data-tab="blacklist">
+          <i data-lucide="ban"></i> قايمة سوداء
+          <span class="tab-count" id="blacklistTabCount" style="display:none;">0</span>
+        </button>
         <button class="tab" data-tab="movements"><i data-lucide="activity"></i> الحركات</button>
       </div>
 
-      <!-- Panel: Products -->
+      <!-- Products -->
       <div class="tab-panel active" data-panel="products">
         <div class="toolbar">
           <div class="search-input">
             <input type="text" id="searchInput" placeholder="ابحث بالاسم أو التصنيف أو الشكل...">
             <i data-lucide="search"></i>
+            <kbd>Ctrl+K</kbd>
           </div>
           <div class="select-wrap">
             <select id="filterStatus">
@@ -797,11 +529,6 @@
               <option value="in-stock">متوفر</option>
               <option value="low">منخفض</option>
               <option value="out">نفد</option>
-            </select>
-          </div>
-          <div class="select-wrap">
-            <select id="filterSupplier">
-              <option value="">كل الموردين</option>
             </select>
           </div>
         </div>
@@ -827,7 +554,7 @@
         </div>
       </div>
 
-      <!-- Panel: Batches -->
+      <!-- Batches -->
       <div class="tab-panel" data-panel="batches">
         <div class="toolbar">
           <div class="search-input">
@@ -855,6 +582,7 @@
                 <tr>
                   <th>الصنف</th>
                   <th>رقم التشغيلة</th>
+                  <th>المخزن</th>
                   <th>الكمية المتبقية</th>
                   <th>سعر الشراء</th>
                   <th>سعر البيع</th>
@@ -870,7 +598,93 @@
         </div>
       </div>
 
-      <!-- Panel: Movements -->
+      <!-- Quarantine -->
+      <div class="tab-panel" data-panel="quarantine">
+        <div class="toolbar">
+          <div class="search-input">
+            <input type="text" id="quarSearch" placeholder="ابحث برقم التشغيلة أو السبب...">
+            <i data-lucide="search"></i>
+          </div>
+          <div class="select-wrap">
+            <select id="quarFilterReason">
+              <option value="">كل الأسباب</option>
+            </select>
+          </div>
+          <button class="btn btn-danger" id="addQuarantineBtn" type="button">
+            <i data-lucide="shield-off"></i> حظر تشغيلة
+          </button>
+        </div>
+
+        <div class="table-wrap">
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>الصنف</th>
+                  <th>رقم التشغيلة</th>
+                  <th>المخزن</th>
+                  <th>سبب الحظر</th>
+                  <th>الكمية</th>
+                  <th>تاريخ الحظر</th>
+                  <th>ملاحظات</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="quarantineBody"></tbody>
+            </table>
+          </div>
+          <div class="pagination" id="quarantinePagination"></div>
+        </div>
+      </div>
+
+      <!-- Blacklist -->
+      <div class="tab-panel" data-panel="blacklist">
+        <div class="toolbar">
+          <div class="search-input">
+            <input type="text" id="blSearch" placeholder="ابحث برقم التشغيلة أو السبب...">
+            <i data-lucide="search"></i>
+          </div>
+          <div class="select-wrap">
+            <select id="blFilterReason">
+              <option value="">كل الأسباب</option>
+            </select>
+          </div>
+          <button class="btn btn-danger" id="addBlacklistBtn" type="button">
+            <i data-lucide="ban"></i> إضافة للقايمة السوداء
+          </button>
+        </div>
+
+        <div class="form-note darkred" style="margin-bottom:16px;">
+          <i data-lucide="info"></i>
+          <div>
+            <strong>القايمة السوداء:</strong> تشغيلات <b>لم تدخل المخزن بعد</b> — تُفحص تلقائياً قبل أي استلام أو إدخال.
+            أي محاولة لإدخال رقم مطابق (حتى بآخر 4 أرقام/حروف) سيتم رفضها.
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>رقم التشغيلة</th>
+                  <th>الصنف</th>
+                  <th>سبب الحظر</th>
+                  <th>الخطورة</th>
+                  <th>تاريخ الإضافة</th>
+                  <th>بواسطة</th>
+                  <th>ملاحظات</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="blacklistBody"></tbody>
+            </table>
+          </div>
+          <div class="pagination" id="blacklistPagination"></div>
+        </div>
+      </div>
+
+      <!-- Movements -->
       <div class="tab-panel" data-panel="movements">
         <div class="chart-wrap">
           <h3><i data-lucide="bar-chart-3"></i> حركات آخر 30 يوم</h3>
@@ -919,53 +733,82 @@
     </main>
   </div>
 
-  <div class="batch-modal-backdrop" id="batchModalBackdrop" aria-hidden="true">
-    <section class="batch-modal" role="dialog" aria-modal="true" aria-labelledby="batchModalTitle">
+  <!-- ✨ NEW: Quick Search Overlay -->
+  <div class="quick-search-overlay" id="quickSearchOverlay">
+    <div class="quick-search-box">
+      <div class="quick-search-input-wrap">
+        <input type="text" class="quick-search-input" id="quickSearchInput" placeholder="ابحث عن صنف أو تشغيلة..." autocomplete="off">
+        <i data-lucide="search"></i>
+        <span class="quick-search-kbd">ESC</span>
+      </div>
+      <div class="quick-search-results" id="quickSearchResults">
+        <div class="quick-search-empty">اكتب للبحث السريع...</div>
+      </div>
+      <div class="quick-search-footer">
+        <span><kbd>↑</kbd> <kbd>↓</kbd> للتنقل</span>
+        <span><kbd>Enter</kbd> للفتح</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Batch -->
+  <div class="modal-backdrop" id="batchModalBackdrop" aria-hidden="true">
+    <section class="modal" role="dialog" aria-modal="true">
       <form id="batchForm">
-        <header class="batch-modal-header">
-          <h2 id="batchModalTitle">إضافة تشغيلة جديدة</h2>
-          <button class="action-btn" type="button" id="closeBatchModalBtn" aria-label="إغلاق">
-            <i data-lucide="x"></i>
-          </button>
+        <header class="modal-header">
+          <h2 id="batchModalTitle">
+            <i data-lucide="layers"></i>
+            <span>إضافة تشغيلة جديدة</span>
+          </h2>
+          <button class="action-btn" type="button" id="closeBatchModalBtn"><i data-lucide="x"></i></button>
         </header>
-        <div class="batch-modal-body">
-          <div class="batch-form-grid">
-            <div class="batch-form-field full">
-              <label for="batchProduct">الصنف <span style="color:var(--danger);">*</span></label>
+        <div class="modal-body">
+          <div class="form-note" style="margin-bottom:16px;">
+            <i data-lucide="warehouse"></i>
+            <div>سيتم الحفظ في المخزن النشط: <strong id="batchModalWhName">—</strong></div>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-field full">
+              <label for="batchProduct">الصنف <span class="req">*</span></label>
               <select id="batchProduct" required></select>
             </div>
-            <div class="batch-form-field">
+            <div class="form-field">
               <label for="batchNumber">رقم التشغيلة</label>
-              <input id="batchNumber" type="text" maxlength="50" autocomplete="off">
+              <input id="batchNumber" type="text" maxlength="50" autocomplete="off" placeholder="ABC-1234">
+              <small id="batchBlacklistHint" style="display:none;color:var(--danger);font-weight:700;"></small>
             </div>
-            <div class="batch-form-field">
+            <div class="form-field">
               <label for="batchSupplier">المورد</label>
               <select id="batchSupplier"></select>
             </div>
-            <div class="batch-form-field">
-              <label for="batchQuantity" id="batchQuantityLabel">الرصيد الحالي <span style="color:var(--danger);">*</span></label>
+            <div class="form-field">
+              <label for="batchQuantity" id="batchQuantityLabel">الرصيد الحالي <span class="req">*</span></label>
               <input id="batchQuantity" type="number" min="0" step="1" required>
             </div>
-            <div class="batch-form-field">
+            <div class="form-field">
               <label for="batchExpiry">تاريخ الصلاحية</label>
               <input id="batchExpiry" type="date">
             </div>
-            <div class="batch-form-field">
-              <label for="batchCostPrice">سعر الشراء للوحدة</label>
+            <div class="form-field">
+              <label for="batchCostPrice">سعر الشراء</label>
               <input id="batchCostPrice" type="number" min="0" step="0.01" value="0">
             </div>
-            <div class="batch-form-field">
-              <label for="batchSalePrice">سعر البيع للوحدة</label>
+            <div class="form-field">
+              <label for="batchSalePrice">سعر البيع</label>
               <input id="batchSalePrice" type="number" min="0" step="0.01" value="0">
             </div>
-            <div class="batch-form-field">
+            <div class="form-field">
               <label for="batchPurchaseDiscount">خصم الشراء (%)</label>
               <input id="batchPurchaseDiscount" type="number" min="0" max="100" step="0.01" value="0">
             </div>
           </div>
-          <p class="batch-modal-note" id="batchModalNote">سيتم تسجيل الكمية المضافة كحركة وارد للمخزون.</p>
+          <p class="form-note" id="batchModalNote" style="margin-top:14px;">
+            <i data-lucide="info"></i>
+            <div>سيتم تسجيل الكمية المضافة كحركة وارد للمخزون.</div>
+          </p>
         </div>
-        <footer class="batch-modal-footer">
+        <footer class="modal-footer">
           <button class="btn btn-outline" type="button" id="cancelBatchModalBtn">إلغاء</button>
           <button class="btn btn-primary" type="submit" id="saveBatchBtn">
             <i data-lucide="save"></i> حفظ التشغيلة
@@ -975,11 +818,299 @@
     </section>
   </div>
 
+  <!-- Modal: Transfer Batch -->
+  <div class="modal-backdrop" id="transferModalBackdrop" aria-hidden="true">
+    <section class="modal" role="dialog" aria-modal="true">
+      <form id="transferForm">
+        <header class="modal-header warning">
+          <h2>
+            <i data-lucide="repeat"></i>
+            <span>نقل تشغيلة لمخزن آخر</span>
+          </h2>
+          <button class="action-btn" type="button" id="closeTransferModalBtn"><i data-lucide="x"></i></button>
+        </header>
+        <div class="modal-body">
+          <div class="transfer-info-box" id="transferInfoBox"></div>
+
+          <div class="form-grid">
+            <div class="form-field full">
+              <label for="transferToWh">إلى المخزن <span class="req">*</span></label>
+              <select id="transferToWh" required></select>
+            </div>
+
+            <div class="form-field full">
+              <label for="transferQty">الكمية المنقولة <span class="req">*</span></label>
+              <input id="transferQty" type="number" min="1" step="1" required>
+              <small id="transferQtyHint"></small>
+            </div>
+
+            <div class="form-field full">
+              <label for="transferNotes">ملاحظات</label>
+              <textarea id="transferNotes" maxlength="500" placeholder="سبب النقل..."></textarea>
+            </div>
+          </div>
+
+          <div class="form-note warning" style="margin-top:14px;">
+            <i data-lucide="alert-triangle"></i>
+            <div>سيتم خصم الكمية من المخزن الحالي وإضافتها للمخزن الجديد كتشغيلة منفصلة.</div>
+          </div>
+        </div>
+        <footer class="modal-footer">
+          <button class="btn btn-outline" type="button" id="cancelTransferModalBtn">إلغاء</button>
+          <button class="btn btn-primary" type="submit" id="confirmTransferBtn">
+            <i data-lucide="repeat"></i> تنفيذ النقل
+          </button>
+        </footer>
+      </form>
+    </section>
+  </div>
+
+  <!-- Modal: Quarantine -->
+  <div class="modal-backdrop" id="quarModalBackdrop" aria-hidden="true">
+    <section class="modal" role="dialog" aria-modal="true">
+      <form id="quarForm">
+        <header class="modal-header danger">
+          <h2>
+            <i data-lucide="shield-off"></i>
+            <span>حظر تشغيلة داخلية</span>
+          </h2>
+          <button class="action-btn" type="button" id="closeQuarModalBtn"><i data-lucide="x"></i></button>
+        </header>
+        <div class="modal-body">
+          <div class="form-note danger" style="margin-bottom:16px;">
+            <i data-lucide="alert-triangle"></i>
+            <div>
+              <strong>تحذير:</strong> الحظر الداخلي لتشغيلة <b>دخلت المخزن بالفعل</b>.
+              سيتم منع بيعها وستُستثنى من حساب المخزون المتاح.
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-field full">
+              <label for="quarSearchBatch">ابحث عن التشغيلة <span class="req">*</span></label>
+              <input id="quarSearchBatch" type="text" placeholder="اكتب رقم التشغيلة أو آخر 4 أرقام/حروف..." autocomplete="off">
+              <small>البحث في التشغيلات المتاحة في المخزن النشط</small>
+            </div>
+
+            <div class="form-field full" id="quarResultsWrap" style="display:none;">
+              <label>النتائج</label>
+              <div class="search-results" id="quarResults"></div>
+            </div>
+
+            <div class="form-field full" id="quarSelectedWrap" style="display:none;">
+              <label>التشغيلة المختارة</label>
+              <div class="batch-selected" id="quarSelected"></div>
+            </div>
+
+            <div class="form-field">
+              <label for="quarReason">سبب الحظر <span class="req">*</span></label>
+              <select id="quarReason" required></select>
+            </div>
+
+            <div class="form-field">
+              <label for="quarReasonNote">تفاصيل السبب</label>
+              <input id="quarReasonNote" type="text" maxlength="200" placeholder="مثال: منشور رقم 1234/2026">
+            </div>
+
+            <div class="form-field full">
+              <label for="quarNotes">ملاحظات إضافية</label>
+              <textarea id="quarNotes" maxlength="500" placeholder="أي تفاصيل أخرى..."></textarea>
+            </div>
+          </div>
+        </div>
+        <footer class="modal-footer">
+          <button class="btn btn-outline" type="button" id="cancelQuarModalBtn">إلغاء</button>
+          <button class="btn btn-danger" type="submit" id="saveQuarBtn" disabled>
+            <i data-lucide="shield-off"></i> تأكيد الحظر
+          </button>
+        </footer>
+      </form>
+    </section>
+  </div>
+
+  <!-- Modal: Blacklist -->
+  <div class="modal-backdrop" id="blModalBackdrop" aria-hidden="true">
+    <section class="modal" role="dialog" aria-modal="true">
+      <form id="blForm">
+        <header class="modal-header darkred">
+          <h2>
+            <i data-lucide="ban"></i>
+            <span>إضافة للقايمة السوداء</span>
+          </h2>
+          <button class="action-btn" type="button" id="closeBlModalBtn"><i data-lucide="x"></i></button>
+        </header>
+        <div class="modal-body">
+          <div class="form-note darkred" style="margin-bottom:16px;">
+            <i data-lucide="alert-octagon"></i>
+            <div>
+              <strong>القايمة السوداء:</strong> لتشغيلات <b>لسه ما دخلتش المخزن</b>.
+              النظام هيرفض أي استلام مطابق (حتى بآخر 4 أرقام/حروف).
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-field full">
+              <label for="blBatchNumber">رقم التشغيلة <span class="req">*</span></label>
+              <input id="blBatchNumber" type="text" maxlength="100" required autocomplete="off" placeholder="مثال: ABC-1234 أو 1234">
+              <small>سيتم مطابقة آخر 4 أرقام/حروف تلقائياً مع أي استلام</small>
+            </div>
+
+            <div class="form-field full" id="blMatchHint" style="display:none;">
+              <div class="form-note warning">
+                <i data-lucide="info"></i>
+                <div id="blMatchHintText"></div>
+              </div>
+            </div>
+
+            <div class="form-field full">
+              <label for="blProduct">الصنف (اختياري)</label>
+              <select id="blProduct">
+                <option value="">— غير محدد —</option>
+              </select>
+            </div>
+
+            <div class="form-field">
+              <label for="blReason">سبب الحظر <span class="req">*</span></label>
+              <select id="blReason" required></select>
+            </div>
+
+            <div class="form-field">
+              <label for="blSeverity">الخطورة</label>
+              <select id="blSeverity">
+                <option value="high">عالية</option>
+                <option value="medium" selected>متوسطة</option>
+                <option value="low">منخفضة</option>
+              </select>
+            </div>
+
+            <div class="form-field full">
+              <label for="blReasonNote">تفاصيل السبب</label>
+              <input id="blReasonNote" type="text" maxlength="200" placeholder="مثال: منشور وزارة الصحة رقم 1234/2026">
+            </div>
+
+            <div class="form-field full">
+              <label for="blNotes">ملاحظات إضافية</label>
+              <textarea id="blNotes" maxlength="500" placeholder="أي تفاصيل أخرى..."></textarea>
+            </div>
+          </div>
+        </div>
+        <footer class="modal-footer">
+          <button class="btn btn-outline" type="button" id="cancelBlModalBtn">إلغاء</button>
+          <button class="btn btn-danger" type="submit" id="saveBlBtn">
+            <i data-lucide="ban"></i> إضافة للقايمة السوداء
+          </button>
+        </footer>
+      </form>
+    </section>
+  </div>
+
+  <!-- Modal: Release -->
+  <div class="modal-backdrop" id="releaseModalBackdrop" aria-hidden="true">
+    <section class="modal" style="width:min(560px,100%);" role="dialog" aria-modal="true">
+      <header class="modal-header">
+        <h2>
+          <i data-lucide="shield-check" style="color:var(--success);"></i>
+          <span id="releaseTitle">فك الحظر</span>
+        </h2>
+        <button class="action-btn" type="button" id="closeReleaseModalBtn"><i data-lucide="x"></i></button>
+      </header>
+      <div class="modal-body">
+        <div id="releaseInfo" style="margin-bottom:16px;padding:14px;border-radius:10px;background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.2);font-size:14px;line-height:1.7;"></div>
+        <div class="form-field">
+          <label for="releaseNotes">ملاحظات الفك</label>
+          <textarea id="releaseNotes" maxlength="500" placeholder="سبب فك الحظر، رقم الموافقة..."></textarea>
+        </div>
+      </div>
+      <footer class="modal-footer">
+        <button class="btn btn-outline" type="button" id="cancelReleaseBtn">إلغاء</button>
+        <button class="btn btn-primary" type="button" id="confirmReleaseBtn">
+          <i data-lucide="shield-check"></i> فك الحظر
+        </button>
+      </footer>
+    </section>
+  </div>
+
+  <!-- ============================================================
+       SCRIPTS — الترتيب مهم جداً
+       ============================================================ -->
   <script src="refad-core.js"></script>
   <script src="refad-auth.js"></script>
+  <script src="refad-theme-sync.js"></script>
+  <script src="refad-settings.js"></script>
+  <script src="refad-warehouse.js"></script>
+  <script src="refad-quarantine.js"></script>
+
   <script>
     (function () {
       'use strict';
+
+      // ============================================================
+      // 0) Safe Settings Wrapper
+      // ============================================================
+      const SafeSettings = {
+        locale: {
+          formatMoney: function (v) {
+            try {
+              if (window.RefadSettings?.locale?.formatMoney) {
+                return RefadSettings.locale.formatMoney(v);
+              }
+            } catch (e) {}
+            return Refad.format.money(v);
+          },
+          getCurrencySymbol: function () {
+            try {
+              if (window.RefadSettings?.locale?.getCurrencySymbol) {
+                return RefadSettings.locale.getCurrencySymbol();
+              }
+            } catch (e) {}
+            return 'ج.م';
+          }
+        },
+        identity: {
+          getSystemName: function () {
+            try {
+              if (window.RefadSettings?.identity?.getSystemName) {
+                return RefadSettings.identity.getSystemName();
+              }
+            } catch (e) {}
+            return 'رفاد';
+          },
+          getTagline: function () {
+            try {
+              if (window.RefadSettings?.identity?.getTagline) {
+                return RefadSettings.identity.getTagline();
+              }
+            } catch (e) {}
+            return 'نظام إدارة الأدوية';
+          },
+          getLogoUrl: function () {
+            try {
+              if (window.RefadSettings?.identity?.getLogoUrl) {
+                return RefadSettings.identity.getLogoUrl();
+              }
+            } catch (e) {}
+            return null;
+          }
+        },
+        inventory: {
+          getExpiryAlertDays: function () {
+            try {
+              if (window.RefadSettings?.inventory?.getExpiryAlertDays) {
+                return RefadSettings.inventory.getExpiryAlertDays();
+              }
+            } catch (e) {}
+            return 90;
+          },
+          getLowStockThreshold: function () {
+            try {
+              if (window.RefadSettings?.inventory?.getReorderLevel) {
+                return RefadSettings.inventory.getReorderLevel();
+              }
+            } catch (e) {}
+            return 10;
+          }
+        }
+      };
 
       // ============================================================
       // 1) Guard
@@ -987,103 +1118,49 @@
       const session = Refad.Auth.guardPage('inventory.view');
       if (!session) return;
 
+      const canAdjust = Refad.Auth.can('inventory.adjust');
+      const canQuarantine = Refad.Auth.can('inventory.adjust') ||
+                            Refad.Session.has('company.owner') ||
+                            Refad.Session.has('quarantine.manage');
+
       // ============================================================
       // 2) State
       // ============================================================
       const state = {
-        products: [],           // { ...product, total_qty, batches, nearest_expiry, status }
-        batches: [],
-        movements: [],
-        suppliers: [],
+        products: [], batches: [], movements: [], suppliers: [],
+        warehouses: [], users: [],
+        quarantinedBatches: [], blacklist: [],
 
-        // Filters
-        productSearch: '',
-        productFilterStatus: '',
-        productFilterSupplier: '',
+        activeWarehouseId: null,
+        expiryAlertDays: 90,
 
-        batchSearch: '',
-        batchFilterStatus: '',
+        productSearch: '', productFilterStatus: '',
+        batchSearch: '', batchFilterStatus: '',
+        quarSearch: '', quarFilterReason: '',
+        blSearch: '', blFilterReason: '',
+        movSearch: '', movType: '',
 
-        movSearch: '',
-        movType: '',
+        productsPage: 1, batchesPage: 1, quarantinePage: 1,
+        blacklistPage: 1, movementsPage: 1, perPage: 15,
 
-        // Pagination
-        productsPage: 1,
-        batchesPage: 1,
-        movementsPage: 1,
-        perPage: 15,
-
-        // Chart
         movementsChart: null,
-        editingBatchId: null
+        editingBatchId: null,
+        transferringBatch: null,
+        releasingBatchId: null,
+        releasingType: null,
+        selectedQuarBatch: null,
+        quarSearchTimer: null,
+
+        // ✨ Finance stats
+        financeStats: { cost: 0, sale: 0, profit: 0 },
+
+        // ✨ Quick search
+        quickSearchIndex: -1,
+        quickSearchResults: []
       };
 
       // ============================================================
-      // 3) Sidebar
-      // ============================================================
-      const MENU = [
-        { section: 'الرئيسية', items: [
-          { label: 'لوحة التحكم', icon: 'layout-dashboard', href: 'dashboard.html' },
-          { label: 'الشات', icon: 'message-circle', href: 'chat.html', permission: 'chat.use' },
-          { label: 'الإشعارات', icon: 'bell', href: 'notifications.html', permission: 'notifications.view' }
-        ]},
-        { section: 'العمليات', items: [
-          { label: 'الأصناف', icon: 'package', href: 'products.html', permission: 'products.view' },
-          { label: 'المخزون', icon: 'warehouse', href: 'inventory.html', permission: 'inventory.view' },
-          { label: 'طلبات الشراء', icon: 'clipboard-list', href: 'purchase-requests.html', permission: 'purchases.view' },
-          { label: 'الاستلامات', icon: 'package-check', href: 'receipts.html', permission: 'purchases.receive' },
-          { label: 'طلبات البيع', icon: 'shopping-cart', href: 'sales-orders.html', permission: 'sales.view' },
-          { label: 'نقطة البيع', icon: 'scan-barcode', href: 'pos.html', permission: 'sales.pos', badge: 'POS', badgeClass: 'teal' },
-          { label: 'الفواتير', icon: 'receipt', href: 'invoices.html', permission: 'sales.view' }
-        ]},
-        { section: 'الأطراف', items: [
-          { label: 'الموردين', icon: 'truck', href: 'suppliers.html', permission: 'suppliers.view' },
-          { label: 'العملاء', icon: 'users', href: 'customers.html', permission: 'customers.view' }
-        ]},
-        { section: 'المخزون', items: [
-          { label: 'الجرد', icon: 'clipboard-check', href: 'stocktake.html', permission: 'inventory.stocktake' },
-          { label: 'التسويات', icon: 'sliders-horizontal', href: 'adjustments.html', permission: 'inventory.adjust' }
-        ]},
-        { section: 'الموارد البشرية', items: [
-          { label: 'الموظفين', icon: 'user-cog', href: 'employees.html', permission: 'employees.view' },
-          { label: 'الصلاحيات', icon: 'shield-check', href: 'permissions.html', permission: 'permissions.manage' },
-          { label: 'الحضور', icon: 'calendar-check', href: 'attendance.html', permission: 'attendance.view' },
-          { label: 'الرواتب', icon: 'wallet', href: 'payroll.html', permission: 'payroll.view' }
-        ]},
-        { section: 'المالية', items: [
-          { label: 'المصاريف', icon: 'banknote', href: 'expenses.html', permission: 'expenses.view' },
-          { label: 'التقارير', icon: 'bar-chart-3', href: 'reports.html', permission: 'reports.view' }
-        ]},
-        { section: 'النظام', items: [
-          { label: 'إعدادات الشركة', icon: 'settings', href: 'company-settings.html', permission: 'settings.view' },
-          { label: 'شاشة الأدمن', icon: 'shield', href: 'admin.html', permission: 'admin.full', badge: 'Admin', badgeClass: 'gold' }
-        ]}
-      ];
-
-      function buildSidebar() {
-        const nav = document.getElementById('sidebarNav');
-        const currentPage = 'inventory.html';
-        const frag = document.createDocumentFragment();
-        MENU.forEach(group => {
-          const allowed = group.items.filter(it => !it.permission || Refad.Session.has(it.permission));
-          if (!allowed.length) return;
-          frag.appendChild(Refad.el('div', { class: 'nav-section' }, group.section));
-          allowed.forEach(item => {
-            const a = Refad.el('a', {
-              href: item.href,
-              class: 'nav-item' + (item.href === currentPage ? ' active' : '')
-            });
-            a.innerHTML = `<i data-lucide="${item.icon}"></i><span>${Refad.escapeHtml(item.label)}</span>${item.badge ? `<span class="badge ${item.badgeClass || ''}">${item.badge}</span>` : ''}`;
-            frag.appendChild(a);
-          });
-        });
-        nav.innerHTML = '';
-        nav.appendChild(frag);
-        if (window.lucide) lucide.createIcons();
-      }
-
-      // ============================================================
-      // 4) UI helpers
+      // 3) UI Helpers
       // ============================================================
       function fillUser() {
         const av = document.getElementById('userAvatar');
@@ -1092,6 +1169,27 @@
         else av.textContent = initial;
         document.getElementById('userName').textContent = session.full_name;
         document.getElementById('userRole').textContent = Refad.Session.has('company.owner') ? 'صاحب الشركة' : 'موظف';
+      }
+
+      function applyIdentity() {
+        const name = SafeSettings.identity.getSystemName();
+        const tagline = SafeSettings.identity.getTagline();
+        const logoUrl = SafeSettings.identity.getLogoUrl();
+
+        const brandName = document.getElementById('sidebarBrandName');
+        const brandDesc = document.getElementById('sidebarBrandDesc');
+        const logoImg = document.getElementById('sidebarLogoImg');
+
+        if (brandName) brandName.textContent = name;
+        if (brandDesc) brandDesc.textContent = tagline;
+        if (logoImg && logoUrl) {
+          logoImg.src = logoUrl;
+          logoImg.onerror = function () {
+            this.style.display = 'none';
+            const parent = this.parentElement;
+            if (parent) parent.innerHTML = '<span class="fallback">' + (name.charAt(0) || 'R') + '</span>';
+          };
+        }
       }
 
       function setupTheme() {
@@ -1140,179 +1238,63 @@
         });
       }
 
-      function openBatchModal(batch) {
-        if (!Refad.Auth.can('inventory.adjust')) {
-          Refad.toast.error('ليس لديك صلاحية إدارة التشغيلات');
-          return;
-        }
+      function setupRealtimeTheme() {
+        window.addEventListener('refad:theme-changed', () => {
+          applyIdentity();
+          if (state.movementsChart) renderMovementsChart();
+        });
+      }
 
-        state.editingBatchId = batch?.id || null;
-        const productSelect = document.getElementById('batchProduct');
-        productSelect.innerHTML = '<option value="">اختر الصنف</option>' + state.products.map(product =>
-          `<option value="${product.id}">${Refad.escapeHtml(product.name)}</option>`
-        ).join('');
-
-        const supplierSelect = document.getElementById('batchSupplier');
-        supplierSelect.innerHTML = '<option value="">بدون مورد</option>' + state.suppliers.map(supplier =>
-          `<option value="${supplier.id}">${Refad.escapeHtml(supplier.name)}</option>`
-        ).join('');
-
-        document.getElementById('batchForm').reset();
-        document.getElementById('batchModalTitle').textContent = batch ? 'تعديل بيانات التشغيلة' : 'إضافة تشغيلة جديدة';
-        document.getElementById('batchQuantityLabel').innerHTML = batch
-          ? 'الرصيد الحالي <span style="color:var(--danger);">*</span>'
-          : 'الكمية المضافة <span style="color:var(--danger);">*</span>';
-        document.getElementById('batchModalNote').textContent = batch
-          ? 'تغيير الرصيد يسجل حركة تسوية تلقائيًا، ولا يغير كمية الاستلام الأصلية.'
-          : 'سيتم إنشاء التشغيلة بكمية ابتدائية وتسجيلها كحركة وارد للمخزون.';
-        productSelect.disabled = Boolean(batch);
-        document.getElementById('batchQuantity').min = batch ? '0' : '1';
-
-        if (batch) {
-          productSelect.value = String(batch.product_id);
-          document.getElementById('batchNumber').value = batch.batch_number || '';
-          supplierSelect.value = batch.supplier_id ? String(batch.supplier_id) : '';
-          document.getElementById('batchQuantity').value = Number(batch.quantity_left) || 0;
-          document.getElementById('batchExpiry').value = batch.expiry_date || '';
-          document.getElementById('batchCostPrice').value = Number(batch.cost_price) || 0;
-          document.getElementById('batchSalePrice').value = Number(batch.sale_price) || 0;
-          document.getElementById('batchPurchaseDiscount').value = Number(batch.purchase_discount) || 0;
+      function updateActiveWhUI() {
+        const active = Refad.Warehouse.getActive();
+        const badge = document.getElementById('activeWhBadge');
+        const nameEl = document.getElementById('activeWhName');
+        const modalNameEl = document.getElementById('batchModalWhName');
+        if (active) {
+          state.activeWarehouseId = Number(active.id);
+          if (nameEl) nameEl.textContent = active.name;
+          if (badge) badge.style.display = 'inline-flex';
+          if (modalNameEl) modalNameEl.textContent = active.name;
         } else {
-          document.getElementById('batchQuantity').value = '1';
-          document.getElementById('batchCostPrice').value = '0';
-          document.getElementById('batchSalePrice').value = '0';
-          document.getElementById('batchPurchaseDiscount').value = '0';
+          state.activeWarehouseId = null;
+          if (badge) badge.style.display = 'none';
+          if (modalNameEl) modalNameEl.textContent = '—';
         }
-
-        const backdrop = document.getElementById('batchModalBackdrop');
-        backdrop.classList.add('show');
-        backdrop.setAttribute('aria-hidden', 'false');
         if (window.lucide) lucide.createIcons();
       }
 
-      function closeBatchModal() {
-        const backdrop = document.getElementById('batchModalBackdrop');
-        backdrop.classList.remove('show');
-        backdrop.setAttribute('aria-hidden', 'true');
-        document.getElementById('batchProduct').disabled = false;
-        state.editingBatchId = null;
+      function getWarehouseName(id) {
+        const w = state.warehouses.find(x => Number(x.id) === Number(id));
+        return w ? w.name : '—';
       }
 
-      async function saveBatch(event) {
-        event.preventDefault();
-        if (!Refad.Auth.can('inventory.adjust')) {
-          Refad.toast.error('ليس لديك صلاحية إدارة التشغيلات');
-          return;
-        }
+      function getReasonData(key) {
+        return Refad.Quarantine.getReason(key);
+      }
 
-        const editing = Boolean(state.editingBatchId);
-        const rawQty = document.getElementById('batchQuantity').value;
-        const quantity = Number(rawQty);
-        const productId = Number(document.getElementById('batchProduct').value);
-        const costPrice = Number(document.getElementById('batchCostPrice').value);
-        const salePrice = Number(document.getElementById('batchSalePrice').value);
-        const purchaseDiscount = Number(document.getElementById('batchPurchaseDiscount').value || 0);
-        if ((!editing && (!Number.isInteger(productId) || !state.products.some(product => Number(product.id) === productId))) ||
-            !Number.isInteger(quantity) || quantity < (editing ? 0 : 1) ||
-            !Number.isFinite(costPrice) || costPrice < 0 ||
-            !Number.isFinite(salePrice) || salePrice < 0 ||
-            !Number.isFinite(purchaseDiscount) || purchaseDiscount < 0 || purchaseDiscount > 100) {
-          Refad.toast.warning('راجع الصنف والكمية والأسعار والخصم المدخل');
-          return;
-        }
-
-        const supplierValue = document.getElementById('batchSupplier').value;
-        const payload = {
-          batch_number: document.getElementById('batchNumber').value.trim() || null,
-          supplier_id: supplierValue ? Number(supplierValue) : null,
-          cost_price: costPrice,
-          sale_price: salePrice,
-          purchase_discount: purchaseDiscount,
-          expiry_date: document.getElementById('batchExpiry').value || null
-        };
-        const saveButton = document.getElementById('saveBatchBtn');
-        const originalButton = saveButton.innerHTML;
-        saveButton.disabled = true;
-        saveButton.innerHTML = '<i data-lucide="loader-2"></i> جارٍ الحفظ...';
-        if (window.lucide) lucide.createIcons();
-
-        let savedEntity = false;
-        let movementSaved = false;
+      // ✨ Copy to clipboard
+      async function copyText(text, btn) {
         try {
-          let batch;
-          let movementQuantity = quantity;
-          let movementType = 'in';
-          let productForMovement = productId;
-
-          if (editing) {
-            const existing = state.batches.find(item => item.id === state.editingBatchId);
-            if (!existing) throw new Error('لم يتم العثور على التشغيلة المطلوبة');
-            productForMovement = existing.product_id;
-            movementQuantity = quantity - (Number(existing.quantity_left) || 0);
-            movementType = 'adjust';
-            batch = await Refad.db.update('batches', existing.id, { ...payload, quantity_left: quantity });
-          } else {
-            batch = await Refad.db.insert('batches', {
-              ...payload,
-              company_id: session.company_id,
-              product_id: productId,
-              quantity_in: quantity,
-              quantity_left: quantity,
-              receipt_id: null
-            });
+          await navigator.clipboard.writeText(text);
+          if (btn) {
+            btn.classList.add('copied');
+            const icon = btn.querySelector('i');
+            if (icon) icon.setAttribute('data-lucide', 'check');
+            if (window.lucide) lucide.createIcons();
+            setTimeout(() => {
+              btn.classList.remove('copied');
+              if (icon) icon.setAttribute('data-lucide', 'copy');
+              if (window.lucide) lucide.createIcons();
+            }, 1200);
           }
-          if (!batch?.id) throw new Error('لم يتم تأكيد حفظ بيانات التشغيلة');
-          savedEntity = true;
-
-          if (movementQuantity !== 0) {
-            await Refad.db.insert('inventory_movements', {
-              company_id: session.company_id,
-              product_id: productForMovement,
-              batch_id: batch.id,
-              movement_type: movementType,
-              reference_type: 'batch',
-              reference_id: batch.id,
-              quantity: movementQuantity,
-              unit_cost: costPrice,
-              balance_after: quantity,
-              notes: editing ? 'تعديل رصيد التشغيلة' : 'إضافة تشغيلة جديدة',
-              user_id: session.user_id
-            });
-          }
-          movementSaved = true;
-
-          await Refad.logActivity(
-            editing ? 'update_batch' : 'create_batch',
-            'inventory',
-            `${editing ? 'تعديل' : 'إضافة'} تشغيلة ${payload.batch_number || batch.id}`,
-            batch.id
-          );
-
-          closeBatchModal();
-          await loadAll(true);
-          Refad.toast.success(editing ? 'تم تحديث بيانات التشغيلة' : 'تمت إضافة التشغيلة');
-        } catch (error) {
-          console.error('[Inventory] Batch save failed:', error);
-          if (savedEntity) {
-            closeBatchModal();
-            await loadAll(true);
-          }
-          if (savedEntity && !movementSaved) {
-            Refad.toast.error(`تم حفظ بيانات التشغيلة لكن فشل تسجيل حركة المخزون: ${error.message}`);
-          } else if (savedEntity && movementSaved) {
-            Refad.toast.error(`تم حفظ التشغيلة وحركتها لكن فشل تسجيل النشاط: ${error.message}`);
-          } else {
-            Refad.toast.error('تعذّر حفظ التشغيلة: ' + error.message);
-          }
-        } finally {
-          saveButton.disabled = false;
-          saveButton.innerHTML = originalButton;
-          if (window.lucide) lucide.createIcons();
+          Refad.toast.success('تم النسخ');
+        } catch (e) {
+          Refad.toast.error('فشل النسخ');
         }
       }
 
       // ============================================================
-      // 5) Load suppliers for filter
+      // 4) Load Helpers
       // ============================================================
       async function loadSuppliers() {
         try {
@@ -1321,26 +1303,41 @@
             eq: { company_id: session.company_id, is_active: true },
             order: { column: 'name', ascending: true }
           });
-          state.suppliers = rows;
-          const sel = document.getElementById('filterSupplier');
-          rows.forEach(s => {
-            const opt = document.createElement('option');
-            opt.value = s.id;
-            opt.textContent = s.name;
-            sel.appendChild(opt);
+          state.suppliers = rows || [];
+        } catch (e) { console.warn('Suppliers load failed:', e.message); }
+      }
+
+      async function loadWarehousesList() {
+        try {
+          const rows = await Refad.db.select('warehouses', {
+            columns: 'id, name, type, is_default',
+            eq: { company_id: session.company_id, is_active: true },
+            order: { column: 'is_default', ascending: false }
           });
-        } catch (e) {
-          console.warn('Suppliers filter failed:', e.message);
-        }
+          state.warehouses = rows || [];
+        } catch (e) { state.warehouses = []; }
+      }
+
+      async function loadUsers() {
+        try {
+          const rows = await Refad.db.select('users', {
+            columns: 'id, full_name, username',
+            eq: { company_id: session.company_id, is_active: true },
+            limit: 500
+          });
+          state.users = rows || [];
+        } catch (e) { state.users = []; }
       }
 
       // ============================================================
-      // 6) Load data (parallel)
+      // 5) Load Main Data
       // ============================================================
       async function loadAll(silent) {
         if (!silent) {
           renderProductsSkeleton();
           renderBatchesSkeleton();
+          renderQuarantineSkeleton();
+          renderBlacklistSkeleton();
           renderMovementsSkeleton();
         }
         try {
@@ -1348,16 +1345,24 @@
             loadProductsAndBatches(),
             loadMovements()
           ]);
-          Refad.scanInventoryAlerts(session.company_id).catch(error => {
-            console.error('[Inventory] Alert notification dispatch failed:', error);
-            Refad.toast.warning('تم تحميل المخزون، لكن تعذّر إرسال تنبيهات المخزون');
-          });
+
+          await Refad.Quarantine.refresh();
+          state.quarantinedBatches = Refad.Quarantine.getQuarantinedBatches();
+          state.blacklist = Refad.Quarantine.getBlacklist();
+
+          Refad.scanInventoryAlerts(session.company_id).catch(() => {});
+
           computeProductStats();
+          computeFinanceStats();
+          renderFinanceStats();
           renderMiniStats();
           applyProductFilters();
           applyBatchFilters();
+          applyQuarantineFilters();
+          applyBlacklistFilters();
           applyMovFilters();
           renderMovementsChart();
+          updateTabCounts();
         } catch (e) {
           console.error('[Inventory] load failed:', e);
           Refad.toast.error('تعذّر التحميل: ' + e.message);
@@ -1365,6 +1370,9 @@
       }
 
       async function loadProductsAndBatches() {
+        const wid = Refad.Warehouse.getActiveId();
+        if (!wid) { state.products = []; state.batches = []; return; }
+
         const [products, batches] = await Promise.all([
           Refad.db.select('products', {
             columns: 'id, name, name_en, form, unit, category, reorder_level, default_price, is_active',
@@ -1372,39 +1380,36 @@
             order: { column: 'name', ascending: true }
           }),
           Refad.db.select('batches', {
-            columns: 'id, product_id, supplier_id, batch_number, quantity_in, quantity_left, cost_price, sale_price, purchase_discount, expiry_date, created_at',
-            eq: { company_id: session.company_id },
+            columns: 'id, product_id, supplier_id, warehouse_id, batch_number, quantity_in, quantity_left, cost_price, sale_price, purchase_discount, expiry_date, is_quarantined, quarantine_reason, quarantine_reason_note, quarantined_at, quarantined_by, created_at',
+            eq: { company_id: session.company_id, warehouse_id: wid },
             order: { column: 'expiry_date', ascending: true },
             limit: 2000
           }).catch(() => [])
         ]);
-
-        state.products = products;
-        state.batches = batches;
+        state.products = products || [];
+        state.batches = batches || [];
       }
 
       async function loadMovements() {
         try {
+          const wid = Refad.Warehouse.getActiveId();
+          if (!wid) { state.movements = []; return; }
           const fromDate = Refad.date.addDays(Refad.date.today(), -90);
           const rows = await Refad.db.select('inventory_movements', {
-            columns: 'id, product_id, batch_id, movement_type, reference_type, reference_id, quantity, unit_cost, notes, created_at, products(name)',
-            eq: { company_id: session.company_id },
+            columns: 'id, product_id, batch_id, warehouse_id, movement_type, reference_type, reference_id, quantity, unit_cost, notes, created_at, products(name)',
+            eq: { company_id: session.company_id, warehouse_id: wid },
             gte: { created_at: fromDate + 'T00:00:00Z' },
             order: { column: 'created_at', ascending: false },
             limit: 500
           });
-          state.movements = rows;
-        } catch (e) {
-          console.warn('Movements load failed:', e.message);
-          state.movements = [];
-        }
+          state.movements = rows || [];
+        } catch (e) { state.movements = []; }
       }
 
       // ============================================================
-      // 7) Compute product stats
+      // 6) Compute
       // ============================================================
       function computeProductStats() {
-        // group batches by product_id
         const byProduct = {};
         state.batches.forEach(b => {
           if (!byProduct[b.product_id]) byProduct[b.product_id] = [];
@@ -1412,39 +1417,53 @@
         });
 
         const today = Refad.date.today();
-        const in90Days = Refad.date.addDays(today, 90);
+        const alertDays = state.expiryAlertDays;
+        const in90Days = Refad.date.addDays(today, alertDays);
 
         state.products = state.products.map(p => {
-          const batches = (byProduct[p.id] || []).filter(b => (b.quantity_left || 0) > 0);
-          const totalQty = batches.reduce((s, b) => s + (b.quantity_left || 0), 0);
+          const allBatches = byProduct[p.id] || [];
+          const availableBatches = allBatches.filter(b => !b.is_quarantined && (b.quantity_left || 0) > 0);
+          const quarantinedCount = allBatches.filter(b => b.is_quarantined).length;
+          const totalQty = availableBatches.reduce((s, b) => s + (b.quantity_left || 0), 0);
 
-          // أقرب صلاحية
           let nearestExpiry = null;
-          batches.forEach(b => {
+          availableBatches.forEach(b => {
             if (!b.expiry_date) return;
             if (!nearestExpiry || b.expiry_date < nearestExpiry) nearestExpiry = b.expiry_date;
           });
 
-          // حالة المخزون
           let status = 'in-stock';
           if (totalQty === 0) status = 'out';
           else if (p.reorder_level && totalQty <= p.reorder_level) status = 'low';
 
-          // قريبة الانتهاء
-          const expiring = batches.some(b => {
-            if (!b.expiry_date) return false;
-            return b.expiry_date <= in90Days;
-          });
+          const expiring = availableBatches.some(b => b.expiry_date && b.expiry_date <= in90Days);
 
           return {
-            ...p,
-            total_qty: totalQty,
-            batches_count: batches.length,
-            nearest_expiry: nearestExpiry,
-            status,
-            expiring
+            ...p, total_qty: totalQty,
+            batches_count: availableBatches.length,
+            quarantined_count: quarantinedCount,
+            nearest_expiry: nearestExpiry, status, expiring
           };
         });
+      }
+
+      // ✨ Finance Stats
+      function computeFinanceStats() {
+        let cost = 0, sale = 0;
+        state.batches.forEach(b => {
+          if (b.is_quarantined) return;
+          const qty = Number(b.quantity_left) || 0;
+          cost += qty * (Number(b.cost_price) || 0);
+          sale += qty * (Number(b.sale_price) || 0);
+        });
+        state.financeStats = { cost, sale, profit: sale - cost };
+      }
+
+      function renderFinanceStats() {
+        const { cost, sale, profit } = state.financeStats;
+        document.getElementById('financeCost').textContent = SafeSettings.locale.formatMoney(cost);
+        document.getElementById('financeSale').textContent = SafeSettings.locale.formatMoney(sale);
+        document.getElementById('financeProfit').textContent = SafeSettings.locale.formatMoney(profit);
       }
 
       function renderMiniStats() {
@@ -1459,10 +1478,24 @@
         document.getElementById('statLow').textContent = Refad.format.number(low);
         document.getElementById('statOut').textContent = Refad.format.number(out);
         document.getElementById('statExpiring').textContent = Refad.format.number(expiring);
+        document.getElementById('statQuarantined').textContent = Refad.format.number(state.quarantinedBatches.length);
+        document.getElementById('statBlacklisted').textContent = Refad.format.number(state.blacklist.length);
+      }
+
+      function updateTabCounts() {
+        const qCount = document.getElementById('quarantineTabCount');
+        const qn = state.quarantinedBatches.length;
+        if (qn > 0) { qCount.textContent = qn; qCount.style.display = 'inline-block'; }
+        else qCount.style.display = 'none';
+
+        const bCount = document.getElementById('blacklistTabCount');
+        const bn = state.blacklist.length;
+        if (bn > 0) { bCount.textContent = bn; bCount.style.display = 'inline-block'; }
+        else bCount.style.display = 'none';
       }
 
       // ============================================================
-      // 8) Products tab
+      // 7) Products
       // ============================================================
       function applyProductFilters() {
         const q = state.productSearch.toLowerCase().trim();
@@ -1499,14 +1532,7 @@
         const pag = Refad.paginate(list, state.productsPage, state.perPage);
 
         if (list.length === 0) {
-          tbody.innerHTML = `
-            <tr class="empty-row">
-              <td colspan="7">
-                <i data-lucide="package-open"></i>
-                <p>لا توجد أصناف مطابقة</p>
-              </td>
-            </tr>
-          `;
+          tbody.innerHTML = `<tr class="empty-row"><td colspan="7"><i data-lucide="package-open"></i><p>لا توجد أصناف مطابقة</p></td></tr>`;
           if (window.lucide) lucide.createIcons();
           renderPagination('productsPagination', pag, p => { state.productsPage = p; renderProductsTable(list); });
           return;
@@ -1514,7 +1540,6 @@
 
         tbody.innerHTML = pag.data.map(p => {
           const initial = (p.name || '؟').trim().charAt(0);
-
           let qtyCls = 'out';
           if (p.status === 'in-stock') qtyCls = 'ok';
           else if (p.status === 'low') qtyCls = 'low';
@@ -1529,12 +1554,16 @@
           if (p.nearest_expiry) {
             const days = Refad.format.daysLeft(p.nearest_expiry);
             if (days !== null) {
-              if (days < 0) expiryTag = `<span class="badge-tag red">منتهي</span>`;
+              if (days < 0) expiryTag = '<span class="badge-tag red">منتهي</span>';
               else if (days <= 30) expiryTag = `<span class="badge-tag red">${days} يوم</span>`;
-              else if (days <= 90) expiryTag = `<span class="badge-tag gold">${days} يوم</span>`;
+              else if (days <= state.expiryAlertDays) expiryTag = `<span class="badge-tag gold">${days} يوم</span>`;
               else expiryTag = `<span class="badge-tag green">${days} يوم</span>`;
             }
           }
+
+          const quarBadge = p.quarantined_count > 0
+            ? `<span class="badge-tag red" style="margin-right:6px;"><i data-lucide="shield-off" style="width:10px;height:10px;"></i> ${p.quarantined_count}</span>`
+            : '';
 
           return `
             <tr data-product-id="${p.id}" tabindex="0" style="cursor:pointer">
@@ -1542,7 +1571,7 @@
                 <div class="product-cell">
                   <div class="product-avatar">${Refad.escapeHtml(initial)}</div>
                   <div>
-                    <div class="product-name">${Refad.escapeHtml(p.name)}</div>
+                    <div class="product-name">${Refad.escapeHtml(p.name)} ${quarBadge}</div>
                     <div class="product-sub">${Refad.escapeHtml([p.form, p.unit].filter(Boolean).join(' • ') || '—')}</div>
                   </div>
                 </div>
@@ -1554,9 +1583,7 @@
               <td>${statusTag}</td>
               <td>
                 <div class="actions-cell">
-                  <button class="action-btn" data-action="view" data-id="${p.id}" title="تفاصيل">
-                    <i data-lucide="eye"></i>
-                  </button>
+                  <button class="action-btn" data-action="view" data-id="${p.id}" title="تفاصيل"><i data-lucide="eye"></i></button>
                 </div>
               </td>
             </tr>
@@ -1568,18 +1595,17 @@
       }
 
       // ============================================================
-      // 9) Batches tab
+      // 8) Batches
       // ============================================================
       function applyBatchFilters() {
         const q = state.batchSearch.toLowerCase().trim();
         const today = Refad.date.today();
-        const in90Days = Refad.date.addDays(today, 90);
-
-        // اربط مع المنتجات
+        const in90Days = Refad.date.addDays(today, state.expiryAlertDays);
         const productMap = {};
         state.products.forEach(p => { productMap[p.id] = p; });
 
         const filtered = state.batches
+          .filter(b => !b.is_quarantined)
           .map(b => ({ ...b, product: productMap[b.product_id] }))
           .filter(b => {
             if (state.batchFilterStatus === 'available') {
@@ -1609,6 +1635,7 @@
           <tr class="skeleton-row">
             <td><div class="skeleton-bar" style="width:60%"></div></td>
             <td><div class="skeleton-bar" style="width:70px"></div></td>
+            <td><div class="skeleton-bar" style="width:80px"></div></td>
             <td><div class="skeleton-bar" style="width:60px"></div></td>
             <td><div class="skeleton-bar" style="width:70px"></div></td>
             <td><div class="skeleton-bar" style="width:70px"></div></td>
@@ -1624,20 +1651,11 @@
         const pag = Refad.paginate(list, state.batchesPage, state.perPage);
 
         if (list.length === 0) {
-          tbody.innerHTML = `
-            <tr class="empty-row">
-              <td colspan="8">
-                <i data-lucide="layers"></i>
-                <p>لا توجد تشغيلات مطابقة</p>
-              </td>
-            </tr>
-          `;
+          tbody.innerHTML = `<tr class="empty-row"><td colspan="9"><i data-lucide="layers"></i><p>لا توجد تشغيلات مطابقة</p></td></tr>`;
           if (window.lucide) lucide.createIcons();
           renderPagination('batchesPagination', pag, p => { state.batchesPage = p; renderBatchesTable(list); });
           return;
         }
-
-        const today = Refad.date.today();
 
         tbody.innerHTML = pag.data.map(b => {
           const days = Refad.format.daysLeft(b.expiry_date);
@@ -1651,7 +1669,7 @@
             } else if (days <= 30) {
               expiryTag = `<span class="badge-tag red">${days} يوم</span>`;
               statusTag = '<span class="badge-tag gold">قريب</span>';
-            } else if (days <= 90) {
+            } else if (days <= state.expiryAlertDays) {
               expiryTag = `<span class="badge-tag gold">${days} يوم</span>`;
               statusTag = '<span class="badge-tag blue">تحذير</span>';
             } else {
@@ -1663,24 +1681,30 @@
           let qtyCls = 'out';
           if (b.quantity_left > 0) qtyCls = 'ok';
 
+          const batchNumEsc = Refad.escapeHtml(b.batch_number || '—');
+          const copyBtn = b.batch_number
+            ? `<button class="copy-btn" data-copy="${batchNumEsc}" title="نسخ رقم التشغيلة"><i data-lucide="copy"></i></button>`
+            : '';
+
           return `
-            <tr data-product-id="${b.product_id}" tabindex="0" style="cursor:pointer">
+            <tr data-product-id="${b.product_id}" data-batch-id="${b.id}" tabindex="0" style="cursor:pointer">
               <td>
                 <div class="product-name">${Refad.escapeHtml(b.product?.name || '—')}</div>
                 <div class="product-sub">${Refad.escapeHtml([b.product?.form, b.product?.unit].filter(Boolean).join(' • ') || '')}</div>
               </td>
-              <td><strong>${Refad.escapeHtml(b.batch_number || '—')}</strong></td>
+              <td>${copyBtn}<strong>${batchNumEsc}</strong></td>
+              <td><span class="wh-badge-sm"><i data-lucide="warehouse"></i> ${Refad.escapeHtml(getWarehouseName(b.warehouse_id))}</span></td>
               <td><span class="qty-value ${qtyCls}">${Refad.format.number(b.quantity_left)}</span></td>
-              <td>${Refad.format.money(b.cost_price)}</td>
-              <td>${Refad.format.money(b.sale_price)}</td>
+              <td>${SafeSettings.locale.formatMoney(b.cost_price)}</td>
+              <td>${SafeSettings.locale.formatMoney(b.sale_price)}</td>
               <td>${Refad.format.date(b.expiry_date)}</td>
               <td>${statusTag}</td>
               <td>
                 <div class="actions-cell">
-                  ${Refad.Auth.can('inventory.adjust') ? `<button class="action-btn" data-action="edit-batch" data-id="${b.id}" title="تعديل التشغيلة"><i data-lucide="pencil"></i></button>` : ''}
-                  <button class="action-btn" data-action="view-product" data-id="${b.product_id}" title="الصنف">
-                    <i data-lucide="eye"></i>
-                  </button>
+                  ${canAdjust ? `<button class="action-btn" data-action="edit-batch" data-id="${b.id}" title="تعديل"><i data-lucide="pencil"></i></button>` : ''}
+                  ${canAdjust ? `<button class="action-btn warning" data-action="transfer" data-id="${b.id}" title="نقل لمخزن"><i data-lucide="repeat"></i></button>` : ''}
+                  ${canQuarantine ? `<button class="action-btn danger" data-action="quarantine" data-id="${b.id}" title="حظر داخلي"><i data-lucide="shield-off"></i></button>` : ''}
+                  <button class="action-btn" data-action="view-product" data-id="${b.product_id}" title="الصنف"><i data-lucide="eye"></i></button>
                 </div>
               </td>
             </tr>
@@ -1692,7 +1716,166 @@
       }
 
       // ============================================================
-      // 10) Movements tab
+      // 9) Quarantine
+      // ============================================================
+      function applyQuarantineFilters() {
+        const q = state.quarSearch.toLowerCase().trim();
+        const filtered = state.quarantinedBatches.filter(b => {
+          if (state.quarFilterReason && b.quarantine_reason !== state.quarFilterReason) return false;
+          if (!q) return true;
+          return (
+            (b.batch_number || '').toLowerCase().includes(q) ||
+            (b.products?.name || '').toLowerCase().includes(q) ||
+            (b.quarantine_reason_note || '').toLowerCase().includes(q) ||
+            (b.quarantine_notes || '').toLowerCase().includes(q)
+          );
+        });
+        renderQuarantineTable(filtered);
+      }
+
+      function renderQuarantineSkeleton() {
+        const tbody = document.getElementById('quarantineBody');
+        tbody.innerHTML = Array(4).fill(0).map(() => `
+          <tr class="skeleton-row">
+            <td><div class="skeleton-bar" style="width:60%"></div></td>
+            <td><div class="skeleton-bar" style="width:70px"></div></td>
+            <td><div class="skeleton-bar" style="width:80px"></div></td>
+            <td><div class="skeleton-bar" style="width:90px"></div></td>
+            <td><div class="skeleton-bar" style="width:60px"></div></td>
+            <td><div class="skeleton-bar" style="width:80px"></div></td>
+            <td><div class="skeleton-bar" style="width:100px"></div></td>
+            <td><div class="skeleton-bar" style="width:60px"></div></td>
+          </tr>
+        `).join('');
+      }
+
+      function renderQuarantineTable(list) {
+        const tbody = document.getElementById('quarantineBody');
+        const pag = Refad.paginate(list, state.quarantinePage, state.perPage);
+
+        if (list.length === 0) {
+          tbody.innerHTML = `<tr class="empty-row"><td colspan="8"><i data-lucide="shield-check"></i><p>لا توجد تشغيلات محظورة داخلياً</p></td></tr>`;
+          if (window.lucide) lucide.createIcons();
+          renderPagination('quarantinePagination', pag, p => { state.quarantinePage = p; renderQuarantineTable(list); });
+          return;
+        }
+
+        tbody.innerHTML = pag.data.map(b => {
+          const r = getReasonData(b.quarantine_reason);
+          const productName = b.products?.name || '—';
+
+          return `
+            <tr class="row-quarantined" data-batch-id="${b.id}">
+              <td>
+                <div class="product-name">${Refad.escapeHtml(productName)}</div>
+                <div class="product-sub">${Refad.escapeHtml([b.products?.form, b.products?.unit].filter(Boolean).join(' • ') || '')}</div>
+              </td>
+              <td><strong>${Refad.escapeHtml(b.batch_number || '—')}</strong></td>
+              <td><span class="wh-badge-sm"><i data-lucide="warehouse"></i> ${Refad.escapeHtml(getWarehouseName(b.warehouse_id))}</span></td>
+              <td>
+                <span class="badge-tag ${r.color}">${r.label}</span>
+                ${b.quarantine_reason_note ? `<div class="product-sub" style="margin-top:4px;">${Refad.escapeHtml(b.quarantine_reason_note)}</div>` : ''}
+              </td>
+              <td><span class="qty-value low">${Refad.format.number(b.quantity_left)}</span></td>
+              <td>${Refad.format.datetime(b.quarantined_at)}</td>
+              <td style="max-width:180px;">
+                <div class="product-sub" style="white-space:normal;">${Refad.escapeHtml(b.quarantine_notes || '—')}</div>
+              </td>
+              <td>
+                <div class="actions-cell">
+                  ${canQuarantine ? `<button class="action-btn success" data-action="release-quar" data-id="${b.id}" title="فك الحظر"><i data-lucide="shield-check"></i></button>` : ''}
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join('');
+
+        if (window.lucide) lucide.createIcons();
+        renderPagination('quarantinePagination', pag, p => { state.quarantinePage = p; renderQuarantineTable(list); });
+      }
+
+      // ============================================================
+      // 10) Blacklist
+      // ============================================================
+      function applyBlacklistFilters() {
+        const q = state.blSearch.toLowerCase().trim();
+        const filtered = state.blacklist.filter(b => {
+          if (state.blFilterReason && b.reason !== state.blFilterReason) return false;
+          if (!q) return true;
+          return (
+            (b.batch_number || '').toLowerCase().includes(q) ||
+            (b.product_name || '').toLowerCase().includes(q) ||
+            (b.reason_note || '').toLowerCase().includes(q) ||
+            (b.notes || '').toLowerCase().includes(q)
+          );
+        });
+        renderBlacklistTable(filtered);
+      }
+
+      function renderBlacklistSkeleton() {
+        const tbody = document.getElementById('blacklistBody');
+        tbody.innerHTML = Array(4).fill(0).map(() => `
+          <tr class="skeleton-row">
+            <td><div class="skeleton-bar" style="width:80px"></div></td>
+            <td><div class="skeleton-bar" style="width:60%"></div></td>
+            <td><div class="skeleton-bar" style="width:90px"></div></td>
+            <td><div class="skeleton-bar" style="width:60px"></div></td>
+            <td><div class="skeleton-bar" style="width:80px"></div></td>
+            <td><div class="skeleton-bar" style="width:70px"></div></td>
+            <td><div class="skeleton-bar" style="width:100px"></div></td>
+            <td><div class="skeleton-bar" style="width:60px"></div></td>
+          </tr>
+        `).join('');
+      }
+
+      function renderBlacklistTable(list) {
+        const tbody = document.getElementById('blacklistBody');
+        const pag = Refad.paginate(list, state.blacklistPage, state.perPage);
+
+        if (list.length === 0) {
+          tbody.innerHTML = `<tr class="empty-row"><td colspan="8"><i data-lucide="ban"></i><p>لا توجد أرقام في القايمة السوداء</p></td></tr>`;
+          if (window.lucide) lucide.createIcons();
+          renderPagination('blacklistPagination', pag, p => { state.blacklistPage = p; renderBlacklistTable(list); });
+          return;
+        }
+
+        const SEV_LABEL = { high: { l: 'عالية', c: 'red' }, medium: { l: 'متوسطة', c: 'gold' }, low: { l: 'منخفضة', c: 'gray' } };
+
+        tbody.innerHTML = pag.data.map(b => {
+          const r = getReasonData(b.reason);
+          const sev = SEV_LABEL[b.severity] || SEV_LABEL.medium;
+          const user = state.users.find(u => Number(u.id) === Number(b.created_by));
+          const userName = user ? (user.full_name || user.username) : '—';
+
+          return `
+            <tr class="row-blacklist" data-bl-id="${b.id}">
+              <td><strong style="font-family:monospace;">${Refad.escapeHtml(b.batch_number)}</strong></td>
+              <td>${Refad.escapeHtml(b.product_name || '—')}</td>
+              <td>
+                <span class="badge-tag ${r.color}">${r.label}</span>
+                ${b.reason_note ? `<div class="product-sub" style="margin-top:4px;">${Refad.escapeHtml(b.reason_note)}</div>` : ''}
+              </td>
+              <td><span class="badge-tag ${sev.c}">${sev.l}</span></td>
+              <td>${Refad.format.datetime(b.created_at)}</td>
+              <td>${Refad.escapeHtml(userName)}</td>
+              <td style="max-width:180px;">
+                <div class="product-sub" style="white-space:normal;">${Refad.escapeHtml(b.notes || '—')}</div>
+              </td>
+              <td>
+                <div class="actions-cell">
+                  ${canQuarantine ? `<button class="action-btn success" data-action="release-bl" data-id="${b.id}" title="فك الحظر"><i data-lucide="shield-check"></i></button>` : ''}
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join('');
+
+        if (window.lucide) lucide.createIcons();
+        renderPagination('blacklistPagination', pag, p => { state.blacklistPage = p; renderBlacklistTable(list); });
+      }
+
+      // ============================================================
+      // 11) Movements
       // ============================================================
       function applyMovFilters() {
         const q = state.movSearch.toLowerCase().trim();
@@ -1727,14 +1910,7 @@
         const pag = Refad.paginate(list, state.movementsPage, state.perPage);
 
         if (list.length === 0) {
-          tbody.innerHTML = `
-            <tr class="empty-row">
-              <td colspan="6">
-                <i data-lucide="activity"></i>
-                <p>لا توجد حركات مطابقة</p>
-              </td>
-            </tr>
-          `;
+          tbody.innerHTML = `<tr class="empty-row"><td colspan="6"><i data-lucide="activity"></i><p>لا توجد حركات مطابقة</p></td></tr>`;
           if (window.lucide) lucide.createIcons();
           renderPagination('movementsPagination', pag, p => { state.movementsPage = p; renderMovementsTable(list); });
           return;
@@ -1767,7 +1943,7 @@
       }
 
       // ============================================================
-      // 11) Movements Chart (30 day)
+      // 12) Chart
       // ============================================================
       function renderMovementsChart() {
         const ctx = document.getElementById('movementsChart').getContext('2d');
@@ -1801,96 +1977,40 @@
           data: {
             labels,
             datasets: [
-              {
-                label: 'إدخال',
-                data: inData,
-                borderColor: '#10b981',
-                backgroundColor: 'rgba(16,185,129,0.1)',
-                borderWidth: 2,
-                tension: 0.35,
-                pointRadius: 2,
-                pointHoverRadius: 5,
-                fill: true
-              },
-              {
-                label: 'إخراج',
-                data: outData,
-                borderColor: '#ef4444',
-                backgroundColor: 'rgba(239,68,68,0.1)',
-                borderWidth: 2,
-                tension: 0.35,
-                pointRadius: 2,
-                pointHoverRadius: 5,
-                fill: true
-              }
+              { label: 'إدخال', data: inData, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.1)', borderWidth: 2, tension: 0.35, pointRadius: 2, pointHoverRadius: 5, fill: true },
+              { label: 'إخراج', data: outData, borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.1)', borderWidth: 2, tension: 0.35, pointRadius: 2, pointHoverRadius: 5, fill: true }
             ]
           },
           options: {
-            responsive: true,
-            maintainAspectRatio: false,
+            responsive: true, maintainAspectRatio: false,
             plugins: {
-              legend: {
-                position: 'top',
-                labels: {
-                  font: { family: 'Cairo', size: 12 },
-                  color: textColor,
-                  usePointStyle: true,
-                  padding: 15
-                }
-              },
-              tooltip: {
-                rtl: true,
-                textDirection: 'rtl',
-                backgroundColor: isDark ? '#0f2137' : '#0B2C4D',
-                padding: 10,
-                cornerRadius: 8,
-                titleFont: { family: 'Cairo', size: 12, weight: '700' },
-                bodyFont: { family: 'Cairo', size: 12 }
-              }
+              legend: { position: 'top', labels: { font: { family: 'Cairo', size: 12 }, color: textColor, usePointStyle: true, padding: 15 } },
+              tooltip: { rtl: true, textDirection: 'rtl', backgroundColor: isDark ? '#0f2137' : '#0B2C4D', padding: 10, cornerRadius: 8 }
             },
             scales: {
-              y: {
-                beginAtZero: true,
-                grid: { color: gridColor, drawBorder: false },
-                ticks: { color: textColor, font: { family: 'Cairo', size: 11 } }
-              },
-              x: {
-                grid: { display: false },
-                ticks: {
-                  color: textColor,
-                  font: { family: 'Cairo', size: 10 },
-                  maxRotation: 0,
-                  autoSkip: true,
-                  maxTicksLimit: 10
-                }
-              }
+              y: { beginAtZero: true, grid: { color: gridColor, drawBorder: false }, ticks: { color: textColor, font: { family: 'Cairo', size: 11 } } },
+              x: { grid: { display: false }, ticks: { color: textColor, font: { family: 'Cairo', size: 10 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 10 } }
             }
           }
         });
       }
 
       // ============================================================
-      // 12) Pagination
+      // 13) Pagination
       // ============================================================
       function renderPagination(elId, pag, onPageChange) {
         const el = document.getElementById(elId);
         const { page, pages, total, perPage } = pag;
-
         if (total === 0) { el.innerHTML = ''; return; }
 
         const from = (page - 1) * perPage + 1;
         const to = Math.min(page * perPage, total);
 
-        let pageNums = [];
-        if (pages <= 5) {
-          for (let i = 1; i <= pages; i++) pageNums.push(i);
-        } else if (page <= 3) {
-          pageNums = [1, 2, 3, 4, 5];
-        } else if (page >= pages - 2) {
-          pageNums = [pages - 4, pages - 3, pages - 2, pages - 1, pages];
-        } else {
-          pageNums = [page - 2, page - 1, page, page + 1, page + 2];
-        }
+        let nums = [];
+        if (pages <= 5) { for (let i = 1; i <= pages; i++) nums.push(i); }
+        else if (page <= 3) nums = [1, 2, 3, 4, 5];
+        else if (page >= pages - 2) nums = [pages - 4, pages - 3, pages - 2, pages - 1, pages];
+        else nums = [page - 2, page - 1, page, page + 1, page + 2];
 
         el.innerHTML = `
           <div>عرض ${from} - ${to} من ${total}</div>
@@ -1898,7 +2018,7 @@
             <button class="page-btn" data-page="${page - 1}" ${page === 1 ? 'disabled' : ''}>
               <i data-lucide="chevron-right" style="width:14px;height:14px;"></i>
             </button>
-            ${pageNums.map(n => `<button class="page-btn ${n === page ? 'active' : ''}" data-page="${n}">${n}</button>`).join('')}
+            ${nums.map(n => `<button class="page-btn ${n === page ? 'active' : ''}" data-page="${n}">${n}</button>`).join('')}
             <button class="page-btn" data-page="${page + 1}" ${page === pages ? 'disabled' : ''}>
               <i data-lucide="chevron-left" style="width:14px;height:14px;"></i>
             </button>
@@ -1914,12 +2034,11 @@
             }
           });
         });
-
         if (window.lucide) lucide.createIcons();
       }
 
       // ============================================================
-      // 13) Tabs
+      // 14) Tabs
       // ============================================================
       function setupTabs() {
         document.querySelectorAll('.tab').forEach(tab => {
@@ -1929,8 +2048,6 @@
             document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
             tab.classList.add('active');
             document.querySelector(`.tab-panel[data-panel="${name}"]`).classList.add('active');
-
-            // Chart needs resize
             if (name === 'movements' && state.movementsChart) {
               setTimeout(() => state.movementsChart.resize(), 50);
             }
@@ -1939,26 +2056,26 @@
       }
 
       // ============================================================
-      // 14) Mini stats click → filter
+      // 15) Mini Stats Click
       // ============================================================
       function setupMiniStats() {
         document.querySelectorAll('.mini-card').forEach(card => {
           card.addEventListener('click', () => {
             const filter = card.dataset.filter;
-            // انتقل لتبويب المنتجات
-            document.querySelector('.tab[data-tab="products"]').click();
-
             document.querySelectorAll('.mini-card').forEach(c => c.classList.remove('active'));
             card.classList.add('active');
+
+            if (filter === 'quarantined') { document.querySelector('.tab[data-tab="quarantine"]').click(); return; }
+            if (filter === 'blacklisted') { document.querySelector('.tab[data-tab="blacklist"]').click(); return; }
+
+            document.querySelector('.tab[data-tab="products"]').click();
 
             if (filter === 'all') {
               state.productFilterStatus = '';
               document.getElementById('filterStatus').value = '';
             } else if (filter === 'expiring') {
-              // فلترة خاصة: نعرض الأصناف قريبة الانتهاء
               state.productFilterStatus = '';
               document.getElementById('filterStatus').value = '';
-              // فلترة يدوية
               const filtered = state.products.filter(p => p.expiring);
               renderProductsTable(filtered);
               return;
@@ -1972,12 +2089,774 @@
       }
 
       // ============================================================
-      // 15) Events
+      // 16) Reason Selects
+      // ============================================================
+      function fillReasonSelects() {
+        const reasons = Refad.Quarantine.getAllReasons();
+        const html = reasons.map(r => `<option value="${r.key}">${r.label}</option>`).join('');
+        document.getElementById('quarReason').innerHTML = html;
+        document.getElementById('blReason').innerHTML = html;
+
+        const filterHtml = '<option value="">كل الأسباب</option>' +
+          reasons.map(r => `<option value="${r.key}">${r.label}</option>`).join('');
+        document.getElementById('quarFilterReason').innerHTML = filterHtml;
+        document.getElementById('blFilterReason').innerHTML = filterHtml;
+      }
+
+      // ============================================================
+      // 17) Batch Modal
+      // ============================================================
+      function openBatchModal(batch) {
+        if (!canAdjust) { Refad.toast.error('ليس لديك صلاحية'); return; }
+        if (!Refad.Warehouse.getActiveId()) { Refad.toast.error('لا يوجد مخزن نشط'); return; }
+
+        state.editingBatchId = batch?.id || null;
+        updateActiveWhUI();
+
+        const productSelect = document.getElementById('batchProduct');
+        productSelect.innerHTML = '<option value="">اختر الصنف</option>' + state.products.map(p =>
+          `<option value="${p.id}">${Refad.escapeHtml(p.name)}</option>`
+        ).join('');
+
+        const supplierSelect = document.getElementById('batchSupplier');
+        supplierSelect.innerHTML = '<option value="">بدون مورد</option>' + state.suppliers.map(s =>
+          `<option value="${s.id}">${Refad.escapeHtml(s.name)}</option>`
+        ).join('');
+
+        document.getElementById('batchForm').reset();
+        document.getElementById('batchModalTitle').querySelector('span').textContent =
+          batch ? 'تعديل بيانات التشغيلة' : 'إضافة تشغيلة جديدة';
+        document.getElementById('batchQuantityLabel').innerHTML = batch
+          ? 'الرصيد الحالي <span class="req">*</span>'
+          : 'الكمية المضافة <span class="req">*</span>';
+        document.getElementById('batchModalNote').querySelector('div').textContent = batch
+          ? 'تغيير الرصيد يسجل حركة تسوية تلقائياً'
+          : 'سيتم تسجيل الكمية المضافة كحركة وارد للمخزون';
+        productSelect.disabled = Boolean(batch);
+        document.getElementById('batchQuantity').min = batch ? '0' : '1';
+        document.getElementById('batchBlacklistHint').style.display = 'none';
+
+        if (batch) {
+          productSelect.value = String(batch.product_id);
+          document.getElementById('batchNumber').value = batch.batch_number || '';
+          supplierSelect.value = batch.supplier_id ? String(batch.supplier_id) : '';
+          document.getElementById('batchQuantity').value = Number(batch.quantity_left) || 0;
+          document.getElementById('batchExpiry').value = batch.expiry_date || '';
+          document.getElementById('batchCostPrice').value = Number(batch.cost_price) || 0;
+          document.getElementById('batchSalePrice').value = Number(batch.sale_price) || 0;
+          document.getElementById('batchPurchaseDiscount').value = Number(batch.purchase_discount) || 0;
+        } else {
+          document.getElementById('batchQuantity').value = '1';
+          document.getElementById('batchCostPrice').value = '0';
+          document.getElementById('batchSalePrice').value = '0';
+          document.getElementById('batchPurchaseDiscount').value = '0';
+        }
+
+        document.getElementById('batchModalBackdrop').classList.add('show');
+        document.getElementById('batchModalBackdrop').setAttribute('aria-hidden', 'false');
+        if (window.lucide) lucide.createIcons();
+      }
+
+      function closeBatchModal() {
+        document.getElementById('batchModalBackdrop').classList.remove('show');
+        document.getElementById('batchModalBackdrop').setAttribute('aria-hidden', 'true');
+        document.getElementById('batchProduct').disabled = false;
+        state.editingBatchId = null;
+        document.getElementById('batchBlacklistHint').style.display = 'none';
+      }
+
+      function checkBatchNumberLive() {
+        const val = document.getElementById('batchNumber').value.trim();
+        const hint = document.getElementById('batchBlacklistHint');
+        if (!val) { hint.style.display = 'none'; return; }
+        const match = Refad.Quarantine.checkBlacklist(val);
+        if (match) {
+          const r = Refad.Quarantine.getReason(match.reason);
+          hint.innerHTML = `🚫 رقم محظور في القايمة السوداء (${r.label})${match.reason_note ? ' — ' + Refad.escapeHtml(match.reason_note) : ''}`;
+          hint.style.display = 'block';
+        } else {
+          hint.style.display = 'none';
+        }
+      }
+
+      async function saveBatch(event) {
+        event.preventDefault();
+        if (!canAdjust) return;
+        if (!Refad.Warehouse.getActiveId()) { Refad.toast.error('لا يوجد مخزن نشط'); return; }
+
+        const editing = Boolean(state.editingBatchId);
+        const quantity = Number(document.getElementById('batchQuantity').value);
+        const productId = Number(document.getElementById('batchProduct').value);
+        const costPrice = Number(document.getElementById('batchCostPrice').value);
+        const salePrice = Number(document.getElementById('batchSalePrice').value);
+        const purchaseDiscount = Number(document.getElementById('batchPurchaseDiscount').value || 0);
+        const batchNumberInput = document.getElementById('batchNumber').value.trim();
+
+        if ((!editing && (!Number.isInteger(productId) || !state.products.some(p => Number(p.id) === productId))) ||
+            !Number.isInteger(quantity) || quantity < (editing ? 0 : 1) ||
+            !isFinite(costPrice) || costPrice < 0 ||
+            !isFinite(salePrice) || salePrice < 0 ||
+            !isFinite(purchaseDiscount) || purchaseDiscount < 0 || purchaseDiscount > 100) {
+          Refad.toast.warning('راجع البيانات');
+          return;
+        }
+
+        if (batchNumberInput) {
+          const check = Refad.Quarantine.canReceive(batchNumberInput);
+          if (!check.allowed) {
+            await Refad.alert.error('🚫 تشغيلة في القايمة السوداء!',
+              check.message + '\n\nالسبب: ' + check.reasonLabel +
+              (check.reasonNote ? '\nتفاصيل: ' + check.reasonNote : ''));
+            return;
+          }
+        }
+
+        const supplierValue = document.getElementById('batchSupplier').value;
+        const payload = {
+          batch_number: batchNumberInput || null,
+          supplier_id: supplierValue ? Number(supplierValue) : null,
+          cost_price: costPrice,
+          sale_price: salePrice,
+          purchase_discount: purchaseDiscount,
+          expiry_date: document.getElementById('batchExpiry').value || null
+        };
+
+        const saveBtn = document.getElementById('saveBatchBtn');
+        const original = saveBtn.innerHTML;
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<i data-lucide="loader-2"></i> جارٍ الحفظ...';
+        if (window.lucide) lucide.createIcons();
+
+        try {
+          let batch;
+          let movementQuantity = quantity;
+          let movementType = 'in';
+          let productForMovement = productId;
+          const warehouseId = Refad.Warehouse.getActiveId();
+
+          if (editing) {
+            const existing = state.batches.find(item => item.id === state.editingBatchId);
+            if (!existing) throw new Error('لم يتم العثور على التشغيلة');
+            if (existing.is_quarantined) throw new Error('لا يمكن تعديل تشغيلة محظورة');
+            productForMovement = existing.product_id;
+            movementQuantity = quantity - (Number(existing.quantity_left) || 0);
+            movementType = 'adjust';
+            batch = await Refad.db.update('batches', existing.id, { ...payload, quantity_left: quantity });
+          } else {
+            batch = await Refad.db.insert('batches', {
+              ...payload,
+              company_id: session.company_id,
+              warehouse_id: warehouseId,
+              product_id: productId,
+              quantity_in: quantity,
+              quantity_left: quantity,
+              receipt_id: null,
+              is_quarantined: false
+            });
+          }
+          if (!batch?.id) throw new Error('لم يتم تأكيد الحفظ');
+
+          if (movementQuantity !== 0) {
+            await Refad.db.insert('inventory_movements', {
+              company_id: session.company_id,
+              warehouse_id: warehouseId,
+              product_id: productForMovement,
+              batch_id: batch.id,
+              movement_type: movementType,
+              reference_type: 'batch',
+              reference_id: batch.id,
+              quantity: movementQuantity,
+              unit_cost: costPrice,
+              balance_after: quantity,
+              notes: editing ? 'تعديل رصيد' : 'إضافة تشغيلة',
+              user_id: session.user_id
+            });
+          }
+
+          await Refad.logActivity(
+            editing ? 'update_batch' : 'create_batch',
+            'inventory',
+            `${editing ? 'تعديل' : 'إضافة'} تشغيلة ${payload.batch_number || batch.id}`,
+            batch.id
+          );
+
+          closeBatchModal();
+          await loadAll(true);
+          Refad.toast.success(editing ? 'تم التحديث' : 'تمت الإضافة');
+        } catch (error) {
+          console.error('[Inventory] save failed:', error);
+          Refad.toast.error('تعذّر الحفظ: ' + error.message);
+        } finally {
+          saveBtn.disabled = false;
+          saveBtn.innerHTML = original;
+          if (window.lucide) lucide.createIcons();
+        }
+      }
+
+      // ============================================================
+      // 18) Transfer Modal
+      // ============================================================
+      function openTransferModal(batch) {
+        if (!canAdjust) { Refad.toast.error('ليس لديك صلاحية النقل'); return; }
+        if (!batch || !batch.quantity_left || batch.quantity_left <= 0) {
+          Refad.toast.warning('لا توجد كمية للنقل');
+          return;
+        }
+
+        const otherWarehouses = state.warehouses.filter(w =>
+          Number(w.id) !== Number(batch.warehouse_id)
+        );
+
+        if (otherWarehouses.length === 0) {
+          Refad.alert.error('لا يمكن النقل', 'لا يوجد مخزن آخر متاح');
+          return;
+        }
+
+        state.transferringBatch = batch;
+
+        const productName = state.products.find(p => Number(p.id) === Number(batch.product_id))?.name || '—';
+
+        document.getElementById('transferInfoBox').innerHTML = `
+          <div class="row">
+            <span class="label">الصنف</span>
+            <span class="value">${Refad.escapeHtml(productName)}</span>
+          </div>
+          <div class="row">
+            <span class="label">رقم التشغيلة</span>
+            <span class="value" style="font-family:monospace;">${Refad.escapeHtml(batch.batch_number || '—')}</span>
+          </div>
+          <div class="row">
+            <span class="label">المخزن الحالي</span>
+            <span class="value">${Refad.escapeHtml(getWarehouseName(batch.warehouse_id))}</span>
+          </div>
+          <div class="row">
+            <span class="label">المتاح للنقل</span>
+            <span class="value">${Refad.format.number(batch.quantity_left)}</span>
+          </div>
+        `;
+
+        document.getElementById('transferToWh').innerHTML =
+          '<option value="">اختر المخزن...</option>' +
+          otherWarehouses.map(w => `<option value="${w.id}">${Refad.escapeHtml(w.name)}${w.is_default ? ' (افتراضي)' : ''}</option>`).join('');
+
+        const qtyInput = document.getElementById('transferQty');
+        qtyInput.value = batch.quantity_left;
+        qtyInput.max = batch.quantity_left;
+        qtyInput.min = 1;
+        document.getElementById('transferQtyHint').textContent = `الحد الأقصى: ${Refad.format.number(batch.quantity_left)}`;
+
+        document.getElementById('transferNotes').value = '';
+
+        document.getElementById('transferModalBackdrop').classList.add('show');
+        document.getElementById('transferModalBackdrop').setAttribute('aria-hidden', 'false');
+        if (window.lucide) lucide.createIcons();
+      }
+
+      function closeTransferModal() {
+        document.getElementById('transferModalBackdrop').classList.remove('show');
+        document.getElementById('transferModalBackdrop').setAttribute('aria-hidden', 'true');
+        state.transferringBatch = null;
+      }
+
+      async function executeTransfer(event) {
+        event.preventDefault();
+        if (!state.transferringBatch) return;
+
+        const batch = state.transferringBatch;
+        const toWhId = Number(document.getElementById('transferToWh').value);
+        const qty = Number(document.getElementById('transferQty').value);
+        const notes = document.getElementById('transferNotes').value.trim();
+
+        if (!toWhId) { Refad.toast.warning('اختر المخزن الهدف'); return; }
+        if (!qty || qty < 1 || qty > batch.quantity_left) {
+          Refad.toast.warning('الكمية غير صحيحة');
+          return;
+        }
+
+        const btn = document.getElementById('confirmTransferBtn');
+        const original = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i data-lucide="loader-2"></i> جارٍ النقل...';
+        if (window.lucide) lucide.createIcons();
+
+        try {
+          await Refad.Warehouse.transferBatch(batch.id, toWhId, qty, notes, 'نقل يدوي');
+
+          await Refad.logActivity('transfer_batch', 'inventory',
+            `نقل تشغيلة ${batch.batch_number} (${qty} وحدة) من "${getWarehouseName(batch.warehouse_id)}" إلى "${getWarehouseName(toWhId)}"`,
+            batch.id);
+
+          closeTransferModal();
+          await loadAll(true);
+          Refad.toast.success('تم النقل بنجاح');
+        } catch (err) {
+          console.error('[Transfer] failed:', err);
+          Refad.toast.error('تعذّر النقل: ' + err.message);
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = original;
+          if (window.lucide) lucide.createIcons();
+        }
+      }
+
+      // ============================================================
+      // 19) Quarantine Modal
+      // ============================================================
+      function openQuarantineModal(batch) {
+        if (!canQuarantine) { Refad.toast.error('ليس لديك صلاحية'); return; }
+
+        document.getElementById('quarForm').reset();
+        state.selectedQuarBatch = null;
+        document.getElementById('quarResultsWrap').style.display = 'none';
+        document.getElementById('quarSelectedWrap').style.display = 'none';
+        document.getElementById('saveQuarBtn').disabled = true;
+
+        if (batch) {
+          selectQuarantineBatch(batch);
+          document.getElementById('quarSearchBatch').value = batch.batch_number || '';
+        }
+
+        document.getElementById('quarModalBackdrop').classList.add('show');
+        document.getElementById('quarModalBackdrop').setAttribute('aria-hidden', 'false');
+        if (window.lucide) lucide.createIcons();
+        setTimeout(() => document.getElementById('quarSearchBatch').focus(), 100);
+      }
+
+      function closeQuarantineModal() {
+        document.getElementById('quarModalBackdrop').classList.remove('show');
+        document.getElementById('quarModalBackdrop').setAttribute('aria-hidden', 'true');
+        state.selectedQuarBatch = null;
+        if (state.quarSearchTimer) clearTimeout(state.quarSearchTimer);
+      }
+
+      function selectQuarantineBatch(batch) {
+        state.selectedQuarBatch = batch;
+        const el = document.getElementById('quarSelected');
+        const productName = batch.products?.name || (state.products.find(p => Number(p.id) === Number(batch.product_id))?.name) || '—';
+        el.innerHTML = `
+          <div class="icon">${Refad.escapeHtml((productName || '؟').charAt(0))}</div>
+          <div class="info">
+            <div class="name">${Refad.escapeHtml(productName)}</div>
+            <div class="sub">تشغيلة: ${Refad.escapeHtml(batch.batch_number || '—')} • الكمية: ${Refad.format.number(batch.quantity_left)} • ${Refad.escapeHtml(getWarehouseName(batch.warehouse_id))}</div>
+          </div>
+        `;
+        document.getElementById('quarSelectedWrap').style.display = 'flex';
+        document.getElementById('quarResultsWrap').style.display = 'none';
+        document.getElementById('saveQuarBtn').disabled = false;
+      }
+
+      function searchBatchesForQuarantine(query) {
+        const q = query.trim();
+        const resultsEl = document.getElementById('quarResults');
+        if (!q) { document.getElementById('quarResultsWrap').style.display = 'none'; return; }
+
+        const matches = state.batches.filter(b => {
+          if (b.is_quarantined) return false;
+          const productName = state.products.find(p => Number(p.id) === Number(b.product_id))?.name || '';
+          return (
+            (b.batch_number || '').toLowerCase().includes(q.toLowerCase()) ||
+            Refad.Quarantine.match(b.batch_number, q) ||
+            productName.toLowerCase().includes(q.toLowerCase())
+          );
+        }).slice(0, 20);
+
+        if (matches.length === 0) {
+          resultsEl.innerHTML = '<div style="padding:12px;text-align:center;color:var(--text-muted);font-size:12px;">لا توجد نتائج</div>';
+          document.getElementById('quarResultsWrap').style.display = 'flex';
+          return;
+        }
+
+        resultsEl.innerHTML = matches.map(b => {
+          const productName = state.products.find(p => Number(p.id) === Number(b.product_id))?.name || '—';
+          return `
+            <div class="search-item" data-batch-id="${b.id}">
+              <div class="icon-sm">${Refad.escapeHtml((productName || '؟').charAt(0))}</div>
+              <div class="info">
+                <div class="name">${Refad.escapeHtml(productName)}</div>
+                <div class="sub">تشغيلة: ${Refad.escapeHtml(b.batch_number || '—')} • كمية: ${Refad.format.number(b.quantity_left)} • ${Refad.escapeHtml(getWarehouseName(b.warehouse_id))}</div>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        document.getElementById('quarResultsWrap').style.display = 'flex';
+
+        resultsEl.querySelectorAll('[data-batch-id]').forEach(el => {
+          el.addEventListener('click', () => {
+            const id = Number(el.dataset.batchId);
+            const b = state.batches.find(x => Number(x.id) === id);
+            if (b) selectQuarantineBatch(b);
+          });
+        });
+      }
+
+      async function saveQuarantine(event) {
+        event.preventDefault();
+        if (!state.selectedQuarBatch) { Refad.toast.warning('اختر تشغيلة'); return; }
+
+        const reason = document.getElementById('quarReason').value;
+        const reasonNote = document.getElementById('quarReasonNote').value.trim();
+        const notes = document.getElementById('quarNotes').value.trim();
+
+        const ok = await Refad.alert.confirm('⚠️ تأكيد الحظر',
+          `سيتم حظر تشغيلة "${state.selectedQuarBatch.batch_number}" ومنع بيعها.\n\nهل أنت متأكد؟`, 'حظر');
+        if (!ok) return;
+
+        const btn = document.getElementById('saveQuarBtn');
+        const original = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i data-lucide="loader-2"></i> جارٍ الحظر...';
+        if (window.lucide) lucide.createIcons();
+
+        try {
+          await Refad.Quarantine.quarantineBatch(state.selectedQuarBatch.id, reason, reasonNote, notes);
+          await Refad.logActivity('quarantine_batch', 'inventory',
+            `حظر تشغيلة ${state.selectedQuarBatch.batch_number}`, state.selectedQuarBatch.id);
+
+          try {
+            await Refad.notifyCompany(session.company_id,
+              '🚫 تم حظر تشغيلة',
+              `تشغيلة "${state.selectedQuarBatch.batch_number}" تم حظرها (${Refad.Quarantine.getReason(reason).label})`,
+              'warning', state.selectedQuarBatch.id, session.user_id);
+          } catch (e) {}
+
+          closeQuarantineModal();
+          await loadAll(true);
+          Refad.toast.success('تم حظر التشغيلة');
+        } catch (e) {
+          console.error('[Quarantine] failed:', e);
+          Refad.toast.error('تعذّر الحظر: ' + e.message);
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = original;
+          if (window.lucide) lucide.createIcons();
+        }
+      }
+
+      // ============================================================
+      // 20) Blacklist Modal
+      // ============================================================
+      function openBlacklistModal() {
+        if (!canQuarantine) { Refad.toast.error('ليس لديك صلاحية'); return; }
+
+        document.getElementById('blForm').reset();
+        document.getElementById('blBatchNumber').value = '';
+        document.getElementById('blReasonNote').value = '';
+        document.getElementById('blNotes').value = '';
+        document.getElementById('blSeverity').value = 'medium';
+        document.getElementById('blMatchHint').style.display = 'none';
+
+        const sel = document.getElementById('blProduct');
+        sel.innerHTML = '<option value="">— غير محدد —</option>' + state.products.map(p =>
+          `<option value="${p.id}">${Refad.escapeHtml(p.name)}</option>`
+        ).join('');
+
+        document.getElementById('blModalBackdrop').classList.add('show');
+        document.getElementById('blModalBackdrop').setAttribute('aria-hidden', 'false');
+        if (window.lucide) lucide.createIcons();
+        setTimeout(() => document.getElementById('blBatchNumber').focus(), 100);
+      }
+
+      function closeBlacklistModal() {
+        document.getElementById('blModalBackdrop').classList.remove('show');
+        document.getElementById('blModalBackdrop').setAttribute('aria-hidden', 'true');
+      }
+
+      function checkBlacklistInputLive() {
+        const val = document.getElementById('blBatchNumber').value.trim();
+        const hintWrap = document.getElementById('blMatchHint');
+        const hintText = document.getElementById('blMatchHintText');
+        if (!val) { hintWrap.style.display = 'none'; return; }
+
+        const existing = Refad.Quarantine.checkBlacklist(val);
+        if (existing) {
+          const r = Refad.Quarantine.getReason(existing.reason);
+          hintText.innerHTML = `⚠️ الرقم "${Refad.escapeHtml(existing.batch_number)}" موجود بالفعل (${r.label}). سيتم رفض الإضافة.`;
+          hintWrap.style.display = 'block';
+        } else {
+          const norm = Refad.Quarantine.normalize(val);
+          const suffix = Refad.Quarantine.getSuffix(val);
+          hintText.innerHTML = `سيتم تخزين الرقم مع مطابقة ذكية لآخر 4 أحرف/أرقام: <b>${Refad.escapeHtml(suffix)}</b> (النموذج: ${Refad.escapeHtml(norm)})`;
+          hintWrap.style.display = 'block';
+        }
+      }
+
+      async function saveBlacklist(event) {
+        event.preventDefault();
+
+        const batchNumber = document.getElementById('blBatchNumber').value.trim();
+        if (!batchNumber) { Refad.toast.warning('رقم التشغيلة مطلوب'); return; }
+
+        const dup = Refad.Quarantine.checkBlacklist(batchNumber);
+        if (dup) { Refad.toast.error('هذا الرقم موجود بالفعل'); return; }
+
+        const reason = document.getElementById('blReason').value;
+        const reasonNote = document.getElementById('blReasonNote').value.trim();
+        const severity = document.getElementById('blSeverity').value;
+        const productId = document.getElementById('blProduct').value;
+        const notes = document.getElementById('blNotes').value.trim();
+        const productName = productId ? (state.products.find(p => Number(p.id) === Number(productId))?.name || null) : null;
+
+        const btn = document.getElementById('saveBlBtn');
+        const original = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i data-lucide="loader-2"></i> جارٍ الإضافة...';
+        if (window.lucide) lucide.createIcons();
+
+        try {
+          await Refad.Quarantine.addToBlacklist({
+            batch_number: batchNumber,
+            product_id: productId ? Number(productId) : null,
+            product_name: productName,
+            reason, reason_note: reasonNote, severity, notes
+          });
+
+          await Refad.logActivity('add_blacklist', 'inventory',
+            `إضافة "${batchNumber}" للقايمة السوداء`, null);
+
+          try {
+            await Refad.notifyCompany(session.company_id,
+              '🚫 إضافة للقايمة السوداء',
+              `رقم التشغيلة "${batchNumber}" تم إضافته للقايمة السوداء`,
+              'warning', null, session.user_id);
+          } catch (e) {}
+
+          closeBlacklistModal();
+          await loadAll(true);
+          Refad.toast.success('تمت الإضافة');
+        } catch (e) {
+          console.error('[Blacklist] failed:', e);
+          Refad.toast.error(e.message || 'تعذّر الإضافة');
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = original;
+          if (window.lucide) lucide.createIcons();
+        }
+      }
+
+      // ============================================================
+      // 21) Release Modal
+      // ============================================================
+      function openReleaseModal(id, type) {
+        if (!canQuarantine) { Refad.toast.error('ليس لديك صلاحية'); return; }
+
+        state.releasingBatchId = id;
+        state.releasingType = type;
+
+        const info = document.getElementById('releaseInfo');
+        const title = document.getElementById('releaseTitle');
+
+        if (type === 'quarantine') {
+          const b = state.quarantinedBatches.find(x => Number(x.id) === Number(id));
+          if (!b) { Refad.toast.error('غير موجود'); return; }
+          const r = getReasonData(b.quarantine_reason);
+
+          title.textContent = 'فك الحظر الداخلي';
+          info.innerHTML = `
+            <strong style="display:block;margin-bottom:8px;">تشغيلة: ${Refad.escapeHtml(b.batch_number || '—')}</strong>
+            <div>الصنف: <strong>${Refad.escapeHtml(b.products?.name || '—')}</strong></div>
+            <div>السبب: <span class="badge-tag ${r.color}">${r.label}</span></div>
+            ${b.quarantine_reason_note ? `<div style="margin-top:4px;">تفاصيل: ${Refad.escapeHtml(b.quarantine_reason_note)}</div>` : ''}
+          `;
+        } else {
+          const b = state.blacklist.find(x => Number(x.id) === Number(id));
+          if (!b) { Refad.toast.error('غير موجود'); return; }
+          const r = getReasonData(b.reason);
+
+          title.textContent = 'فك الحظر من القايمة السوداء';
+          info.innerHTML = `
+            <strong style="display:block;margin-bottom:8px;">رقم: ${Refad.escapeHtml(b.batch_number)}</strong>
+            <div>الصنف: <strong>${Refad.escapeHtml(b.product_name || '—')}</strong></div>
+            <div>السبب: <span class="badge-tag ${r.color}">${r.label}</span></div>
+            ${b.reason_note ? `<div style="margin-top:4px;">تفاصيل: ${Refad.escapeHtml(b.reason_note)}</div>` : ''}
+          `;
+        }
+
+        document.getElementById('releaseNotes').value = '';
+        document.getElementById('releaseModalBackdrop').classList.add('show');
+        document.getElementById('releaseModalBackdrop').setAttribute('aria-hidden', 'false');
+        if (window.lucide) lucide.createIcons();
+      }
+
+      function closeReleaseModal() {
+        document.getElementById('releaseModalBackdrop').classList.remove('show');
+        document.getElementById('releaseModalBackdrop').setAttribute('aria-hidden', 'true');
+        state.releasingBatchId = null;
+        state.releasingType = null;
+      }
+
+      async function confirmRelease() {
+        if (!state.releasingBatchId) return;
+
+        const notes = document.getElementById('releaseNotes').value.trim();
+        const btn = document.getElementById('confirmReleaseBtn');
+        const original = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i data-lucide="loader-2"></i> جارٍ الفك...';
+        if (window.lucide) lucide.createIcons();
+
+        try {
+          if (state.releasingType === 'quarantine') {
+            await Refad.Quarantine.releaseBatch(state.releasingBatchId, notes);
+          } else {
+            await Refad.Quarantine.releaseFromBlacklist(state.releasingBatchId, notes);
+          }
+          closeReleaseModal();
+          await loadAll(true);
+          Refad.toast.success('تم فك الحظر');
+        } catch (e) {
+          console.error('[Release] failed:', e);
+          Refad.toast.error('تعذّر الفك: ' + e.message);
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = original;
+          if (window.lucide) lucide.createIcons();
+        }
+      }
+
+      // ============================================================
+      // 22) Quick Search (Ctrl+K)
+      // ============================================================
+      function openQuickSearch() {
+        const overlay = document.getElementById('quickSearchOverlay');
+        overlay.classList.add('show');
+        const input = document.getElementById('quickSearchInput');
+        input.value = '';
+        input.focus();
+        state.quickSearchIndex = -1;
+        state.quickSearchResults = [];
+        renderQuickSearchResults('');
+      }
+
+      function closeQuickSearch() {
+        document.getElementById('quickSearchOverlay').classList.remove('show');
+      }
+
+      function renderQuickSearchResults(query) {
+        const container = document.getElementById('quickSearchResults');
+        const q = (query || '').toLowerCase().trim();
+
+        let results = [];
+        if (!q) {
+          container.innerHTML = '<div class="quick-search-empty">اكتب للبحث السريع عن الأصناف...</div>';
+          state.quickSearchResults = [];
+          return;
+        }
+
+        // Products
+        results = state.products.filter(p =>
+          (p.name || '').toLowerCase().includes(q) ||
+          (p.name_en || '').toLowerCase().includes(q) ||
+          (p.category || '').toLowerCase().includes(q)
+        ).slice(0, 10).map(p => ({
+          type: 'product',
+          id: p.id,
+          name: p.name,
+          sub: `${Refad.format.number(p.total_qty)} متاح • ${p.category || 'بدون تصنيف'}`,
+          initial: (p.name || '؟').charAt(0),
+          url: `product-details.html?id=${p.id}`
+        }));
+
+        state.quickSearchResults = results;
+        state.quickSearchIndex = results.length ? 0 : -1;
+
+        if (!results.length) {
+          container.innerHTML = '<div class="quick-search-empty">لا توجد نتائج</div>';
+          return;
+        }
+
+        container.innerHTML = results.map((r, i) => `
+          <div class="quick-search-item ${i === 0 ? 'selected' : ''}" data-idx="${i}">
+            <div class="qs-icon">${Refad.escapeHtml(r.initial)}</div>
+            <div class="qs-body">
+              <div class="qs-name">${Refad.escapeHtml(r.name)}</div>
+              <div class="qs-sub">${Refad.escapeHtml(r.sub)}</div>
+            </div>
+            <i data-lucide="arrow-left" style="width:16px;height:16px;color:var(--text-muted);"></i>
+          </div>
+        `).join('');
+
+        if (window.lucide) lucide.createIcons();
+
+        container.querySelectorAll('.quick-search-item').forEach(el => {
+          el.addEventListener('click', () => {
+            const idx = Number(el.dataset.idx);
+            navigateQuickSearch(idx);
+          });
+        });
+      }
+
+      function navigateQuickSearch(idx) {
+        const r = state.quickSearchResults[idx];
+        if (!r) return;
+        closeQuickSearch();
+        window.location.href = r.url;
+      }
+
+      function updateQuickSearchSelection() {
+        const container = document.getElementById('quickSearchResults');
+        container.querySelectorAll('.quick-search-item').forEach((el, i) => {
+          el.classList.toggle('selected', i === state.quickSearchIndex);
+        });
+        const selected = container.querySelector('.quick-search-item.selected');
+        if (selected) selected.scrollIntoView({ block: 'nearest' });
+      }
+
+      function setupQuickSearch() {
+        const overlay = document.getElementById('quickSearchOverlay');
+        const input = document.getElementById('quickSearchInput');
+
+        overlay.addEventListener('click', e => {
+          if (e.target === overlay) closeQuickSearch();
+        });
+
+        input.addEventListener('input', e => renderQuickSearchResults(e.target.value));
+
+        input.addEventListener('keydown', e => {
+          if (e.key === 'Escape') {
+            e.preventDefault();
+            closeQuickSearch();
+          } else if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            if (state.quickSearchResults.length) {
+              state.quickSearchIndex = Math.min(state.quickSearchIndex + 1, state.quickSearchResults.length - 1);
+              updateQuickSearchSelection();
+            }
+          } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            if (state.quickSearchResults.length) {
+              state.quickSearchIndex = Math.max(state.quickSearchIndex - 1, 0);
+              updateQuickSearchSelection();
+            }
+          } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (state.quickSearchIndex >= 0) {
+              navigateQuickSearch(state.quickSearchIndex);
+            } else if (state.quickSearchResults.length) {
+              navigateQuickSearch(0);
+            }
+          }
+        });
+      }
+
+      // ============================================================
+      // 23) Events
       // ============================================================
       function bindEvents() {
-        // Product search
-        const pSearchHandler = Refad.debounce(v => { state.productSearch = v; state.productsPage = 1; applyProductFilters(); }, 250);
-        document.getElementById('searchInput').addEventListener('input', e => pSearchHandler(e.target.value));
+        const pSearch = Refad.debounce(v => { state.productSearch = v; state.productsPage = 1; applyProductFilters(); }, 250);
+        document.getElementById('searchInput').addEventListener('input', e => pSearch(e.target.value));
+
+        const bSearch = Refad.debounce(v => { state.batchSearch = v; state.batchesPage = 1; applyBatchFilters(); }, 250);
+        document.getElementById('batchSearch').addEventListener('input', e => bSearch(e.target.value));
+
+        const qSearch = Refad.debounce(v => { state.quarSearch = v; state.quarantinePage = 1; applyQuarantineFilters(); }, 250);
+        document.getElementById('quarSearch').addEventListener('input', e => qSearch(e.target.value));
+
+        const blSearch = Refad.debounce(v => { state.blSearch = v; state.blacklistPage = 1; applyBlacklistFilters(); }, 250);
+        document.getElementById('blSearch').addEventListener('input', e => blSearch(e.target.value));
+
+        const mSearch = Refad.debounce(v => { state.movSearch = v; state.movementsPage = 1; applyMovFilters(); }, 250);
+        document.getElementById('movSearch').addEventListener('input', e => mSearch(e.target.value));
 
         document.getElementById('filterStatus').addEventListener('change', e => {
           state.productFilterStatus = e.target.value;
@@ -1985,90 +2864,169 @@
           applyProductFilters();
           document.querySelectorAll('.mini-card').forEach(c => c.classList.remove('active'));
         });
-
-        document.getElementById('filterSupplier').addEventListener('change', e => {
-          state.productFilterSupplier = e.target.value;
-          // ملاحظة: يمكن لاحقاً ربط الفلترة بالمورد عبر batches
-          Refad.toast.info('قريباً: فلترة حسب المورد');
-        });
-
-        // Batch search
-        const bSearchHandler = Refad.debounce(v => { state.batchSearch = v; state.batchesPage = 1; applyBatchFilters(); }, 250);
-        document.getElementById('batchSearch').addEventListener('input', e => bSearchHandler(e.target.value));
         document.getElementById('batchFilterStatus').addEventListener('change', e => {
           state.batchFilterStatus = e.target.value;
           state.batchesPage = 1;
           applyBatchFilters();
         });
-
-        // Movements search
-        const mSearchHandler = Refad.debounce(v => { state.movSearch = v; state.movementsPage = 1; applyMovFilters(); }, 250);
-        document.getElementById('movSearch').addEventListener('input', e => mSearchHandler(e.target.value));
+        document.getElementById('quarFilterReason').addEventListener('change', e => {
+          state.quarFilterReason = e.target.value;
+          state.quarantinePage = 1;
+          applyQuarantineFilters();
+        });
+        document.getElementById('blFilterReason').addEventListener('change', e => {
+          state.blFilterReason = e.target.value;
+          state.blacklistPage = 1;
+          applyBlacklistFilters();
+        });
         document.getElementById('movType').addEventListener('change', e => {
           state.movType = e.target.value;
           state.movementsPage = 1;
           applyMovFilters();
         });
 
-        // Table actions
+        // Products body
         document.getElementById('productsBody').addEventListener('click', e => {
           const btn = e.target.closest('[data-action]');
-          if (btn && btn.dataset.action === 'view') {
-            location.href = `product-details.html?id=${btn.dataset.id}`;
+          if (btn && btn.dataset.action === 'view') { location.href = `product-details.html?id=${btn.dataset.id}`; return; }
+          const row = e.target.closest('tr[data-product-id]');
+          if (row && !e.target.closest('button, a, input, select, textarea, label')) {
+            location.href = `product-details.html?id=${row.dataset.productId}`;
+          }
+        });
+
+        // Batches body
+        document.getElementById('batchesBody').addEventListener('click', e => {
+          // ✨ Copy button
+          const copyBtn = e.target.closest('[data-copy]');
+          if (copyBtn) {
+            e.stopPropagation();
+            copyText(copyBtn.dataset.copy, copyBtn);
             return;
           }
-          const row = e.target.closest('tr[data-product-id]');
-          if (row && !e.target.closest('a, input, select, textarea, label')) {
-            location.href = `product-details.html?id=${row.dataset.productId}`;
-          }
-        });
-        document.getElementById('batchesBody').addEventListener('click', e => {
+
           const btn = e.target.closest('[data-action]');
-          if (btn && btn.dataset.action === 'view-product') {
-            location.href = `product-details.html?id=${btn.dataset.id}`;
-          } else if (btn && btn.dataset.action === 'edit-batch') {
-            const batch = state.batches.find(item => String(item.id) === btn.dataset.id);
-            if (batch) openBatchModal(batch);
-          } else {
-            const row = e.target.closest('tr[data-product-id]');
-            if (row && !e.target.closest('a, input, select, textarea, label')) {
-              location.href = `product-details.html?id=${row.dataset.productId}`;
+          if (btn) {
+            const action = btn.dataset.action;
+            const id = Number(btn.dataset.id);
+            if (action === 'view-product') { location.href = `product-details.html?id=${btn.dataset.id}`; return; }
+            if (action === 'edit-batch') {
+              const b = state.batches.find(x => Number(x.id) === id);
+              if (b) openBatchModal(b);
+              return;
+            }
+            if (action === 'transfer') {
+              const b = state.batches.find(x => Number(x.id) === id);
+              if (b) openTransferModal(b);
+              return;
+            }
+            if (action === 'quarantine') {
+              const b = state.batches.find(x => Number(x.id) === id);
+              if (b) openQuarantineModal(b);
+              return;
             }
           }
-        });
-        document.getElementById('productsBody').addEventListener('keydown', e => {
           const row = e.target.closest('tr[data-product-id]');
-          if (row && e.target === row && (e.key === 'Enter' || e.key === ' ')) {
-            e.preventDefault();
+          if (row && !e.target.closest('button, a, input, select, textarea, label')) {
             location.href = `product-details.html?id=${row.dataset.productId}`;
           }
         });
-        document.getElementById('batchesBody').addEventListener('keydown', e => {
-          const row = e.target.closest('tr[data-product-id]');
-          if (row && e.target === row && (e.key === 'Enter' || e.key === ' ')) {
-            e.preventDefault();
-            location.href = `product-details.html?id=${row.dataset.productId}`;
+
+        // Quarantine body
+        document.getElementById('quarantineBody').addEventListener('click', e => {
+          const btn = e.target.closest('[data-action]');
+          if (btn && btn.dataset.action === 'release-quar') {
+            openReleaseModal(Number(btn.dataset.id), 'quarantine');
           }
         });
+
+        // Blacklist body
+        document.getElementById('blacklistBody').addEventListener('click', e => {
+          const btn = e.target.closest('[data-action]');
+          if (btn && btn.dataset.action === 'release-bl') {
+            openReleaseModal(Number(btn.dataset.id), 'blacklist');
+          }
+        });
+
+        // Buttons
         document.getElementById('addBatchBtn').addEventListener('click', () => openBatchModal());
+        document.getElementById('addQuarantineBtn').addEventListener('click', () => openQuarantineModal());
+        document.getElementById('addBlacklistBtn').addEventListener('click', openBlacklistModal);
+
+        // Batch modal
         document.getElementById('batchProduct').addEventListener('change', event => {
           if (state.editingBatchId) return;
           const product = state.products.find(item => String(item.id) === event.target.value);
           document.getElementById('batchSalePrice').value = Number(product?.default_price) || 0;
         });
+        document.getElementById('batchNumber').addEventListener('input', checkBatchNumberLive);
         document.getElementById('batchForm').addEventListener('submit', saveBatch);
         document.getElementById('closeBatchModalBtn').addEventListener('click', closeBatchModal);
         document.getElementById('cancelBatchModalBtn').addEventListener('click', closeBatchModal);
-        document.getElementById('batchModalBackdrop').addEventListener('click', event => {
-          if (event.target.id === 'batchModalBackdrop') closeBatchModal();
+        document.getElementById('batchModalBackdrop').addEventListener('click', e => {
+          if (e.target.id === 'batchModalBackdrop') closeBatchModal();
         });
-        document.addEventListener('keydown', event => {
-          if (event.key === 'Escape') closeBatchModal();
+
+        // Transfer modal
+        document.getElementById('transferForm').addEventListener('submit', executeTransfer);
+        document.getElementById('closeTransferModalBtn').addEventListener('click', closeTransferModal);
+        document.getElementById('cancelTransferModalBtn').addEventListener('click', closeTransferModal);
+        document.getElementById('transferModalBackdrop').addEventListener('click', e => {
+          if (e.target.id === 'transferModalBackdrop') closeTransferModal();
         });
+
+        // Quarantine modal
+        document.getElementById('quarSearchBatch').addEventListener('input', e => {
+          if (state.quarSearchTimer) clearTimeout(state.quarSearchTimer);
+          state.quarSearchTimer = setTimeout(() => searchBatchesForQuarantine(e.target.value), 250);
+        });
+        document.getElementById('quarForm').addEventListener('submit', saveQuarantine);
+        document.getElementById('closeQuarModalBtn').addEventListener('click', closeQuarantineModal);
+        document.getElementById('cancelQuarModalBtn').addEventListener('click', closeQuarantineModal);
+        document.getElementById('quarModalBackdrop').addEventListener('click', e => {
+          if (e.target.id === 'quarModalBackdrop') closeQuarantineModal();
+        });
+
+        // Blacklist modal
+        document.getElementById('blBatchNumber').addEventListener('input', checkBlacklistInputLive);
+        document.getElementById('blForm').addEventListener('submit', saveBlacklist);
+        document.getElementById('closeBlModalBtn').addEventListener('click', closeBlacklistModal);
+        document.getElementById('cancelBlModalBtn').addEventListener('click', closeBlacklistModal);
+        document.getElementById('blModalBackdrop').addEventListener('click', e => {
+          if (e.target.id === 'blModalBackdrop') closeBlacklistModal();
+        });
+
+        // Release modal
+        document.getElementById('confirmReleaseBtn').addEventListener('click', confirmRelease);
+        document.getElementById('closeReleaseModalBtn').addEventListener('click', closeReleaseModal);
+        document.getElementById('cancelReleaseBtn').addEventListener('click', closeReleaseModal);
+        document.getElementById('releaseModalBackdrop').addEventListener('click', e => {
+          if (e.target.id === 'releaseModalBackdrop') closeReleaseModal();
+        });
+
+        // Escape
+        document.addEventListener('keydown', e => {
+          if (e.key === 'Escape') {
+            closeBatchModal();
+            closeTransferModal();
+            closeQuarantineModal();
+            closeBlacklistModal();
+            closeReleaseModal();
+          }
+          // ✨ Ctrl+K
+          if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+            e.preventDefault();
+            openQuickSearch();
+          }
+        });
+
+        // Quick search
+        setupQuickSearch();
 
         // Refresh
         document.getElementById('refreshBtn').addEventListener('click', async () => {
           Refad.toast.info('جارٍ التحديث...');
+          await Refad.Warehouse.refresh();
           await loadAll(true);
           Refad.toast.success('تم التحديث');
         });
@@ -2076,17 +3034,13 @@
         // Export
         document.getElementById('exportBtn').addEventListener('click', () => {
           const activeTab = document.querySelector('.tab.active').dataset.tab;
-          let rows = [];
-          let name = '';
+          let rows = [], name = '';
 
           if (activeTab === 'products') {
             rows = state.products.map(p => ({
-              'الصنف': p.name,
-              'الشكل': p.form || '',
-              'الوحدة': p.unit || '',
-              'المخزون': p.total_qty,
-              'حد إعادة الطلب': p.reorder_level || 0,
-              'عدد التشغيلات': p.batches_count,
+              'الصنف': p.name, 'الشكل': p.form || '', 'الوحدة': p.unit || '',
+              'المخزون': p.total_qty, 'حد إعادة الطلب': p.reorder_level || 0,
+              'عدد التشغيلات': p.batches_count, 'محظورة': p.quarantined_count || 0,
               'أقرب صلاحية': p.nearest_expiry || '',
               'الحالة': p.status === 'in-stock' ? 'متوفر' : p.status === 'low' ? 'منخفض' : 'نفد'
             }));
@@ -2095,30 +3049,49 @@
             const productMap = {};
             state.products.forEach(p => { productMap[p.id] = p.name; });
             rows = state.batches.map(b => ({
-              'الصنف': productMap[b.product_id] || '',
-              'رقم التشغيلة': b.batch_number || '',
-              'المتبقي': b.quantity_left || 0,
-              'سعر الشراء': b.cost_price || 0,
-              'سعر البيع': b.sale_price || 0,
-              'الصلاحية': b.expiry_date || ''
+              'الصنف': productMap[b.product_id] || '', 'رقم التشغيلة': b.batch_number || '',
+              'المخزن': getWarehouseName(b.warehouse_id),
+              'المتبقي': b.quantity_left || 0, 'سعر الشراء': b.cost_price || 0,
+              'سعر البيع': b.sale_price || 0, 'الصلاحية': b.expiry_date || ''
             }));
             name = 'inventory-batches';
+          } else if (activeTab === 'quarantine') {
+            rows = state.quarantinedBatches.map(b => ({
+              'الصنف': b.products?.name || '', 'رقم التشغيلة': b.batch_number || '',
+              'المخزن': getWarehouseName(b.warehouse_id),
+              'السبب': getReasonData(b.quarantine_reason).label,
+              'الكمية': b.quantity_left || 0,
+              'تاريخ الحظر': Refad.format.datetime(b.quarantined_at),
+              'ملاحظات': b.quarantine_notes || ''
+            }));
+            name = 'quarantined-batches';
+          } else if (activeTab === 'blacklist') {
+            rows = state.blacklist.map(b => ({
+              'رقم التشغيلة': b.batch_number, 'الصنف': b.product_name || '',
+              'السبب': getReasonData(b.reason).label,
+              'الخطورة': b.severity, 'تاريخ الإضافة': Refad.format.datetime(b.created_at),
+              'ملاحظات': b.notes || ''
+            }));
+            name = 'blacklist';
           } else {
             rows = state.movements.map(m => ({
               'التاريخ': Refad.format.datetime(m.created_at),
               'الصنف': m.products?.name || '',
-              'النوع': m.movement_type,
-              'الكمية': m.quantity,
+              'النوع': m.movement_type, 'الكمية': m.quantity,
               'المرجع': `${m.reference_type || ''} ${m.reference_id || ''}`,
               'ملاحظات': m.notes || ''
             }));
             name = 'inventory-movements';
           }
 
-          if (!rows.length) {
-            Refad.toast.warning('لا توجد بيانات للتصدير');
+          if (!rows.length) { Refad.toast.warning('لا توجد بيانات'); return; }
+
+          // ✨ التحقق من وجود XLSX
+          if (typeof XLSX === 'undefined') {
+            Refad.toast.error('مكتبة Excel لم تُحمّل بعد. أعد المحاولة.');
             return;
           }
+
           const ws = XLSX.utils.json_to_sheet(rows);
           const wb = XLSX.utils.book_new();
           XLSX.utils.book_append_sheet(wb, ws, name);
@@ -2126,31 +3099,68 @@
           Refad.toast.success('تم التصدير');
         });
 
-        // Print
-        document.getElementById('printBtn').addEventListener('click', () => {
-          window.print();
-        });
+        document.getElementById('printBtn').addEventListener('click', () => window.print());
       }
 
       // ============================================================
-      // 16) Init
+      // 24) Init
       // ============================================================
       async function init() {
-        buildSidebar();
+        // ✨ 1) الإعدادات الأول
+        state.expiryAlertDays = SafeSettings.inventory.getExpiryAlertDays();
+
+        // ✨ 2) UI الأساسية
+        Refad.buildMenu('inventory.html');
         fillUser();
+        applyIdentity();
         setupTheme();
         setupSidebarMobile();
         setupUserMenu();
         setupNotifBtn();
+        setupRealtimeTheme();
         setupTabs();
         setupMiniStats();
+        fillReasonSelects();
         bindEvents();
-        document.getElementById('addBatchBtn').style.display = Refad.Auth.can('inventory.adjust') ? 'inline-flex' : 'none';
 
+        document.getElementById('addBatchBtn').style.display = canAdjust ? 'inline-flex' : 'none';
+        document.getElementById('addQuarantineBtn').style.display = canQuarantine ? 'inline-flex' : 'none';
+        document.getElementById('addBlacklistBtn').style.display = canQuarantine ? 'inline-flex' : 'none';
+
+        // ✨ 3) Warehouse
+        try {
+          await Refad.Warehouse.ensureLoaded();
+          Refad.Warehouse.injectSelector();
+          await loadWarehousesList();
+          Refad.Warehouse.onChange(() => {
+            updateActiveWhUI();
+            loadAll(true);
+          });
+          updateActiveWhUI();
+        } catch (e) {
+          console.warn('[Inventory] Warehouse init failed:', e.message);
+        }
+
+        // ✨ 4) Data
         await loadSuppliers();
+        await loadUsers();
+        try {
+          await Refad.Quarantine.ensureLoaded();
+        } catch (e) {
+          console.warn('[Inventory] Quarantine init failed:', e.message);
+        }
         await loadAll();
 
-        Refad.registerServiceWorker();
+        // ✨ 5) Service Worker
+        try { Refad.registerServiceWorker(); } catch (e) {}
+
+        console.log('%c[Refad] Inventory v3 ready (Theme Sync + Settings + Quick Search + Finance)', 'color:#14B8A6;font-weight:bold;font-size:14px');
+        console.log('  ✅ المخزن النشط + dropdown');
+        console.log('  ✅ Quick Search (Ctrl+K)');
+        console.log('  ✅ Finance Stats (Cost/Sale/Profit)');
+        console.log('  ✅ Expiry Alert Days from Settings');
+        console.log('  ✅ Copy Batch Number');
+        console.log('  ✅ Unified Menu + Theme Sync');
       }
 
       if (document.readyState === 'loading') {
@@ -2158,8 +3168,6 @@
       } else {
         init();
       }
-
-      console.log('%c[Refad] Inventory ready', 'color:#14B8A6;font-weight:bold');
 
     })();
   </script>

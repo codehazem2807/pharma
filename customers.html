@@ -39,6 +39,7 @@
       --success: #10b981;
       --warning: #f59e0b;
       --info: #3b82f6;
+      --purple: #8b5cf6;
       --sidebar-bg: #0B2C4D;
       --sidebar-text: #cbd5e1;
       --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
@@ -98,6 +99,7 @@
       display: flex; align-items: center; justify-content: center;
       flex-shrink: 0;
       box-shadow: 0 4px 12px rgba(20,184,166,0.4);
+      overflow: hidden;
     }
     .sidebar-logo img { width: 70%; height: 70%; object-fit: contain; }
     .sidebar-logo .fallback { color: white; font-weight: 800; font-size: 18px; }
@@ -125,6 +127,7 @@
     .nav-item .badge { margin-right: auto; background: var(--danger); color: white; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
     .nav-item .badge.teal { background: var(--accent); }
     .nav-item .badge.gold { background: var(--gold); }
+    .nav-item .badge.new { background: var(--purple); }
 
     /* Main */
     .main { flex: 1; margin-right: var(--sidebar-w); min-width: 0; display: flex; flex-direction: column; }
@@ -242,6 +245,7 @@
     .stat-card.gold::before { background: var(--gold); }
     .stat-card.danger::before { background: var(--danger); }
     .stat-card.info::before { background: var(--info); }
+    .stat-card.purple::before { background: var(--purple); }
     .stat-icon {
       width: 48px; height: 48px;
       border-radius: 12px;
@@ -253,6 +257,7 @@
     .stat-icon.gold { background: rgba(245,158,11,0.12); color: var(--gold); }
     .stat-icon.danger { background: rgba(239,68,68,0.12); color: var(--danger); }
     .stat-icon.info { background: rgba(59,130,246,0.12); color: var(--info); }
+    .stat-icon.purple { background: rgba(139,92,246,0.12); color: var(--purple); }
     .stat-icon i { width: 22px; height: 22px; }
     .stat-body { flex: 1; min-width: 0; }
     .stat-body .label { font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px; }
@@ -312,7 +317,7 @@
       width: 100%;
       border-collapse: collapse;
       font-size: 13px;
-      min-width: 900px;
+      min-width: 1100px;
     }
     table.data-table thead { background: var(--bg); border-bottom: 1px solid var(--border); }
     table.data-table th {
@@ -330,6 +335,8 @@
       cursor: pointer;
     }
     table.data-table tbody tr:hover { background: var(--bg); }
+    table.data-table tbody tr.row-overdue { background: rgba(239,68,68,0.03); }
+    table.data-table tbody tr.row-overdue:hover { background: rgba(239,68,68,0.06); }
     table.data-table td { padding: 11px 10px; color: var(--text); vertical-align: middle; }
 
     .customer-cell { display: flex; align-items: center; gap: 10px; }
@@ -360,6 +367,38 @@
     }
     .status-pill.active { background: rgba(16,185,129,0.12); color: var(--success); }
     .status-pill.inactive { background: rgba(239,68,68,0.12); color: var(--danger); }
+
+    /* Credit badge */
+    .credit-badge {
+      display: inline-flex; align-items: center; gap: 3px;
+      padding: 3px 8px;
+      border-radius: 10px;
+      font-size: 10px; font-weight: 700;
+      white-space: nowrap;
+    }
+    .credit-badge.ok { background: rgba(16,185,129,0.12); color: var(--success); }
+    .credit-badge.warning { background: rgba(245,158,11,0.15); color: var(--gold); }
+    .credit-badge.danger { background: rgba(239,68,68,0.15); color: var(--danger); }
+    .credit-badge.none { background: rgba(148,163,184,0.15); color: var(--text-muted); }
+    .credit-badge i { width: 10px; height: 10px; }
+
+    /* Progress bar for credit usage */
+    .credit-progress {
+      height: 4px;
+      background: var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 4px;
+      min-width: 70px;
+    }
+    .credit-progress > div {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.3s;
+    }
+    .credit-progress > div.ok { background: linear-gradient(90deg, var(--success), #047857); }
+    .credit-progress > div.warning { background: linear-gradient(90deg, var(--gold), #d97706); }
+    .credit-progress > div.danger { background: linear-gradient(90deg, var(--danger), #b91c1c); }
 
     .action-btn {
       width: 30px; height: 30px;
@@ -410,7 +449,7 @@
       border-radius: var(--radius);
       box-shadow: var(--shadow-lg);
       width: 100%;
-      max-width: 560px;
+      max-width: 640px;
       max-height: 90vh;
       display: flex;
       flex-direction: column;
@@ -440,6 +479,8 @@
     .modal-close:hover { background: var(--bg); color: var(--danger); }
     .modal-close i { width: 18px; height: 18px; }
     .modal-body { padding: 20px; overflow-y: auto; flex: 1; min-height: 0; }
+    .modal-body::-webkit-scrollbar { width: 8px; }
+    .modal-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
     .modal-footer {
       padding: 14px 20px;
       border-top: 1px solid var(--border);
@@ -474,6 +515,74 @@
       box-shadow: 0 0 0 3px rgba(20,184,166,0.1);
     }
 
+    /* Form section title */
+    .form-section-title {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--purple);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 10px 0 6px;
+      border-bottom: 1px solid var(--border);
+      margin: 6px 0 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      grid-column: 1 / -1;
+    }
+    .form-section-title i { width: 14px; height: 14px; }
+
+    /* Credit Info Box */
+    .credit-info-box {
+      grid-column: 1 / -1;
+      background: linear-gradient(135deg, rgba(139,92,246,0.06), rgba(20,184,166,0.04));
+      border: 1.5px solid rgba(139,92,246,0.2);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 12px;
+      line-height: 1.7;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    .credit-info-box i { width: 16px; height: 16px; color: var(--purple); flex-shrink: 0; margin-top: 2px; }
+
+    /* Checkbox pill */
+    .check-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--bg);
+      cursor: pointer;
+      transition: all 0.2s;
+      grid-column: 1 / -1;
+    }
+    .check-row:hover { border-color: var(--accent); }
+    .check-row input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--accent);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .check-row span {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .check-row small {
+      display: block;
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 500;
+      margin-top: 2px;
+    }
+
     /* Overlay */
     .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; opacity: 0; transition: opacity 0.3s; }
     .overlay.show { display: block; opacity: 1; }
@@ -501,18 +610,17 @@
       .modal-footer .btn { width: 100%; justify-content: center; }
     }
   </style>
-</head>
-<body>
+</head><body>
 
   <!-- Sidebar -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
-      <div class="sidebar-logo">
-        <img src="logo.png" alt="رفاد" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=fallback>R</span>';">
+      <div class="sidebar-logo" id="sidebarLogo">
+        <img src="logo.png" alt="رفاد" id="sidebarLogoImg" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=fallback>R</span>';">
       </div>
       <div class="sidebar-brand">
-        <h2>رفاد</h2>
-        <p>نظام إدارة الأدوية</p>
+        <h2 id="sidebarBrandName">رفاد</h2>
+        <p id="sidebarBrandDesc">نظام إدارة الأدوية</p>
       </div>
     </div>
     <nav class="sidebar-nav" id="sidebarNav"></nav>
@@ -558,7 +666,7 @@
       <div class="page-head">
         <div>
           <h1>جميع العملاء</h1>
-          <p>قائمة كاملة بكل عملاء الشركة مع الأرصدة والبيانات الأساسية</p>
+          <p>قائمة كاملة بكل عملاء الشركة مع الأرصدة وحدود الائتمان</p>
         </div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;">
           <button class="btn btn-outline btn-sm" id="refreshBtn">
@@ -607,6 +715,22 @@
             <div class="sub">أرصدة لهم</div>
           </div>
         </div>
+        <div class="stat-card purple">
+          <div class="stat-icon purple"><i data-lucide="wallet"></i></div>
+          <div class="stat-body">
+            <div class="label">إجمالي حدود الائتمان</div>
+            <div class="value" id="statTotalCreditLimit">0.00</div>
+            <div class="sub" id="statTotalCreditLimitSub">—</div>
+          </div>
+        </div>
+        <div class="stat-card danger">
+          <div class="stat-icon danger"><i data-lucide="alert-triangle"></i></div>
+          <div class="stat-body">
+            <div class="label">تجاوزوا الحد</div>
+            <div class="value" id="statOverLimit">0</div>
+            <div class="sub">يحتاج متابعة</div>
+          </div>
+        </div>
       </div>
 
       <!-- Toolbar -->
@@ -620,6 +744,13 @@
           <option value="debt">عليه رصيد</option>
           <option value="credit">له رصيد</option>
           <option value="zero">رصيد صفر</option>
+        </select>
+        <select class="filter-select" id="filterCredit">
+          <option value="">كل حدود الائتمان</option>
+          <option value="has_limit">له حد ائتمان</option>
+          <option value="no_limit">بدون حد</option>
+          <option value="over_limit">تجاوز الحد</option>
+          <option value="near_limit">قريب من الحد</option>
         </select>
         <select class="filter-select" id="filterStatus">
           <option value="">كل الحالات</option>
@@ -637,15 +768,17 @@
                 <th style="width:50px;">#</th>
                 <th>العميل</th>
                 <th>الهاتف</th>
-                <th>البريد</th>
                 <th>الرصيد</th>
+                <th>حد الائتمان</th>
+                <th>المتاح</th>
+                <th>السداد</th>
                 <th>الفواتير</th>
                 <th>الحالة</th>
-                <th style="width:120px;">إجراءات</th>
+                <th style="width:130px;">إجراءات</th>
               </tr>
             </thead>
             <tbody id="tableBody">
-              <tr><td colspan="8"><div class="loader"><i data-lucide="loader-2"></i><p>جارٍ التحميل...</p></div></td></tr>
+              <tr><td colspan="10"><div class="loader"><i data-lucide="loader-2"></i><p>جارٍ التحميل...</p></div></td></tr>
             </tbody>
           </table>
         </div>
@@ -663,6 +796,11 @@
       </div>
       <div class="modal-body">
         <div class="form-grid">
+
+          <div class="form-section-title">
+            <i data-lucide="user"></i> البيانات الأساسية
+          </div>
+
           <div class="form-group full">
             <label>اسم العميل <span class="req">*</span></label>
             <input type="text" id="cName" maxlength="150" placeholder="اسم العميل">
@@ -679,6 +817,37 @@
             <label>العنوان</label>
             <input type="text" id="cAddress" maxlength="255" placeholder="المدينة، الشارع">
           </div>
+          <div class="form-group full">
+            <label>ملاحظات</label>
+            <textarea id="cNotes" maxlength="500" placeholder="ملاحظات..."></textarea>
+          </div>
+
+          <div class="form-section-title">
+            <i data-lucide="wallet"></i> الائتمان والسداد
+          </div>
+
+          <div class="credit-info-box">
+            <i data-lucide="info"></i>
+            <div>
+              <b>حد الائتمان:</b> الحد الأقصى للديون المسموح بها.<br>
+              <b>فترة السداد:</b> عدد الأيام المسموح بها قبل المطالبة.<br>
+              النظام سيرفض أي فاتورة تتجاوز الحد (مع تحذير لصاحب الشركة).
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>حد الائتمان <span class="hint">0 = بدون حد</span></label>
+            <input type="number" id="cCreditLimit" step="0.01" min="0" value="0" placeholder="0.00">
+          </div>
+          <div class="form-group">
+            <label>فترة السداد (بالأيام) <span class="hint">0 = نقدي</span></label>
+            <input type="number" id="cPaymentTerms" step="1" min="0" value="0" placeholder="0">
+          </div>
+
+          <div class="form-section-title">
+            <i data-lucide="settings"></i> إعدادات إضافية
+          </div>
+
           <div class="form-group">
             <label>الرصيد الافتتاحي <span class="hint">+ له / - عليه</span></label>
             <input type="number" id="cBalance" step="0.01" value="0" placeholder="0.00">
@@ -690,10 +859,7 @@
               <option value="inactive">موقوف</option>
             </select>
           </div>
-          <div class="form-group full">
-            <label>ملاحظات</label>
-            <textarea id="cNotes" maxlength="500" placeholder="ملاحظات..."></textarea>
-          </div>
+
         </div>
       </div>
       <div class="modal-footer">
@@ -705,11 +871,69 @@
     </div>
   </div>
 
+  <!-- ⏭️ الـ JavaScript هيتم إضافته في الجزء 3 -->
+   
+  <!-- ============================================================
+       SCRIPTS — الترتيب مهم جداً
+       ============================================================ -->
   <script src="refad-core.js"></script>
   <script src="refad-auth.js"></script>
+  <script src="refad-theme-sync.js"></script>
+  <script src="refad-settings.js"></script>
+
   <script>
     (function () {
       'use strict';
+
+      // ============================================================
+      // 0) Safe Wrappers
+      // ============================================================
+      const SafeSettings = {
+        locale: {
+          formatMoney: function (v) {
+            try {
+              if (window.RefadSettings?.locale?.formatMoney) {
+                return RefadSettings.locale.formatMoney(v);
+              }
+            } catch (e) {}
+            return Refad.format.money(v);
+          },
+          getCurrencySymbol: function () {
+            try {
+              if (window.RefadSettings?.locale?.getCurrencySymbol) {
+                return RefadSettings.locale.getCurrencySymbol();
+              }
+            } catch (e) {}
+            return 'ج.م';
+          }
+        },
+        identity: {
+          getSystemName: function () {
+            try {
+              if (window.RefadSettings?.identity?.getSystemName) {
+                return RefadSettings.identity.getSystemName();
+              }
+            } catch (e) {}
+            return 'رفاد';
+          },
+          getTagline: function () {
+            try {
+              if (window.RefadSettings?.identity?.getTagline) {
+                return RefadSettings.identity.getTagline();
+              }
+            } catch (e) {}
+            return 'نظام إدارة الأدوية';
+          },
+          getLogoUrl: function () {
+            try {
+              if (window.RefadSettings?.identity?.getLogoUrl) {
+                return RefadSettings.identity.getLogoUrl();
+              }
+            } catch (e) {}
+            return null;
+          }
+        }
+      };
 
       // ============================================================
       // 1) Guard
@@ -718,89 +942,72 @@
       if (!session) return;
 
       // ============================================================
-      // 2) State
+      // 2) Helpers
+      // ============================================================
+      function esc(s) {
+        if (typeof Refad.escapeHtml === 'function') return Refad.escapeHtml(s);
+        if (s === null || s === undefined) return '';
+        return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+      }
+      function fmtMoney(v) {
+        return SafeSettings.locale.formatMoney(v);
+      }
+      function fmtNumber(v) {
+        if (typeof Refad.format?.number === 'function') return Refad.format.number(v);
+        return String(v || 0);
+      }
+
+      // ============================================================
+      // 3) State
       // ============================================================
       const state = {
         customers: [],
         invoicesCountMap: {},
         filtered: [],
         editingId: null,
-        filters: { search: '', balance: '', status: '' }
+        filters: { search: '', balance: '', credit: '', status: '' }
       };
 
       // ============================================================
-      // 3) Sidebar
+      // 4) Sidebar — Unified Menu
       // ============================================================
-      const MENU = [
-        { section: 'الرئيسية', items: [
-          { label: 'لوحة التحكم', icon: 'layout-dashboard', href: 'dashboard.html' },
-          { label: 'الشات', icon: 'message-circle', href: 'chat.html', permission: 'chat.use' },
-          { label: 'الإشعارات', icon: 'bell', href: 'notifications.html', permission: 'notifications.view' }
-        ]},
-        { section: 'العمليات', items: [
-          { label: 'الأصناف', icon: 'package', href: 'products.html', permission: 'products.view' },
-          { label: 'المخزون', icon: 'warehouse', href: 'inventory.html', permission: 'inventory.view' },
-          { label: 'طلبات الشراء', icon: 'clipboard-list', href: 'purchase-requests.html', permission: 'purchases.view' },
-          { label: 'الاستلامات', icon: 'package-check', href: 'receipts.html', permission: 'purchases.receive' },
-          { label: 'طلبات البيع', icon: 'shopping-cart', href: 'sales-orders.html', permission: 'sales.view' },
-          { label: 'نقطة البيع', icon: 'scan-barcode', href: 'pos.html', permission: 'sales.pos', badge: 'POS', badgeClass: 'teal' },
-          { label: 'الفواتير', icon: 'receipt', href: 'invoices.html', permission: 'sales.view' }
-        ]},
-        { section: 'الأطراف', items: [
-          { label: 'الموردين', icon: 'truck', href: 'suppliers.html', permission: 'suppliers.view' },
-          { label: 'العملاء', icon: 'users', href: 'customers.html', permission: 'customers.view' }
-        ]},
-        { section: 'المخزون', items: [
-          { label: 'الجرد', icon: 'clipboard-check', href: 'stocktake.html', permission: 'inventory.stocktake' },
-          { label: 'التسويات', icon: 'sliders-horizontal', href: 'adjustments.html', permission: 'inventory.adjust' }
-        ]},
-        { section: 'الموارد البشرية', items: [
-          { label: 'الموظفين', icon: 'user-cog', href: 'employees.html', permission: 'employees.view' },
-          { label: 'الصلاحيات', icon: 'shield-check', href: 'permissions.html', permission: 'permissions.manage' },
-          { label: 'الحضور', icon: 'calendar-check', href: 'attendance.html', permission: 'attendance.view' },
-          { label: 'الرواتب', icon: 'wallet', href: 'payroll.html', permission: 'payroll.view' }
-        ]},
-        { section: 'المالية', items: [
-          { label: 'المصاريف', icon: 'banknote', href: 'expenses.html', permission: 'expenses.view' },
-          { label: 'التقارير', icon: 'bar-chart-3', href: 'reports.html', permission: 'reports.view' }
-        ]},
-        { section: 'النظام', items: [
-          { label: 'إعدادات الشركة', icon: 'settings', href: 'company-settings.html', permission: 'settings.view' },
-          { label: 'شاشة الأدمن', icon: 'shield', href: 'admin.html', permission: 'admin.full', badge: 'Admin', badgeClass: 'gold' }
-        ]}
-      ];
-
       function buildSidebar() {
-        const nav = document.getElementById('sidebarNav');
-        const frag = document.createDocumentFragment();
-        MENU.forEach(group => {
-          const allowed = group.items.filter(it => !it.permission || Refad.Session.has(it.permission));
-          if (!allowed.length) return;
-          frag.appendChild(Refad.el('div', { class: 'nav-section' }, group.section));
-          allowed.forEach(item => {
-            const a = Refad.el('a', {
-              href: item.href,
-              class: 'nav-item' + (item.href === 'customers.html' ? ' active' : '')
-            });
-            a.innerHTML = `<i data-lucide="${item.icon}"></i><span>${Refad.escapeHtml(item.label)}</span>${item.badge ? `<span class="badge ${item.badgeClass || ''}">${item.badge}</span>` : ''}`;
-            frag.appendChild(a);
-          });
-        });
-        nav.innerHTML = '';
-        nav.appendChild(frag);
-        if (window.lucide) lucide.createIcons();
+        Refad.buildMenu('customers.html');
       }
 
       // ============================================================
-      // 4) UI helpers
+      // 5) UI Helpers
       // ============================================================
       function fillUser() {
         const av = document.getElementById('userAvatar');
         const initial = (session.full_name || '؟').trim().charAt(0);
-        if (session.avatar_url) av.innerHTML = `<img src="${Refad.escapeHtml(session.avatar_url)}" alt="">`;
+        if (session.avatar_url) av.innerHTML = '<img src="' + esc(session.avatar_url) + '" alt="">';
         else av.textContent = initial;
         document.getElementById('userName').textContent = session.full_name;
         document.getElementById('userRole').textContent = Refad.Session.has('company.owner') ? 'صاحب الشركة' : 'موظف';
+      }
+
+      function applyIdentity() {
+        const name = SafeSettings.identity.getSystemName();
+        const tagline = SafeSettings.identity.getTagline();
+        const logoUrl = SafeSettings.identity.getLogoUrl();
+
+        const brandName = document.getElementById('sidebarBrandName');
+        const brandDesc = document.getElementById('sidebarBrandDesc');
+        const logoImg = document.getElementById('sidebarLogoImg');
+
+        if (brandName) brandName.textContent = name;
+        if (brandDesc) brandDesc.textContent = tagline;
+
+        if (logoImg && logoUrl) {
+          logoImg.src = logoUrl;
+          logoImg.onerror = function () {
+            this.style.display = 'none';
+            const parent = this.parentElement;
+            if (parent) parent.innerHTML = '<span class="fallback">' + (name.charAt(0) || 'R') + '</span>';
+          };
+        }
       }
 
       function setupTheme() {
@@ -845,28 +1052,44 @@
         });
       }
 
+      function setupRealtimeTheme() {
+        window.addEventListener('refad:theme-changed', function () {
+          applyIdentity();
+        });
+      }
+
       // ============================================================
-      // 5) Load data
+      // 6) Load Data
       // ============================================================
       async function loadData() {
         document.getElementById('tableBody').innerHTML =
-          '<tr><td colspan="8"><div class="loader"><i data-lucide="loader-2"></i><p>جارٍ التحميل...</p></div></td></tr>';
+          '<tr><td colspan="10"><div class="loader"><i data-lucide="loader-2"></i><p>جارٍ التحميل...</p></div></td></tr>';
         if (window.lucide) lucide.createIcons();
 
         try {
-          const [customers, invoices] = await Promise.all([
-            Refad.db.select('customers', {
+          let customers;
+          try {
+            customers = await Refad.db.select('customers', {
+              columns: 'id, name, phone, email, address, balance, credit_limit, payment_terms_days, notes, is_active, created_at',
+              eq: { company_id: session.company_id },
+              order: { column: 'name', ascending: true },
+              limit: 3000
+            });
+          } catch (e) {
+            console.warn('[Customers] Full columns failed, fallback:', e.message);
+            customers = await Refad.db.select('customers', {
               columns: 'id, name, phone, email, address, balance, notes, is_active, created_at',
               eq: { company_id: session.company_id },
               order: { column: 'name', ascending: true },
               limit: 3000
-            }),
-            Refad.db.select('sales_invoices', {
-              columns: 'id, customer_id',
-              eq: { company_id: session.company_id },
-              limit: 5000
-            }).catch(() => [])
-          ]);
+            });
+          }
+
+          const invoices = await Refad.db.select('sales_invoices', {
+            columns: 'id, customer_id',
+            eq: { company_id: session.company_id },
+            limit: 5000
+          }).catch(() => []);
 
           state.customers = customers;
           state.invoicesCountMap = {};
@@ -880,17 +1103,17 @@
         } catch (e) {
           console.error('[Customers] load failed:', e);
           document.getElementById('tableBody').innerHTML = `
-            <tr><td colspan="8"><div class="empty-state" style="color:var(--danger);">
+            <tr><td colspan="10"><div class="empty-state" style="color:var(--danger);">
               <i data-lucide="alert-circle"></i>
               <h3>فشل تحميل البيانات</h3>
-              <p>${Refad.escapeHtml(e.message || '')}</p>
+              <p>${esc(e.message || '')}</p>
             </div></td></tr>`;
           if (window.lucide) lucide.createIcons();
         }
       }
 
       // ============================================================
-      // 6) Stats
+      // 7) Stats
       // ============================================================
       function renderStats() {
         const list = state.customers;
@@ -898,21 +1121,33 @@
         const active = list.filter(c => c.is_active !== false).length;
 
         let debt = 0, credit = 0;
+        let totalCreditLimit = 0;
+        let overLimit = 0;
+
         list.forEach(c => {
           const b = parseFloat(c.balance) || 0;
           if (b < 0) debt += Math.abs(b);
           else if (b > 0) credit += b;
+
+          const limit = parseFloat(c.credit_limit) || 0;
+          if (limit > 0) {
+            totalCreditLimit += limit;
+            if (b > limit) overLimit++;
+          }
         });
 
-        document.getElementById('statTotal').textContent = Refad.format.number(total);
+        document.getElementById('statTotal').textContent = fmtNumber(total);
         document.getElementById('statTotalSub').textContent = `${active} نشط`;
-        document.getElementById('statActive').textContent = Refad.format.number(active);
-        document.getElementById('statDebt').textContent = Refad.format.money(debt);
-        document.getElementById('statCredit').textContent = Refad.format.money(credit);
+        document.getElementById('statActive').textContent = fmtNumber(active);
+        document.getElementById('statDebt').textContent = fmtMoney(debt);
+        document.getElementById('statCredit').textContent = fmtMoney(credit);
+        document.getElementById('statTotalCreditLimit').textContent = fmtMoney(totalCreditLimit);
+        document.getElementById('statTotalCreditLimitSub').textContent = `${list.filter(c => parseFloat(c.credit_limit) > 0).length} عميل بحد`;
+        document.getElementById('statOverLimit').textContent = fmtNumber(overLimit);
       }
 
       // ============================================================
-      // 7) Filters + render
+      // 8) Filters
       // ============================================================
       function applyFilters() {
         let list = state.customers.slice();
@@ -932,6 +1167,28 @@
           else if (state.filters.balance === 'zero') list = list.filter(c => !c.balance || parseFloat(c.balance) === 0);
         }
 
+        if (state.filters.credit) {
+          if (state.filters.credit === 'has_limit') {
+            list = list.filter(c => (parseFloat(c.credit_limit) || 0) > 0);
+          } else if (state.filters.credit === 'no_limit') {
+            list = list.filter(c => !c.credit_limit || parseFloat(c.credit_limit) === 0);
+          } else if (state.filters.credit === 'over_limit') {
+            list = list.filter(c => {
+              const limit = parseFloat(c.credit_limit) || 0;
+              const bal = parseFloat(c.balance) || 0;
+              return limit > 0 && bal > limit;
+            });
+          } else if (state.filters.credit === 'near_limit') {
+            list = list.filter(c => {
+              const limit = parseFloat(c.credit_limit) || 0;
+              const bal = parseFloat(c.balance) || 0;
+              if (limit <= 0) return false;
+              const usage = (bal / limit) * 100;
+              return usage >= 80 && usage <= 100;
+            });
+          }
+        }
+
         if (state.filters.status) {
           list = list.filter(c => state.filters.status === 'active' ? c.is_active !== false : c.is_active === false);
         }
@@ -940,13 +1197,16 @@
         renderTable();
       }
 
+      // ============================================================
+      // 9) Render Table
+      // ============================================================
       function renderTable() {
         const tbody = document.getElementById('tableBody');
         const list = state.filtered;
 
         if (!list.length) {
           tbody.innerHTML = `
-            <tr><td colspan="8">
+            <tr><td colspan="10">
               <div class="empty-state">
                 <i data-lucide="users"></i>
                 <h3>${state.customers.length ? 'لا توجد نتائج مطابقة' : 'لا يوجد عملاء بعد'}</h3>
@@ -959,26 +1219,83 @@
 
         tbody.innerHTML = list.map((c, i) => {
           const balance = parseFloat(c.balance) || 0;
+          const creditLimit = parseFloat(c.credit_limit) || 0;
+          const paymentTerms = parseInt(c.payment_terms_days, 10) || 0;
+
           const balanceCls = balance < 0 ? 'danger' : (balance > 0 ? 'success' : '');
-          const initials = Refad.escapeHtml((c.name || '؟').charAt(0));
+
+          const hasLimit = creditLimit > 0;
+          const available = hasLimit ? (creditLimit - balance) : Infinity;
+          const usagePct = hasLimit ? Math.min(100, Math.max(0, (balance / creditLimit) * 100)) : 0;
+
+          let creditStatus = 'none';
+          let creditLabel = 'بدون حد';
+          let creditIcon = 'minus-circle';
+
+          if (hasLimit) {
+            if (balance > creditLimit) {
+              creditStatus = 'danger';
+              creditLabel = `تجاوز بـ ${fmtMoney(balance - creditLimit)}`;
+              creditIcon = 'alert-octagon';
+            } else if (usagePct >= 80) {
+              creditStatus = 'warning';
+              creditLabel = `استُخدم ${Math.round(usagePct)}%`;
+              creditIcon = 'alert-triangle';
+            } else {
+              creditStatus = 'ok';
+              creditLabel = `متاح ${fmtMoney(available)}`;
+              creditIcon = 'check-circle';
+            }
+          }
+
+          let termsLabel = 'نقدي';
+          let termsIcon = 'banknote';
+          if (paymentTerms > 0) {
+            termsLabel = `${paymentTerms} يوم`;
+            termsIcon = 'clock';
+          }
+
           const invCount = state.invoicesCountMap[c.id] || 0;
           const isActive = c.is_active !== false;
+          const initials = esc((c.name || '؟').charAt(0));
+          const isOverLimit = hasLimit && balance > creditLimit;
 
           return `
-            <tr data-id="${c.id}" tabindex="0" style="cursor:pointer">
+            <tr data-id="${c.id}" tabindex="0" class="${isOverLimit ? 'row-overdue' : ''}">
               <td style="color:var(--text-muted);font-weight:700;text-align:center;">${i + 1}</td>
               <td>
                 <div class="customer-cell">
                   <div class="customer-avatar">${initials}</div>
                   <div class="customer-info">
-                    <div class="name">${Refad.escapeHtml(c.name)}</div>
-                    ${c.address ? `<div class="sub">${Refad.escapeHtml(c.address)}</div>` : ''}
+                    <div class="name">${esc(c.name)}</div>
+                    ${c.address ? `<div class="sub">${esc(c.address)}</div>` : ''}
                   </div>
                 </div>
               </td>
-              <td>${Refad.escapeHtml(c.phone || '—')}</td>
-              <td>${Refad.escapeHtml(c.email || '—')}</td>
-              <td class="money ${balanceCls}">${Refad.format.money(balance)}</td>
+              <td>${esc(c.phone || '—')}</td>
+              <td class="money ${balanceCls}">${fmtMoney(balance)}</td>
+              <td>
+                ${hasLimit ? `
+                  <div style="font-weight:700;">${fmtMoney(creditLimit)}</div>
+                  <div class="credit-progress">
+                    <div class="${creditStatus}" style="width:${usagePct}%;"></div>
+                  </div>
+                ` : '<span style="color:var(--text-muted);">—</span>'}
+              </td>
+              <td>
+                ${hasLimit ? `
+                  <span class="credit-badge ${creditStatus}">
+                    <i data-lucide="${creditIcon}"></i>
+                    ${creditLabel}
+                  </span>
+                ` : '<span style="color:var(--text-muted);">—</span>'}
+              </td>
+              <td>
+                <span class="credit-badge ${paymentTerms > 0 ? 'warning' : 'none'}" style="background:${paymentTerms > 0 ? 'rgba(245,158,11,0.12)' : 'rgba(148,163,184,0.15)'};color:${paymentTerms > 0 ? 'var(--gold)' : 'var(--text-muted)'};">
+                  <i data-lucide="${termsIcon}"></i>
+                  ${termsLabel}
+                </span>
+              </td>
               <td style="text-align:center;font-weight:700;">${invCount}</td>
               <td>
                 <span class="status-pill ${isActive ? 'active' : 'inactive'}">
@@ -1027,7 +1344,7 @@
       }
 
       // ============================================================
-      // 8) Add / Edit
+      // 10) Add / Edit
       // ============================================================
       function openAdd() {
         state.editingId = null;
@@ -1037,9 +1354,12 @@
           document.getElementById(id).value = '';
         });
         document.getElementById('cBalance').value = 0;
+        document.getElementById('cCreditLimit').value = 0;
+        document.getElementById('cPaymentTerms').value = 0;
         document.getElementById('cStatus').value = 'active';
         document.getElementById('customerModal').classList.add('show');
         setTimeout(() => document.getElementById('cName').focus(), 150);
+        if (window.lucide) lucide.createIcons();
       }
 
       function openEdit(cid) {
@@ -1053,9 +1373,12 @@
         document.getElementById('cEmail').value = c.email || '';
         document.getElementById('cAddress').value = c.address || '';
         document.getElementById('cBalance').value = c.balance || 0;
+        document.getElementById('cCreditLimit').value = c.credit_limit || 0;
+        document.getElementById('cPaymentTerms').value = c.payment_terms_days || 0;
         document.getElementById('cStatus').value = c.is_active === false ? 'inactive' : 'active';
         document.getElementById('cNotes').value = c.notes || '';
         document.getElementById('customerModal').classList.add('show');
+        if (window.lucide) lucide.createIcons();
       }
 
       async function save() {
@@ -1064,6 +1387,19 @@
           Refad.toast.warning('اسم العميل مطلوب');
           document.getElementById('cName').focus();
           return;
+        }
+
+        const creditLimit = Number(document.getElementById('cCreditLimit').value) || 0;
+        const paymentTerms = parseInt(document.getElementById('cPaymentTerms').value, 10) || 0;
+        const balance = Refad.toNum(document.getElementById('cBalance').value);
+
+        if (creditLimit > 0 && balance > creditLimit) {
+          const ok = await Refad.alert.confirm(
+            '⚠️ الرصيد يتجاوز الحد',
+            `الرصيد الحالي (${fmtMoney(balance)}) أكبر من حد الائتمان (${fmtMoney(creditLimit)}).\n\nمتابعة؟`,
+            'متابعة'
+          );
+          if (!ok) return;
         }
 
         const btn = document.getElementById('saveBtn');
@@ -1076,16 +1412,20 @@
             phone: document.getElementById('cPhone').value.trim() || null,
             email: document.getElementById('cEmail').value.trim() || null,
             address: document.getElementById('cAddress').value.trim() || null,
-            balance: Refad.toNum(document.getElementById('cBalance').value),
+            balance: balance,
+            credit_limit: creditLimit,
+            payment_terms_days: paymentTerms,
             is_active: document.getElementById('cStatus').value === 'active',
             notes: document.getElementById('cNotes').value.trim() || null
           };
 
           if (state.editingId) {
             await Refad.db.update('customers', state.editingId, payload);
+            await Refad.logActivity('update_customer', 'customers', `تعديل عميل: ${name}`, state.editingId);
             Refad.toast.success('تم تحديث العميل');
           } else {
-            await Refad.db.insert('customers', payload);
+            const created = await Refad.db.insert('customers', payload);
+            await Refad.logActivity('create_customer', 'customers', `إضافة عميل: ${name}`, created?.id);
             Refad.toast.success('تم إضافة العميل');
           }
 
@@ -1122,7 +1462,7 @@
       }
 
       // ============================================================
-      // 9) Export
+      // 11) Export
       // ============================================================
       function exportExcel() {
         const list = state.filtered.length ? state.filtered : state.customers;
@@ -1135,6 +1475,9 @@
           'البريد': c.email || '',
           'العنوان': c.address || '',
           'الرصيد': parseFloat(c.balance) || 0,
+          'حد الائتمان': parseFloat(c.credit_limit) || 0,
+          'المتاح': (parseFloat(c.credit_limit) || 0) - (parseFloat(c.balance) || 0),
+          'فترة السداد (يوم)': parseInt(c.payment_terms_days, 10) || 0,
           'عدد الفواتير': state.invoicesCountMap[c.id] || 0,
           'الحالة': c.is_active === false ? 'موقوف' : 'نشط'
         }));
@@ -1147,7 +1490,7 @@
       }
 
       // ============================================================
-      // 10) Events
+      // 12) Events
       // ============================================================
       function bindEvents() {
         document.getElementById('addBtn').addEventListener('click', openAdd);
@@ -1180,6 +1523,11 @@
           applyFilters();
         });
 
+        document.getElementById('filterCredit').addEventListener('change', (e) => {
+          state.filters.credit = e.target.value;
+          applyFilters();
+        });
+
         document.getElementById('filterStatus').addEventListener('change', (e) => {
           state.filters.status = e.target.value;
           applyFilters();
@@ -1187,20 +1535,24 @@
       }
 
       // ============================================================
-      // 11) Init
+      // 13) Init
       // ============================================================
       async function init() {
         buildSidebar();
         fillUser();
+        applyIdentity();
         setupTheme();
         setupSidebarMobile();
         setupUserMenu();
         setupNotifBtn();
+        setupRealtimeTheme();
         bindEvents();
 
         await loadData();
 
         if (Refad.registerServiceWorker) Refad.registerServiceWorker();
+
+        console.log('%c[Refad] Customers v3 ready (Theme Sync + Settings + buildMenu)', 'color:#14B8A6;font-weight:bold');
       }
 
       if (document.readyState === 'loading') {
@@ -1208,8 +1560,6 @@
       } else {
         init();
       }
-
-      console.log('%c[Refad] Customers ready', 'color:#14B8A6;font-weight:bold');
 
     })();
   </script>

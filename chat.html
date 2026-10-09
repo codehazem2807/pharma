@@ -40,6 +40,7 @@
       --success: #10b981;
       --warning: #f59e0b;
       --info: #3b82f6;
+      --purple: #8b5cf6;
       --sidebar-bg: #0B2C4D;
       --sidebar-text: #cbd5e1;
       --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
@@ -80,15 +81,14 @@
 
     body { display: flex; height: 100vh; overflow: hidden; }
 
-    /* Sidebar */
+    /* ============ Sidebar ============ */
     .sidebar {
       width: var(--sidebar-w);
       height: 100vh;
       background: var(--sidebar-bg);
       color: var(--sidebar-text);
       position: fixed;
-      top: 0;
-      right: 0;
+      top: 0; right: 0;
       z-index: 100;
       display: flex;
       flex-direction: column;
@@ -111,10 +111,11 @@
       display: flex; align-items: center; justify-content: center;
       flex-shrink: 0;
       box-shadow: 0 4px 12px rgba(20,184,166,0.4);
+      overflow: hidden;
     }
     .sidebar-logo img { width: 70%; height: 70%; object-fit: contain; }
     .sidebar-logo .fallback { color: white; font-weight: 800; font-size: 18px; }
-    .sidebar-brand h2 { color: white; font-size: 20px; font-weight: 800; letter-spacing: -0.5px; line-height: 1.2; }
+    .sidebar-brand h2 { color: white; font-size: 20px; font-weight: 800; line-height: 1.2; }
     .sidebar-brand p { font-size: 10px; color: var(--sidebar-text); opacity: 0.7; font-weight: 500; margin-top: 2px; }
     .sidebar-nav { flex: 1; overflow-y: auto; padding: 12px 0; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.15) transparent; }
     .sidebar-nav::-webkit-scrollbar { width: 5px; }
@@ -138,8 +139,9 @@
     .nav-item .badge { margin-right: auto; background: var(--danger); color: white; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
     .nav-item .badge.teal { background: var(--accent); }
     .nav-item .badge.gold { background: var(--gold); }
+    .nav-item .badge.new { background: var(--purple); }
 
-    /* Main */
+    /* ============ Main ============ */
     .main {
       flex: 1;
       margin-right: var(--sidebar-w);
@@ -213,7 +215,7 @@
     .dropdown-item i { width: 16px; height: 16px; }
     .dropdown-divider { height: 1px; background: var(--border); margin: 6px 0; }
 
-    /* Chat layout */
+    /* ============ Chat Layout ============ */
     .chat-layout {
       flex: 1;
       display: grid;
@@ -222,7 +224,7 @@
       overflow: hidden;
     }
 
-    /* Conversations Panel */
+    /* ============ Conversations Panel ============ */
     .conv-panel {
       background: var(--card);
       border-left: 1px solid var(--border);
@@ -336,7 +338,6 @@
     .conv-list::-webkit-scrollbar { width: 6px; }
     .conv-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
 
-    /* Channel item */
     .channel-item {
       display: flex;
       align-items: center;
@@ -382,7 +383,6 @@
       justify-content: center;
     }
 
-    /* User item */
     .conv-item {
       display: flex;
       align-items: center;
@@ -472,7 +472,7 @@
       box-shadow: 0 2px 8px rgba(20,184,166,0.4);
     }
 
-    /* Chat Panel */
+    /* ============ Chat Panel ============ */
     .chat-panel {
       display: flex;
       flex-direction: column;
@@ -568,7 +568,6 @@
     }
     .chat-header-actions { display: flex; gap: 6px; }
 
-    /* Pinned messages */
     .pinned-bar {
       display: none;
       background: var(--accent-soft);
@@ -915,6 +914,7 @@
       padding: 12px 20px 14px;
       flex-shrink: 0;
       box-shadow: 0 -2px 10px rgba(0,0,0,0.03);
+      position: relative;
     }
     .chat-input-row {
       display: flex;
@@ -995,7 +995,6 @@
     }
     .emoji-picker button:hover { background: var(--bg); transform: scale(1.2); }
 
-    /* Mention dropdown */
     .mention-dropdown {
       position: absolute;
       bottom: 100%;
@@ -1037,7 +1036,6 @@
     .mention-item .m-name { font-size: 13px; font-weight: 700; color: var(--text); }
     .mention-item .m-username { font-size: 11px; color: var(--text-muted); }
 
-    /* Quick replies */
     .quick-replies {
       display: none;
       gap: 6px;
@@ -1082,7 +1080,6 @@
     .drag-overlay i { width: 80px; height: 80px; color: var(--accent); }
     .drag-overlay p { font-size: 18px; font-weight: 800; color: var(--accent); }
 
-    /* Modal */
     .modal-backdrop {
       position: fixed;
       inset: 0;
@@ -1303,14 +1300,15 @@
 </head>
 <body>
 
+  <!-- Sidebar -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
-      <div class="sidebar-logo">
-        <img src="logo.png" alt="رفاد" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=fallback>R</span>';">
+      <div class="sidebar-logo" id="sidebarLogo">
+        <img src="logo.png" alt="رفاد" id="sidebarLogoImg" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=fallback>R</span>';">
       </div>
       <div class="sidebar-brand">
-        <h2>رفاد</h2>
-        <p>نظام إدارة الأدوية</p>
+        <h2 id="sidebarBrandName">رفاد</h2>
+        <p id="sidebarBrandDesc">نظام إدارة الأدوية</p>
       </div>
     </div>
     <nav class="sidebar-nav" id="sidebarNav"></nav>
@@ -1318,6 +1316,7 @@
 
   <div class="overlay" id="overlay"></div>
 
+  <!-- Main -->
   <div class="main">
     <header class="topbar">
       <button class="menu-toggle" id="menuToggle"><i data-lucide="menu"></i></button>
@@ -1473,6 +1472,7 @@
     </main>
   </div>
 
+  <!-- Modals -->
   <div class="modal-backdrop" id="newChatModal">
     <div class="modal">
       <div class="modal-header">
@@ -1559,11 +1559,59 @@
     <img id="lightboxImg" src="" alt="">
   </div>
 
+  <!-- ============================================================
+       SCRIPTS — الترتيب مهم جداً
+       ============================================================ -->
   <script src="refad-core.js"></script>
   <script src="refad-auth.js"></script>
-    <script>
+  <script src="refad-theme-sync.js"></script>
+  <script src="refad-settings.js"></script>
+
+  <script>
     (function () {
       'use strict';
+
+      // ============================================================
+      // 0) Safe Wrappers
+      // ============================================================
+      const SafeSettings = {
+        locale: {
+          formatMoney: function (v) {
+            try {
+              if (window.RefadSettings?.locale?.formatMoney) {
+                return RefadSettings.locale.formatMoney(v);
+              }
+            } catch (e) {}
+            return Refad.format.money(v);
+          }
+        },
+        identity: {
+          getSystemName: function () {
+            try {
+              if (window.RefadSettings?.identity?.getSystemName) {
+                return RefadSettings.identity.getSystemName();
+              }
+            } catch (e) {}
+            return 'رفاد';
+          },
+          getTagline: function () {
+            try {
+              if (window.RefadSettings?.identity?.getTagline) {
+                return RefadSettings.identity.getTagline();
+              }
+            } catch (e) {}
+            return 'نظام إدارة الأدوية';
+          },
+          getLogoUrl: function () {
+            try {
+              if (window.RefadSettings?.identity?.getLogoUrl) {
+                return RefadSettings.identity.getLogoUrl();
+              }
+            } catch (e) {}
+            return null;
+          }
+        }
+      };
 
       // ============================================================
       // Helpers
@@ -1574,7 +1622,7 @@
         let i = 0;
         let size = Number(bytes);
         while (size >= 1024 && i < units.length - 1) { size /= 1024; i++; }
-        return `${size.toFixed(1)} ${units[i]}`;
+        return size.toFixed(1) + ' ' + units[i];
       }
 
       function getFileIcon(type, name) {
@@ -1588,6 +1636,8 @@
         return 'file';
       }
 
+      function esc(s) { return Refad.escapeHtml(s); }
+
       // ============================================================
       // Guard
       // ============================================================
@@ -1598,13 +1648,11 @@
       const myUserId = parseInt(session.user_id, 10);
 
       // ============================================================
-      // 🔊 Sound System (Web Audio API)
+      // Sound System
       // ============================================================
       let audioCtx = null;
       let soundUnlocked = false;
       const SOUND_ENABLED_KEY = 'refad_chat_sound_enabled';
-
-      // حالة تفعيل الصوت (محفوظة)
       let soundEnabled = localStorage.getItem(SOUND_ENABLED_KEY) !== 'false';
 
       function initAudioContext() {
@@ -1620,63 +1668,47 @@
         initAudioContext();
         if (!audioCtx) return;
         try {
-          if (audioCtx.state === 'suspended') {
-            audioCtx.resume();
-          }
+          if (audioCtx.state === 'suspended') audioCtx.resume();
           soundUnlocked = true;
         } catch (e) {
           console.warn('[Chat] Audio unlock failed:', e);
         }
       }
 
-      // unlock عند أي تفاعل
-      ['click', 'touchstart', 'keydown', 'scroll'].forEach(evt => {
+      ['click', 'touchstart', 'keydown', 'scroll'].forEach(function (evt) {
         document.addEventListener(evt, unlockAudio, { passive: true });
       });
 
-      // نغمة الإشعار (ding-dong)
       function playNotificationSound() {
         if (!soundEnabled) return;
-        
         try {
           initAudioContext();
           if (!audioCtx) {
-            // Fallback: HTML Audio
             const audio = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
             audio.volume = 0.5;
-            audio.play().catch(() => {});
+            audio.play().catch(function () {});
             return;
           }
-
-          if (audioCtx.state === 'suspended') {
-            audioCtx.resume().catch(() => {});
-          }
+          if (audioCtx.state === 'suspended') audioCtx.resume().catch(function () {});
 
           const now = audioCtx.currentTime;
-
-          // نغمة مزدوجة (C5 → E5)
           const notes = [
-            { freq: 523.25, start: 0,    duration: 0.15 },
+            { freq: 523.25, start: 0, duration: 0.15 },
             { freq: 783.99, start: 0.12, duration: 0.25 }
           ];
 
-          notes.forEach(note => {
+          notes.forEach(function (note) {
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
-            
             osc.type = 'sine';
             osc.frequency.value = note.freq;
-            
             const startTime = now + note.start;
             const endTime = startTime + note.duration;
-            
             gain.gain.setValueAtTime(0, startTime);
             gain.gain.linearRampToValueAtTime(0.35, startTime + 0.02);
             gain.gain.exponentialRampToValueAtTime(0.001, endTime);
-            
             osc.connect(gain);
             gain.connect(audioCtx.destination);
-            
             osc.start(startTime);
             osc.stop(endTime);
           });
@@ -1685,14 +1717,12 @@
         }
       }
 
-      // Vibrate
       function vibrateDevice() {
         if (navigator.vibrate) {
           try { navigator.vibrate([80, 40, 80]); } catch (e) {}
         }
       }
 
-      // Toggle Sound
       function toggleSound() {
         soundEnabled = !soundEnabled;
         localStorage.setItem(SOUND_ENABLED_KEY, String(soundEnabled));
@@ -1710,7 +1740,7 @@
       }
 
       // ============================================================
-      // Default Channels
+      // Constants
       // ============================================================
       const DEFAULT_CHANNELS = [
         { name: 'عام', slug: 'general' },
@@ -1720,19 +1750,18 @@
         { name: 'إعلانات', slug: 'announcements' }
       ];
 
-      // ============================================================
-      // Quick Replies
-      // ============================================================
       const QUICK_REPLIES = [
         'تمام ✅',
         'سأتحقق وأرد عليك',
         'شكراً 🙏',
-        'معلش، ممكن توضيح أكثر؟',
+        'ممكن توضيح أكثر؟',
         'جارٍ العمل عليه',
         'تم 👍',
         'أرسل لي التفاصيل',
         'ممكن ملف؟'
       ];
+
+      const EMOJIS = ['😀','😂','😍','🥰','😎','🤔','😅','😢','😡','🥳','👍','👎','👏','🙏','💪','🔥','✨','⭐','❤️','💔','🎉','🎁','💯','✅','❌','⚠️','📌','📎','📞','📧','💬','🕐','📅','🏥','💊','🩺','📊','📈','💰','💵','🛒','🚚','📦','⚡','🌟','🎯','🚀','🔔','👋','🤝'];
 
       // ============================================================
       // State
@@ -1759,73 +1788,8 @@
         mentionQuery: '',
         mentionStart: -1,
         viewingUserId: null,
-        hasPinnedColumn: true  // هل عمود is_pinned موجود؟
+        hasPinnedColumn: true
       };
-
-      const EMOJIS = ['😀','😂','😍','🥰','😎','🤔','😅','😢','😡','🥳','👍','👎','👏','🙏','💪','🔥','✨','⭐','❤️','💔','🎉','🎁','💯','✅','❌','⚠️','📌','📎','📞','📧','💬','🕐','📅','🏥','💊','🩺','📊','📈','💰','💵','🛒','🚚','📦','⚡','🌟','🎯','🚀','🔔','👋','🤝'];
-
-      // ============================================================
-      // Sidebar
-      // ============================================================
-      const MENU = [
-        { section: 'الرئيسية', items: [
-          { label: 'لوحة التحكم', icon: 'layout-dashboard', href: 'dashboard.html' },
-          { label: 'الشات', icon: 'message-circle', href: 'chat.html', permission: 'chat.use' },
-          { label: 'الإشعارات', icon: 'bell', href: 'notifications.html', permission: 'notifications.view' }
-        ]},
-        { section: 'العمليات', items: [
-          { label: 'الأصناف', icon: 'package', href: 'products.html', permission: 'products.view' },
-          { label: 'المخزون', icon: 'warehouse', href: 'inventory.html', permission: 'inventory.view' },
-          { label: 'طلبات الشراء', icon: 'clipboard-list', href: 'purchase-requests.html', permission: 'purchases.view' },
-          { label: 'الاستلامات', icon: 'package-check', href: 'receipts.html', permission: 'purchases.receive' },
-          { label: 'طلبات البيع', icon: 'shopping-cart', href: 'sales-orders.html', permission: 'sales.view' },
-          { label: 'نقطة البيع', icon: 'scan-barcode', href: 'pos.html', permission: 'sales.pos', badge: 'POS', badgeClass: 'teal' },
-          { label: 'الفواتير', icon: 'receipt', href: 'invoices.html', permission: 'sales.view' }
-        ]},
-        { section: 'الأطراف', items: [
-          { label: 'الموردين', icon: 'truck', href: 'suppliers.html', permission: 'suppliers.view' },
-          { label: 'العملاء', icon: 'users', href: 'customers.html', permission: 'customers.view' }
-        ]},
-        { section: 'المخزون', items: [
-          { label: 'الجرد', icon: 'clipboard-check', href: 'stocktake.html', permission: 'inventory.stocktake' },
-          { label: 'التسويات', icon: 'sliders-horizontal', href: 'adjustments.html', permission: 'inventory.adjust' }
-        ]},
-        { section: 'الموارد البشرية', items: [
-          { label: 'الموظفين', icon: 'user-cog', href: 'employees.html', permission: 'employees.view' },
-          { label: 'الصلاحيات', icon: 'shield-check', href: 'permissions.html', permission: 'permissions.manage' },
-          { label: 'الحضور', icon: 'calendar-check', href: 'attendance.html', permission: 'attendance.view' },
-          { label: 'الرواتب', icon: 'wallet', href: 'payroll.html', permission: 'payroll.view' }
-        ]},
-        { section: 'المالية', items: [
-          { label: 'المصاريف', icon: 'banknote', href: 'expenses.html', permission: 'expenses.view' },
-          { label: 'التقارير', icon: 'bar-chart-3', href: 'reports.html', permission: 'reports.view' }
-        ]},
-        { section: 'النظام', items: [
-          { label: 'إعدادات الشركة', icon: 'settings', href: 'company-settings.html', permission: 'settings.view' },
-          { label: 'شاشة الأدمن', icon: 'shield', href: 'admin.html', permission: 'admin.full', badge: 'Admin', badgeClass: 'gold' }
-        ]}
-      ];
-
-      function buildSidebar() {
-        const nav = document.getElementById('sidebarNav');
-        const frag = document.createDocumentFragment();
-        MENU.forEach(group => {
-          const allowed = group.items.filter(it => !it.permission || Refad.Session.has(it.permission));
-          if (!allowed.length) return;
-          frag.appendChild(Refad.el('div', { class: 'nav-section' }, group.section));
-          allowed.forEach(item => {
-            const a = Refad.el('a', {
-              href: item.href,
-              class: 'nav-item' + (item.href === 'chat.html' ? ' active' : '')
-            });
-            a.innerHTML = `<i data-lucide="${item.icon}"></i><span>${Refad.escapeHtml(item.label)}</span>${item.badge ? `<span class="badge ${item.badgeClass || ''}">${item.badge}</span>` : ''}`;
-            frag.appendChild(a);
-          });
-        });
-        nav.innerHTML = '';
-        nav.appendChild(frag);
-        if (window.lucide) lucide.createIcons();
-      }
 
       // ============================================================
       // UI Helpers
@@ -1833,31 +1797,52 @@
       function fillUser() {
         const av = document.getElementById('userAvatar');
         const initial = (session.full_name || '؟').trim().charAt(0);
-        if (session.avatar_url) av.innerHTML = `<img src="${Refad.escapeHtml(session.avatar_url)}" alt="">`;
+        if (session.avatar_url) av.innerHTML = '<img src="' + esc(session.avatar_url) + '" alt="">';
         else av.textContent = initial;
         document.getElementById('userName').textContent = session.full_name;
         document.getElementById('userRole').textContent = Refad.Session.has('company.owner') ? 'صاحب الشركة' : 'موظف';
       }
 
+      function applyIdentity() {
+        const name = SafeSettings.identity.getSystemName();
+        const tagline = SafeSettings.identity.getTagline();
+        const logoUrl = SafeSettings.identity.getLogoUrl();
+
+        const brandName = document.getElementById('sidebarBrandName');
+        const brandDesc = document.getElementById('sidebarBrandDesc');
+        const logoImg = document.getElementById('sidebarLogoImg');
+
+        if (brandName) brandName.textContent = name;
+        if (brandDesc) brandDesc.textContent = tagline;
+        if (logoImg && logoUrl) {
+          logoImg.src = logoUrl;
+          logoImg.onerror = function () {
+            this.style.display = 'none';
+            const parent = this.parentElement;
+            if (parent) parent.innerHTML = '<span class="fallback">' + (name.charAt(0) || 'R') + '</span>';
+          };
+        }
+      }
+
       function setupTheme() {
         const btn = document.getElementById('themeToggle');
         const icon = document.getElementById('themeIcon');
-        const refresh = () => {
+        const refresh = function () {
           const isDark = Refad.theme.get() === 'dark';
           icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
           if (window.lucide) lucide.createIcons();
         };
         refresh();
-        btn.addEventListener('click', () => { Refad.theme.toggle(); refresh(); });
+        btn.addEventListener('click', function () { Refad.theme.toggle(); refresh(); });
       }
 
       function setupSidebarMobile() {
         const sb = document.getElementById('sidebar');
         const ov = document.getElementById('overlay');
-        document.getElementById('menuToggle').addEventListener('click', () => {
+        document.getElementById('menuToggle').addEventListener('click', function () {
           sb.classList.add('open'); ov.classList.add('show');
         });
-        ov.addEventListener('click', () => {
+        ov.addEventListener('click', function () {
           sb.classList.remove('open'); ov.classList.remove('show');
         });
       }
@@ -1865,24 +1850,30 @@
       function setupUserMenu() {
         const m = document.getElementById('userMenu');
         const d = document.getElementById('userDropdown');
-        m.addEventListener('click', e => { e.stopPropagation(); d.classList.toggle('show'); });
-        document.addEventListener('click', () => d.classList.remove('show'));
-        d.addEventListener('click', e => e.stopPropagation());
-        document.getElementById('logoutBtn').addEventListener('click', async () => {
+        m.addEventListener('click', function (e) { e.stopPropagation(); d.classList.toggle('show'); });
+        document.addEventListener('click', function () { d.classList.remove('show'); });
+        d.addEventListener('click', function (e) { e.stopPropagation(); });
+        document.getElementById('logoutBtn').addEventListener('click', async function () {
           if (await Refad.alert.confirm('تسجيل الخروج', 'هل تريد الخروج؟', 'خروج')) {
             await Refad.Auth.logout();
           }
         });
       }
 
+      function setupRealtimeTheme() {
+        window.addEventListener('refad:theme-changed', () => {
+          applyIdentity();
+        });
+      }
+
       function setupEmojiPicker() {
         const picker = document.getElementById('emojiPicker');
-        picker.innerHTML = EMOJIS.map(e => `<button type="button">${e}</button>`).join('');
-        document.getElementById('emojiBtn').addEventListener('click', e => {
+        picker.innerHTML = EMOJIS.map(function (e) { return '<button type="button">' + e + '</button>'; }).join('');
+        document.getElementById('emojiBtn').addEventListener('click', function (e) {
           e.stopPropagation();
           picker.classList.toggle('show');
         });
-        picker.addEventListener('click', e => {
+        picker.addEventListener('click', function (e) {
           if (e.target.tagName === 'BUTTON') {
             const input = document.getElementById('msgInput');
             input.value += e.target.textContent;
@@ -1890,7 +1881,7 @@
             input.focus();
           }
         });
-        document.addEventListener('click', e => {
+        document.addEventListener('click', function (e) {
           if (!e.target.closest('#emojiPicker') && !e.target.closest('#emojiBtn')) {
             picker.classList.remove('show');
           }
@@ -1901,8 +1892,8 @@
         const chatPanel = document.getElementById('chatPanel');
         const overlay = document.getElementById('dragOverlay');
         let dragCounter = 0;
-        ['dragenter', 'dragover'].forEach(evt => {
-          chatPanel.addEventListener(evt, e => {
+        ['dragenter', 'dragover'].forEach(function (evt) {
+          chatPanel.addEventListener(evt, function (e) {
             e.preventDefault();
             e.stopPropagation();
             if (!state.activeConvId) return;
@@ -1910,14 +1901,14 @@
             overlay.classList.add('show');
           });
         });
-        ['dragleave', 'drop'].forEach(evt => {
-          chatPanel.addEventListener(evt, e => {
+        ['dragleave', 'drop'].forEach(function (evt) {
+          chatPanel.addEventListener(evt, function (e) {
             e.preventDefault();
             e.stopPropagation();
             if (evt === 'dragleave') dragCounter--;
             if (dragCounter <= 0) { dragCounter = 0; overlay.classList.remove('show'); }
             if (evt === 'drop') {
-              const file = e.dataTransfer?.files?.[0];
+              const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
               if (file) sendFile(file);
             }
           });
@@ -1925,7 +1916,7 @@
       }
 
       // ============================================================
-      // Load users
+      // Load Users
       // ============================================================
       async function loadUsers() {
         try {
@@ -1935,9 +1926,9 @@
             order: { column: 'full_name', ascending: true },
             limit: 500
           });
-          state.users = rows.filter(u => u.is_active !== false && u.id !== myUserId);
+          state.users = rows.filter(function (u) { return u.is_active !== false && u.id !== myUserId; });
           state.usersMap = {};
-          rows.forEach(u => { state.usersMap[u.id] = u; });
+          rows.forEach(function (u) { state.usersMap[u.id] = u; });
           state.usersMap[myUserId] = {
             id: myUserId,
             full_name: session.full_name,
@@ -1950,7 +1941,7 @@
       }
 
       // ============================================================
-      // Load channels
+      // Load Channels
       // ============================================================
       async function loadChannels() {
         try {
@@ -1959,7 +1950,7 @@
             eq: { company_id: companyId, type: 'channel' },
             order: { column: 'last_message_at', ascending: false },
             limit: 100
-          }).catch(() => []);
+          }).catch(function () { return []; });
 
           if (!rows.length) {
             rows = await createDefaultChannels();
@@ -1967,7 +1958,6 @@
 
           state.channels = rows;
 
-          // ضم المستخدم للقنوات
           for (const ch of rows) {
             try {
               const parts = await Refad.db.select('chat_participants', {
@@ -2018,7 +2008,7 @@
 
       async function attachLastMessages(convs) {
         if (!convs.length) return;
-        const ids = convs.map(c => c.id);
+        const ids = convs.map(function (c) { return c.id; });
         try {
           const lastMsgs = await Refad.db.select('chat_messages', {
             columns: 'id, conversation_id, sender_id, content, message_type, created_at',
@@ -2027,15 +2017,15 @@
             limit: 500
           });
           const lastMap = {};
-          lastMsgs.forEach(m => {
+          lastMsgs.forEach(function (m) {
             if (!lastMap[m.conversation_id]) lastMap[m.conversation_id] = m;
           });
-          convs.forEach(c => { c._lastMsg = lastMap[c.id]; });
+          convs.forEach(function (c) { c._lastMsg = lastMap[c.id]; });
         } catch (e) { /* ignore */ }
       }
 
       // ============================================================
-      // Load private conversations
+      // Load Private Conversations
       // ============================================================
       async function loadConversations() {
         try {
@@ -2044,7 +2034,7 @@
             eq: { user_id: myUserId }
           });
 
-          const convIds = myParts.map(p => p.conversation_id);
+          const convIds = myParts.map(function (p) { return p.conversation_id; });
           if (!convIds.length) {
             state.conversations = [];
             state.participantsMap = {};
@@ -2058,7 +2048,7 @@
             neq: { type: 'channel' },
             order: { column: 'last_message_at', ascending: false },
             limit: 200
-          }).catch(() => []);
+          }).catch(function () { return []; });
 
           state.conversations = convs;
 
@@ -2067,7 +2057,7 @@
             in: { conversation_id: convIds }
           });
           state.participantsMap = {};
-          parts.forEach(p => {
+          parts.forEach(function (p) {
             if (!state.participantsMap[p.conversation_id]) state.participantsMap[p.conversation_id] = [];
             state.participantsMap[p.conversation_id].push(p.user_id);
           });
@@ -2075,17 +2065,17 @@
           await attachLastMessages(convs);
 
           const readMap = {};
-          myParts.forEach(p => { readMap[p.conversation_id] = p.last_read_at; });
+          myParts.forEach(function (p) { readMap[p.conversation_id] = p.last_read_at; });
 
           const lastMsgs = await Refad.db.select('chat_messages', {
             columns: 'id, conversation_id, sender_id, created_at',
             in: { conversation_id: convIds },
             order: { column: 'created_at', ascending: false },
             limit: 1000
-          }).catch(() => []);
+          }).catch(function () { return []; });
 
           const unread = {};
-          lastMsgs.forEach(m => {
+          lastMsgs.forEach(function (m) {
             if (m.sender_id === myUserId) return;
             const readAt = readMap[m.conversation_id];
             if (!readAt || new Date(m.created_at) > new Date(readAt)) {
@@ -2094,7 +2084,7 @@
           });
           state.unreadMap = unread;
 
-          state.conversations.forEach(c => {
+          state.conversations.forEach(function (c) {
             c._unread = unread[c.id] || 0;
           });
 
@@ -2127,48 +2117,50 @@
       function renderChannelsList(list, search) {
         let channels = state.channels.slice();
         if (search) {
-          channels = channels.filter(c => (c.title || '').toLowerCase().includes(search));
+          channels = channels.filter(function (c) {
+            return (c.title || '').toLowerCase().includes(search);
+          });
         }
 
         if (!channels.length) {
-          list.innerHTML = `<div class="chat-loading">لا توجد قنوات</div>`;
+          list.innerHTML = '<div class="chat-loading">لا توجد قنوات</div>';
           return;
         }
 
-        list.innerHTML = channels.map(c => {
+        list.innerHTML = channels.map(function (c) {
           const isActive = c.id === state.activeConvId;
           const unread = c._unread || 0;
-          return `
-            <div class="channel-item ${isActive ? 'active' : ''}" data-id="${c.id}">
-              <div class="channel-hash">#</div>
-              <div class="channel-name">${Refad.escapeHtml(c.title || 'قناة')}</div>
-              ${unread ? `<div class="unread-badge">${unread > 99 ? '99+' : unread}</div>` : ''}
-            </div>
-          `;
+          return '<div class="channel-item ' + (isActive ? 'active' : '') + '" data-id="' + c.id + '">' +
+            '<div class="channel-hash">#</div>' +
+            '<div class="channel-name">' + esc(c.title || 'قناة') + '</div>' +
+            (unread ? '<div class="unread-badge">' + (unread > 99 ? '99+' : unread) + '</div>' : '') +
+          '</div>';
         }).join('');
 
-        list.querySelectorAll('.channel-item').forEach(el => {
-          el.addEventListener('click', () => openConversation(parseInt(el.dataset.id, 10), true));
+        list.querySelectorAll('.channel-item').forEach(function (el) {
+          el.addEventListener('click', function () {
+            openConversation(parseInt(el.dataset.id, 10), true);
+          });
         });
       }
 
       function renderChatsList(list, search) {
         let convs = state.conversations.slice();
         if (search) {
-          convs = convs.filter(c => {
+          convs = convs.filter(function (c) {
             const d = getConvDisplay(c);
             return d.name.toLowerCase().includes(search);
           });
         }
 
         if (!convs.length) {
-          list.innerHTML = `<div class="chat-loading">
-            ${search ? 'لا توجد نتائج' : 'لا توجد محادثات بعد<br><small style="font-size:11px;opacity:0.7;">ابدأ محادثة جديدة</small>'}
-          </div>`;
+          list.innerHTML = '<div class="chat-loading">' +
+            (search ? 'لا توجد نتائج' : 'لا توجد محادثات بعد<br><small style="font-size:11px;opacity:0.7;">ابدأ محادثة جديدة</small>') +
+          '</div>';
           return;
         }
 
-        list.innerHTML = convs.map(c => {
+        list.innerHTML = convs.map(function (c) {
           const d = getConvDisplay(c);
           const last = c._lastMsg;
           const isActive = c.id === state.activeConvId;
@@ -2180,41 +2172,41 @@
             const isMine = last.sender_id === myUserId;
             const prefix = isMine ? 'أنت: ' : '';
             if (last.message_type === 'file') {
-              lastIcon = `<i data-lucide="paperclip"></i>`;
+              lastIcon = '<i data-lucide="paperclip"></i>';
               lastText = prefix + (last.content || 'ملف');
             } else {
               lastText = prefix + (last.content || '');
             }
           }
 
-          let timeStr = last ? Refad.format.relative(last.created_at) : '';
+          const timeStr = last ? Refad.format.relative(last.created_at) : '';
           const avatarHtml = d.avatarUrl
-            ? `<img src="${Refad.escapeHtml(d.avatarUrl)}" alt="">`
-            : Refad.escapeHtml(d.avatar);
+            ? '<img src="' + esc(d.avatarUrl) + '" alt="">'
+            : esc(d.avatar);
 
-          return `
-            <div class="conv-item ${isActive ? 'active' : ''}" data-id="${c.id}">
-              <div class="conv-avatar ${d.isGroup ? 'group' : ''}">
-                ${avatarHtml}
-                ${!d.isGroup ? '<span class="online-dot"></span>' : ''}
-              </div>
-              <div class="conv-body">
-                <div class="conv-top">
-                  <div class="conv-name">${Refad.escapeHtml(d.name)}</div>
-                  ${timeStr ? `<div class="conv-time">${timeStr}</div>` : ''}
-                </div>
-                <div class="conv-last ${unread ? 'unread' : ''}">
-                  ${lastIcon}
-                  <span style="overflow:hidden;text-overflow:ellipsis;">${Refad.escapeHtml(lastText).slice(0, 55)}</span>
-                </div>
-              </div>
-              ${unread ? `<div class="conv-unread-badge">${unread > 99 ? '99+' : unread}</div>` : ''}
-            </div>
-          `;
+          return '<div class="conv-item ' + (isActive ? 'active' : '') + '" data-id="' + c.id + '">' +
+            '<div class="conv-avatar ' + (d.isGroup ? 'group' : '') + '">' +
+              avatarHtml +
+              (!d.isGroup ? '<span class="online-dot"></span>' : '') +
+            '</div>' +
+            '<div class="conv-body">' +
+              '<div class="conv-top">' +
+                '<div class="conv-name">' + esc(d.name) + '</div>' +
+                (timeStr ? '<div class="conv-time">' + timeStr + '</div>' : '') +
+              '</div>' +
+              '<div class="conv-last ' + (unread ? 'unread' : '') + '">' +
+                lastIcon +
+                '<span style="overflow:hidden;text-overflow:ellipsis;">' + esc(lastText).slice(0, 55) + '</span>' +
+              '</div>' +
+            '</div>' +
+            (unread ? '<div class="conv-unread-badge">' + (unread > 99 ? '99+' : unread) + '</div>' : '') +
+          '</div>';
         }).join('');
 
-        list.querySelectorAll('.conv-item').forEach(el => {
-          el.addEventListener('click', () => openConversation(parseInt(el.dataset.id, 10), false));
+        list.querySelectorAll('.conv-item').forEach(function (el) {
+          el.addEventListener('click', function () {
+            openConversation(parseInt(el.dataset.id, 10), false);
+          });
         });
       }
 
@@ -2224,21 +2216,21 @@
             name: conv.title || 'مجموعة',
             avatar: (conv.title || 'G').charAt(0),
             isGroup: true,
-            sub: `${(state.participantsMap[conv.id] || []).length} أعضاء`
+            sub: (state.participantsMap[conv.id] || []).length + ' أعضاء'
           };
         }
         if (conv.type === 'channel') {
           return { name: conv.title || 'قناة', avatar: '#', isGroup: true, sub: 'قناة' };
         }
         const parts = state.participantsMap[conv.id] || [];
-        const otherId = parts.find(id => id !== myUserId);
+        const otherId = parts.find(function (id) { return id !== myUserId; });
         const other = state.usersMap[otherId];
         return {
-          name: other?.full_name || 'مستخدم محذوف',
-          avatar: (other?.full_name || '؟').charAt(0),
+          name: (other && other.full_name) || 'مستخدم محذوف',
+          avatar: ((other && other.full_name) || '؟').charAt(0),
           isGroup: false,
-          avatarUrl: other?.avatar_url,
-          sub: other?.username ? '@' + other.username : ''
+          avatarUrl: other && other.avatar_url,
+          sub: other && other.username ? '@' + other.username : ''
         };
       }
 
@@ -2246,16 +2238,14 @@
       // Tab Title
       // ============================================================
       const originalTitle = document.title;
+
       function updateTabTitle() {
-        const totalUnread = Object.values(state.unreadMap).reduce((a, b) => a + b, 0);
-        if (totalUnread > 0) {
-          document.title = `(${totalUnread}) ${originalTitle}`;
-        } else {
-          document.title = originalTitle;
-        }
-        // تحديث badge المحادثات
+        const totalUnread = Object.values(state.unreadMap).reduce(function (a, b) { return a + b; }, 0);
+        if (totalUnread > 0) document.title = '(' + totalUnread + ') ' + originalTitle;
+        else document.title = originalTitle;
+
         const badge = document.getElementById('chatsBadge');
-        const chatUnread = state.conversations.reduce((sum, c) => sum + (c._unread || 0), 0);
+        const chatUnread = state.conversations.reduce(function (sum, c) { return sum + (c._unread || 0); }, 0);
         if (badge) {
           if (chatUnread > 0) {
             badge.style.display = 'flex';
@@ -2270,9 +2260,9 @@
       // Tabs
       // ============================================================
       function setupTabs() {
-        document.querySelectorAll('.conv-tab').forEach(tab => {
-          tab.addEventListener('click', () => {
-            document.querySelectorAll('.conv-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.conv-tab').forEach(function (tab) {
+          tab.addEventListener('click', function () {
+            document.querySelectorAll('.conv-tab').forEach(function (t) { t.classList.remove('active'); });
             tab.classList.add('active');
             state.tab = tab.dataset.tab;
             document.getElementById('listTitle').innerHTML = state.tab === 'channels'
@@ -2294,24 +2284,16 @@
       // ============================================================
       function requestNotifPermission() {
         if (!('Notification' in window)) return;
-        if (Notification.permission === 'granted') {
-          console.log('[Chat] ✅ Notifications granted');
-          return;
-        }
-        if (Notification.permission === 'denied') {
-          console.warn('[Chat] ❌ Notifications denied');
-          return;
-        }
-        // اطلب بعد 3 ثواني من التحميل
-        setTimeout(() => {
-          Notification.requestPermission().then(permission => {
-            if (permission === 'granted') {
-              Refad.toast.success('✅ تم تفعيل الإشعارات');
-            }
-          }).catch(() => {});
+        if (Notification.permission === 'granted') return;
+        if (Notification.permission === 'denied') return;
+        setTimeout(function () {
+          Notification.requestPermission().then(function (permission) {
+            if (permission === 'granted') Refad.toast.success('✅ تم تفعيل الإشعارات');
+          }).catch(function () {});
         }, 3000);
       }
-            // ============================================================
+
+      // ============================================================
       // Open Conversation
       // ============================================================
       async function openConversation(convId, isChannel) {
@@ -2319,9 +2301,9 @@
         state.isChannel = isChannel;
 
         if (isChannel) {
-          state.activeConv = state.channels.find(c => c.id === convId);
+          state.activeConv = state.channels.find(function (c) { return c.id === convId; });
         } else {
-          state.activeConv = state.conversations.find(c => c.id === convId);
+          state.activeConv = state.conversations.find(function (c) { return c.id === convId; });
         }
         if (!state.activeConv) return;
 
@@ -2330,20 +2312,20 @@
         active.style.display = 'flex';
 
         const d = getConvDisplay(state.activeConv);
-        document.getElementById('chatName').textContent = isChannel ? `# ${d.name}` : d.name;
+        document.getElementById('chatName').textContent = isChannel ? '# ' + d.name : d.name;
 
         const statusEl = document.getElementById('chatStatus');
         if (isChannel) {
-          statusEl.innerHTML = `<span>قناة عامة</span>`;
+          statusEl.innerHTML = '<span>قناة عامة</span>';
         } else if (d.isGroup) {
-          statusEl.innerHTML = `<span>${d.sub}</span>`;
+          statusEl.innerHTML = '<span>' + d.sub + '</span>';
         } else {
-          statusEl.innerHTML = `<span class="pulse"></span> <span style="color:var(--success);font-weight:700;">متصل الآن</span>`;
+          statusEl.innerHTML = '<span class="pulse"></span> <span style="color:var(--success);font-weight:700;">متصل الآن</span>';
         }
 
         const av = document.getElementById('chatAvatar');
         av.className = 'chat-header-avatar' + (isChannel ? ' channel' : '');
-        if (d.avatarUrl) av.innerHTML = `<img src="${Refad.escapeHtml(d.avatarUrl)}" alt="">`;
+        if (d.avatarUrl) av.innerHTML = '<img src="' + esc(d.avatarUrl) + '" alt="">';
         else av.textContent = d.avatar;
 
         if (window.innerWidth <= 768) {
@@ -2381,7 +2363,7 @@
       }
 
       // ============================================================
-      // Load Messages (with fallback for is_pinned)
+      // Load Messages
       // ============================================================
       async function loadMessages(convId) {
         const body = document.getElementById('chatBody');
@@ -2390,7 +2372,6 @@
         try {
           let rows;
           try {
-            // حاول مع is_pinned
             rows = await Refad.db.select('chat_messages', {
               columns: 'id, conversation_id, sender_id, content, message_type, is_pinned, created_at',
               eq: { conversation_id: convId },
@@ -2399,7 +2380,6 @@
             });
             state.hasPinnedColumn = true;
           } catch (e) {
-            // fallback: بدون is_pinned
             if (/is_pinned/i.test(e.message || '')) {
               console.warn('[Chat] is_pinned not available, using fallback');
               state.hasPinnedColumn = false;
@@ -2409,25 +2389,24 @@
                 order: { column: 'created_at', ascending: true },
                 limit: 500
               });
-              rows.forEach(r => { r.is_pinned = false; });
+              rows.forEach(function (r) { r.is_pinned = false; });
             } else {
               throw e;
             }
           }
-          
+
           state.messages = rows;
 
-          // جلب الملفات
           if (rows.length) {
-            const msgIds = rows.filter(r => r.message_type === 'file').map(r => r.id);
+            const msgIds = rows.filter(function (r) { return r.message_type === 'file'; }).map(function (r) { return r.id; });
             if (msgIds.length) {
               const files = await Refad.db.select('chat_files', {
                 columns: 'id, message_id, file_url, file_name, file_size, file_type',
                 in: { message_id: msgIds }
               });
               const fileMap = {};
-              files.forEach(f => { fileMap[f.message_id] = f; });
-              state.messages.forEach(m => {
+              files.forEach(function (f) { fileMap[f.message_id] = f; });
+              state.messages.forEach(function (m) {
                 if (fileMap[m.id]) m._file = fileMap[m.id];
               });
             }
@@ -2437,7 +2416,7 @@
           scrollToBottom(true);
         } catch (e) {
           console.error('[Chat] messages load failed:', e);
-          body.innerHTML = `<div class="chat-loading" style="color:var(--danger);">فشل تحميل الرسائل: ${Refad.escapeHtml(e.message || '')}</div>`;
+          body.innerHTML = '<div class="chat-loading" style="color:var(--danger);">فشل تحميل الرسائل: ' + esc(e.message || '') + '</div>';
         }
       }
 
@@ -2456,7 +2435,7 @@
         let html = '';
         let lastDate = '';
 
-        msgs.forEach(m => {
+        msgs.forEach(function (m) {
           const msgDate = dayjs(m.created_at).format('YYYY-MM-DD');
           if (msgDate !== lastDate) {
             lastDate = msgDate;
@@ -2465,7 +2444,7 @@
             let lbl = Refad.format.date(msgDate);
             if (msgDate === today) lbl = 'اليوم';
             else if (msgDate === yesterday) lbl = 'أمس';
-            html += `<div class="chat-date-sep">${lbl}</div>`;
+            html += '<div class="chat-date-sep">' + lbl + '</div>';
           }
           html += renderMessageHtml(m);
         });
@@ -2480,99 +2459,88 @@
         if (!m || !m.id) return '';
         const isOut = m.sender_id === myUserId;
         const sender = state.usersMap[m.sender_id] || { full_name: 'مستخدم', id: m.sender_id };
-        const initials = (sender?.full_name || '؟').charAt(0);
+        const initials = ((sender && sender.full_name) || '؟').charAt(0);
 
         let contentHtml = '';
 
-        // Reply quote
         if (m._replyTo) {
-          const replyTo = state.messages.find(x => x.id === m._replyTo);
+          const replyTo = state.messages.find(function (x) { return x.id === m._replyTo; });
           if (replyTo) {
             const replySender = state.usersMap[replyTo.sender_id];
-            contentHtml += `
-              <div class="msg-reply-quote">
-                <div class="q-name">${Refad.escapeHtml(replySender?.full_name || '؟')}</div>
-                <div class="q-text">${Refad.escapeHtml((replyTo.content || 'ملف').slice(0, 60))}</div>
-              </div>
-            `;
+            contentHtml += '<div class="msg-reply-quote">' +
+              '<div class="q-name">' + esc((replySender && replySender.full_name) || '؟') + '</div>' +
+              '<div class="q-text">' + esc((replyTo.content || 'ملف').slice(0, 60)) + '</div>' +
+            '</div>';
           }
         }
 
-        // File or text
         if (m.message_type === 'file' && m._file) {
           const f = m._file;
           const isImage = (f.file_type || '').startsWith('image/');
           const sizeStr = f.file_size ? formatFileSize(f.file_size) : '';
 
           if (isImage) {
-            contentHtml += `
-              <img src="${Refad.escapeHtml(f.file_url)}" alt="${Refad.escapeHtml(f.file_name || 'صورة')}"
-                   class="msg-image" data-lightbox="${Refad.escapeHtml(f.file_url)}"
-                   onerror="this.style.display='none'">
-            `;
+            contentHtml += '<img src="' + esc(f.file_url) + '" alt="' + esc(f.file_name || 'صورة') + '" ' +
+              'class="msg-image" data-lightbox="' + esc(f.file_url) + '" onerror="this.style.display=\'none\'">';
           } else {
-            contentHtml += `
-              <a href="${Refad.escapeHtml(f.file_url)}" target="_blank" class="msg-file" rel="noopener" download="${Refad.escapeHtml(f.file_name || '')}">
-                <div class="msg-file-icon"><i data-lucide="${getFileIcon(f.file_type, f.file_name)}"></i></div>
-                <div class="msg-file-info">
-                  <div class="msg-file-name">${Refad.escapeHtml(f.file_name || 'ملف')}</div>
-                  <div class="msg-file-size">${sizeStr}</div>
-                </div>
-                <i data-lucide="download" style="width:16px;height:16px;opacity:0.7;"></i>
-              </a>
-            `;
+            contentHtml += '<a href="' + esc(f.file_url) + '" target="_blank" class="msg-file" rel="noopener" download="' + esc(f.file_name || '') + '">' +
+              '<div class="msg-file-icon"><i data-lucide="' + getFileIcon(f.file_type, f.file_name) + '"></i></div>' +
+              '<div class="msg-file-info">' +
+                '<div class="msg-file-name">' + esc(f.file_name || 'ملف') + '</div>' +
+                '<div class="msg-file-size">' + sizeStr + '</div>' +
+              '</div>' +
+              '<i data-lucide="download" style="width:16px;height:16px;opacity:0.7;"></i>' +
+            '</a>';
           }
         } else if (m.content) {
-          contentHtml += `<div>${renderTextWithMentions(m.content)}</div>`;
+          contentHtml += '<div>' + renderTextWithMentions(m.content) + '</div>';
         }
 
         const pinnedClass = m.is_pinned ? 'pinned' : '';
 
-        return `
-          <div class="msg-row ${isOut ? 'out' : 'in'} ${pinnedClass}" data-id="${m.id}">
-            ${!isOut ? `<div class="msg-avatar" data-user-profile="${m.sender_id}">${sender?.avatar_url ? `<img src="${Refad.escapeHtml(sender.avatar_url)}" alt="">` : Refad.escapeHtml(initials)}</div>` : ''}
-            <div class="msg-content">
-              ${!isOut && (state.isChannel || state.activeConv?.type === 'group') ? `<div class="msg-sender">${Refad.escapeHtml(sender?.full_name || '؟')}</div>` : ''}
-              <div class="msg-bubble">
-                ${contentHtml}
-                <div class="msg-time">
-                  ${m.is_pinned ? '<i data-lucide="pin" style="width:11px;height:11px;color:var(--gold);"></i>' : ''}
-                  ${dayjs(m.created_at).format('HH:mm')}
-                  ${isOut ? `<i data-lucide="${m._read ? 'check-check' : 'check'}" class="msg-check ${m._read ? 'read' : 'sent'}"></i>` : ''}
-                </div>
-              </div>
-            </div>
-            <div class="msg-actions">
-              <button class="msg-action-btn" data-reply="${m.id}" title="رد">
-                <i data-lucide="reply"></i>
-              </button>
-              ${state.hasPinnedColumn ? `
-                <button class="msg-action-btn ${m.is_pinned ? 'active' : ''}" data-pin="${m.id}" title="${m.is_pinned ? 'إلغاء التثبيت' : 'تثبيت'}">
-                  <i data-lucide="pin"></i>
-                </button>
-              ` : ''}
-              <button class="msg-action-btn" data-copy="${m.id}" title="نسخ">
-                <i data-lucide="copy"></i>
-              </button>
-            </div>
-          </div>
-        `;
+        return '<div class="msg-row ' + (isOut ? 'out' : 'in') + ' ' + pinnedClass + '" data-id="' + m.id + '">' +
+          (!isOut ? '<div class="msg-avatar" data-user-profile="' + m.sender_id + '">' + (sender && sender.avatar_url ? '<img src="' + esc(sender.avatar_url) + '" alt="">' : esc(initials)) + '</div>' : '') +
+          '<div class="msg-content">' +
+            (!isOut && (state.isChannel || (state.activeConv && state.activeConv.type === 'group')) ? '<div class="msg-sender">' + esc((sender && sender.full_name) || '؟') + '</div>' : '') +
+            '<div class="msg-bubble">' +
+              contentHtml +
+              '<div class="msg-time">' +
+                (m.is_pinned ? '<i data-lucide="pin" style="width:11px;height:11px;color:var(--gold);"></i>' : '') +
+                dayjs(m.created_at).format('HH:mm') +
+                (isOut ? '<i data-lucide="' + (m._read ? 'check-check' : 'check') + '" class="msg-check ' + (m._read ? 'read' : 'sent') + '"></i>' : '') +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="msg-actions">' +
+            '<button class="msg-action-btn" data-reply="' + m.id + '" title="رد">' +
+              '<i data-lucide="reply"></i>' +
+            '</button>' +
+            (state.hasPinnedColumn ?
+              '<button class="msg-action-btn ' + (m.is_pinned ? 'active' : '') + '" data-pin="' + m.id + '" title="' + (m.is_pinned ? 'إلغاء التثبيت' : 'تثبيت') + '">' +
+                '<i data-lucide="pin"></i>' +
+              '</button>'
+            : '') +
+            '<button class="msg-action-btn" data-copy="' + m.id + '" title="نسخ">' +
+              '<i data-lucide="copy"></i>' +
+            '</button>' +
+          '</div>' +
+        '</div>';
       }
 
       function renderTextWithMentions(text) {
-        let escaped = Refad.escapeHtml(text);
-        escaped = escaped.replace(/@([\w\u0600-\u06FF\-\s]+?)(?=\s|$|[.,!?])/g, (match, name) => {
-          return `<span class="msg-mention" data-mention="${Refad.escapeHtml(name.trim())}">@${Refad.escapeHtml(name.trim())}</span>`;
+        let escaped = esc(text);
+        escaped = escaped.replace(/@([\w\u0600-\u06FF\-\s]+?)(?=\s|$|[.,!?])/g, function (match, name) {
+          return '<span class="msg-mention" data-mention="' + esc(name.trim()) + '">@' + esc(name.trim()) + '</span>';
         });
         escaped = escaped.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" style="color:inherit;text-decoration:underline;">$1</a>');
         return escaped;
       }
 
       function bindMentionClicks() {
-        document.querySelectorAll('.msg-mention').forEach(el => {
-          el.addEventListener('click', () => {
+        document.querySelectorAll('.msg-mention').forEach(function (el) {
+          el.addEventListener('click', function () {
             const name = el.dataset.mention;
-            const user = state.users.find(u => u.full_name === name);
+            const user = state.users.find(function (u) { return u.full_name === name; });
             if (user) openUserProfile(user.id);
           });
         });
@@ -2600,7 +2568,7 @@
           let lbl = Refad.format.date(msgDate);
           if (msgDate === today) lbl = 'اليوم';
           else if (msgDate === yesterday) lbl = 'أمس';
-          html += `<div class="chat-date-sep">${lbl}</div>`;
+          html += '<div class="chat-date-sep">' + lbl + '</div>';
         }
         html += renderMessageHtml(m);
         body.insertAdjacentHTML('beforeend', html);
@@ -2611,7 +2579,7 @@
 
       function scrollToBottom(smooth) {
         const body = document.getElementById('chatBody');
-        requestAnimationFrame(() => {
+        requestAnimationFrame(function () {
           body.scrollTo({ top: body.scrollHeight, behavior: smooth ? 'smooth' : 'auto' });
           state.pendingNewMsgs = 0;
           updateScrollBtn();
@@ -2636,12 +2604,12 @@
 
       function setupScrollListener() {
         const body = document.getElementById('chatBody');
-        body.addEventListener('scroll', () => {
+        body.addEventListener('scroll', function () {
           const diff = body.scrollHeight - body.scrollTop - body.clientHeight;
           state.isUserScrolledUp = diff > 200;
           updateScrollBtn();
         });
-        document.getElementById('scrollBottomBtn').addEventListener('click', () => {
+        document.getElementById('scrollBottomBtn').addEventListener('click', function () {
           scrollToBottom(true);
           state.isUserScrolledUp = false;
           updateScrollBtn();
@@ -2663,7 +2631,7 @@
             eq: { conversation_id: convId, is_pinned: true },
             order: { column: 'created_at', ascending: false },
             limit: 50
-          }).catch(() => []);
+          }).catch(function () { return []; });
           state.pinnedMessages = rows;
           renderPinnedBar();
         } catch (e) {
@@ -2692,12 +2660,10 @@
           Refad.toast.warning('ميزة التثبيت تحتاج تحديث قاعدة البيانات');
           return;
         }
-        const m = state.messages.find(x => x.id === messageId);
+        const m = state.messages.find(function (x) { return x.id === messageId; });
         if (!m) return;
         try {
-          await Refad.db.update('chat_messages', messageId, {
-            is_pinned: !m.is_pinned
-          });
+          await Refad.db.update('chat_messages', messageId, { is_pinned: !m.is_pinned });
           m.is_pinned = !m.is_pinned;
           Refad.toast.success(m.is_pinned ? 'تم التثبيت' : 'تم إلغاء التثبيت');
           await loadPinnedMessages(state.activeConvId);
@@ -2712,26 +2678,24 @@
         if (!state.pinnedMessages.length) {
           body.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);">لا توجد رسائل مثبتة</div>';
         } else {
-          body.innerHTML = state.pinnedMessages.map(m => {
+          body.innerHTML = state.pinnedMessages.map(function (m) {
             const sender = state.usersMap[m.sender_id];
-            return `
-              <div style="padding:12px;border-bottom:1px solid var(--border);">
-                <div style="font-size:11px;color:var(--accent);font-weight:700;margin-bottom:4px;">
-                  ${Refad.escapeHtml(sender?.full_name || '؟')} • ${Refad.format.datetime(m.created_at)}
-                </div>
-                <div style="font-size:13px;line-height:1.6;">${Refad.escapeHtml(m.content || 'ملف')}</div>
-                <button class="btn btn-outline btn-sm" data-unpin="${m.id}" style="margin-top:8px;">
-                  <i data-lucide="pin-off" style="width:12px;height:12px;"></i> إلغاء التثبيت
-                </button>
-              </div>
-            `;
+            return '<div style="padding:12px;border-bottom:1px solid var(--border);">' +
+              '<div style="font-size:11px;color:var(--accent);font-weight:700;margin-bottom:4px;">' +
+                esc((sender && sender.full_name) || '؟') + ' • ' + Refad.format.datetime(m.created_at) +
+              '</div>' +
+              '<div style="font-size:13px;line-height:1.6;">' + esc(m.content || 'ملف') + '</div>' +
+              '<button class="btn btn-outline btn-sm" data-unpin="' + m.id + '" style="margin-top:8px;">' +
+                '<i data-lucide="pin-off" style="width:12px;height:12px;"></i> إلغاء التثبيت' +
+              '</button>' +
+            '</div>';
           }).join('');
         }
         document.getElementById('pinnedModal').classList.add('show');
         if (window.lucide) lucide.createIcons();
 
-        body.querySelectorAll('[data-unpin]').forEach(btn => {
-          btn.addEventListener('click', async () => {
+        body.querySelectorAll('[data-unpin]').forEach(function (btn) {
+          btn.addEventListener('click', async function () {
             await togglePin(parseInt(btn.dataset.unpin, 10));
             openPinnedModal();
           });
@@ -2743,12 +2707,12 @@
       // ============================================================
       function setupQuickReplies() {
         const container = document.getElementById('quickReplies');
-        container.innerHTML = QUICK_REPLIES.map(t =>
-          `<button class="quick-reply-btn" type="button" data-quick="${Refad.escapeHtml(t)}">${Refad.escapeHtml(t)}</button>`
-        ).join('');
+        container.innerHTML = QUICK_REPLIES.map(function (t) {
+          return '<button class="quick-reply-btn" type="button" data-quick="' + esc(t) + '">' + esc(t) + '</button>';
+        }).join('');
         container.classList.add('show');
-        container.querySelectorAll('.quick-reply-btn').forEach(btn => {
-          btn.addEventListener('click', () => {
+        container.querySelectorAll('.quick-reply-btn').forEach(function (btn) {
+          btn.addEventListener('click', function () {
             const input = document.getElementById('msgInput');
             input.value = btn.dataset.quick;
             input.dispatchEvent(new Event('input'));
@@ -2786,29 +2750,29 @@
 
       function showMentionDropdown(query) {
         const dd = document.getElementById('mentionDropdown');
-        const filtered = state.users.filter(u =>
-          (u.full_name || '').toLowerCase().includes(query.toLowerCase()) ||
-          (u.username || '').toLowerCase().includes(query.toLowerCase())
-        ).slice(0, 8);
+        const filtered = state.users.filter(function (u) {
+          return (u.full_name || '').toLowerCase().includes(query.toLowerCase()) ||
+                 (u.username || '').toLowerCase().includes(query.toLowerCase());
+        }).slice(0, 8);
 
         if (!filtered.length) {
           closeMentionDropdown();
           return;
         }
 
-        dd.innerHTML = filtered.map((u, i) => `
-          <div class="mention-item ${i === 0 ? 'selected' : ''}" data-user-id="${u.id}" data-name="${Refad.escapeHtml(u.full_name)}">
-            <div class="m-avatar">${u.avatar_url ? `<img src="${Refad.escapeHtml(u.avatar_url)}" style="width:100%;height:100%;object-fit:cover;border-radius:9px;">` : Refad.escapeHtml((u.full_name || '؟').charAt(0))}</div>
-            <div class="m-info">
-              <div class="m-name">${Refad.escapeHtml(u.full_name)}</div>
-              <div class="m-username">@${Refad.escapeHtml(u.username || '')}</div>
-            </div>
-          </div>
-        `).join('');
+        dd.innerHTML = filtered.map(function (u, i) {
+          return '<div class="mention-item ' + (i === 0 ? 'selected' : '') + '" data-user-id="' + u.id + '" data-name="' + esc(u.full_name) + '">' +
+            '<div class="m-avatar">' + (u.avatar_url ? '<img src="' + esc(u.avatar_url) + '" style="width:100%;height:100%;object-fit:cover;border-radius:9px;">' : esc((u.full_name || '؟').charAt(0))) + '</div>' +
+            '<div class="m-info">' +
+              '<div class="m-name">' + esc(u.full_name) + '</div>' +
+              '<div class="m-username">@' + esc(u.username || '') + '</div>' +
+            '</div>' +
+          '</div>';
+        }).join('');
         dd.classList.add('show');
 
-        dd.querySelectorAll('.mention-item').forEach(el => {
-          el.addEventListener('click', () => insertMention(el.dataset.name));
+        dd.querySelectorAll('.mention-item').forEach(function (el) {
+          el.addEventListener('click', function () { insertMention(el.dataset.name); });
         });
       }
 
@@ -2844,31 +2808,30 @@
         const body = document.getElementById('userProfileModalBody');
         const initial = (user.full_name || '؟').charAt(0);
 
-        body.innerHTML = `
-          <div style="text-align:center;padding:20px 0;">
-            <div style="width:100px;height:100px;border-radius:24px;background:linear-gradient(135deg,var(--primary),var(--accent));color:white;display:flex;align-items:center;justify-content:center;font-size:40px;font-weight:800;margin:0 auto 16px;box-shadow:0 8px 24px rgba(20,184,166,0.3);overflow:hidden;">
-              ${user.avatar_url ? `<img src="${Refad.escapeHtml(user.avatar_url)}" style="width:100%;height:100%;object-fit:cover;">` : initial}
-            </div>
-            <h3 style="font-size:20px;font-weight:800;color:var(--text);margin-bottom:4px;">${Refad.escapeHtml(user.full_name)}</h3>
-            <div style="font-size:13px;color:var(--text-muted);">@${Refad.escapeHtml(user.username || '')}</div>
-          </div>
-          <div style="border-top:1px solid var(--border);padding-top:16px;">
-            ${user.phone ? `
-              <div style="display:flex;align-items:center;gap:10px;padding:10px 0;font-size:13px;">
-                <i data-lucide="phone" style="width:16px;height:16px;color:var(--accent);"></i>
-                <span style="color:var(--text-muted);">الهاتف:</span>
-                <strong>${Refad.escapeHtml(user.phone)}</strong>
-              </div>
-            ` : ''}
-            ${user.email ? `
-              <div style="display:flex;align-items:center;gap:10px;padding:10px 0;font-size:13px;">
-                <i data-lucide="mail" style="width:16px;height:16px;color:var(--accent);"></i>
-                <span style="color:var(--text-muted);">البريد:</span>
-                <strong>${Refad.escapeHtml(user.email)}</strong>
-              </div>
-            ` : ''}
-          </div>
-        `;
+        body.innerHTML =
+          '<div style="text-align:center;padding:20px 0;">' +
+            '<div style="width:100px;height:100px;border-radius:24px;background:linear-gradient(135deg,var(--primary),var(--accent));color:white;display:flex;align-items:center;justify-content:center;font-size:40px;font-weight:800;margin:0 auto 16px;box-shadow:0 8px 24px rgba(20,184,166,0.3);overflow:hidden;">' +
+              (user.avatar_url ? '<img src="' + esc(user.avatar_url) + '" style="width:100%;height:100%;object-fit:cover;">' : initial) +
+            '</div>' +
+            '<h3 style="font-size:20px;font-weight:800;color:var(--text);margin-bottom:4px;">' + esc(user.full_name) + '</h3>' +
+            '<div style="font-size:13px;color:var(--text-muted);">@' + esc(user.username || '') + '</div>' +
+          '</div>' +
+          '<div style="border-top:1px solid var(--border);padding-top:16px;">' +
+            (user.phone ?
+              '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;font-size:13px;">' +
+                '<i data-lucide="phone" style="width:16px;height:16px;color:var(--accent);"></i>' +
+                '<span style="color:var(--text-muted);">الهاتف:</span>' +
+                '<strong>' + esc(user.phone) + '</strong>' +
+              '</div>'
+            : '') +
+            (user.email ?
+              '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;font-size:13px;">' +
+                '<i data-lucide="mail" style="width:16px;height:16px;color:var(--accent);"></i>' +
+                '<span style="color:var(--text-muted);">البريد:</span>' +
+                '<strong>' + esc(user.email) + '</strong>' +
+              '</div>'
+            : '') +
+          '</div>';
 
         document.getElementById('userProfileModal').classList.add('show');
         if (window.lucide) lucide.createIcons();
@@ -2888,7 +2851,7 @@
         autoResize(input);
         document.getElementById('quickReplies').classList.remove('show');
 
-        const replyToId = state.replyTo?.id || null;
+        const replyToId = state.replyTo && state.replyTo.id ? state.replyTo.id : null;
 
         try {
           const payload = {
@@ -2929,7 +2892,7 @@
 
       function updateConvLastMsg(msg) {
         const list = state.isChannel ? state.channels : state.conversations;
-        const c = list.find(x => x.id === state.activeConvId);
+        const c = list.find(function (x) { return x.id === state.activeConvId; });
         if (c) {
           c._lastMsg = msg;
           c.last_message_at = msg.created_at;
@@ -2943,14 +2906,12 @@
       }
 
       // ============================================================
-      // Send File (محسّن مع fallback)
+      // Send File
       // ============================================================
       async function sendFile(file) {
         if (!file || !state.activeConvId) return;
-        
-        // فعّل الصوت
         unlockAudio();
-        
+
         if (file.size > 10 * 1024 * 1024) {
           Refad.toast.warning('حجم الملف أكبر من 10 ميجا');
           return;
@@ -2961,9 +2922,8 @@
         try {
           let uploadBlob = file;
           let uploadType = file.type || 'application/octet-stream';
-          let uploadName = file.name || `file-${Date.now()}`;
+          let uploadName = file.name || 'file-' + Date.now();
 
-          // ضغط الصور (إذا ممكن)
           if (file.type && file.type.startsWith('image/') && !file.type.includes('svg') && file.size > 200 * 1024) {
             try {
               const compressed = await Refad.storage.compressImage(file, 1400, 0.85);
@@ -2978,45 +2938,41 @@
           }
 
           const ext = (uploadName.split('.').pop() || 'bin').toLowerCase();
-          const path = `conv-${state.activeConvId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+          const path = 'conv-' + state.activeConvId + '/' + Date.now() + '-' + Math.random().toString(36).slice(2, 8) + '.' + ext;
 
-          // الرفع
-          const { data, error } = await Refad.sb.storage
+          const uploadResult = await Refad.sb.storage
             .from('chat-files')
-            .upload(path, uploadBlob, { 
-              upsert: false, 
+            .upload(path, uploadBlob, {
+              upsert: false,
               contentType: uploadType,
               cacheControl: '3600'
             });
 
-          if (error) {
-            console.error('[Chat] Upload error:', error);
-            const msgLower = (error.message || '').toLowerCase();
+          if (uploadResult.error) {
+            console.error('[Chat] Upload error:', uploadResult.error);
+            const msgLower = (uploadResult.error.message || '').toLowerCase();
             let errMsg = 'فشل رفع الملف';
-            
+
             if (msgLower.includes('bucket') || msgLower.includes('not found')) {
               errMsg = '⚠️ bucket "chat-files" غير موجود';
             } else if (msgLower.includes('policy') || msgLower.includes('permission') || msgLower.includes('denied')) {
               errMsg = '⚠️ لا توجد صلاحيات للرفع';
             } else if (msgLower.includes('size') || msgLower.includes('too large')) {
               errMsg = '⚠️ الملف كبير جداً';
-            } else if (msgLower.includes('mime') || msgLower.includes('type')) {
-              errMsg = `⚠️ نوع الملف غير مسموح: ${uploadType}`;
-            } else if (error.message) {
-              errMsg = error.message;
+            } else if (uploadResult.error.message) {
+              errMsg = uploadResult.error.message;
             }
-            
+
             Refad.toast.error(errMsg, 6000);
             return;
           }
 
-          const { data: urlData } = Refad.sb.storage
+          const urlResult = Refad.sb.storage
             .from('chat-files')
-            .getPublicUrl(data.path);
-          
-          const fileUrl = urlData.publicUrl;
+            .getPublicUrl(uploadResult.data.path);
 
-          // أنشئ رسالة
+          const fileUrl = urlResult.data.publicUrl;
+
           const msg = await Refad.db.insert('chat_messages', {
             conversation_id: state.activeConvId,
             sender_id: myUserId,
@@ -3065,11 +3021,11 @@
       // Reply
       // ============================================================
       function setReply(messageId) {
-        const m = state.messages.find(x => x.id === messageId);
+        const m = state.messages.find(function (x) { return x.id === messageId; });
         if (!m) return;
         state.replyTo = m;
         const sender = state.usersMap[m.sender_id];
-        document.getElementById('rpName').textContent = sender?.full_name || '؟';
+        document.getElementById('rpName').textContent = (sender && sender.full_name) || '؟';
         document.getElementById('rpText').textContent = m.content || 'ملف';
         document.getElementById('replyPreview').classList.add('show');
         document.getElementById('msgInput').focus();
@@ -3081,7 +3037,7 @@
       }
 
       // ============================================================
-      // 🔔 Realtime with Sound Notifications
+      // Realtime
       // ============================================================
       function setupRealtime() {
         try {
@@ -3091,23 +3047,21 @@
               event: 'INSERT',
               schema: 'public',
               table: 'chat_messages'
-            }, async (payload) => {
+            }, async function (payload) {
               const m = payload.new;
-              
-              // تجاهل رسائلي
+
               if (m.sender_id === myUserId) return;
 
-              const allConvs = [...state.channels, ...state.conversations];
-              const inConv = allConvs.some(c => c.id === m.conversation_id);
-              
+              const allConvs = state.channels.concat(state.conversations);
+              const inConv = allConvs.some(function (c) { return c.id === m.conversation_id; });
+
               if (!inConv) {
                 await Promise.all([loadChannels(), loadConversations()]);
                 return;
               }
-              
-              if (state.messages.some(x => x.id === m.id)) return;
 
-              // جلب الملف
+              if (state.messages.some(function (x) { return x.id === m.id; })) return;
+
               if (m.message_type === 'file') {
                 try {
                   const files = await Refad.db.select('chat_files', {
@@ -3118,48 +3072,35 @@
               }
 
               const sender = state.usersMap[m.sender_id];
-              const senderName = sender?.full_name || 'مستخدم';
+              const senderName = (sender && sender.full_name) || 'مستخدم';
 
               if (m.conversation_id === state.activeConvId) {
-                // رسالة في المحادثة النشطة
                 appendMessage(m);
                 if (!state.isUserScrolledUp) scrollToBottom();
                 else { state.pendingNewMsgs++; updateScrollBtn(); }
                 markAsRead(m.conversation_id);
 
-                // 🔊 الصوت + الاهتزاز
                 playNotificationSound();
                 vibrateDevice();
               } else {
-                // رسالة في محادثة أخرى
-                
-                // 🔔 1) الصوت
                 playNotificationSound();
-                
-                // 📳 2) الاهتزاز
                 vibrateDevice();
-                
-                // 💬 3) Toast
-                Refad.toast.info(`💬 رسالة من ${senderName}`);
-                
-                // 🌐 4) Browser Notification
+                Refad.toast.info('💬 رسالة من ' + senderName);
+
                 if (window.Notification && Notification.permission === 'granted') {
                   try {
                     const notif = new Notification(senderName, {
                       body: m.content || (m._file ? '📎 أرسل ملفاً' : 'رسالة جديدة'),
                       icon: 'logo.png',
                       badge: 'logo.png',
-                      tag: `chat-${m.conversation_id}`,
-                      silent: true  // لأننا نشغل صوتنا الخاص
+                      tag: 'chat-' + m.conversation_id,
+                      silent: true
                     });
-                    notif.onclick = () => {
+                    notif.onclick = function () {
                       window.focus();
-                      const isChannel = state.channels.some(c => c.id === m.conversation_id);
-                      if (isChannel) {
-                        document.querySelector('.conv-tab[data-tab="channels"]').click();
-                      } else {
-                        document.querySelector('.conv-tab[data-tab="chats"]').click();
-                      }
+                      const isChannel = state.channels.some(function (c) { return c.id === m.conversation_id; });
+                      if (isChannel) document.querySelector('.conv-tab[data-tab="channels"]').click();
+                      else document.querySelector('.conv-tab[data-tab="chats"]').click();
                       openConversation(m.conversation_id, isChannel);
                       notif.close();
                     };
@@ -3167,21 +3108,16 @@
                     console.warn('[Chat] Notification failed:', e);
                   }
                 }
-                
-                // 📊 5) عداد
+
                 state.unreadMap[m.conversation_id] = (state.unreadMap[m.conversation_id] || 0) + 1;
               }
 
-              // تحديث آخر رسالة
-              const list = m.conversation_id === state.activeConvId && state.isChannel
-                ? state.channels
-                : [...state.channels, ...state.conversations];
-              const c = list.find(x => x.id === m.conversation_id);
+              const c = [...state.channels, ...state.conversations].find(function (x) { return x.id === m.conversation_id; });
               if (c) {
                 c._lastMsg = m;
                 c._unread = state.unreadMap[c.id] || 0;
                 c.last_message_at = m.created_at;
-                const sourceList = state.channels.some(x => x.id === c.id) ? state.channels : state.conversations;
+                const sourceList = state.channels.some(function (x) { return x.id === c.id; }) ? state.channels : state.conversations;
                 const idx = sourceList.indexOf(c);
                 if (idx > 0) {
                   sourceList.splice(idx, 1);
@@ -3194,9 +3130,9 @@
               event: 'UPDATE',
               schema: 'public',
               table: 'chat_messages'
-            }, (payload) => {
+            }, function (payload) {
               const m = payload.new;
-              const existing = state.messages.find(x => x.id === m.id);
+              const existing = state.messages.find(function (x) { return x.id === m.id; });
               if (existing) {
                 existing.is_pinned = m.is_pinned;
                 if (m.conversation_id === state.activeConvId) {
@@ -3205,14 +3141,15 @@
                 }
               }
             })
-            .subscribe((status) => {
+            .subscribe(function (status) {
               console.log('[Chat] Realtime:', status);
             });
         } catch (e) {
           console.warn('[Chat] Realtime not available:', e.message);
         }
       }
-            // ============================================================
+
+      // ============================================================
       // New Conversation
       // ============================================================
       async function openNewChatModal() {
@@ -3227,25 +3164,25 @@
         if (!state.users.length) {
           list.innerHTML = '<div class="chat-loading" style="padding:20px;">لا يوجد مستخدمون آخرون</div>';
         } else {
-          list.innerHTML = state.users.map(u => `
-            <div class="user-pick-item" data-id="${u.id}">
-              <div class="user-pick-avatar">${u.avatar_url ? `<img src="${Refad.escapeHtml(u.avatar_url)}" alt="">` : Refad.escapeHtml((u.full_name || '؟').charAt(0))}</div>
-              <div class="user-pick-info">
-                <div class="name">${Refad.escapeHtml(u.full_name)}</div>
-                <div class="role">@${Refad.escapeHtml(u.username || '')}</div>
-              </div>
-              <div class="user-pick-check"><i data-lucide="check"></i></div>
-            </div>
-          `).join('');
+          list.innerHTML = state.users.map(function (u) {
+            return '<div class="user-pick-item" data-id="' + u.id + '">' +
+              '<div class="user-pick-avatar">' + (u.avatar_url ? '<img src="' + esc(u.avatar_url) + '" alt="">' : esc((u.full_name || '؟').charAt(0))) + '</div>' +
+              '<div class="user-pick-info">' +
+                '<div class="name">' + esc(u.full_name) + '</div>' +
+                '<div class="role">@' + esc(u.username || '') + '</div>' +
+              '</div>' +
+              '<div class="user-pick-check"><i data-lucide="check"></i></div>' +
+            '</div>';
+          }).join('');
 
-          list.querySelectorAll('.user-pick-item').forEach(el => {
-            el.addEventListener('click', () => {
+          list.querySelectorAll('.user-pick-item').forEach(function (el) {
+            el.addEventListener('click', function () {
               const id = parseInt(el.dataset.id, 10);
               const type = document.getElementById('newChatType').value;
               if (type === 'direct') {
                 state.selectedUsers.clear();
                 state.selectedUsers.add(id);
-                list.querySelectorAll('.user-pick-item').forEach(x => x.classList.remove('selected'));
+                list.querySelectorAll('.user-pick-item').forEach(function (x) { x.classList.remove('selected'); });
                 el.classList.add('selected');
               } else {
                 if (state.selectedUsers.has(id)) {
@@ -3332,7 +3269,7 @@
       }
 
       async function findExistingDirect(otherId) {
-        const myConvs = state.conversations.filter(c => c.type === 'direct');
+        const myConvs = state.conversations.filter(function (c) { return c.type === 'direct'; });
         for (const c of myConvs) {
           const parts = state.participantsMap[c.id] || [];
           if (parts.length === 2 && parts.includes(myUserId) && parts.includes(otherId)) {
@@ -3349,47 +3286,47 @@
         const input = document.getElementById('searchInput');
         const results = document.getElementById('searchResults');
 
-        const handler = Refad.debounce(v => {
+        const handler = Refad.debounce(function (v) {
           if (!v || v.length < 2) {
             results.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:20px;font-size:12px;">اكتب حرفين على الأقل للبحث</div>';
             return;
           }
           const q = v.toLowerCase();
-          const matches = state.messages.filter(m => (m.content || '').toLowerCase().includes(q));
+          const matches = state.messages.filter(function (m) {
+            return (m.content || '').toLowerCase().includes(q);
+          });
           if (!matches.length) {
             results.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:20px;">لا توجد نتائج</div>';
             return;
           }
-          results.innerHTML = matches.slice(0, 50).map(m => {
+          results.innerHTML = matches.slice(0, 50).map(function (m) {
             const sender = state.usersMap[m.sender_id];
-            return `
-              <div style="padding:12px;border-bottom:1px solid var(--border);cursor:pointer;" data-msg-id="${m.id}">
-                <div style="font-size:11px;color:var(--accent);font-weight:700;margin-bottom:4px;">
-                  ${Refad.escapeHtml(sender?.full_name || '؟')} • ${Refad.format.datetime(m.created_at)}
-                </div>
-                <div style="font-size:13px;line-height:1.5;color:var(--text);">
-                  ${Refad.escapeHtml(m.content || 'ملف')}
-                </div>
-              </div>
-            `;
+            return '<div style="padding:12px;border-bottom:1px solid var(--border);cursor:pointer;" data-msg-id="' + m.id + '">' +
+              '<div style="font-size:11px;color:var(--accent);font-weight:700;margin-bottom:4px;">' +
+                esc((sender && sender.full_name) || '؟') + ' • ' + Refad.format.datetime(m.created_at) +
+              '</div>' +
+              '<div style="font-size:13px;line-height:1.5;color:var(--text);">' +
+                esc(m.content || 'ملف') +
+              '</div>' +
+            '</div>';
           }).join('');
 
-          results.querySelectorAll('[data-msg-id]').forEach(el => {
-            el.addEventListener('click', () => {
+          results.querySelectorAll('[data-msg-id]').forEach(function (el) {
+            el.addEventListener('click', function () {
               document.getElementById('searchModal').classList.remove('show');
               const msgId = parseInt(el.dataset.msgId, 10);
-              const target = document.querySelector(`.msg-row[data-id="${msgId}"]`);
+              const target = document.querySelector('.msg-row[data-id="' + msgId + '"]');
               if (target) {
                 target.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 target.style.transition = 'all 0.3s';
                 target.style.transform = 'scale(1.05)';
-                setTimeout(() => { target.style.transform = ''; }, 1500);
+                setTimeout(function () { target.style.transform = ''; }, 1500);
               }
             });
           });
         }, 250);
 
-        input.addEventListener('input', e => handler(e.target.value));
+        input.addEventListener('input', function (e) { handler(e.target.value); });
       }
 
       // ============================================================
@@ -3404,13 +3341,13 @@
         const input = document.getElementById('msgInput');
         const sendBtn = document.getElementById('sendBtn');
 
-        input.addEventListener('input', () => {
+        input.addEventListener('input', function () {
           autoResize(input);
           sendBtn.disabled = !input.value.trim();
           handleMentionInput({ target: input });
         });
 
-        input.addEventListener('keydown', (e) => {
+        input.addEventListener('keydown', function (e) {
           const dd = document.getElementById('mentionDropdown');
           if (dd.classList.contains('show')) {
             const items = dd.querySelectorAll('.mention-item');
@@ -3419,8 +3356,8 @@
               e.preventDefault();
               const idx = Array.from(items).indexOf(selected);
               const next = e.key === 'ArrowDown' ? Math.min(idx + 1, items.length - 1) : Math.max(idx - 1, 0);
-              items.forEach(x => x.classList.remove('selected'));
-              items[next]?.classList.add('selected');
+              items.forEach(function (x) { x.classList.remove('selected'); });
+              if (items[next]) items[next].classList.add('selected');
               return;
             }
             if (e.key === 'Enter' || e.key === 'Tab') {
@@ -3440,18 +3377,18 @@
           }
           if (e.key === 'Escape' && state.replyTo) cancelReply();
           if (e.key === 'ArrowUp' && !input.value && state.messages.length) {
-            const lastIn = [...state.messages].reverse().find(m => m.sender_id !== myUserId);
+            const lastIn = state.messages.slice().reverse().find(function (m) { return m.sender_id !== myUserId; });
             if (lastIn) setReply(lastIn.id);
           }
         });
 
         sendBtn.addEventListener('click', sendMessage);
 
-        document.getElementById('attachBtn').addEventListener('click', () => {
-          unlockAudio(); // فعّل الصوت عند التفاعل
+        document.getElementById('attachBtn').addEventListener('click', function () {
+          unlockAudio();
           document.getElementById('fileInput').click();
         });
-        document.getElementById('fileInput').addEventListener('change', (e) => {
+        document.getElementById('fileInput').addEventListener('change', function (e) {
           const f = e.target.files[0];
           if (f) sendFile(f);
           e.target.value = '';
@@ -3461,17 +3398,17 @@
       }
 
       function setupLightbox() {
-        document.getElementById('lightboxClose').addEventListener('click', () => {
+        document.getElementById('lightboxClose').addEventListener('click', function () {
           document.getElementById('lightbox').classList.remove('show');
         });
-        document.getElementById('lightbox').addEventListener('click', (e) => {
+        document.getElementById('lightbox').addEventListener('click', function (e) {
           if (e.target.id === 'lightbox') e.target.classList.remove('show');
         });
       }
 
       function bindLightbox() {
-        document.querySelectorAll('[data-lightbox]').forEach(img => {
-          img.addEventListener('click', () => {
+        document.querySelectorAll('[data-lightbox]').forEach(function (img) {
+          img.addEventListener('click', function () {
             document.getElementById('lightboxImg').src = img.dataset.lightbox;
             document.getElementById('lightbox').classList.add('show');
           });
@@ -3482,49 +3419,42 @@
       // Events
       // ============================================================
       function bindEvents() {
-        // Sound toggle
         document.getElementById('soundToggle').addEventListener('click', toggleSound);
-
-        // New chat
         document.getElementById('newChatBtn').addEventListener('click', openNewChatModal);
         document.getElementById('createChatBtn').addEventListener('click', createConversation);
 
-        document.getElementById('newChatType').addEventListener('change', (e) => {
+        document.getElementById('newChatType').addEventListener('change', function (e) {
           document.getElementById('groupTitleGroup').style.display = e.target.value === 'group' ? 'block' : 'none';
           updateCreateBtn();
           state.selectedUsers.clear();
-          document.querySelectorAll('#userPickList .user-pick-item').forEach(x => x.classList.remove('selected'));
+          document.querySelectorAll('#userPickList .user-pick-item').forEach(function (x) { x.classList.remove('selected'); });
         });
         document.getElementById('groupTitle').addEventListener('input', updateCreateBtn);
 
-        // Close modals
-        document.querySelectorAll('[data-close]').forEach(b => {
-          b.addEventListener('click', () => {
-            document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.remove('show'));
+        document.querySelectorAll('[data-close]').forEach(function (b) {
+          b.addEventListener('click', function () {
+            document.querySelectorAll('.modal-backdrop').forEach(function (m) { m.classList.remove('show'); });
           });
         });
-        document.querySelectorAll('.modal-backdrop').forEach(m => {
-          m.addEventListener('click', e => {
+        document.querySelectorAll('.modal-backdrop').forEach(function (m) {
+          m.addEventListener('click', function (e) {
             if (e.target === m) m.classList.remove('show');
           });
         });
 
-        // Search
-        document.getElementById('convSearch').addEventListener('input', Refad.debounce((e) => {
+        document.getElementById('convSearch').addEventListener('input', Refad.debounce(function (e) {
           state.searchTerm = e.target.value.trim();
           renderConversationList();
         }, 200));
 
-        // Refresh
-        document.getElementById('refreshBtn').addEventListener('click', async () => {
+        document.getElementById('refreshBtn').addEventListener('click', async function () {
           Refad.toast.info('جارٍ التحديث...');
           await Promise.all([loadChannels(), loadConversations()]);
           if (state.activeConvId) await loadMessages(state.activeConvId);
           Refad.toast.success('تم التحديث');
         });
 
-        // Back button
-        document.getElementById('backBtn').addEventListener('click', () => {
+        document.getElementById('backBtn').addEventListener('click', function () {
           document.getElementById('convPanel').classList.remove('hidden');
           document.getElementById('chatActive').style.display = 'none';
           document.getElementById('chatEmpty').style.display = 'flex';
@@ -3532,14 +3462,13 @@
           state.activeConv = null;
         });
 
-        // Chat info
-        document.getElementById('chatInfoBtn').addEventListener('click', () => {
+        document.getElementById('chatInfoBtn').addEventListener('click', function () {
           if (!state.activeConv) return;
           if (state.isChannel) {
             Refad.alert.info('قناة عامة', 'هذه القناة متاحة لجميع الموظفين للتواصل.');
           } else {
             const parts = state.participantsMap[state.activeConv.id] || [];
-            const names = parts.map(id => state.usersMap[id]?.full_name || '؟');
+            const names = parts.map(function (id) { return (state.usersMap[id] && state.usersMap[id].full_name) || '؟'; });
             Refad.alert.info(
               state.activeConv.type === 'group' ? (state.activeConv.title || 'مجموعة') : 'محادثة مباشرة',
               'المشاركون: ' + names.join('، ')
@@ -3547,20 +3476,17 @@
           }
         });
 
-        // Pinned
         document.getElementById('pinnedBtn').addEventListener('click', openPinnedModal);
         document.getElementById('pinnedBar').addEventListener('click', openPinnedModal);
 
-        // Search in chat
-        document.getElementById('searchInChatBtn').addEventListener('click', () => {
+        document.getElementById('searchInChatBtn').addEventListener('click', function () {
           document.getElementById('searchInput').value = '';
           document.getElementById('searchResults').innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:20px;font-size:12px;">اكتب حرفين على الأقل للبحث</div>';
           document.getElementById('searchModal').classList.add('show');
-          setTimeout(() => document.getElementById('searchInput').focus(), 100);
+          setTimeout(function () { document.getElementById('searchInput').focus(); }, 100);
         });
 
-        // Chat body actions
-        document.getElementById('chatBody').addEventListener('click', (e) => {
+        document.getElementById('chatBody').addEventListener('click', function (e) {
           const replyBtn = e.target.closest('[data-reply]');
           if (replyBtn) { setReply(parseInt(replyBtn.dataset.reply, 10)); return; }
 
@@ -3570,11 +3496,11 @@
           const copyBtn = e.target.closest('[data-copy]');
           if (copyBtn) {
             const id = parseInt(copyBtn.dataset.copy, 10);
-            const m = state.messages.find(x => x.id === id);
+            const m = state.messages.find(function (x) { return x.id === id; });
             if (m) {
-              navigator.clipboard.writeText(m.content || '').then(() => {
+              navigator.clipboard.writeText(m.content || '').then(function () {
                 Refad.toast.success('تم نسخ الرسالة');
-              }).catch(() => {
+              }).catch(function () {
                 Refad.toast.error('فشل النسخ');
               });
             }
@@ -3588,8 +3514,7 @@
           }
         });
 
-        // Start chat from profile
-        document.getElementById('startChatFromProfileBtn').addEventListener('click', async () => {
+        document.getElementById('startChatFromProfileBtn').addEventListener('click', async function () {
           if (!state.viewingUserId) return;
           document.getElementById('userProfileModal').classList.remove('show');
           const existing = await findExistingDirect(state.viewingUserId);
@@ -3599,15 +3524,14 @@
             openConversation(existing.id, false);
           } else {
             await openNewChatModal();
-            const item = document.querySelector(`#userPickList [data-id="${state.viewingUserId}"]`);
+            const item = document.querySelector('#userPickList [data-user-id="' + state.viewingUserId + '"]');
             if (item) item.click();
           }
         });
 
-        // Keyboard shortcuts
-        document.addEventListener('keydown', (e) => {
+        document.addEventListener('keydown', function (e) {
           if (e.key === 'Escape') {
-            document.querySelectorAll('.modal-backdrop.show').forEach(m => m.classList.remove('show'));
+            document.querySelectorAll('.modal-backdrop.show').forEach(function (m) { m.classList.remove('show'); });
             document.getElementById('lightbox').classList.remove('show');
             document.getElementById('emojiPicker').classList.remove('show');
             closeMentionDropdown();
@@ -3623,8 +3547,9 @@
       // Init
       // ============================================================
       async function init() {
-        buildSidebar();
+        Refad.buildMenu('chat.html');
         fillUser();
+        applyIdentity();
         setupTheme();
         setupSidebarMobile();
         setupUserMenu();
@@ -3635,6 +3560,7 @@
         setupLightbox();
         setupDragDrop();
         setupSearchModal();
+        setupRealtimeTheme();
         bindEvents();
         updateSoundIcon();
 
@@ -3646,18 +3572,15 @@
 
         const cid = parseInt(Refad.getParam('id'), 10);
         if (cid) {
-          const isChannel = state.channels.some(c => c.id === cid);
-          if (isChannel) {
-            document.querySelector('.conv-tab[data-tab="channels"]').click();
-          } else {
-            document.querySelector('.conv-tab[data-tab="chats"]').click();
-          }
+          const isChannel = state.channels.some(function (c) { return c.id === cid; });
+          if (isChannel) document.querySelector('.conv-tab[data-tab="channels"]').click();
+          else document.querySelector('.conv-tab[data-tab="chats"]').click();
           await openConversation(cid, isChannel);
         }
 
         if (Refad.registerServiceWorker) Refad.registerServiceWorker();
 
-        console.log('%c[Refad] Chat ready (PRO v3 - Sound + Fixed Upload)', 'color:#14B8A6;font-weight:bold');
+        console.log('%c[Refad] Chat v3 ready (Theme Sync + Settings + buildMenu)', 'color:#14B8A6;font-weight:bold;font-size:14px');
       }
 
       if (document.readyState === 'loading') {
@@ -3671,4 +3594,3 @@
 
 </body>
 </html>
-

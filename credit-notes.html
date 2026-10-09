@@ -1,0 +1,2145 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0B2C4D">
+  <title>إشعارات الدائن والمدين - رفاد</title>
+
+  <link rel="icon" type="image/png" href="logo.png">
+  <link rel="manifest" href="manifest.json">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --primary: #0B2C4D;
+      --primary-light: #1e4a73;
+      --accent: #14B8A6;
+      --accent-dark: #0d9488;
+      --gold: #F59E0B;
+      --bg: #F1F5F9;
+      --card: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --danger: #ef4444;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --info: #3b82f6;
+      --purple: #8b5cf6;
+      --sidebar-bg: #0B2C4D;
+      --sidebar-text: #cbd5e1;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+      --shadow: 0 4px 20px rgba(11, 44, 77, 0.08);
+      --shadow-lg: 0 10px 40px rgba(11, 44, 77, 0.12);
+      --radius: 14px;
+      --radius-sm: 10px;
+      --sidebar-w: 260px;
+      --topbar-h: 64px;
+    }
+
+    [data-theme="dark"] {
+      --bg: #0a1628;
+      --card: #0f2137;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --border: #1e3a5f;
+      --sidebar-bg: #061a2e;
+      --sidebar-text: #94a3b8;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Cairo', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      transition: background 0.3s, color 0.3s;
+    }
+
+    body { display: flex; min-height: 100vh; overflow-x: hidden; }
+
+    /* ============ Sidebar ============ */
+    .sidebar {
+      width: var(--sidebar-w);
+      height: 100vh;
+      background: var(--sidebar-bg);
+      color: var(--sidebar-text);
+      position: fixed;
+      top: 0; right: 0;
+      z-index: 100;
+      display: flex; flex-direction: column;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: -4px 0 20px rgba(0,0,0,0.1);
+    }
+    .sidebar-header {
+      padding: 20px 22px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      display: flex; align-items: center; gap: 14px;
+      height: var(--topbar-h);
+      box-sizing: border-box;
+    }
+    .sidebar-logo {
+      width: 40px; height: 40px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 4px 12px rgba(20,184,166,0.4);
+      overflow: hidden;
+    }
+    .sidebar-logo img { width: 70%; height: 70%; object-fit: contain; }
+    .sidebar-logo .fallback { color: white; font-weight: 800; font-size: 18px; }
+    .sidebar-brand h2 { color: white; font-size: 20px; font-weight: 800; line-height: 1.2; }
+    .sidebar-brand p { font-size: 10px; color: var(--sidebar-text); opacity: 0.7; font-weight: 500; margin-top: 2px; }
+    .sidebar-nav { flex: 1; overflow-y: auto; padding: 12px 0; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.15) transparent; }
+    .sidebar-nav::-webkit-scrollbar { width: 5px; }
+    .sidebar-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 10px; }
+    .nav-section { padding: 8px 20px 4px; font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 1px; margin-top: 8px; }
+    .nav-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 11px 22px;
+      color: var(--sidebar-text);
+      text-decoration: none;
+      font-size: 14px; font-weight: 500;
+      border-right: 3px solid transparent;
+      transition: all 0.2s;
+      position: relative;
+      cursor: pointer;
+    }
+    .nav-item:hover { background: rgba(255,255,255,0.05); color: white; border-right-color: rgba(20,184,166,0.5); }
+    .nav-item.active { background: rgba(20,184,166,0.12); color: white; border-right-color: var(--accent); font-weight: 600; }
+    .nav-item.active::before { content: ''; position: absolute; right: 0; top: 50%; transform: translateY(-50%); width: 3px; height: 60%; background: var(--accent); border-radius: 0 4px 4px 0; }
+    .nav-item i, .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; opacity: 0.85; }
+    .nav-item .badge { margin-right: auto; background: var(--danger); color: white; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
+    .nav-item .badge.teal { background: var(--accent); }
+    .nav-item .badge.gold { background: var(--gold); }
+    .nav-item .badge.new { background: var(--purple); }
+
+    /* ============ Main ============ */
+    .main { flex: 1; margin-right: var(--sidebar-w); min-width: 0; display: flex; flex-direction: column; }
+    .topbar {
+      height: var(--topbar-h);
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 16px;
+      padding: 0 24px;
+      position: sticky; top: 0;
+      z-index: 50;
+      box-shadow: var(--shadow-sm);
+    }
+    .menu-toggle { display: none; background: transparent; border: none; color: var(--text); cursor: pointer; padding: 8px; border-radius: 8px; }
+    .menu-toggle:hover { background: var(--bg); }
+    .topbar-title { font-size: 18px; font-weight: 700; color: var(--text); flex-shrink: 0; }
+    .topbar-actions { display: flex; align-items: center; gap: 8px; margin-right: auto; }
+    .icon-btn {
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      position: relative;
+      transition: all 0.2s;
+    }
+    .icon-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .icon-btn i, .icon-btn svg { width: 18px; height: 18px; }
+    .icon-btn .dot { position: absolute; top: 8px; left: 8px; width: 8px; height: 8px; background: var(--danger); border-radius: 50%; border: 2px solid var(--card); }
+    .user-menu {
+      display: flex; align-items: center; gap: 10px;
+      padding: 5px 12px 5px 5px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.2s;
+      border: 1px solid var(--border);
+      background: var(--card);
+    }
+    .user-menu:hover { background: var(--bg); }
+    .user-avatar {
+      width: 34px; height: 34px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-weight: 700; font-size: 14px;
+      flex-shrink: 0; overflow: hidden;
+    }
+    .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .user-info { display: flex; flex-direction: column; line-height: 1.2; }
+    .user-info .name { font-size: 13px; font-weight: 700; color: var(--text); }
+    .user-info .role { font-size: 11px; color: var(--text-muted); }
+    .dropdown { position: absolute; top: calc(100% + 8px); left: 0; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: var(--shadow-lg); min-width: 200px; padding: 6px; opacity: 0; visibility: hidden; transform: translateY(-8px); transition: all 0.2s; z-index: 100; }
+    .dropdown.show { opacity: 1; visibility: visible; transform: translateY(0); }
+    .dropdown-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; color: var(--text); font-size: 13px; font-weight: 500; cursor: pointer; transition: background 0.15s; text-decoration: none; }
+    .dropdown-item:hover { background: var(--bg); }
+    .dropdown-item.danger { color: var(--danger); }
+    .dropdown-item.danger:hover { background: rgba(239,68,68,0.08); }
+    .dropdown-item i { width: 16px; height: 16px; }
+    .dropdown-divider { height: 1px; background: var(--border); margin: 6px 0; }
+
+    /* ============ Content ============ */
+    .content { padding: 24px; flex: 1; }
+    .page-head {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .page-head h1 { font-size: 24px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+    .page-head p { font-size: 13px; color: var(--text-muted); }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 18px;
+      font-family: inherit;
+      font-size: 14px; font-weight: 600;
+      border-radius: var(--radius-sm);
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn i { width: 16px; height: 16px; }
+    .btn-primary { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; }
+    .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(20,184,166,0.35); }
+    .btn-outline { background: var(--card); color: var(--text); border: 1px solid var(--border); }
+    .btn-outline:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+    .btn-success { background: var(--success); color: white; }
+    .btn-success:hover:not(:disabled) { background: #047857; }
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-danger:hover:not(:disabled) { background: #b91c1c; }
+    .btn-gold { background: var(--gold); color: white; }
+    .btn-gold:hover:not(:disabled) { background: #d97706; }
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+    /* ============ Stats ============ */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      display: flex; align-items: center; gap: 14px;
+      box-shadow: var(--shadow-sm);
+      position: relative;
+      overflow: hidden;
+    }
+    .stat-card::before { content: ''; position: absolute; top: 0; right: 0; width: 4px; height: 100%; background: var(--accent); }
+    .stat-card.success::before { background: var(--success); }
+    .stat-card.danger::before { background: var(--danger); }
+    .stat-card.gold::before { background: var(--gold); }
+    .stat-card.info::before { background: var(--info); }
+    .stat-card.purple::before { background: var(--purple); }
+    .stat-icon {
+      width: 48px; height: 48px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      background: rgba(20,184,166,0.12);
+      color: var(--accent);
+    }
+    .stat-icon.success { background: rgba(16,185,129,0.12); color: var(--success); }
+    .stat-icon.danger { background: rgba(239,68,68,0.12); color: var(--danger); }
+    .stat-icon.gold { background: rgba(245,158,11,0.12); color: var(--gold); }
+    .stat-icon.info { background: rgba(59,130,246,0.12); color: var(--info); }
+    .stat-icon.purple { background: rgba(139,92,246,0.12); color: var(--purple); }
+    .stat-icon i { width: 22px; height: 22px; }
+    .stat-body { flex: 1; min-width: 0; }
+    .stat-body .label { font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px; }
+    .stat-body .value { font-size: 20px; font-weight: 800; color: var(--text); line-height: 1.2; overflow-wrap: anywhere; }
+    .stat-body .sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+    /* ============ Toolbar ============ */
+    .toolbar {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      margin-bottom: 16px;
+      display: flex; gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+      box-shadow: var(--shadow-sm);
+    }
+    .search-box { position: relative; flex: 1; min-width: 220px; }
+    .search-box input {
+      width: 100%;
+      padding: 10px 42px 10px 14px;
+      font-family: inherit;
+      font-size: 14px;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      outline: none;
+      transition: all 0.2s;
+    }
+    .search-box input:focus { border-color: var(--accent); background: var(--card); box-shadow: 0 0 0 3px rgba(20,184,166,0.1); }
+    .search-box i { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--text-muted); pointer-events: none; }
+    .filter-select {
+      padding: 10px 14px;
+      font-family: inherit;
+      font-size: 13px; font-weight: 600;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      outline: none;
+      cursor: pointer;
+      min-width: 140px;
+    }
+    .filter-select:focus { border-color: var(--accent); background: var(--card); }
+
+    /* ============ Type Tabs ============ */
+    .type-tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 6px;
+      margin-bottom: 16px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .type-tabs::-webkit-scrollbar { display: none; }
+    .type-tab {
+      display: flex; align-items: center; justify-content: center;
+      gap: 8px;
+      padding: 12px 20px;
+      font-family: inherit;
+      font-size: 13px; font-weight: 700;
+      color: var(--text-muted);
+      background: transparent;
+      border: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .type-tab:hover { background: var(--bg); color: var(--text); }
+    .type-tab.active { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; box-shadow: 0 4px 12px rgba(20,184,166,0.3); }
+    .type-tab i { width: 16px; height: 16px; }
+    .type-tab .count-badge {
+      background: rgba(255,255,255,0.2);
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+    }
+    .type-tab:not(.active) .count-badge { background: rgba(148,163,184,0.2); }
+
+    /* ============ Table ============ */
+    .table-wrap {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+    }
+    .table-scroll { overflow-x: auto; }
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      min-width: 1100px;
+    }
+    table.data-table thead { background: var(--bg); border-bottom: 1px solid var(--border); }
+    table.data-table th {
+      text-align: right;
+      padding: 12px 10px;
+      font-size: 11px; font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+    }
+    table.data-table tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+      cursor: pointer;
+    }
+    table.data-table tbody tr:hover { background: var(--bg); }
+    table.data-table tbody tr:last-child { border-bottom: none; }
+    table.data-table td { padding: 11px 10px; color: var(--text); vertical-align: middle; }
+
+    .note-number {
+      font-family: 'Courier New', monospace;
+      font-weight: 800;
+      color: var(--accent);
+      font-size: 13px;
+    }
+
+    .note-type-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px; font-weight: 800;
+      white-space: nowrap;
+    }
+    .note-type-badge.credit { background: rgba(16,185,129,0.12); color: var(--success); }
+    .note-type-badge.debit { background: rgba(239,68,68,0.12); color: var(--danger); }
+    .note-type-badge i { width: 12px; height: 12px; }
+
+    .party-cell { display: flex; align-items: center; gap: 8px; }
+    .party-avatar {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: white;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 12px;
+      flex-shrink: 0;
+    }
+    .party-info { min-width: 0; }
+    .party-info .name { font-weight: 700; font-size: 13px; }
+    .party-info .sub { font-size: 10px; color: var(--text-muted); }
+
+    .amount-cell { font-weight: 800; font-size: 14px; }
+    .amount-cell.credit { color: var(--success); }
+    .amount-cell.debit { color: var(--danger); }
+
+    .status-pill {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px; font-weight: 700;
+      white-space: nowrap;
+    }
+    .status-pill.active { background: rgba(16,185,129,0.12); color: var(--success); }
+    .status-pill.applied { background: rgba(59,130,246,0.12); color: var(--info); }
+    .status-pill.cancelled { background: rgba(148,163,184,0.15); color: var(--text-muted); }
+
+    .action-btn {
+      width: 30px; height: 30px;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text-muted);
+      cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+      margin: 0 1px;
+      text-decoration: none;
+    }
+    .action-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .action-btn.success:hover { border-color: var(--success); color: var(--success); background: rgba(16,185,129,0.06); }
+    .action-btn.danger:hover { border-color: var(--danger); color: var(--danger); background: rgba(239,68,68,0.06); }
+    .action-btn i { width: 14px; height: 14px; }
+
+    /* ============ Empty / Loader ============ */
+    .empty-state {
+      padding: 60px 20px;
+      text-align: center;
+      color: var(--text-muted);
+    }
+    .empty-state i { width: 52px; height: 52px; opacity: 0.3; margin-bottom: 14px; }
+    .empty-state h3 { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+    .empty-state p { font-size: 13px; }
+
+    .loader { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+    .loader i { width: 40px; height: 40px; animation: spin 1s linear infinite; color: var(--accent); margin-bottom: 12px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ============ Modal ============ */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(11, 44, 77, 0.5);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      display: none;
+      align-items: center; justify-content: center;
+      padding: 20px;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .modal-backdrop.show { display: flex; opacity: 1; }
+    .modal {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-lg);
+      width: 100%;
+      max-width: 700px;
+      max-height: 90vh;
+      display: flex; flex-direction: column;
+      transform: scale(0.95);
+      transition: transform 0.2s;
+      overflow: hidden;
+    }
+    .modal.modal-lg { max-width: 900px; }
+    .modal-backdrop.show .modal { transform: scale(1); }
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+    .modal-header h3 { font-size: 16px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px; }
+    .modal-header h3 i { width: 18px; height: 18px; color: var(--accent); }
+    .modal-close {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+    }
+    .modal-close:hover { background: var(--bg); color: var(--danger); }
+    .modal-close i { width: 18px; height: 18px; }
+    .modal-body { padding: 20px; overflow-y: auto; flex: 1; min-height: 0; }
+    .modal-body::-webkit-scrollbar { width: 8px; }
+    .modal-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+    .modal-footer {
+      padding: 14px 20px;
+      border-top: 1px solid var(--border);
+      display: flex; gap: 10px; justify-content: flex-end;
+      background: var(--bg);
+      flex-shrink: 0;
+    }
+
+    /* ============ Form ============ */
+    .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+    .form-group { display: flex; flex-direction: column; }
+    .form-group.full { grid-column: 1 / -1; }
+    .form-group label {
+      font-size: 12px; font-weight: 700;
+      color: var(--text);
+      margin-bottom: 6px;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .form-group label .req { color: var(--danger); }
+    .form-group label .hint { color: var(--text-muted); font-weight: 500; font-size: 11px; margin-right: auto; }
+    .form-group input, .form-group select, .form-group textarea {
+      padding: 10px 14px;
+      font-family: inherit;
+      font-size: 14px;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      outline: none;
+      transition: all 0.2s;
+      width: 100%;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      border-color: var(--accent);
+      background: var(--card);
+      box-shadow: 0 0 0 3px rgba(20,184,166,0.1);
+    }
+    .form-group textarea { resize: vertical; min-height: 70px; }
+    .form-group input:disabled, .form-group select:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .form-section-title {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--purple);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 10px 0 6px;
+      border-bottom: 1px solid var(--border);
+      margin: 6px 0 12px;
+      display: flex; align-items: center; gap: 6px;
+      grid-column: 1 / -1;
+    }
+    .form-section-title i { width: 14px; height: 14px; }
+
+    /* ============ Note Type Picker ============ */
+    .type-picker {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      grid-column: 1 / -1;
+    }
+    .type-option {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 6px;
+      padding: 16px 10px;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--bg);
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+    .type-option:hover { border-color: var(--accent); }
+    .type-option.selected {
+      border-color: var(--accent);
+      background: rgba(20,184,166,0.08);
+      box-shadow: 0 0 0 3px rgba(20,184,166,0.1);
+    }
+    .type-option.credit.selected { border-color: var(--success); background: rgba(16,185,129,0.08); box-shadow: 0 0 0 3px rgba(16,185,129,0.1); }
+    .type-option.debit.selected { border-color: var(--danger); background: rgba(239,68,68,0.08); box-shadow: 0 0 0 3px rgba(239,68,68,0.1); }
+    .type-option i { width: 26px; height: 26px; color: var(--text-muted); }
+    .type-option.credit.selected i { color: var(--success); }
+    .type-option.debit.selected i { color: var(--danger); }
+    .type-option span { font-size: 13px; font-weight: 800; color: var(--text); }
+    .type-option small { font-size: 10px; font-weight: 500; color: var(--text-muted); line-height: 1.4; }
+
+    /* ============ Info Box ============ */
+    .info-box {
+      grid-column: 1 / -1;
+      background: linear-gradient(135deg, rgba(139,92,246,0.06), rgba(20,184,166,0.04));
+      border: 1.5px solid rgba(139,92,246,0.2);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 12px;
+      line-height: 1.7;
+      display: flex; align-items: flex-start; gap: 8px;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    .info-box i { width: 16px; height: 16px; color: var(--purple); flex-shrink: 0; margin-top: 2px; }
+
+    /* ============ Balance Info ============ */
+    .balance-info {
+      grid-column: 1 / -1;
+      background: rgba(59,130,246,0.06);
+      border: 1.5px solid rgba(59,130,246,0.2);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--info);
+      display: none;
+      align-items: center;
+      gap: 8px;
+    }
+    .balance-info.show { display: flex; }
+    .balance-info i { width: 16px; height: 16px; flex-shrink: 0; }
+    .balance-info strong { color: var(--text); }
+
+    /* ============ Overlay ============ */
+    .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; opacity: 0; transition: opacity 0.3s; }
+    .overlay.show { display: block; opacity: 1; }
+
+    /* ============ Responsive ============ */
+    @media (max-width: 1024px) {
+      .sidebar { transform: translateX(100%); }
+      .sidebar.open { transform: translateX(0); }
+      .main { margin-right: 0; }
+      .menu-toggle { display: flex; }
+      .user-info { display: none; }
+    }
+    @media (max-width: 640px) {
+      .content { padding: 16px; }
+      .topbar { padding: 0 14px; gap: 10px; }
+      .topbar-title { font-size: 15px; }
+      .page-head { flex-direction: column; align-items: stretch; }
+      .page-head h1 { font-size: 20px; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .stat-card { padding: 14px; }
+      .stat-icon { width: 40px; height: 40px; }
+      .stat-body .value { font-size: 16px; }
+      .form-grid { grid-template-columns: 1fr; }
+      .modal-footer { flex-direction: column-reverse; }
+      .modal-footer .btn { width: 100%; justify-content: center; }
+      .type-tab span:not(.count-badge) { display: none; }
+      .type-tab { padding: 10px; flex: 1; }
+      .type-picker { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo" id="sidebarLogo">
+        <img src="logo.png" alt="رفاد" id="sidebarLogoImg" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=fallback>R</span>';">
+      </div>
+      <div class="sidebar-brand">
+        <h2 id="sidebarBrandName">رفاد</h2>
+        <p id="sidebarBrandDesc">نظام إدارة الأدوية</p>
+      </div>
+    </div>
+    <nav class="sidebar-nav" id="sidebarNav"></nav>
+  </aside>
+
+  <div class="overlay" id="overlay"></div>
+
+  <!-- Main -->
+  <div class="main">
+    <header class="topbar">
+      <button class="menu-toggle" id="menuToggle"><i data-lucide="menu"></i></button>
+      <div class="topbar-title">إشعارات الدائن والمدين</div>
+      <div class="topbar-actions">
+        <button class="icon-btn" id="themeToggle" title="الوضع الليلي/النهاري">
+          <i data-lucide="moon" id="themeIcon"></i>
+        </button>
+        <button class="icon-btn" id="notifBtn" title="الإشعارات" style="position:relative;">
+          <i data-lucide="bell"></i>
+          <span class="dot" id="notifDot" style="display:none;"></span>
+        </button>
+        <div style="position:relative;">
+          <div class="user-menu" id="userMenu">
+            <div class="user-avatar" id="userAvatar">م</div>
+            <div class="user-info">
+              <span class="name" id="userName">—</span>
+              <span class="role" id="userRole">—</span>
+            </div>
+            <i data-lucide="chevron-down" style="width:14px;height:14px;opacity:0.5;"></i>
+          </div>
+          <div class="dropdown" id="userDropdown">
+            <a href="company-settings.html" class="dropdown-item"><i data-lucide="settings"></i> الإعدادات</a>
+            <a href="employees.html" class="dropdown-item"><i data-lucide="user-cog"></i> الملف الشخصي</a>
+            <div class="dropdown-divider"></div>
+            <div class="dropdown-item danger" id="logoutBtn"><i data-lucide="log-out"></i> تسجيل الخروج</div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="content">
+
+      <div class="page-head">
+        <div>
+          <h1>إشعارات الدائن والمدين</h1>
+          <p>إدارة الإشعارات المالية للعملاء والموردين (خصومات، تعويضات، تسويات)</p>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn btn-outline" id="refreshBtn">
+            <i data-lucide="refresh-cw"></i> تحديث
+          </button>
+          <button class="btn btn-outline" id="exportBtn">
+            <i data-lucide="download"></i> تصدير Excel
+          </button>
+          <button class="btn btn-primary" id="addBtn">
+            <i data-lucide="plus"></i> إشعار جديد
+          </button>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon"><i data-lucide="file-text"></i></div>
+          <div class="stat-body">
+            <div class="label">إجمالي الإشعارات</div>
+            <div class="value" id="statTotal">0</div>
+            <div class="sub" id="statTotalSub">—</div>
+          </div>
+        </div>
+        <div class="stat-card success">
+          <div class="stat-icon success"><i data-lucide="arrow-down-circle"></i></div>
+          <div class="stat-body">
+            <div class="label">إشعارات دائن</div>
+            <div class="value" id="statCredit">0.00</div>
+            <div class="sub" id="statCreditSub">—</div>
+          </div>
+        </div>
+        <div class="stat-card danger">
+          <div class="stat-icon danger"><i data-lucide="arrow-up-circle"></i></div>
+          <div class="stat-body">
+            <div class="label">إشعارات مدين</div>
+            <div class="value" id="statDebit">0.00</div>
+            <div class="sub" id="statDebitSub">—</div>
+          </div>
+        </div>
+        <div class="stat-card info">
+          <div class="stat-icon info"><i data-lucide="users"></i></div>
+          <div class="stat-body">
+            <div class="label">على العملاء</div>
+            <div class="value" id="statCustomers">0.00</div>
+            <div class="sub" id="statCustomersSub">—</div>
+          </div>
+        </div>
+        <div class="stat-card gold">
+          <div class="stat-icon gold"><i data-lucide="truck"></i></div>
+          <div class="stat-body">
+            <div class="label">على الموردين</div>
+            <div class="value" id="statSuppliers">0.00</div>
+            <div class="sub" id="statSuppliersSub">—</div>
+          </div>
+        </div>
+        <div class="stat-card purple">
+          <div class="stat-icon purple"><i data-lucide="check-circle"></i></div>
+          <div class="stat-body">
+            <div class="label">مُطبّقة</div>
+            <div class="value" id="statApplied">0</div>
+            <div class="sub" id="statAppliedSub">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Type Tabs -->
+      <div class="type-tabs">
+        <button class="type-tab active" data-type="">
+          <i data-lucide="list"></i>
+          <span>الكل</span>
+          <span class="count-badge" id="countAll">0</span>
+        </button>
+        <button class="type-tab" data-type="credit">
+          <i data-lucide="arrow-down-circle"></i>
+          <span>دائن (Credit)</span>
+          <span class="count-badge" id="countCredit">0</span>
+        </button>
+        <button class="type-tab" data-type="debit">
+          <i data-lucide="arrow-up-circle"></i>
+          <span>مدين (Debit)</span>
+          <span class="count-badge" id="countDebit">0</span>
+        </button>
+      </div>
+
+      <!-- Toolbar -->
+      <div class="toolbar">
+        <div class="search-box">
+          <input type="text" id="searchInput" placeholder="ابحث برقم الإشعار أو السبب أو الطرف...">
+          <i data-lucide="search"></i>
+        </div>
+        <select class="filter-select" id="filterParty">
+          <option value="">كل الأطراف</option>
+          <option value="customer">عملاء فقط</option>
+          <option value="supplier">موردين فقط</option>
+        </select>
+        <select class="filter-select" id="filterStatus">
+          <option value="">كل الحالات</option>
+          <option value="active">نشط</option>
+          <option value="applied">مُطبّق</option>
+          <option value="cancelled">ملغي</option>
+        </select>
+      </div>
+
+      <!-- Table -->
+      <div class="table-wrap">
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th style="width:60px;">#</th>
+                <th>رقم الإشعار</th>
+                <th>النوع</th>
+                <th>الطرف</th>
+                <th>المرجع</th>
+                <th>السبب</th>
+                <th>التاريخ</th>
+                <th>المبلغ</th>
+                <th>الحالة</th>
+                <th style="width:140px;">إجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody">
+              <tr><td colspan="10"><div class="loader"><i data-lucide="loader-2"></i><p>جارٍ التحميل...</p></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- ========== Modal: Add/Edit Note ========== -->
+  <div class="modal-backdrop" id="noteModal">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <h3><i data-lucide="file-plus"></i> <span id="modalTitle">إشعار جديد</span></h3>
+        <button class="modal-close" data-close><i data-lucide="x"></i></button>
+      </div>
+      <form id="noteForm">
+        <div class="modal-body">
+          <div class="form-grid">
+
+            <div class="form-section-title"><i data-lucide="tag"></i> نوع الإشعار</div>
+
+            <div class="type-picker" id="noteTypePicker">
+              <div class="type-option credit" data-type="credit">
+                <i data-lucide="arrow-down-circle"></i>
+                <span>إشعار دائن</span>
+                <small>يقلل رصيد الطرف (خصم / مرتجع / تعويض)</small>
+              </div>
+              <div class="type-option debit" data-type="debit">
+                <i data-lucide="arrow-up-circle"></i>
+                <span>إشعار مدين</span>
+                <small>يزيد رصيد الطرف (رسوم / فوائد / تصحيح)</small>
+              </div>
+            </div>
+            <input type="hidden" id="cNoteType" value="credit" required>
+
+            <div class="form-section-title"><i data-lucide="user"></i> الطرف</div>
+
+            <div class="form-group">
+              <label>نوع الطرف <span class="req">*</span></label>
+              <select id="cPartyType" required>
+                <option value="customer">عميل</option>
+                <option value="supplier">مورد</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>الطرف <span class="req">*</span></label>
+              <select id="cPartyId" required>
+                <option value="">— اختر —</option>
+              </select>
+            </div>
+
+            <div class="balance-info" id="balanceInfo">
+              <i data-lucide="info"></i>
+              <div>رصيد الطرف الحالي: <strong id="balanceValue">—</strong></div>
+            </div>
+
+            <div class="form-section-title"><i data-lucide="info"></i> بيانات الإشعار</div>
+
+            <div class="info-box">
+              <i data-lucide="info"></i>
+              <div>
+                <b>إشعار الدائن:</b> يقلل المبلغ المستحق على الطرف (خصم/مرتجع).<br>
+                <b>إشعار المدين:</b> يزيد المبلغ المستحق على الطرف (رسوم/تصحيح).<br>
+                <b>ملاحظة:</b> الإشعار يُسجل فقط، والتطبيق على الرصيد يحصل عند الضغط على "تطبيق".
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>رقم الإشعار <span class="hint">يُولّد تلقائياً إن تُرك فارغاً</span></label>
+              <input type="text" id="cNoteNumber" maxlength="50" placeholder="CN-2025-00001">
+            </div>
+
+            <div class="form-group">
+              <label>المبلغ <span class="req">*</span></label>
+              <input type="number" id="cAmount" min="0.01" step="0.01" placeholder="0.00" required>
+            </div>
+
+            <div class="form-group">
+              <label>تاريخ الإشعار</label>
+              <input type="date" id="cNoteDate">
+            </div>
+
+            <div class="form-group">
+              <label>الضريبة (اختياري)</label>
+              <input type="number" id="cTaxAmount" min="0" step="0.01" value="0" placeholder="0.00">
+            </div>
+
+            <div class="form-group full">
+              <label>السبب <span class="req">*</span></label>
+              <input type="text" id="cReason" maxlength="200" placeholder="مثال: مرتجع بضاعة تالفة، خصم تعاقدي، تصحيح فاتورة" required>
+            </div>
+
+            <div class="form-section-title"><i data-lucide="link"></i> المرجع (اختياري)</div>
+
+            <div class="form-group full" id="refInvoiceGroup" style="display:none;">
+              <label>فاتورة البيع المرجعية <span class="hint" id="refInvoiceHint"></span></label>
+              <select id="cRefInvoice">
+                <option value="">— بدون مرجع —</option>
+              </select>
+            </div>
+
+            <div class="form-group full" id="refReceiptGroup" style="display:none;">
+              <label>استلام المشتريات المرجعي <span class="hint" id="refReceiptHint"></span></label>
+              <select id="cRefReceipt">
+                <option value="">— بدون مرجع —</option>
+              </select>
+            </div>
+
+            <div class="form-section-title"><i data-lucide="edit-3"></i> ملاحظات</div>
+
+            <div class="form-group full">
+              <label>ملاحظات إضافية</label>
+              <textarea id="cNotes" maxlength="500" placeholder="تفاصيل إضافية..."></textarea>
+            </div>
+
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" data-close>إلغاء</button>
+          <button type="submit" class="btn btn-primary" id="submitBtn">
+            <i data-lucide="save"></i> <span id="submitText">إضافة الإشعار</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========== Modal: Details ========== -->
+  <div class="modal-backdrop" id="detailsModal">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <h3><i data-lucide="file-text"></i> تفاصيل الإشعار</h3>
+        <button class="modal-close" data-close><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body" id="detailsModalBody"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" data-close>إغلاق</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       SCRIPTS — الترتيب مهم جداً
+       ============================================================ -->
+  <script src="refad-core.js"></script>
+  <script src="refad-auth.js"></script>
+  <script src="refad-theme-sync.js"></script>
+  <script src="refad-settings.js"></script>
+
+  <script>
+    (function () {
+      'use strict';
+
+      // ============================================================
+      // 0) Safe Wrappers
+      // ============================================================
+      const SafeSettings = {
+        locale: {
+          formatMoney: function (v) {
+            try {
+              if (window.RefadSettings?.locale?.formatMoney) {
+                return RefadSettings.locale.formatMoney(v);
+              }
+            } catch (e) {}
+            return Refad.format.money(v);
+          }
+        },
+        identity: {
+          getSystemName: function () {
+            try {
+              if (window.RefadSettings?.identity?.getSystemName) {
+                return RefadSettings.identity.getSystemName();
+              }
+            } catch (e) {}
+            return 'رفاد';
+          },
+          getTagline: function () {
+            try {
+              if (window.RefadSettings?.identity?.getTagline) {
+                return RefadSettings.identity.getTagline();
+              }
+            } catch (e) {}
+            return 'نظام إدارة الأدوية';
+          },
+          getLogoUrl: function () {
+            try {
+              if (window.RefadSettings?.identity?.getLogoUrl) {
+                return RefadSettings.identity.getLogoUrl();
+              }
+            } catch (e) {}
+            return null;
+          }
+        }
+      };
+
+      // ============================================================
+      // 1) Guard
+      // ============================================================
+      const session = Refad.Auth.guardPage('company.owner');
+      if (!session) return;
+
+      // ============================================================
+      // 2) Constants
+      // ============================================================
+      const NOTE_TYPE_LABELS = {
+        credit: 'إشعار دائن',
+        debit: 'إشعار مدين'
+      };
+
+      const NOTE_TYPE_ICONS = {
+        credit: 'arrow-down-circle',
+        debit: 'arrow-up-circle'
+      };
+
+      const STATUS_LABELS = {
+        active: 'نشط',
+        applied: 'مُطبّق',
+        cancelled: 'ملغي'
+      };
+
+      const PARTY_TYPE_LABELS = {
+        customer: 'عميل',
+        supplier: 'مورد'
+      };
+
+      // ============================================================
+      // 3) UI Helpers
+      // ============================================================
+      function esc(s) { return Refad.escapeHtml(s); }
+      function money(v) { return SafeSettings.locale.formatMoney(v); }
+      function amount(v) { return Number(v) || 0; }
+      const today = () => Refad.date.today();
+
+      function fillUser() {
+        const av = document.getElementById('userAvatar');
+        const initial = (session.full_name || '؟').trim().charAt(0);
+        if (session.avatar_url) av.innerHTML = `<img src="${esc(session.avatar_url)}" alt="">`;
+        else av.textContent = initial;
+        document.getElementById('userName').textContent = session.full_name;
+        document.getElementById('userRole').textContent = Refad.Session.has('company.owner') ? 'صاحب الشركة' : 'موظف';
+      }
+
+      function applyIdentity() {
+        const name = SafeSettings.identity.getSystemName();
+        const tagline = SafeSettings.identity.getTagline();
+        const logoUrl = SafeSettings.identity.getLogoUrl();
+
+        const brandName = document.getElementById('sidebarBrandName');
+        const brandDesc = document.getElementById('sidebarBrandDesc');
+        const logoImg = document.getElementById('sidebarLogoImg');
+
+        if (brandName) brandName.textContent = name;
+        if (brandDesc) brandDesc.textContent = tagline;
+        if (logoImg && logoUrl) {
+          logoImg.src = logoUrl;
+          logoImg.onerror = function () {
+            this.style.display = 'none';
+            const parent = this.parentElement;
+            if (parent) parent.innerHTML = '<span class="fallback">' + (name.charAt(0) || 'R') + '</span>';
+          };
+        }
+      }
+
+      function setupTheme() {
+        const btn = document.getElementById('themeToggle');
+        const icon = document.getElementById('themeIcon');
+        const refresh = () => {
+          const isDark = Refad.theme.get() === 'dark';
+          icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+          if (window.lucide) lucide.createIcons();
+        };
+        refresh();
+        btn.addEventListener('click', () => { Refad.theme.toggle(); refresh(); });
+      }
+
+      function setupSidebarMobile() {
+        const sb = document.getElementById('sidebar');
+        const ov = document.getElementById('overlay');
+        document.getElementById('menuToggle').addEventListener('click', () => {
+          sb.classList.add('open'); ov.classList.add('show');
+        });
+        ov.addEventListener('click', () => {
+          sb.classList.remove('open'); ov.classList.remove('show');
+        });
+      }
+
+      function setupUserMenu() {
+        const m = document.getElementById('userMenu');
+        const d = document.getElementById('userDropdown');
+        m.addEventListener('click', e => { e.stopPropagation(); d.classList.toggle('show'); });
+        document.addEventListener('click', () => d.classList.remove('show'));
+        d.addEventListener('click', e => e.stopPropagation());
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+          if (await Refad.alert.confirm('تسجيل الخروج', 'هل تريد الخروج؟', 'خروج')) {
+            await Refad.Auth.logout();
+          }
+        });
+      }
+
+      function setupNotifBtn() {
+        document.getElementById('notifBtn').addEventListener('click', () => {
+          window.location.href = 'notifications.html';
+        });
+      }
+
+      function setupRealtimeTheme() {
+        window.addEventListener('refad:theme-changed', () => {
+          applyIdentity();
+        });
+      }
+
+      // ============================================================
+      // 4) State
+      // ============================================================
+      const state = {
+        notes: [],
+        customers: [],
+        suppliers: [],
+        invoices: [],
+        receipts: [],
+        users: [],
+        filtered: [],
+        editingId: null,
+        filters: {
+          type: '',
+          search: '',
+          party: '',
+          status: ''
+        }
+      };
+
+      // ============================================================
+      // 5) Load Data
+      // ============================================================
+      async function loadData() {
+        const tbody = document.getElementById('tableBody');
+        tbody.innerHTML = '<tr><td colspan="10"><div class="loader"><i data-lucide="loader-2"></i><p>جارٍ التحميل...</p></div></td></tr>';
+        if (window.lucide) lucide.createIcons();
+
+        try {
+          const [notes, customers, suppliers, invoices, receipts, users] = await Promise.all([
+            Refad.db.select('credit_notes', {
+              columns: 'id, company_id, note_number, note_type, party_type, customer_id, supplier_id, reference_invoice_id, reference_receipt_id, reference_return_id, amount, tax_amount, reason, notes, note_date, status, applied_at, applied_by, created_by, created_at',
+              eq: { company_id: session.company_id },
+              order: { column: 'id', ascending: false },
+              limit: 2000
+            }).catch(() => []),
+            Refad.db.select('customers', {
+              columns: 'id, name, phone, balance',
+              eq: { company_id: session.company_id, is_active: true },
+              order: { column: 'name', ascending: true }
+            }).catch(() => []),
+            Refad.db.select('suppliers', {
+              columns: 'id, name, phone, balance',
+              eq: { company_id: session.company_id, is_active: true },
+              order: { column: 'name', ascending: true }
+            }).catch(() => []),
+            Refad.db.select('sales_invoices', {
+              columns: 'id, invoice_number, invoice_date, grand_total, paid_amount, status, customer_id, invoice_type',
+              eq: { company_id: session.company_id },
+              order: { column: 'id', ascending: false },
+              limit: 2000
+            }).catch(() => []),
+            Refad.db.select('receipts', {
+              columns: 'id, receipt_number, receipt_date, total_amount, paid_amount, status, supplier_id',
+              eq: { company_id: session.company_id },
+              order: { column: 'id', ascending: false },
+              limit: 2000
+            }).catch(() => []),
+            Refad.db.select('users', {
+              columns: 'id, full_name',
+              eq: { company_id: session.company_id }
+            }).catch(() => [])
+          ]);
+
+          state.notes = notes || [];
+          state.customers = customers || [];
+          state.suppliers = suppliers || [];
+          state.invoices = invoices || [];
+          state.receipts = receipts || [];
+          state.users = users || [];
+
+          renderStats();
+          renderTypeCounts();
+          applyFilters();
+
+        } catch (e) {
+          console.error('[CreditNotes] Load failed:', e);
+          tbody.innerHTML = `<tr><td colspan="10"><div class="empty-state" style="color:var(--danger);"><i data-lucide="alert-circle"></i><h3>فشل التحميل</h3><p>${esc(e.message)}</p></div></td></tr>`;
+          if (window.lucide) lucide.createIcons();
+        }
+      }
+
+      // ============================================================
+      // 6) Helpers
+      // ============================================================
+      function partyName(n) {
+        if (n.customer_id) {
+          const c = state.customers.find(x => String(x.id) === String(n.customer_id));
+          return c?.name || 'عميل محذوف';
+        }
+        if (n.supplier_id) {
+          const s = state.suppliers.find(x => String(x.id) === String(n.supplier_id));
+          return s?.name || 'مورد محذوف';
+        }
+        return '—';
+      }
+
+      function userName(id) {
+        return state.users.find(u => String(u.id) === String(id))?.full_name || '—';
+      }
+
+      function getReference(n) {
+        if (n.reference_invoice_id) {
+          const inv = state.invoices.find(i => String(i.id) === String(n.reference_invoice_id));
+          return inv ? { type: 'فاتورة', number: inv.invoice_number, link: `invoices.html?id=${inv.id}` } : null;
+        }
+        if (n.reference_receipt_id) {
+          const rec = state.receipts.find(r => String(r.id) === String(n.reference_receipt_id));
+          return rec ? { type: 'استلام', number: rec.receipt_number, link: `receipt-form.html?id=${rec.id}` } : null;
+        }
+        return null;
+      }
+
+      // ============================================================
+      // 7) Render Stats
+      // ============================================================
+      function renderStats() {
+        const list = state.notes;
+        const active = list.filter(n => n.status !== 'cancelled');
+
+        const creditNotes = active.filter(n => n.note_type === 'credit');
+        const debitNotes = active.filter(n => n.note_type === 'debit');
+
+        const creditTotal = creditNotes.reduce((s, n) => s + amount(n.amount), 0);
+        const debitTotal = debitNotes.reduce((s, n) => s + amount(n.amount), 0);
+
+        const customerNotes = active.filter(n => n.party_type === 'customer');
+        const supplierNotes = active.filter(n => n.party_type === 'supplier');
+
+        const customerTotal = customerNotes.reduce((s, n) => s + amount(n.amount), 0);
+        const supplierTotal = supplierNotes.reduce((s, n) => s + amount(n.amount), 0);
+
+        const applied = list.filter(n => n.status === 'applied');
+
+        document.getElementById('statTotal').textContent = Refad.format.number(list.length);
+        document.getElementById('statTotalSub').textContent = `${applied.length} مُطبّق`;
+
+        document.getElementById('statCredit').textContent = money(creditTotal);
+        document.getElementById('statCreditSub').textContent = `${creditNotes.length} إشعار`;
+
+        document.getElementById('statDebit').textContent = money(debitTotal);
+        document.getElementById('statDebitSub').textContent = `${debitNotes.length} إشعار`;
+
+        document.getElementById('statCustomers').textContent = money(customerTotal);
+        document.getElementById('statCustomersSub').textContent = `${customerNotes.length} إشعار`;
+
+        document.getElementById('statSuppliers').textContent = money(supplierTotal);
+        document.getElementById('statSuppliersSub').textContent = `${supplierNotes.length} إشعار`;
+
+        document.getElementById('statApplied').textContent = Refad.format.number(applied.length);
+        document.getElementById('statAppliedSub').textContent =
+          applied.length ? money(applied.reduce((s, n) => s + amount(n.amount), 0)) : '—';
+      }
+
+      function renderTypeCounts() {
+        document.getElementById('countAll').textContent = state.notes.length;
+        document.getElementById('countCredit').textContent =
+          state.notes.filter(n => n.note_type === 'credit').length;
+        document.getElementById('countDebit').textContent =
+          state.notes.filter(n => n.note_type === 'debit').length;
+      }
+
+      // ============================================================
+      // 8) Apply Filters
+      // ============================================================
+      function applyFilters() {
+        let list = state.notes.slice();
+
+        if (state.filters.type) {
+          list = list.filter(n => n.note_type === state.filters.type);
+        }
+
+        if (state.filters.search) {
+          const q = state.filters.search.toLowerCase();
+          list = list.filter(n =>
+            (n.note_number || '').toLowerCase().includes(q) ||
+            (n.reason || '').toLowerCase().includes(q) ||
+            (n.notes || '').toLowerCase().includes(q) ||
+            (partyName(n) || '').toLowerCase().includes(q)
+          );
+        }
+
+        if (state.filters.party) {
+          list = list.filter(n => n.party_type === state.filters.party);
+        }
+
+        if (state.filters.status) {
+          list = list.filter(n => n.status === state.filters.status);
+        }
+
+        state.filtered = list;
+        renderTable();
+      }
+
+      // ============================================================
+      // 9) Render Table
+      // ============================================================
+      function renderTable() {
+        const tbody = document.getElementById('tableBody');
+        const list = state.filtered;
+
+        if (!list.length) {
+          tbody.innerHTML = `
+            <tr><td colspan="10">
+              <div class="empty-state">
+                <i data-lucide="file-text"></i>
+                <h3>${state.notes.length ? 'لا توجد نتائج مطابقة' : 'لا توجد إشعارات بعد'}</h3>
+                <p>${state.notes.length ? 'جرّب تعديل الفلاتر' : 'ابدأ بإضافة إشعار جديد'}</p>
+              </div>
+            </td></tr>
+          `;
+          if (window.lucide) lucide.createIcons();
+          return;
+        }
+
+        tbody.innerHTML = list.map((n, i) => {
+          const isCredit = n.note_type === 'credit';
+          const typeLabel = NOTE_TYPE_LABELS[n.note_type];
+          const typeIcon = NOTE_TYPE_ICONS[n.note_type];
+          const statusLabel = STATUS_LABELS[n.status] || n.status;
+          const party = partyName(n);
+          const initials = esc((party || '؟').charAt(0));
+          const reference = getReference(n);
+          const totalAmount = amount(n.amount) + amount(n.tax_amount);
+
+          return `
+            <tr data-id="${n.id}">
+              <td style="color:var(--text-muted);font-weight:700;text-align:center;">${i + 1}</td>
+              <td><span class="note-number">${esc(n.note_number)}</span></td>
+              <td>
+                <span class="note-type-badge ${isCredit ? 'credit' : 'debit'}">
+                  <i data-lucide="${typeIcon}"></i>
+                  ${typeLabel}
+                </span>
+              </td>
+              <td>
+                <div class="party-cell">
+                  <div class="party-avatar">${initials}</div>
+                  <div class="party-info">
+                    <div class="name">${esc(party)}</div>
+                    <div class="sub">${esc(PARTY_TYPE_LABELS[n.party_type] || '—')}</div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                ${reference
+                  ? `<a href="${reference.link}" class="type-link" onclick="event.stopPropagation();">${esc(reference.type)} ${esc(reference.number)}</a>`
+                  : '<span style="color:var(--text-muted);">—</span>'}
+              </td>
+              <td>${esc(n.reason || '—')}</td>
+              <td>${Refad.format.date(n.note_date)}</td>
+              <td class="amount-cell ${isCredit ? 'credit' : 'debit'}">
+                ${isCredit ? '-' : '+'} ${money(totalAmount)}
+              </td>
+              <td>
+                <span class="status-pill ${n.status}">
+                  ${statusLabel}
+                </span>
+              </td>
+              <td>
+                ${n.status === 'active' ? `
+                  <button class="action-btn success" data-action="apply" data-id="${n.id}" title="تطبيق على الرصيد">
+                    <i data-lucide="check-circle"></i>
+                  </button>
+                ` : ''}
+                <button class="action-btn" data-action="view" data-id="${n.id}" title="تفاصيل">
+                  <i data-lucide="eye"></i>
+                </button>
+                ${n.status === 'active' ? `
+                  <button class="action-btn" data-action="edit" data-id="${n.id}" title="تعديل">
+                    <i data-lucide="edit"></i>
+                  </button>
+                  <button class="action-btn danger" data-action="cancel" data-id="${n.id}" title="إلغاء">
+                    <i data-lucide="x-circle"></i>
+                  </button>
+                ` : ''}
+                ${n.status !== 'applied' ? `
+                  <button class="action-btn danger" data-action="delete" data-id="${n.id}" title="حذف">
+                    <i data-lucide="trash-2"></i>
+                  </button>
+                ` : ''}
+              </td>
+            </tr>
+          `;
+        }).join('');
+
+        if (window.lucide) lucide.createIcons();
+
+        tbody.querySelectorAll('tr[data-id]').forEach(tr => {
+          tr.addEventListener('click', (e) => {
+            if (e.target.closest('[data-action]') || e.target.closest('a')) return;
+            openDetails(parseInt(tr.dataset.id, 10));
+          });
+        });
+
+        tbody.querySelectorAll('[data-action]').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const id = parseInt(btn.dataset.id, 10);
+            const action = btn.dataset.action;
+            if (action === 'view') openDetails(id);
+            else if (action === 'edit') openEdit(id);
+            else if (action === 'apply') applyNote(id);
+            else if (action === 'cancel') cancelNote(id);
+            else if (action === 'delete') deleteNote(id);
+          });
+        });
+      }
+
+      // ============================================================
+      // 10) Type Picker
+      // ============================================================
+      function setNoteType(type) {
+        document.getElementById('cNoteType').value = type;
+        document.querySelectorAll('#noteTypePicker .type-option').forEach(opt => {
+          opt.classList.toggle('selected', opt.dataset.type === type);
+        });
+      }
+
+      // ============================================================
+      // 11) Populate Party Select
+      // ============================================================
+      function populatePartySelect(selectedId) {
+        const partyType = document.getElementById('cPartyType').value;
+        const sel = document.getElementById('cPartyId');
+        sel.innerHTML = '<option value="">— اختر —</option>';
+
+        const list = partyType === 'customer' ? state.customers : state.suppliers;
+        list.forEach(item => {
+          const opt = document.createElement('option');
+          opt.value = item.id;
+          const balance = amount(item.balance);
+          opt.textContent = item.name + (balance !== 0 ? ` (رصيد: ${money(balance)})` : '');
+          sel.appendChild(opt);
+        });
+
+        if (selectedId) sel.value = selectedId;
+      }
+
+      // ============================================================
+      // 12) Populate Reference Selects
+      // ============================================================
+      function populateReferenceSelects(partyType, partyId) {
+        const invGroup = document.getElementById('refInvoiceGroup');
+        const recGroup = document.getElementById('refReceiptGroup');
+        const invSel = document.getElementById('cRefInvoice');
+        const recSel = document.getElementById('cRefReceipt');
+        const invHint = document.getElementById('refInvoiceHint');
+        const recHint = document.getElementById('refReceiptHint');
+
+        invSel.innerHTML = '<option value="">— بدون مرجع —</option>';
+        recSel.innerHTML = '<option value="">— بدون مرجع —</option>';
+
+        if (partyType === 'customer') {
+          invGroup.style.display = 'flex';
+          recGroup.style.display = 'none';
+
+          if (partyId) {
+            const invoices = state.invoices
+              .filter(i =>
+                String(i.customer_id) === String(partyId) &&
+                i.status !== 'cancelled' &&
+                (i.invoice_type === 'sale' || i.invoice_type === null || i.invoice_type === undefined)
+              )
+              .sort((a, b) => String(b.invoice_date).localeCompare(String(a.invoice_date)))
+              .slice(0, 100);
+
+            invHint.textContent = invoices.length ? `${invoices.length} فاتورة متاحة` : 'لا توجد فواتير';
+
+            if (invoices.length) {
+              invoices.forEach(inv => {
+                const opt = document.createElement('option');
+                opt.value = inv.id;
+                const due = amount(inv.grand_total) - amount(inv.paid_amount);
+                const dueLabel = due > 0.01 ? ` • متبقي: ${money(due)}` : ' • مسددة';
+                opt.textContent = `${inv.invoice_number} — ${money(inv.grand_total)}${dueLabel}`;
+                opt.dataset.due = due;
+                invSel.appendChild(opt);
+              });
+            } else {
+              const opt = document.createElement('option');
+              opt.disabled = true;
+              opt.textContent = '— لا توجد فواتير لهذا العميل —';
+              invSel.appendChild(opt);
+            }
+          } else {
+            invHint.textContent = 'اختر عميلاً أولاً';
+            const opt = document.createElement('option');
+            opt.disabled = true;
+            opt.textContent = '— اختر عميلاً أولاً —';
+            invSel.appendChild(opt);
+          }
+        }
+
+        if (partyType === 'supplier') {
+          recGroup.style.display = 'flex';
+          invGroup.style.display = 'none';
+
+          if (partyId) {
+            const receipts = state.receipts
+              .filter(r =>
+                String(r.supplier_id) === String(partyId) &&
+                r.status !== 'cancelled'
+              )
+              .sort((a, b) => String(b.receipt_date).localeCompare(String(a.receipt_date)))
+              .slice(0, 100);
+
+            recHint.textContent = receipts.length ? `${receipts.length} استلام متاح` : 'لا توجد استلامات';
+
+            if (receipts.length) {
+              receipts.forEach(rec => {
+                const opt = document.createElement('option');
+                opt.value = rec.id;
+                const due = amount(rec.total_amount) - amount(rec.paid_amount);
+                const dueLabel = due > 0.01 ? ` • متبقي: ${money(due)}` : ' • مسددة';
+                opt.textContent = `${rec.receipt_number} — ${money(rec.total_amount)}${dueLabel}`;
+                opt.dataset.due = due;
+                recSel.appendChild(opt);
+              });
+            } else {
+              const opt = document.createElement('option');
+              opt.disabled = true;
+              opt.textContent = '— لا توجد استلامات لهذا المورد —';
+              recSel.appendChild(opt);
+            }
+          } else {
+            recHint.textContent = 'اختر مورداً أولاً';
+            const opt = document.createElement('option');
+            opt.disabled = true;
+            opt.textContent = '— اختر مورداً أولاً —';
+            recSel.appendChild(opt);
+          }
+        }
+      }
+
+      // ============================================================
+      // 13) Update Balance Info
+      // ============================================================
+      function updateBalanceInfo() {
+        const partyType = document.getElementById('cPartyType').value;
+        const partyId = parseInt(document.getElementById('cPartyId').value, 10);
+        const box = document.getElementById('balanceInfo');
+        const valueEl = document.getElementById('balanceValue');
+
+        if (!partyId) {
+          box.classList.remove('show');
+          return;
+        }
+
+        const list = partyType === 'customer' ? state.customers : state.suppliers;
+        const party = list.find(p => String(p.id) === String(partyId));
+        if (!party) {
+          box.classList.remove('show');
+          return;
+        }
+
+        const balance = amount(party.balance);
+        valueEl.textContent = money(balance);
+        box.classList.add('show');
+      }
+
+      // ============================================================
+      // 14) Generate Note Number
+      // ============================================================
+      function generateNoteNumber(type) {
+        const prefix = type === 'credit' ? 'CN' : 'DN';
+        const year = new Date().getFullYear();
+        const count = state.notes.filter(n =>
+          n.note_number && n.note_number.startsWith(`${prefix}-${year}`)
+        ).length;
+        return `${prefix}-${year}-${String(count + 1).padStart(5, '0')}`;
+      }
+
+      // ============================================================
+      // 15) Open Add
+      // ============================================================
+      function openAdd() {
+        state.editingId = null;
+        document.getElementById('modalTitle').textContent = 'إشعار جديد';
+        document.getElementById('submitText').textContent = 'إضافة الإشعار';
+        document.getElementById('noteForm').reset();
+
+        document.getElementById('cNoteDate').value = today();
+        document.getElementById('cPartyType').value = 'customer';
+        document.getElementById('cTaxAmount').value = 0;
+        document.getElementById('balanceInfo').classList.remove('show');
+
+        setNoteType('credit');
+        populatePartySelect();
+        populateReferenceSelects('customer', null);
+
+        document.getElementById('noteModal').classList.add('show');
+        setTimeout(() => document.getElementById('cAmount').focus(), 150);
+        if (window.lucide) lucide.createIcons();
+      }
+
+      // ============================================================
+      // 16) Open Edit
+      // ============================================================
+      function openEdit(id) {
+        const n = state.notes.find(x => x.id === id);
+        if (!n) return;
+        if (n.status !== 'active') {
+          Refad.toast.warning('لا يمكن تعديل إشعار في هذه الحالة');
+          return;
+        }
+
+        state.editingId = id;
+        document.getElementById('modalTitle').textContent = 'تعديل ' + n.note_number;
+        document.getElementById('submitText').textContent = 'حفظ التعديلات';
+
+        setNoteType(n.note_type);
+        document.getElementById('cPartyType').value = n.party_type;
+        document.getElementById('cNoteNumber').value = n.note_number || '';
+        document.getElementById('cAmount').value = amount(n.amount);
+        document.getElementById('cNoteDate').value = n.note_date || today();
+        document.getElementById('cTaxAmount').value = amount(n.tax_amount);
+        document.getElementById('cReason').value = n.reason || '';
+        document.getElementById('cNotes').value = n.notes || '';
+
+        populatePartySelect(n.customer_id || n.supplier_id);
+        populateReferenceSelects(n.party_type, n.customer_id || n.supplier_id);
+        updateBalanceInfo();
+
+        setTimeout(() => {
+          if (n.reference_invoice_id) {
+            const invSel = document.getElementById('cRefInvoice');
+            const opt = invSel.querySelector(`option[value="${n.reference_invoice_id}"]`);
+            if (opt) invSel.value = n.reference_invoice_id;
+          }
+          if (n.reference_receipt_id) {
+            const recSel = document.getElementById('cRefReceipt');
+            const opt = recSel.querySelector(`option[value="${n.reference_receipt_id}"]`);
+            if (opt) recSel.value = n.reference_receipt_id;
+          }
+        }, 50);
+
+        document.getElementById('noteModal').classList.add('show');
+        if (window.lucide) lucide.createIcons();
+      }
+
+      // ============================================================
+      // 17) Submit Form
+      // ============================================================
+      async function submitForm(e) {
+        e.preventDefault();
+        const btn = document.getElementById('submitBtn');
+        btn.disabled = true;
+
+        try {
+          const noteType = document.getElementById('cNoteType').value;
+          const partyType = document.getElementById('cPartyType').value;
+          const partyId = parseInt(document.getElementById('cPartyId').value, 10);
+          const noteNumber = document.getElementById('cNoteNumber').value.trim() || generateNoteNumber(noteType);
+          const amountVal = Refad.toNum(document.getElementById('cAmount').value);
+          const taxAmount = Refad.toNum(document.getElementById('cTaxAmount').value);
+          const noteDate = document.getElementById('cNoteDate').value || today();
+          const reason = document.getElementById('cReason').value.trim();
+          const notes = document.getElementById('cNotes').value.trim() || null;
+          const refInvoiceId = parseInt(document.getElementById('cRefInvoice').value, 10) || null;
+          const refReceiptId = parseInt(document.getElementById('cRefReceipt').value, 10) || null;
+
+          if (!partyId) { Refad.toast.warning('اختر الطرف'); btn.disabled = false; return; }
+          if (amountVal <= 0) { Refad.toast.warning('أدخل مبلغاً صحيحاً'); btn.disabled = false; return; }
+          if (!reason) { Refad.toast.warning('السبب مطلوب'); btn.disabled = false; return; }
+
+          const payload = {
+            company_id: session.company_id,
+            note_number: noteNumber,
+            note_type: noteType,
+            party_type: partyType,
+            customer_id: partyType === 'customer' ? partyId : null,
+            supplier_id: partyType === 'supplier' ? partyId : null,
+            reference_invoice_id: refInvoiceId,
+            reference_receipt_id: refReceiptId,
+            amount: amountVal,
+            tax_amount: taxAmount,
+            reason: reason,
+            notes: notes,
+            note_date: noteDate,
+            created_by: session.user_id
+          };
+
+          if (state.editingId) {
+            await Refad.db.update('credit_notes', state.editingId, payload);
+            await Refad.logActivity('update_credit_note', 'credit_notes',
+              `تعديل ${noteNumber} بمبلغ ${money(amountVal)}`, state.editingId);
+            Refad.toast.success('تم تحديث الإشعار');
+          } else {
+            payload.status = 'active';
+            const created = await Refad.db.insert('credit_notes', payload);
+            await Refad.logActivity('create_credit_note', 'credit_notes',
+              `إضافة ${NOTE_TYPE_LABELS[noteType]}: ${noteNumber} بمبلغ ${money(amountVal)}`, created?.id);
+            Refad.toast.success('تم إضافة الإشعار');
+          }
+
+          document.getElementById('noteModal').classList.remove('show');
+          await loadData();
+
+        } catch (err) {
+          console.error('[CreditNotes] Save failed:', err);
+          Refad.toast.error('فشل الحفظ: ' + (err.message || err));
+        } finally {
+          btn.disabled = false;
+        }
+      }
+
+      // ============================================================
+      // 18) Apply Note
+      // ============================================================
+      async function applyNote(id) {
+        const n = state.notes.find(x => x.id === id);
+        if (!n) return;
+        if (n.status !== 'active') {
+          Refad.toast.warning('الإشعار ليس نشطاً');
+          return;
+        }
+
+        const totalAmount = amount(n.amount) + amount(n.tax_amount);
+        const isCredit = n.note_type === 'credit';
+        const party = partyName(n);
+
+        let impactLabel;
+        let impactSign;
+        if (n.party_type === 'customer') {
+          impactLabel = isCredit ? 'يقلل رصيد العميل' : 'يزيد رصيد العميل';
+          impactSign = isCredit ? -1 : 1;
+        } else {
+          impactLabel = isCredit ? 'يقلل رصيد المورد' : 'يزيد رصيد المورد';
+          impactSign = isCredit ? -1 : 1;
+        }
+
+        const ok = await Refad.alert.confirm(
+          'تطبيق الإشعار',
+          `سيتم تطبيق ${NOTE_TYPE_LABELS[n.note_type]} بمبلغ ${money(totalAmount)} على ${party}.\n\nالتأثير: ${impactLabel}\n\nمتابعة؟`,
+          'تطبيق'
+        );
+        if (!ok) return;
+
+        try {
+          const table = n.party_type === 'customer' ? 'customers' : 'suppliers';
+          const partyData = await Refad.db.selectOne(table, {
+            columns: 'id, balance',
+            eq: { id: n.customer_id || n.supplier_id }
+          });
+
+          if (!partyData) throw new Error('الطرف غير موجود');
+
+          const currentBalance = amount(partyData.balance);
+          const newBalance = currentBalance + (impactSign * totalAmount);
+
+          await Refad.db.update(table, partyData.id, { balance: newBalance });
+
+          if (n.party_type === 'supplier') {
+            await Refad.db.insert('supplier_transactions', {
+              supplier_id: partyData.id,
+              company_id: session.company_id,
+              type: isCredit ? 'credit_note' : 'debit_note',
+              amount: totalAmount,
+              balance_after: newBalance,
+              reference_id: id,
+              notes: `${NOTE_TYPE_LABELS[n.note_type]}: ${n.note_number} — ${n.reason}`,
+              user_id: session.user_id
+            });
+          }
+
+          await Refad.db.update('credit_notes', id, {
+            status: 'applied',
+            applied_at: new Date().toISOString(),
+            applied_by: session.user_id
+          });
+
+          await Refad.logActivity('apply_credit_note', 'credit_notes',
+            `تطبيق ${n.note_number} على ${party} بمبلغ ${money(totalAmount)}`, id);
+
+          Refad.toast.success(`تم تطبيق الإشعار. رصيد ${party} الجديد: ${money(newBalance)}`);
+          await loadData();
+
+        } catch (err) {
+          console.error('[CreditNotes] Apply failed:', err);
+          Refad.toast.error('فشل التطبيق: ' + err.message);
+        }
+      }
+
+      // ============================================================
+      // 19) Cancel Note
+      // ============================================================
+      async function cancelNote(id) {
+        const n = state.notes.find(x => x.id === id);
+        if (!n) return;
+        if (n.status !== 'active') {
+          Refad.toast.warning('لا يمكن إلغاء إشعار في هذه الحالة');
+          return;
+        }
+
+        const ok = await Refad.alert.confirm(
+          'إلغاء الإشعار',
+          `سيتم إلغاء ${n.note_number} بمبلغ ${money(amount(n.amount))}. متابعة؟`,
+          'إلغاء الإشعار'
+        );
+        if (!ok) return;
+
+        try {
+          await Refad.db.update('credit_notes', id, { status: 'cancelled' });
+          await Refad.logActivity('cancel_credit_note', 'credit_notes',
+            `إلغاء ${n.note_number}`, id);
+          Refad.toast.success('تم الإلغاء');
+          await loadData();
+        } catch (err) {
+          console.error('[CreditNotes] Cancel failed:', err);
+          Refad.toast.error('فشل الإلغاء: ' + err.message);
+        }
+      }
+
+      // ============================================================
+      // 20) Delete Note
+      // ============================================================
+      async function deleteNote(id) {
+        const n = state.notes.find(x => x.id === id);
+        if (!n) return;
+
+        if (n.status === 'applied') {
+          Refad.toast.error('لا يمكن حذف إشعار مُطبّق');
+          return;
+        }
+
+        const ok = await Refad.alert.confirm(
+          'حذف الإشعار',
+          `سيتم حذف ${n.note_number} نهائياً. متابعة؟`,
+          'حذف'
+        );
+        if (!ok) return;
+
+        try {
+          await Refad.db.remove('credit_notes', id);
+          await Refad.logActivity('delete_credit_note', 'credit_notes',
+            `حذف ${n.note_number}`, id);
+          Refad.toast.success('تم الحذف');
+          await loadData();
+        } catch (err) {
+          console.error('[CreditNotes] Delete failed:', err);
+          Refad.toast.error('فشل الحذف: ' + err.message);
+        }
+      }
+
+      // ============================================================
+      // 21) Open Details
+      // ============================================================
+      function openDetails(id) {
+        const n = state.notes.find(x => x.id === id);
+        if (!n) return;
+
+        const isCredit = n.note_type === 'credit';
+        const party = partyName(n);
+        const statusLabel = STATUS_LABELS[n.status] || n.status;
+        const totalAmount = amount(n.amount) + amount(n.tax_amount);
+        const reference = getReference(n);
+
+        const typeColor = isCredit ? '#10b981' : '#ef4444';
+        const typeColorDark = isCredit ? '#047857' : '#b91c1c';
+
+        document.getElementById('detailsModalBody').innerHTML = `
+          <div style="background:linear-gradient(135deg,${typeColor},${typeColorDark});border-radius:12px;padding:20px;color:white;margin-bottom:20px;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;">
+              <div>
+                <div style="font-size:12px;opacity:0.85;margin-bottom:4px;">
+                  ${isCredit ? '📥 إشعار دائن (Credit Note)' : '📤 إشعار مدين (Debit Note)'}
+                </div>
+                <div style="font-family: 'Courier New', monospace;font-size:24px;font-weight:800;letter-spacing:1px;">
+                  ${esc(n.note_number)}
+                </div>
+              </div>
+              <div style="text-align:left;">
+                <div style="font-size:11px;opacity:0.85;">المبلغ الإجمالي</div>
+                <div style="font-size:26px;font-weight:800;">${money(totalAmount)}</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:20px;">
+            <div style="background:var(--bg);padding:12px;border-radius:10px;">
+              <div style="font-size:11px;color:var(--text-muted);font-weight:700;margin-bottom:4px;">الحالة</div>
+              <span class="status-pill ${n.status}">${statusLabel}</span>
+            </div>
+            <div style="background:var(--bg);padding:12px;border-radius:10px;">
+              <div style="font-size:11px;color:var(--text-muted);font-weight:700;margin-bottom:4px;">الطرف</div>
+              <div style="font-weight:700;">${esc(party)}</div>
+              <div style="font-size:11px;color:var(--text-muted);">${esc(PARTY_TYPE_LABELS[n.party_type] || '—')}</div>
+            </div>
+            <div style="background:var(--bg);padding:12px;border-radius:10px;">
+              <div style="font-size:11px;color:var(--text-muted);font-weight:700;margin-bottom:4px;">تاريخ الإشعار</div>
+              <div style="font-weight:700;">${Refad.format.date(n.note_date)}</div>
+            </div>
+            <div style="background:var(--bg);padding:12px;border-radius:10px;">
+              <div style="font-size:11px;color:var(--text-muted);font-weight:700;margin-bottom:4px;">المبلغ الأساسي</div>
+              <div style="font-weight:700;">${money(n.amount)}</div>
+            </div>
+            ${amount(n.tax_amount) > 0 ? `
+              <div style="background:var(--bg);padding:12px;border-radius:10px;">
+                <div style="font-size:11px;color:var(--text-muted);font-weight:700;margin-bottom:4px;">الضريبة</div>
+                <div style="font-weight:700;">${money(n.tax_amount)}</div>
+              </div>
+            ` : ''}
+          </div>
+
+          <div style="background:var(--bg);padding:14px;border-radius:10px;margin-bottom:12px;">
+            <div style="font-size:11px;color:var(--text-muted);font-weight:700;margin-bottom:6px;">السبب</div>
+            <div style="font-size:14px;font-weight:700;">${esc(n.reason)}</div>
+          </div>
+
+          ${reference ? `
+            <div style="background:var(--bg);padding:14px;border-radius:10px;margin-bottom:12px;">
+              <div style="font-size:11px;color:var(--text-muted);font-weight:700;margin-bottom:6px;">المرجع</div>
+              <a href="${reference.link}" class="type-link" style="font-size:14px;font-weight:700;">
+                ${esc(reference.type)} ${esc(reference.number)}
+              </a>
+            </div>
+          ` : ''}
+
+          ${n.notes ? `
+            <div style="background:var(--bg);padding:14px;border-radius:10px;margin-bottom:12px;">
+              <div style="font-size:11px;color:var(--text-muted);font-weight:700;margin-bottom:6px;">ملاحظات</div>
+              <div style="font-size:13px;line-height:1.7;">${esc(n.notes)}</div>
+            </div>
+          ` : ''}
+
+          ${n.status === 'applied' ? `
+            <div style="background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);padding:14px;border-radius:10px;margin-bottom:12px;">
+              <div style="font-size:11px;color:var(--success);font-weight:700;margin-bottom:6px;">مُطبّق</div>
+              <div style="font-size:12px;line-height:1.7;">
+                طُبّق بواسطة: <b>${esc(userName(n.applied_by))}</b><br>
+                تاريخ التطبيق: ${Refad.format.datetime(n.applied_at)}
+              </div>
+            </div>
+          ` : ''}
+
+          <div style="margin-top:20px;padding-top:12px;border-top:1px solid var(--border);font-size:11px;color:var(--text-muted);text-align:center;">
+            أُنشئ بواسطة: ${esc(userName(n.created_by))} • ${Refad.format.datetime(n.created_at)}
+          </div>
+        `;
+
+        document.getElementById('detailsModal').classList.add('show');
+        if (window.lucide) lucide.createIcons();
+      }
+
+      // ============================================================
+      // 22) Export
+      // ============================================================
+      function exportExcel() {
+        const list = state.filtered.length ? state.filtered : state.notes;
+        if (!list.length) { Refad.toast.warning('لا توجد بيانات'); return; }
+
+        const data = list.map(n => {
+          return {
+            'رقم الإشعار': n.note_number,
+            'النوع': NOTE_TYPE_LABELS[n.note_type],
+            'الطرف': partyName(n),
+            'نوع الطرف': PARTY_TYPE_LABELS[n.party_type] || '',
+            'المبلغ': amount(n.amount),
+            'الضريبة': amount(n.tax_amount),
+            'الإجمالي': amount(n.amount) + amount(n.tax_amount),
+            'السبب': n.reason || '',
+            'التاريخ': n.note_date || '',
+            'الحالة': STATUS_LABELS[n.status] || n.status,
+            'ملاحظات': n.notes || ''
+          };
+        });
+
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'إشعارات الدائن والمدين');
+        XLSX.writeFile(wb, `credit-notes_${today()}.xlsx`);
+        Refad.toast.success('تم التصدير');
+      }
+
+      // ============================================================
+      // 23) Bind Events
+      // ============================================================
+      function bindEvents() {
+        document.getElementById('addBtn').addEventListener('click', openAdd);
+
+        document.getElementById('refreshBtn').addEventListener('click', async () => {
+          Refad.toast.info('جارٍ التحديث...');
+          await loadData();
+          Refad.toast.success('تم التحديث');
+        });
+
+        document.getElementById('exportBtn').addEventListener('click', exportExcel);
+
+        document.querySelectorAll('.type-tab').forEach(tab => {
+          tab.addEventListener('click', () => {
+            document.querySelectorAll('.type-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            state.filters.type = tab.dataset.type;
+            applyFilters();
+          });
+        });
+
+        document.getElementById('searchInput').addEventListener('input', Refad.debounce(e => {
+          state.filters.search = e.target.value.trim();
+          applyFilters();
+        }, 200));
+
+        document.getElementById('filterParty').addEventListener('change', e => {
+          state.filters.party = e.target.value;
+          applyFilters();
+        });
+
+        document.getElementById('filterStatus').addEventListener('change', e => {
+          state.filters.status = e.target.value;
+          applyFilters();
+        });
+
+        document.getElementById('noteForm').addEventListener('submit', submitForm);
+
+        document.querySelectorAll('#noteTypePicker .type-option').forEach(opt => {
+          opt.addEventListener('click', () => {
+            setNoteType(opt.dataset.type);
+            const numInput = document.getElementById('cNoteNumber');
+            if (!numInput.value) {
+              numInput.placeholder = generateNoteNumber(opt.dataset.type);
+            }
+          });
+        });
+
+        document.getElementById('cPartyType').addEventListener('change', () => {
+          populatePartySelect();
+          populateReferenceSelects(document.getElementById('cPartyType').value, null);
+          updateBalanceInfo();
+        });
+
+        document.getElementById('cPartyId').addEventListener('change', e => {
+          const partyType = document.getElementById('cPartyType').value;
+          const partyId = parseInt(e.target.value, 10);
+          populateReferenceSelects(partyType, partyId);
+          updateBalanceInfo();
+        });
+
+        document.querySelectorAll('[data-close]').forEach(b => {
+          b.addEventListener('click', () => {
+            document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.remove('show'));
+          });
+        });
+
+        document.addEventListener('keydown', e => {
+          if (e.key === 'Escape') {
+            document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.remove('show'));
+          }
+        });
+
+        document.querySelectorAll('.modal-backdrop').forEach(m => {
+          m.addEventListener('click', e => {
+            if (e.target === m) m.classList.remove('show');
+          });
+        });
+      }
+
+      // ============================================================
+      // 24) Init
+      // ============================================================
+      async function init() {
+        Refad.buildMenu('credit-notes.html');
+        fillUser();
+        applyIdentity();
+        setupTheme();
+        setupSidebarMobile();
+        setupUserMenu();
+        setupNotifBtn();
+        setupRealtimeTheme();
+        bindEvents();
+
+        await loadData();
+
+        Refad.registerServiceWorker();
+
+        console.log('%c[Refad] Credit Notes v2 ready (Theme Sync + Settings)', 'color:#14B8A6;font-weight:bold');
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+
+    })();
+  </script>
+</body>
+</html>
