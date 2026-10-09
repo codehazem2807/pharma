@@ -49,6 +49,7 @@
       --radius-sm: 10px;
       --sidebar-w: 260px;
       --topbar-h: 64px;
+      --impersonate-h: 48px;
     }
 
     [data-theme="dark"] {
@@ -61,6 +62,15 @@
       --sidebar-text: #94a3b8;
     }
 
+    /* ✨ Reduced-motion */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
     html, body {
       height: 100%;
       font-family: 'Cairo', sans-serif;
@@ -71,27 +81,67 @@
 
     body { display: flex; min-height: 100vh; overflow-x: hidden; }
 
-    /* Sidebar */
+    /* ============ Impersonate Bar ============ */
+    .impersonate-bar {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: var(--impersonate-h);
+      background: linear-gradient(90deg, #7c3aed, #a855f7, #d946ef);
+      color: white;
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      padding: 0 20px;
+      box-shadow: 0 4px 20px rgba(124,58,237,0.4);
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .impersonate-bar.show { display: flex; }
+    .impersonate-bar i { width: 18px; height: 18px; }
+    .impersonate-bar .imp-info { display: flex; align-items: center; gap: 8px; }
+    .impersonate-bar .imp-info strong { background: rgba(255,255,255,0.2); padding: 3px 10px; border-radius: 8px; font-weight: 800; }
+    .impersonate-bar .imp-actions { display: flex; gap: 8px; margin-right: 20px; }
+    .impersonate-bar button {
+      padding: 6px 14px;
+      border: 1.5px solid rgba(255,255,255,0.4);
+      background: rgba(255,255,255,0.15);
+      color: white;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .impersonate-bar button:hover { background: rgba(255,255,255,0.25); }
+    .impersonate-bar button.danger { background: rgba(239,68,68,0.4); border-color: rgba(239,68,68,0.6); }
+    .impersonate-bar button i { width: 13px; height: 13px; }
+
+    body.has-impersonate { padding-top: var(--impersonate-h); }
+
+    /* ============ Sidebar ============ */
     .sidebar {
       width: var(--sidebar-w);
       height: 100vh;
       background: var(--sidebar-bg);
       color: var(--sidebar-text);
       position: fixed;
-      top: 0;
-      right: 0;
+      top: 0; right: 0;
       z-index: 100;
-      display: flex;
-      flex-direction: column;
+      display: flex; flex-direction: column;
       transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       box-shadow: -4px 0 20px rgba(0,0,0,0.1);
     }
+    body.has-impersonate .sidebar { top: var(--impersonate-h); height: calc(100vh - var(--impersonate-h)); }
     .sidebar-header {
       padding: 20px 22px;
       border-bottom: 1px solid rgba(255,255,255,0.08);
-      display: flex;
-      align-items: center;
-      gap: 14px;
+      display: flex; align-items: center; gap: 14px;
       height: var(--topbar-h);
       box-sizing: border-box;
     }
@@ -102,6 +152,7 @@
       display: flex; align-items: center; justify-content: center;
       flex-shrink: 0;
       box-shadow: 0 4px 12px rgba(20,184,166,0.4);
+      overflow: hidden;
     }
     .sidebar-logo img { width: 70%; height: 70%; object-fit: contain; }
     .sidebar-logo .fallback { color: white; font-weight: 800; font-size: 18px; }
@@ -125,23 +176,28 @@
     .nav-item:hover { background: rgba(255,255,255,0.05); color: white; border-right-color: rgba(20,184,166,0.5); }
     .nav-item.active { background: rgba(20,184,166,0.12); color: white; border-right-color: var(--accent); font-weight: 600; }
     .nav-item i, .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; opacity: 0.85; }
+    .nav-item .badge { margin-right: auto; background: var(--danger); color: white; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
+    .nav-item .badge.teal { background: var(--accent); }
+    .nav-item .badge.gold { background: var(--gold); }
+    .nav-item .badge.new { background: var(--purple); }
 
-    /* Main */
+    /* ============ Main ============ */
     .main { flex: 1; margin-right: var(--sidebar-w); min-width: 0; display: flex; flex-direction: column; }
+    body.has-impersonate .main { margin-top: var(--impersonate-h); }
+
     .topbar {
       height: var(--topbar-h);
       background: var(--card);
       border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      gap: 16px;
+      display: flex; align-items: center; gap: 16px;
       padding: 0 24px;
-      position: sticky;
-      top: 0;
+      position: sticky; top: 0;
       z-index: 50;
       box-shadow: var(--shadow-sm);
     }
+    body.has-impersonate .topbar { top: var(--impersonate-h); }
     .menu-toggle { display: none; background: transparent; border: none; color: var(--text); cursor: pointer; padding: 8px; border-radius: 8px; }
+    .menu-toggle:hover { background: var(--bg); }
     .topbar-title { font-size: 18px; font-weight: 700; color: var(--text); flex-shrink: 0; display: flex; align-items: center; gap: 8px; }
     .topbar-title i { color: var(--accent); }
     .topbar-actions { display: flex; align-items: center; gap: 8px; margin-right: auto; }
@@ -158,6 +214,7 @@
     }
     .icon-btn:hover { border-color: var(--accent); color: var(--accent); }
     .icon-btn i, .icon-btn svg { width: 18px; height: 18px; }
+    .icon-btn .dot { position: absolute; top: 8px; left: 8px; width: 8px; height: 8px; background: var(--danger); border-radius: 50%; border: 2px solid var(--card); }
     .user-menu {
       display: flex; align-items: center; gap: 10px;
       padding: 5px 12px 5px 5px;
@@ -174,8 +231,7 @@
       background: linear-gradient(135deg, var(--primary), var(--accent));
       display: flex; align-items: center; justify-content: center;
       color: white; font-weight: 700; font-size: 14px;
-      flex-shrink: 0;
-      overflow: hidden;
+      flex-shrink: 0; overflow: hidden;
     }
     .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
     .user-info { display: flex; flex-direction: column; line-height: 1.2; }
@@ -190,12 +246,10 @@
     .dropdown-item i { width: 16px; height: 16px; }
     .dropdown-divider { height: 1px; background: var(--border); margin: 6px 0; }
 
-    /* Content */
+    /* ============ Content ============ */
     .content { padding: 24px; flex: 1; }
     .page-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      display: flex; align-items: center; justify-content: space-between;
       gap: 16px;
       margin-bottom: 20px;
       flex-wrap: wrap;
@@ -204,13 +258,10 @@
     .page-head p { font-size: 13px; color: var(--text-muted); }
 
     .btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
+      display: inline-flex; align-items: center; gap: 8px;
       padding: 10px 18px;
       font-family: inherit;
-      font-size: 14px;
-      font-weight: 600;
+      font-size: 14px; font-weight: 600;
       border-radius: var(--radius-sm);
       border: none;
       cursor: pointer;
@@ -230,9 +281,11 @@
     .btn-danger:hover:not(:disabled) { background: #b91c1c; }
     .btn-gold { background: var(--gold); color: white; }
     .btn-gold:hover:not(:disabled) { background: #d97706; }
+    .btn-purple { background: var(--purple); color: white; }
+    .btn-purple:hover:not(:disabled) { background: #6d28d9; }
     .btn-sm { padding: 6px 12px; font-size: 12px; }
 
-    /* Main Tabs */
+    /* ============ Main Tabs ============ */
     .main-tabs {
       display: flex;
       gap: 4px;
@@ -265,6 +318,15 @@
     .main-tab:hover { background: var(--bg); color: var(--text); }
     .main-tab.active { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; }
     .main-tab i { width: 16px; height: 16px; }
+    .main-tab .tab-badge {
+      background: var(--danger);
+      color: white;
+      font-size: 9px;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 8px;
+      margin-right: 4px;
+    }
 
     .panel { display: none; }
     .panel.active { display: block; animation: fadeIn 0.3s; }
@@ -273,7 +335,7 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
-    /* Stats */
+    /* ============ Stats ============ */
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -325,7 +387,7 @@
     .stat-body .value { font-size: 22px; font-weight: 800; color: var(--text); line-height: 1.2; }
     .stat-body .sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
 
-    /* Card */
+    /* ============ Card ============ */
     .card {
       background: var(--card);
       border: 1px solid var(--border);
@@ -354,7 +416,7 @@
     .card-header h3 i { width: 18px; height: 18px; color: var(--accent); }
     .card-body { padding: 18px; }
 
-    /* Info box */
+    /* ============ Info Box ============ */
     .info-box {
       background: rgba(20,184,166,0.06);
       border: 1.5px solid rgba(20,184,166,0.25);
@@ -371,8 +433,10 @@
     .info-box.warning i { color: var(--gold); }
     .info-box.danger { background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.3); }
     .info-box.danger i { color: var(--danger); }
+    .info-box.purple { background: rgba(139,92,246,0.08); border-color: rgba(139,92,246,0.3); }
+    .info-box.purple i { color: var(--purple); }
 
-    /* Company cards */
+    /* ============ Companies Grid ============ */
     .companies-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
@@ -461,6 +525,7 @@
     .status-pill.expiring { background: rgba(245,158,11,0.12); color: var(--gold); }
     .status-pill.expired { background: rgba(239,68,68,0.12); color: var(--danger); }
     .company-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+
     .action-btn {
       width: 32px; height: 32px;
       border-radius: 8px;
@@ -470,15 +535,17 @@
       cursor: pointer;
       display: inline-flex; align-items: center; justify-content: center;
       transition: all 0.2s;
+      text-decoration: none;
     }
     .action-btn:hover { border-color: var(--accent); color: var(--accent); }
     .action-btn.danger:hover { border-color: var(--danger); color: var(--danger); background: rgba(239,68,68,0.06); }
     .action-btn.success:hover { border-color: var(--success); color: var(--success); background: rgba(16,185,129,0.06); }
     .action-btn.gold:hover { border-color: var(--gold); color: var(--gold); background: rgba(245,158,11,0.06); }
     .action-btn.purple:hover { border-color: var(--purple); color: var(--purple); background: rgba(139,92,246,0.06); }
+    .action-btn.info:hover { border-color: var(--info); color: var(--info); background: rgba(59,130,246,0.06); }
     .action-btn i { width: 14px; height: 14px; }
 
-    /* Toolbar */
+    /* ============ Toolbar ============ */
     .toolbar {
       background: var(--card);
       border: 1px solid var(--border);
@@ -506,7 +573,7 @@
     .search-box input:focus { border-color: var(--accent); background: var(--card); }
     .search-box i { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--text-muted); pointer-events: none; }
 
-    /* Table */
+    /* ============ Table ============ */
     .table-wrap {
       background: var(--card);
       border: 1px solid var(--border);
@@ -534,9 +601,103 @@
     tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
     tbody tr:last-child { border-bottom: none; }
     tbody tr:hover { background: var(--bg); }
+    tbody tr.locked-row { background: rgba(239,68,68,0.03); }
     td { padding: 12px 14px; color: var(--text); vertical-align: middle; }
 
-    /* Form */
+    /* User cells */
+    .user-cell { display: flex; align-items: center; gap: 10px; }
+    .user-avatar-sm {
+      width: 38px; height: 38px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-weight: 700; font-size: 14px;
+      flex-shrink: 0;
+      overflow: hidden;
+      position: relative;
+    }
+    .user-avatar-sm img { width: 100%; height: 100%; object-fit: cover; }
+    .user-avatar-sm .lock-badge {
+      position: absolute;
+      bottom: -3px; left: -3px;
+      width: 16px; height: 16px;
+      background: var(--danger);
+      border-radius: 50%;
+      border: 2px solid var(--card);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .user-avatar-sm .lock-badge i { width: 8px; height: 8px; color: white; }
+    .user-cell-info { min-width: 0; }
+    .user-cell-info .name { font-weight: 700; color: var(--text); font-size: 13px; }
+    .user-cell-info .sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+    .username-badge {
+      font-family: 'Courier New', monospace;
+      font-weight: 800;
+      color: var(--accent);
+      font-size: 13px;
+      background: rgba(20,184,166,0.08);
+      padding: 3px 9px;
+      border-radius: 6px;
+      border: 1px solid rgba(20,184,166,0.2);
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .username-badge:hover { background: rgba(20,184,166,0.15); }
+    .username-badge i { width: 11px; height: 11px; }
+
+    .password-badge {
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      font-weight: 700;
+      background: var(--bg);
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      color: var(--text);
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      letter-spacing: 1px;
+    }
+    .password-badge:hover { border-color: var(--accent); color: var(--accent); }
+    .password-badge i { width: 12px; height: 12px; }
+    .password-badge.hidden-pwd { letter-spacing: 2px; color: var(--text-muted); }
+
+    .role-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      background: rgba(59,130,246,0.12);
+      color: var(--info);
+      white-space: nowrap;
+    }
+    .role-badge.admin { background: rgba(245,158,11,0.15); color: var(--warning); }
+    .role-badge.owner { background: rgba(139,92,246,0.15); color: var(--purple); }
+
+    .status-pill-sm {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 10px;
+      font-weight: 700;
+    }
+    .status-pill-sm.active { background: rgba(16,185,129,0.12); color: var(--success); }
+    .status-pill-sm.inactive { background: rgba(239,68,68,0.12); color: var(--danger); }
+    .status-pill-sm.locked { background: rgba(245,158,11,0.15); color: var(--warning); }
+
+    /* ============ Form ============ */
     .form-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
@@ -577,8 +738,25 @@
       background: var(--card);
       box-shadow: 0 0 0 3px rgba(20,184,166,0.1);
     }
+    .form-group input:disabled { opacity: 0.6; cursor: not-allowed; }
 
-    /* Modal */
+    .password-input-wrap { position: relative; display: flex; align-items: center; }
+    .password-input-wrap input { padding-left: 42px; font-family: 'Courier New', monospace; font-weight: 700; }
+    .toggle-password {
+      position: absolute;
+      left: 8px;
+      width: 30px; height: 30px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 6px;
+    }
+    .toggle-password:hover { background: var(--bg); color: var(--accent); }
+    .toggle-password i { width: 16px; height: 16px; }
+
+    /* ============ Modal ============ */
     .modal-backdrop {
       position: fixed;
       inset: 0;
@@ -640,7 +818,7 @@
       flex-shrink: 0;
     }
 
-    /* Backup checkbox */
+    /* ============ Backup checkboxes ============ */
     .backup-checkbox-list {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -662,7 +840,7 @@
     .backup-checkbox input { accent-color: var(--accent); width: 16px; height: 16px; }
     .backup-checkbox.checked { border-color: var(--accent); background: rgba(20,184,166,0.08); }
 
-    /* Activity log */
+    /* ============ Activity log ============ */
     .activity-list { display: flex; flex-direction: column; gap: 8px; max-height: 500px; overflow-y: auto; }
     .activity-item {
       display: flex;
@@ -680,6 +858,7 @@
     .activity-item.create { border-right-color: var(--success); }
     .activity-item.delete { border-right-color: var(--danger); }
     .activity-item.update { border-right-color: var(--gold); }
+    .activity-item.impersonate { border-right-color: var(--purple); }
     .activity-icon {
       width: 36px; height: 36px;
       border-radius: 10px;
@@ -711,7 +890,7 @@
     .activity-body .details { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
     .activity-body .meta { font-size: 11px; color: var(--text-muted); margin-top: 4px; display: flex; gap: 10px; flex-wrap: wrap; }
 
-    /* Alerts */
+    /* ============ Alerts ============ */
     .alerts-list { display: flex; flex-direction: column; gap: 10px; }
     .alert-item {
       display: flex;
@@ -750,7 +929,7 @@
       font-weight: 700;
     }
 
-    /* Empty & loading */
+    /* ============ Empty & loading ============ */
     .empty-state {
       background: var(--card);
       border: 1px solid var(--border);
@@ -773,7 +952,7 @@
     .loader i { width: 40px; height: 40px; animation: spin 1s linear infinite; color: var(--accent); margin-bottom: 12px; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* Health bar */
+    /* ============ Health bar ============ */
     .health-bar {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -804,7 +983,158 @@
     .health-item .health-label { font-weight: 700; color: var(--text); }
     .health-item .health-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
 
-    /* Responsive */
+    /* ============ Users Panel ============ */
+    .users-filter-bar {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      margin-bottom: 16px;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+      box-shadow: var(--shadow-sm);
+    }
+    .users-filter-bar select {
+      padding: 10px 14px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      outline: none;
+      cursor: pointer;
+      min-width: 200px;
+    }
+    .users-filter-bar select:focus { border-color: var(--accent); }
+
+    /* ============ ✨ Quick Search Overlay ============ */
+    .quick-search-overlay {
+      position: fixed; inset: 0;
+      z-index: 600;
+      display: none;
+      align-items: flex-start; justify-content: center;
+      padding: 80px 20px 20px;
+      background: rgba(15,23,42,0.6);
+      backdrop-filter: blur(6px);
+      animation: qsFadeIn 0.2s;
+    }
+    .quick-search-overlay.show { display: flex; }
+    @keyframes qsFadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes qsSlideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .quick-search-box {
+      width: min(600px, 100%);
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+      animation: qsSlideUp 0.25s;
+    }
+    .quick-search-input-wrap { position: relative; }
+    .quick-search-input {
+      width: 100%;
+      padding: 18px 60px 18px 18px;
+      font-family: inherit;
+      font-size: 16px; font-weight: 600;
+      background: var(--card);
+      border: none;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+      outline: none;
+    }
+    .quick-search-input-wrap > i {
+      position: absolute; right: 20px; top: 50%;
+      transform: translateY(-50%);
+      width: 22px; height: 22px;
+      color: var(--accent);
+      pointer-events: none;
+    }
+    .quick-search-kbd {
+      position: absolute; left: 18px; top: 50%;
+      transform: translateY(-50%);
+      font-size: 10px;
+      padding: 3px 8px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-muted);
+      font-family: 'Courier New', monospace;
+      font-weight: 700;
+    }
+    .quick-search-results { max-height: 400px; overflow-y: auto; padding: 8px; }
+    .quick-search-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .quick-search-item:hover, .quick-search-item.selected { background: rgba(20,184,166,0.1); }
+    .quick-search-item .qs-icon {
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: white;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 15px;
+      flex-shrink: 0;
+    }
+    .quick-search-item .qs-body { flex: 1; min-width: 0; }
+    .quick-search-item .qs-name { font-weight: 700; font-size: 14px; color: var(--text); }
+    .quick-search-item .qs-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .quick-search-empty { text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 13px; }
+    .quick-search-footer {
+      padding: 10px 16px;
+      border-top: 1px solid var(--border);
+      background: var(--bg);
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 11px; color: var(--text-muted);
+    }
+    .quick-search-footer kbd {
+      font-family: 'Courier New', monospace;
+      padding: 2px 6px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-weight: 700;
+    }
+
+    /* ============ ✨ User Details Modal — Hero ============ */
+    .user-hero {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px;
+      background: linear-gradient(135deg, rgba(20,184,166,0.08), rgba(139,92,246,0.08));
+      border-radius: 12px;
+      margin-bottom: 18px;
+    }
+    .user-hero-avatar {
+      width: 70px; height: 70px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: white;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 26px;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    .user-hero-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .user-hero-info { flex: 1; min-width: 0; }
+    .user-hero-info .name { font-size: 20px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+    .user-hero-info .sub { font-size: 13px; color: var(--text-muted); display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+
+    /* ============ ✨ Reveal password animation ============ */
+    @keyframes pwd-reveal {
+      0% { background: rgba(20,184,166,0.3); }
+      100% { background: transparent; }
+    }
+    .password-badge.just-revealed { animation: pwd-reveal 1s; }
+
+    /* ============ Responsive ============ */
     @media (max-width: 1024px) {
       .sidebar { transform: translateX(100%); }
       .sidebar.open { transform: translateX(0); }
@@ -825,20 +1155,40 @@
       .form-grid { grid-template-columns: 1fr; }
       .modal-footer { flex-direction: column-reverse; }
       .modal-footer .btn { width: 100%; justify-content: center; }
+      .quick-search-overlay { padding: 20px 10px; }
+      .impersonate-bar { font-size: 11px; gap: 8px; padding: 0 10px; }
+      .impersonate-bar .imp-actions { margin-right: 8px; }
     }
   </style>
-</head>
-<body>
+</head><body>
+
+  <!-- ✨ Impersonate Bar -->
+  <div class="impersonate-bar" id="impersonateBar">
+    <div class="imp-info">
+      <i data-lucide="user-check"></i>
+      <span>أنت في وضع الدخول كـ:</span>
+      <strong id="impersonateUserName">—</strong>
+      <span id="impersonateCompanyName" style="opacity:0.85;">—</span>
+    </div>
+    <div class="imp-actions">
+      <button id="impersonateBackBtn">
+        <i data-lucide="undo-2"></i> رجوع لحساب الأدمن
+      </button>
+      <button id="impersonateLogoutBtn" class="danger">
+        <i data-lucide="log-out"></i> خروج
+      </button>
+    </div>
+  </div>
 
   <!-- Sidebar -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
-      <div class="sidebar-logo">
-        <img src="logo.png" alt="رفاد" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=fallback>R</span>';">
+      <div class="sidebar-logo" id="sidebarLogo">
+        <img src="logo.png" alt="رفاد" id="sidebarLogoImg" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=fallback>R</span>';">
       </div>
       <div class="sidebar-brand">
-        <h2>رفاد</h2>
-        <p>لوحة الأدمن</p>
+        <h2 id="sidebarBrandName">رفاد</h2>
+        <p id="sidebarBrandDesc">لوحة الأدمن</p>
       </div>
     </div>
     <nav class="sidebar-nav" id="sidebarNav"></nav>
@@ -886,6 +1236,10 @@
         <button class="main-tab" data-panel="companies">
           <i data-lucide="building-2"></i> الشركات
         </button>
+        <button class="main-tab" data-panel="users">
+          <i data-lucide="users"></i> المستخدمين
+          <span class="tab-badge" id="usersTabBadge" style="display:none;">0</span>
+        </button>
         <button class="main-tab" data-panel="backup">
           <i data-lucide="database-backup"></i> النسخ الاحتياطي
         </button>
@@ -900,11 +1254,13 @@
         </button>
         <button class="main-tab" data-panel="alerts">
           <i data-lucide="bell"></i> التنبيهات
-          <span id="alertsBadge" style="background:var(--danger);color:white;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;">0</span>
+          <span class="tab-badge" id="alertsBadge" style="display:none;">0</span>
         </button>
       </div>
 
+      <!-- ============================================================ -->
       <!-- PANEL: Dashboard -->
+      <!-- ============================================================ -->
       <div class="panel active" data-panel-content="dashboard">
         <div class="stats-grid">
           <div class="stat-card">
@@ -985,12 +1341,14 @@
         </div>
       </div>
 
+      <!-- ============================================================ -->
       <!-- PANEL: Companies -->
+      <!-- ============================================================ -->
       <div class="panel" data-panel-content="companies">
         <div class="page-head">
           <div>
             <h1>إدارة الشركات</h1>
-            <p>إدارة كل الشركات، المدفوعات، والاشتراكات</p>
+            <p>إدارة كل الشركات، المدفوعات، والمستخدمين</p>
           </div>
           <div style="display:flex;gap:10px;flex-wrap:wrap;">
             <button class="btn btn-outline btn-sm" id="exportCompaniesBtn">
@@ -1020,7 +1378,73 @@
         </div>
       </div>
 
+      <!-- ============================================================ -->
+      <!-- PANEL: Users (✨ NEW) -->
+      <!-- ============================================================ -->
+      <div class="panel" data-panel-content="users">
+        <div class="page-head">
+          <div>
+            <h1>إدارة المستخدمين</h1>
+            <p>تحكم كامل في مستخدمي كل الشركات — تعديل، حذف، إعادة تعيين كلمات المرور، تبديل الأدوار</p>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <button class="btn btn-outline btn-sm" id="exportUsersBtn">
+              <i data-lucide="download"></i> تصدير Excel
+            </button>
+            <button class="btn btn-primary" id="addUserBtn">
+              <i data-lucide="user-plus"></i> إضافة مستخدم
+            </button>
+          </div>
+        </div>
+
+        <div class="users-filter-bar">
+          <select id="usersCompanyFilter">
+            <option value="">كل الشركات</option>
+          </select>
+          <select id="usersRoleFilter">
+            <option value="">كل الأدوار</option>
+          </select>
+          <select id="usersStatusFilter">
+            <option value="">كل الحالات</option>
+            <option value="active">نشط</option>
+            <option value="inactive">موقوف</option>
+            <option value="locked">مقفل</option>
+          </select>
+          <div class="search-box" style="flex:1;min-width:220px;">
+            <input type="text" id="usersSearchInput" placeholder="ابحث بالاسم، Username، أو الهاتف...">
+            <i data-lucide="search"></i>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>المستخدم</th>
+                  <th>Username</th>
+                  <th>Password</th>
+                  <th>الشركة</th>
+                  <th>الدور</th>
+                  <th>الحالة</th>
+                  <th>إجراءات</th>
+                </tr>
+              </thead>
+              <tbody id="usersTableBody">
+                <tr>
+                  <td colspan="7">
+                    <div class="loader"><i data-lucide="loader-2"></i><p>جارٍ التحميل...</p></div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================================ -->
       <!-- PANEL: Backup -->
+      <!-- ============================================================ -->
       <div class="panel" data-panel-content="backup">
         <div class="page-head">
           <div>
@@ -1089,7 +1513,9 @@
         </div>
       </div>
 
+      <!-- ============================================================ -->
       <!-- PANEL: Cleanup -->
+      <!-- ============================================================ -->
       <div class="panel" data-panel-content="cleanup">
         <div class="page-head">
           <div>
@@ -1160,7 +1586,9 @@
         </div>
       </div>
 
+      <!-- ============================================================ -->
       <!-- PANEL: Import CSV -->
+      <!-- ============================================================ -->
       <div class="panel" data-panel-content="import">
         <div class="page-head">
           <div>
@@ -1214,7 +1642,9 @@
         </div>
       </div>
 
+      <!-- ============================================================ -->
       <!-- PANEL: Activity -->
+      <!-- ============================================================ -->
       <div class="panel" data-panel-content="activity">
         <div class="page-head">
           <div>
@@ -1222,7 +1652,7 @@
             <p>كل عمليات المستخدمين في النظام</p>
           </div>
           <div style="display:flex;gap:10px;">
-            <select id="activityCompanyFilter" style="padding:10px 14px;border-radius:10px;border:1.5px solid var(--border);background:var(--card);font-family:inherit;">
+            <select id="activityCompanyFilter" style="padding:10px 14px;border-radius:10px;border:1.5px solid var(--border);background:var(--card);font-family:inherit;font-size:13px;">
               <option value="">كل الشركات</option>
             </select>
             <button class="btn btn-outline btn-sm" id="refreshActivityBtn">
@@ -1239,7 +1669,9 @@
         </div>
       </div>
 
+      <!-- ============================================================ -->
       <!-- PANEL: Alerts -->
+      <!-- ============================================================ -->
       <div class="panel" data-panel-content="alerts">
         <div class="page-head">
           <div>
@@ -1256,9 +1688,9 @@
       </div>
 
     </main>
-  </div>
-
+  </div>  <!-- ============================================================ -->
   <!-- Modal: Cleanup Confirm -->
+  <!-- ============================================================ -->
   <div class="modal-backdrop" id="cleanupConfirmModal">
     <div class="modal">
       <div class="modal-header">
@@ -1285,19 +1717,399 @@
     </div>
   </div>
 
+  <!-- ============================================================ -->
+  <!-- Modal: ✨ User Details (Full Control) -->
+  <!-- ============================================================ -->
+  <div class="modal-backdrop" id="userDetailsModal">
+    <div class="modal lg">
+      <div class="modal-header">
+        <h3><i data-lucide="user-cog"></i> <span id="userDetailsTitle">تفاصيل المستخدم</span></h3>
+        <button class="modal-close" data-close><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body">
+        <div id="userDetailsBody">
+          <div class="loader"><i data-lucide="loader-2"></i><p>جارٍ التحميل...</p></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" data-close>إغلاق</button>
+        <button class="btn btn-purple" id="userDetailsImpersonateBtn">
+          <i data-lucide="user-check"></i> دخول كمستخدم
+        </button>
+        <button class="btn btn-primary" id="userDetailsSaveBtn">
+          <i data-lucide="save"></i> حفظ التعديلات
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- Modal: ✨ Add User -->
+  <!-- ============================================================ -->
+  <div class="modal-backdrop" id="addUserModal">
+    <div class="modal lg">
+      <div class="modal-header">
+        <h3><i data-lucide="user-plus"></i> إضافة مستخدم جديد</h3>
+        <button class="modal-close" data-close><i data-lucide="x"></i></button>
+      </div>
+      <form id="addUserForm">
+        <div class="modal-body">
+          <div class="info-box purple">
+            <i data-lucide="info"></i>
+            <div>سيتم إنشاء المستخدم فوراً في الشركة المحددة مع صلاحيات الدور المختار.</div>
+          </div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>الشركة <span class="req">*</span></label>
+              <select id="newUserCompany" required>
+                <option value="">اختر الشركة...</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>الدور <span class="req">*</span></label>
+              <select id="newUserRole" required>
+                <option value="">اختر الدور...</option>
+              </select>
+            </div>
+            <div class="form-group full">
+              <label>الاسم الكامل <span class="req">*</span></label>
+              <input type="text" id="newUserFullName" required maxlength="120" placeholder="مثال: أحمد محمد">
+            </div>
+            <div class="form-group">
+              <label>اسم المستخدم (Username) <span class="req">*</span></label>
+              <input type="text" id="newUserUsername" required maxlength="50" dir="ltr" placeholder="ahmed" autocomplete="off">
+            </div>
+            <div class="form-group">
+              <label>كلمة المرور <span class="req">*</span></label>
+              <div class="password-input-wrap">
+                <input type="text" id="newUserPassword" required maxlength="100" dir="ltr" placeholder="4 أحرف على الأقل" autocomplete="off">
+                <button type="button" class="toggle-password" data-toggle="newUserPassword">
+                  <i data-lucide="eye"></i>
+                </button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>الهاتف</label>
+              <input type="tel" id="newUserPhone" maxlength="30" dir="ltr" placeholder="01000000000">
+            </div>
+            <div class="form-group">
+              <label>البريد الإلكتروني</label>
+              <input type="email" id="newUserEmail" maxlength="120" dir="ltr" placeholder="email@example.com">
+            </div>
+            <div class="form-group">
+              <label>الراتب</label>
+              <input type="number" id="newUserSalary" min="0" step="0.01" value="0">
+            </div>
+            <div class="form-group">
+              <label>الحالة</label>
+              <select id="newUserIsActive">
+                <option value="true">نشط</option>
+                <option value="false">موقوف</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group full" style="margin-top:14px;">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+              <input type="checkbox" id="newUserGeneratePassword" style="width:18px;height:18px;accent-color:var(--accent);">
+              توليد كلمة مرور عشوائية (6 أرقام)
+            </label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" data-close>إلغاء</button>
+          <button type="submit" class="btn btn-primary" id="addUserSubmitBtn">
+            <i data-lucide="save"></i> <span id="addUserSubmitText">إضافة المستخدم</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- Modal: ✨ Impersonate Confirm -->
+  <!-- ============================================================ -->
+  <div class="modal-backdrop" id="impersonateConfirmModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3><i data-lucide="user-check"></i> تأكيد الدخول كمستخدم</h3>
+        <button class="modal-close" data-close><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="info-box purple">
+          <i data-lucide="alert-triangle"></i>
+          <div>
+            <strong>وضع الدخول كمستخدم (Impersonate)</strong>
+            <div style="margin-top:6px;line-height:1.7;">
+              سيتم الدخول كـ المستخدم المحدد وستظهر بيانات الشركة كاملة.
+              كل عملية ستسجل في <code>activity_log</code> بمعرّف الأدمن.
+            </div>
+          </div>
+        </div>
+        <div id="impersonateConfirmBody"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" data-close>إلغاء</button>
+        <button class="btn btn-purple" id="impersonateConfirmBtn">
+          <i data-lucide="log-in"></i> دخول كمستخدم
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- Modal: ✨ Edit Company (Full Control) -->
+  <!-- ============================================================ -->
+  <div class="modal-backdrop" id="editCompanyModal">
+    <div class="modal lg">
+      <div class="modal-header">
+        <h3><i data-lucide="building-2"></i> <span id="editCompanyTitle">تعديل بيانات الشركة</span></h3>
+        <button class="modal-close" data-close><i data-lucide="x"></i></button>
+      </div>
+      <form id="editCompanyForm">
+        <div class="modal-body">
+          <div class="form-grid">
+            <div class="form-group full">
+              <label>اسم الشركة <span class="req">*</span></label>
+              <input type="text" id="editCompanyName" required maxlength="120">
+            </div>
+            <div class="form-group">
+              <label>الهاتف</label>
+              <input type="tel" id="editCompanyPhone" maxlength="30" dir="ltr">
+            </div>
+            <div class="form-group">
+              <label>البريد الإلكتروني</label>
+              <input type="email" id="editCompanyEmail" maxlength="120" dir="ltr">
+            </div>
+            <div class="form-group">
+              <label>الرقم الضريبي</label>
+              <input type="text" id="editCompanyTax" maxlength="50">
+            </div>
+            <div class="form-group">
+              <label>العملة</label>
+              <select id="editCompanyCurrency">
+                <option value="EGP">جنيه مصري (EGP)</option>
+                <option value="SAR">ريال سعودي (SAR)</option>
+                <option value="AED">درهم إماراتي (AED)</option>
+                <option value="USD">دولار أمريكي (USD)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>تاريخ انتهاء الاشتراك</label>
+              <input type="date" id="editCompanySubscriptionEnd">
+            </div>
+            <div class="form-group">
+              <label>الحالة</label>
+              <select id="editCompanyIsActive">
+                <option value="true">نشطة</option>
+                <option value="false">موقوفة</option>
+              </select>
+            </div>
+            <div class="form-group full">
+              <label>رابط الشعار (اختياري)</label>
+              <input type="url" id="editCompanyLogo" maxlength="500" dir="ltr" placeholder="https://...">
+            </div>
+            <div class="form-group full">
+              <label>العنوان</label>
+              <input type="text" id="editCompanyAddress" maxlength="255">
+            </div>
+            <div class="form-group full">
+              <label>ملاحظات</label>
+              <textarea id="editCompanyNotes" maxlength="500"></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" data-close>إلغاء</button>
+          <button type="submit" class="btn btn-primary" id="editCompanySaveBtn">
+            <i data-lucide="save"></i> حفظ التعديلات
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- Modal: Company Users (Quick view from company card) -->
+  <!-- ============================================================ -->
+  <div class="modal-backdrop" id="companyUsersModal">
+    <div class="modal xl">
+      <div class="modal-header">
+        <h3><i data-lucide="users"></i> <span id="companyUsersTitle">مستخدمي الشركة</span></h3>
+        <button class="modal-close" data-close><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body">
+        <div id="companyUsersBody">
+          <div class="loader"><i data-lucide="loader-2"></i><p>جارٍ التحميل...</p></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" data-close>إغلاق</button>
+        <button class="btn btn-primary" id="companyUsersAddBtn">
+          <i data-lucide="user-plus"></i> إضافة مستخدم
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- Modal: Reset Password Confirm -->
+  <!-- ============================================================ -->
+  <div class="modal-backdrop" id="resetPasswordModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3><i data-lucide="key-round"></i> إعادة تعيين كلمة المرور</h3>
+        <button class="modal-close" data-close><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="info-box warning">
+          <i data-lucide="alert-triangle"></i>
+          <div>سيتم استبدال كلمة المرور الحالية. تأكد من إبلاغ المستخدم بالكلمة الجديدة.</div>
+        </div>
+        <div id="resetPasswordBody"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" data-close>إلغاء</button>
+        <button class="btn btn-gold" id="resetPasswordConfirmBtn">
+          <i data-lucide="refresh-cw"></i> توليد وتعيين كلمة مرور جديدة
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- Modal: Payment (kept from v2 — used inline) -->
+  <!-- ============================================================ -->
+  <div class="modal-backdrop" id="paymentModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3><i data-lucide="wallet"></i> <span id="paymentModalTitle">تسجيل دفعة</span></h3>
+        <button class="modal-close" data-close><i data-lucide="x"></i></button>
+      </div>
+      <form id="paymentForm">
+        <div class="modal-body">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>المبلغ <span class="req">*</span></label>
+              <input type="number" id="payAmount" step="0.01" min="0" required placeholder="0.00">
+            </div>
+            <div class="form-group">
+              <label>طريقة الدفع</label>
+              <select id="payMethod">
+                <option value="cash">نقدي</option>
+                <option value="transfer">تحويل بنكي</option>
+                <option value="vodafone">فودافون كاش</option>
+                <option value="cheque">شيك</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>تاريخ الدفع</label>
+              <input type="date" id="payDate">
+            </div>
+            <div class="form-group">
+              <label>تاريخ الاستحقاق القادم</label>
+              <input type="date" id="payDueDate">
+            </div>
+            <div class="form-group full">
+              <label>ملاحظات</label>
+              <textarea id="payNotes" maxlength="255"></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" data-close>إلغاء</button>
+          <button type="submit" class="btn btn-primary" id="savePaymentBtn">
+            <i data-lucide="save"></i> تسجيل الدفعة
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ✨ Quick Search Overlay -->
+  <div class="quick-search-overlay" id="quickSearchOverlay">
+    <div class="quick-search-box">
+      <div class="quick-search-input-wrap">
+        <input type="text" class="quick-search-input" id="quickSearchInput" placeholder="ابحث في الشركات أو المستخدمين..." autocomplete="off">
+        <i data-lucide="search"></i>
+        <span class="quick-search-kbd">ESC</span>
+      </div>
+      <div class="quick-search-results" id="quickSearchResults">
+        <div class="quick-search-empty">اكتب للبحث السريع...</div>
+      </div>
+      <div class="quick-search-footer">
+        <span><kbd>↑</kbd> <kbd>↓</kbd> للتنقل</span>
+        <span><kbd>Enter</kbd> للفتح</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- Scripts -->
+  <!-- ============================================================ -->
   <script src="refad-core.js"></script>
-  <script src="refad-auth.js"></script>  <script>
+  <script src="refad-auth.js"></script>
+  <script src="refad-theme-sync.js"></script>
+  <script src="refad-settings.js"></script>
+
+  <script>
     (function () {
       'use strict';
 
       // ============================================================
-      // Guard
+      // 0) Safe Settings Wrapper
+      // ============================================================
+      const SafeSettings = {
+        locale: {
+          formatMoney: function (v) {
+            try {
+              if (window.RefadSettings?.locale?.formatMoney) {
+                return RefadSettings.locale.formatMoney(v);
+              }
+            } catch (e) {}
+            return Refad.format.money(v);
+          }
+        },
+        identity: {
+          getSystemName: function () {
+            try {
+              if (window.RefadSettings?.identity?.getSystemName) {
+                return RefadSettings.identity.getSystemName();
+              }
+            } catch (e) {}
+            return 'رفاد';
+          },
+          getTagline: function () {
+            try {
+              if (window.RefadSettings?.identity?.getTagline) {
+                return RefadSettings.identity.getTagline();
+              }
+            } catch (e) {}
+            return 'نظام إدارة الأدوية';
+          },
+          getLogoUrl: function () {
+            try {
+              if (window.RefadSettings?.identity?.getLogoUrl) {
+                return RefadSettings.identity.getLogoUrl();
+              }
+            } catch (e) {}
+            return null;
+          }
+        }
+      };
+
+      // ============================================================
+      // 1) Guard — Admin Only
       // ============================================================
       const session = Refad.Auth.guardPage('system.admin');
       if (!session) return;
 
+      // ✨ Check if admin is in impersonate mode
+      const impersonateSession = localStorage.getItem('refad_admin_impersonate');
+      const isImpersonating = !!impersonateSession;
+      const impersonateData = isImpersonating ? JSON.parse(impersonateSession) : null;
+
       // ============================================================
-      // Constants: Tables with company_id directly vs via parent
+      // 2) Constants
       // ============================================================
       const BACKUP_TABLES = [
         // Direct company_id
@@ -1337,40 +2149,30 @@
         { key: 'representative_settlements', label: 'تسويات المندوبين', hasCompanyId: true },
         { key: 'share_links', label: 'روابط المشاركة', hasCompanyId: true },
         { key: 'admin_payments', label: 'مدفوعات الأدمن', hasCompanyId: true },
-        // Chat (via conversation)
         { key: 'chat_conversations', label: 'محادثات الشات', hasCompanyId: true },
         { key: 'chat_participants', label: 'مشاركو الشات', hasCompanyId: false, parent: { table: 'chat_conversations', fk: 'conversation_id' } },
         { key: 'chat_messages', label: 'رسائل الشات', hasCompanyId: false, parent: { table: 'chat_conversations', fk: 'conversation_id' } },
         { key: 'chat_files', label: 'ملفات الشات', hasCompanyId: false, parent: { table: 'chat_messages', fk: 'message_id' } }
       ];
 
-      // ============================================================
-      // Cleanup Types
-      // ============================================================
       const CLEANUP_TYPES = {
         sales_invoices: {
           label: 'فواتير البيع',
           dateField: 'invoice_date',
           hasCompanyId: true,
-          cascade: [
-            { table: 'sales_invoice_items', fk: 'invoice_id' }
-          ]
+          cascade: [{ table: 'sales_invoice_items', fk: 'invoice_id' }]
         },
         sales_orders: {
           label: 'طلبات البيع',
           dateField: 'created_at',
           hasCompanyId: true,
-          cascade: [
-            { table: 'sales_order_items', fk: 'order_id' }
-          ]
+          cascade: [{ table: 'sales_order_items', fk: 'order_id' }]
         },
         receipts: {
           label: 'الاستلامات',
           dateField: 'receipt_date',
           hasCompanyId: true,
-          cascade: [
-            { table: 'receipt_items', fk: 'receipt_id' }
-          ]
+          cascade: [{ table: 'receipt_items', fk: 'receipt_id' }]
         },
         purchase_requests: {
           label: 'طلبات الشراء',
@@ -1416,9 +2218,7 @@
           dateField: 'created_at',
           hasCompanyId: false,
           parent: { table: 'chat_conversations', fk: 'conversation_id' },
-          cascade: [
-            { table: 'chat_files', fk: 'message_id' }
-          ]
+          cascade: [{ table: 'chat_files', fk: 'message_id' }]
         },
         representative_settlements: {
           label: 'تسويات المندوبين',
@@ -1428,35 +2228,86 @@
         }
       };
 
+      const IMPORT_SCHEMAS = {
+        products: {
+          label: 'الأصناف',
+          required: ['name'],
+          columns: {
+            'الاسم': 'name', 'name': 'name',
+            'الاسم بالإنجليزية': 'name_en', 'name_en': 'name_en',
+            'الشكل': 'form', 'form': 'form',
+            'الوحدة': 'unit', 'unit': 'unit',
+            'التصنيف': 'category', 'category': 'category',
+            'السعر': 'default_price', 'price': 'default_price', 'default_price': 'default_price',
+            'حد الطلب': 'reorder_level', 'reorder_level': 'reorder_level',
+            'ملاحظات': 'notes', 'notes': 'notes'
+          },
+          defaults: { is_active: true, min_order_qty: 1 }
+        },
+        customers: {
+          label: 'العملاء',
+          required: ['name'],
+          columns: {
+            'الاسم': 'name', 'name': 'name',
+            'الهاتف': 'phone', 'phone': 'phone',
+            'البريد': 'email', 'email': 'email',
+            'العنوان': 'address', 'address': 'address',
+            'ملاحظات': 'notes', 'notes': 'notes'
+          },
+          defaults: { balance: 0, is_active: true }
+        },
+        suppliers: {
+          label: 'الموردين',
+          required: ['name'],
+          columns: {
+            'الاسم': 'name', 'name': 'name',
+            'الهاتف': 'phone', 'phone': 'phone',
+            'البريد': 'email', 'email': 'email',
+            'العنوان': 'address', 'address': 'address',
+            'الرقم الضريبي': 'tax_number', 'tax_number': 'tax_number',
+            'ملاحظات': 'notes', 'notes': 'notes'
+          },
+          defaults: { balance: 0, is_active: true }
+        },
+        employees: {
+          label: 'الموظفين',
+          required: ['full_name', 'username', 'password'],
+          columns: {
+            'الاسم': 'full_name', 'full_name': 'full_name',
+            'اسم المستخدم': 'username', 'username': 'username',
+            'كلمة المرور': 'password', 'password': 'password',
+            'الهاتف': 'phone', 'phone': 'phone',
+            'البريد': 'email', 'email': 'email',
+            'الراتب': 'salary', 'salary': 'salary',
+            'تاريخ التعيين': 'hire_date', 'hire_date': 'hire_date'
+          },
+          defaults: { is_active: true, has_device: true, role_id: null }
+        }
+      };
+
       // ============================================================
-      // State
+      // 3) State
       // ============================================================
       const state = {
         companies: [],
+        users: [],
         usersCountMap: {},
+        roles: [],
         payments: [],
+        allUsers: [], // flat list for users tab
         selectedBackupTables: new Set(BACKUP_TABLES.map(t => t.key)),
         restoreData: null,
         csvImportData: null,
         csvImportType: null,
-        cleanupPreviewCount: 0
+        cleanupPreviewCount: 0,
+        currentUserId: null,
+        currentCompanyId: null,
+        impersonateTarget: null,
+        qsState: { index: -1, results: [] }
       };
 
       // ============================================================
-      // Sidebar MENU
-      // ============================================================
-      const MENU = [
-        { section: 'النظام', items: [
-          { label: 'شاشة الأدمن', icon: 'shield', href: 'admin.html', permission: 'admin.full', badge: 'Admin', badgeClass: 'gold' }
-        ]}
-      ];
-
-      function buildSidebar() {
-  Refad.buildMenu('admin.html');
-}
-
-      // ============================================================
-      // UI Helpers
+      // 4) UI Setup
       // ============================================================
       function fillUser() {
         const av = document.getElementById('userAvatar');
@@ -1465,6 +2316,26 @@
         else av.textContent = initial;
         document.getElementById('userName').textContent = session.full_name;
         document.getElementById('userRole').textContent = 'أدمن النظام';
+      }
+
+      // ✨ Apply Identity
+      function applyIdentity() {
+        const name = SafeSettings.identity.getSystemName();
+        const tagline = SafeSettings.identity.getTagline();
+        const logoUrl = SafeSettings.identity.getLogoUrl();
+        const brandName = document.getElementById('sidebarBrandName');
+        const brandDesc = document.getElementById('sidebarBrandDesc');
+        const logoImg = document.getElementById('sidebarLogoImg');
+        if (brandName) brandName.textContent = name;
+        if (brandDesc) brandDesc.textContent = 'لوحة الأدمن';
+        if (logoImg && logoUrl) {
+          logoImg.src = logoUrl;
+          logoImg.onerror = function () {
+            this.style.display = 'none';
+            const parent = this.parentElement;
+            if (parent) parent.innerHTML = '<span class="fallback">' + (name.charAt(0) || 'R') + '</span>';
+          };
+        }
       }
 
       function setupTheme() {
@@ -1498,13 +2369,21 @@
         d.addEventListener('click', e => e.stopPropagation());
         document.getElementById('logoutBtn').addEventListener('click', async () => {
           if (await Refad.alert.confirm('تسجيل الخروج', 'هل تريد الخروج؟', 'خروج')) {
+            localStorage.removeItem('refad_admin_impersonate');
             await Refad.Auth.logout();
           }
         });
       }
 
+      // ✨ Realtime Theme
+      function setupRealtimeTheme() {
+        window.addEventListener('refad:theme-changed', () => {
+          applyIdentity();
+        });
+      }
+
       // ============================================================
-      // Main Tabs
+      // 5) Main Tabs
       // ============================================================
       function setupMainTabs() {
         document.querySelectorAll('.main-tab').forEach(tab => {
@@ -1519,24 +2398,29 @@
             if (panel === 'activity') loadActivity();
             else if (panel === 'alerts') loadAlerts();
             else if (panel === 'dashboard') { renderStats(); renderAlerts(); renderSystemHealth(); }
+            else if (panel === 'users') renderUsersTable();
           });
         });
       }
 
       // ============================================================
-      // Load Data
+      // 6) Load Data
       // ============================================================
       async function loadData() {
         try {
-          const [companies, users, payments] = await Promise.all([
+          const [companies, users, roles, payments] = await Promise.all([
             Refad.db.select('companies', {
               columns: 'id, name, phone, email, address, tax_number, logo_url, is_active, subscription_end, notes, currency, created_at',
               order: { column: 'created_at', ascending: false },
               limit: 500
             }),
             Refad.db.select('users', {
-              columns: 'id, company_id, is_active',
+              columns: 'id, company_id, role_id, full_name, username, password, phone, email, avatar_url, is_active, has_device, salary, hire_date, last_login, failed_attempts, locked_until, created_at',
               limit: 5000
+            }).catch(() => []),
+            Refad.db.select('roles', {
+              columns: 'id, company_id, name, name_ar, is_system, is_owner',
+              limit: 1000
             }).catch(() => []),
             Refad.db.select('admin_payments', {
               columns: 'id, company_id, amount, payment_date, due_date, status, method, notes, created_at',
@@ -1546,10 +2430,14 @@
           ]);
 
           state.companies = companies || [];
+          state.users = users || [];
+          state.allUsers = users || [];
+          state.roles = roles || [];
           state.payments = payments || [];
 
+          // Users count map (active only)
           state.usersCountMap = {};
-          users.forEach(u => {
+          state.allUsers.forEach(u => {
             if (u.is_active === false) return;
             state.usersCountMap[u.company_id] = (state.usersCountMap[u.company_id] || 0) + 1;
           });
@@ -1557,6 +2445,7 @@
           renderStats();
           renderCompanies();
           populateCompanySelects();
+          renderUsersTable();
           updateAlertsBadge();
           renderAlerts();
           renderSystemHealth();
@@ -1577,20 +2466,40 @@
           state.companies.map(c => `<option value="${c.id}">${Refad.escapeHtml(c.name)}</option>`).join('');
         
         ['backupCompanySelect', 'restoreCompanySelect', 'cleanupCompanySelect', 
-         'importCompanySelect', 'activityCompanyFilter'].forEach(id => {
+         'importCompanySelect', 'newUserCompany', 'usersCompanyFilter'].forEach(id => {
           const el = document.getElementById(id);
-          if (el) {
-            const current = el.value;
-            el.innerHTML = id === 'activityCompanyFilter' 
-              ? '<option value="">كل الشركات</option>' + state.companies.map(c => `<option value="${c.id}">${Refad.escapeHtml(c.name)}</option>`).join('')
-              : options;
-            if (current) el.value = current;
+          if (!el) return;
+          const current = el.value;
+          
+          if (id === 'usersCompanyFilter') {
+            el.innerHTML = '<option value="">كل الشركات</option>' + 
+              state.companies.map(c => `<option value="${c.id}">${Refad.escapeHtml(c.name)}</option>`).join('');
+          } else if (id === 'activityCompanyFilter') {
+            el.innerHTML = '<option value="">كل الشركات</option>' + 
+              state.companies.map(c => `<option value="${c.id}">${Refad.escapeHtml(c.name)}</option>`).join('');
+          } else {
+            el.innerHTML = options;
           }
+          
+          if (current) el.value = current;
         });
       }
 
+      function populateRoleSelects() {
+        const allRoles = state.roles.map(r => 
+          `<option value="${r.id}">${Refad.escapeHtml(r.name_ar || r.name)} (${Refad.escapeHtml(r.name)})</option>`
+        ).join('');
+
+        const usersRoleFilter = document.getElementById('usersRoleFilter');
+        if (usersRoleFilter) {
+          const current = usersRoleFilter.value;
+          usersRoleFilter.innerHTML = '<option value="">كل الأدوار</option>' + allRoles;
+          if (current) usersRoleFilter.value = current;
+        }
+      }
+
       // ============================================================
-      // Company Status
+      // 7) Company Status
       // ============================================================
       function getCompanyStatus(c) {
         if (c.is_active === false) return 'inactive';
@@ -1602,14 +2511,14 @@
       }
 
       // ============================================================
-      // Render Stats
+      // 8) Render Stats
       // ============================================================
       function renderStats() {
         const total = state.companies.length;
         const active = state.companies.filter(c => getCompanyStatus(c) === 'active').length;
         const expiring = state.companies.filter(c => getCompanyStatus(c) === 'expiring').length;
         const inactive = state.companies.filter(c => ['inactive', 'expired'].includes(getCompanyStatus(c))).length;
-        const totalUsers = Object.values(state.usersCountMap).reduce((s, n) => s + n, 0);
+        const totalUsers = state.allUsers.filter(u => u.is_active !== false).length;
         const totalRevenue = state.payments
           .filter(p => p.status === 'paid')
           .reduce((s, p) => s + (parseFloat(p.amount) || 0), 0);
@@ -1622,16 +2531,22 @@
         document.getElementById('statInactive').textContent = Refad.format.number(inactive);
         document.getElementById('statInactiveSub').textContent = `${state.companies.filter(c => c.is_active === false).length} موقوفة`;
         document.getElementById('statUsers').textContent = Refad.format.number(totalUsers);
-        document.getElementById('statRevenue').textContent = Refad.format.money(totalRevenue);
+        document.getElementById('statRevenue').textContent = SafeSettings.locale.formatMoney(totalRevenue);
+
+        // Users tab badge
+        const usersBadge = document.getElementById('usersTabBadge');
+        if (usersBadge) {
+          usersBadge.textContent = totalUsers;
+          usersBadge.style.display = totalUsers > 0 ? 'inline-block' : 'none';
+        }
       }
 
       // ============================================================
-      // Render System Health
+      // 9) System Health
       // ============================================================
       function renderSystemHealth() {
         const el = document.getElementById('systemHealth');
         
-        // فحوصات سريعة
         const noUsersCompanies = state.companies.filter(c => !state.usersCountMap[c.id] && c.is_active !== false).length;
         const expiredSubs = state.companies.filter(c => getCompanyStatus(c) === 'expired').length;
         const expiringSubs = state.companies.filter(c => getCompanyStatus(c) === 'expiring').length;
@@ -1689,7 +2604,7 @@
       }
 
       // ============================================================
-      // Render Companies
+      // 10) Render Companies
       // ============================================================
       function renderCompanies() {
         const grid = document.getElementById('companiesGrid');
@@ -1772,11 +2687,17 @@
                   <i data-lucide="${s.icon}"></i>${s.label}
                 </span>
                 <div class="company-actions">
-                  <button class="action-btn purple" data-action="backup" data-id="${c.id}" title="نسخة احتياطية">
-                    <i data-lucide="database"></i>
+                  <button class="action-btn info" data-action="edit" data-id="${c.id}" title="تعديل البيانات">
+                    <i data-lucide="edit"></i>
+                  </button>
+                  <button class="action-btn purple" data-action="users" data-id="${c.id}" title="مستخدمو الشركة">
+                    <i data-lucide="users"></i>
                   </button>
                   <button class="action-btn gold" data-action="payment" data-id="${c.id}" title="تسجيل دفعة">
                     <i data-lucide="wallet"></i>
+                  </button>
+                  <button class="action-btn" data-action="backup" data-id="${c.id}" title="نسخة احتياطية">
+                    <i data-lucide="database"></i>
                   </button>
                   ${c.is_active === false ? `
                     <button class="action-btn success" data-action="activate" data-id="${c.id}" title="تفعيل">
@@ -1808,12 +2729,924 @@
             else if (action === 'activate') toggleCompanyActive(cid, true);
             else if (action === 'deactivate') toggleCompanyActive(cid, false);
             else if (action === 'delete') deleteCompany(cid);
+            else if (action === 'edit') openEditCompanyModal(cid);
+            else if (action === 'users') openCompanyUsersModal(cid);
+          });
+        });
+      }      // ============================================================
+      // 11) ✨ Users Table Rendering
+      // ============================================================
+      function isUserLocked(u) {
+        if (!u || !u.locked_until) return false;
+        return new Date(u.locked_until).getTime() > Date.now();
+      }
+
+      function getRoleName(roleId) {
+        const role = state.roles.find(r => r.id === roleId);
+        if (!role) return 'بدون دور';
+        return role.name_ar || role.name || 'بدون دور';
+      }
+
+      function getRoleClass(roleId) {
+        const role = state.roles.find(r => r.id === roleId);
+        if (!role) return '';
+        if (role.is_owner) return 'owner';
+        if (role.name === 'admin') return 'admin';
+        return '';
+      }
+
+      function renderUsersTable() {
+        const tbody = document.getElementById('usersTableBody');
+        if (!tbody) return;
+
+        const companyFilter = document.getElementById('usersCompanyFilter')?.value || '';
+        const roleFilter = document.getElementById('usersRoleFilter')?.value || '';
+        const statusFilter = document.getElementById('usersStatusFilter')?.value || '';
+        const search = (document.getElementById('usersSearchInput')?.value || '').trim().toLowerCase();
+
+        let list = state.allUsers.slice();
+
+        if (companyFilter) {
+          list = list.filter(u => String(u.company_id) === String(companyFilter));
+        }
+        if (roleFilter) {
+          list = list.filter(u => String(u.role_id) === String(roleFilter));
+        }
+        if (statusFilter === 'active') {
+          list = list.filter(u => u.is_active !== false && !isUserLocked(u));
+        } else if (statusFilter === 'inactive') {
+          list = list.filter(u => u.is_active === false);
+        } else if (statusFilter === 'locked') {
+          list = list.filter(u => isUserLocked(u));
+        }
+        if (search) {
+          list = list.filter(u =>
+            (u.full_name || '').toLowerCase().includes(search) ||
+            (u.username || '').toLowerCase().includes(search) ||
+            (u.phone || '').toLowerCase().includes(search) ||
+            (u.email || '').toLowerCase().includes(search)
+          );
+        }
+
+        // Sort by company then name
+        list.sort((a, b) => {
+          if (a.company_id !== b.company_id) return a.company_id - b.company_id;
+          return String(a.full_name || '').localeCompare(String(b.full_name || ''), 'ar');
+        });
+
+        if (!list.length) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="7">
+                <div class="empty-state" style="border:none;box-shadow:none;padding:40px 20px;">
+                  <i data-lucide="users"></i>
+                  <h3>${state.allUsers.length ? 'لا توجد نتائج مطابقة' : 'لا يوجد مستخدمون'}</h3>
+                  <p>${state.allUsers.length ? 'جرّب تعديل الفلاتر' : 'ابدأ بإضافة مستخدم جديد'}</p>
+                </div>
+              </td>
+            </tr>`;
+          if (window.lucide) lucide.createIcons();
+          return;
+        }
+
+        tbody.innerHTML = list.map(u => {
+          const company = state.companies.find(c => c.id === u.company_id);
+          const initial = (u.full_name || '؟').trim().charAt(0);
+          const locked = isUserLocked(u);
+          const isActive = u.is_active !== false;
+
+          const statusHtml = !isActive
+            ? '<span class="status-pill-sm inactive"><i data-lucide="x-circle" style="width:10px;height:10px;"></i> موقوف</span>'
+            : locked
+              ? '<span class="status-pill-sm locked"><i data-lucide="lock" style="width:10px;height:10px;"></i> مقفل</span>'
+              : '<span class="status-pill-sm active"><i data-lucide="check-circle" style="width:10px;height:10px;"></i> نشط</span>';
+
+          return `
+            <tr class="${locked ? 'locked-row' : ''}" data-user-id="${u.id}">
+              <td>
+                <div class="user-cell">
+                  <div class="user-avatar-sm">
+                    ${u.avatar_url ? `<img src="${Refad.escapeHtml(u.avatar_url)}" alt="">` : Refad.escapeHtml(initial)}
+                    ${locked ? '<span class="lock-badge"><i data-lucide="lock"></i></span>' : ''}
+                  </div>
+                  <div class="user-cell-info">
+                    <div class="name">${Refad.escapeHtml(u.full_name || '—')}</div>
+                    ${u.phone ? `<div class="sub">${Refad.escapeHtml(u.phone)}</div>` : ''}
+                  </div>
+                </div>
+              </td>
+              <td>
+                <span class="username-badge" data-copy-username="${Refad.escapeHtml(u.username)}" title="اضغط للنسخ">
+                  <i data-lucide="at-sign"></i>
+                  ${Refad.escapeHtml(u.username)}
+                </span>
+              </td>
+              <td>
+                <span class="password-badge hidden-pwd" data-reveal-pwd="${u.id}" title="اضغط لإظهار كلمة المرور">
+                  <i data-lucide="eye"></i>
+                  ••••••
+                </span>
+              </td>
+              <td>
+                <span style="font-weight:700;font-size:12px;">${Refad.escapeHtml(company?.name || '—')}</span>
+              </td>
+              <td>
+                <span class="role-badge ${getRoleClass(u.role_id)}">
+                  <i data-lucide="${getRoleClass(u.role_id) === 'admin' ? 'shield' : 'user'}" style="width:11px;height:11px;"></i>
+                  ${Refad.escapeHtml(getRoleName(u.role_id))}
+                </span>
+              </td>
+              <td>${statusHtml}</td>
+              <td>
+                <div style="display:flex;gap:4px;justify-content:flex-end;">
+                  <button class="action-btn purple" data-action="impersonate" data-id="${u.id}" title="دخول كمستخدم">
+                    <i data-lucide="user-check"></i>
+                  </button>
+                  <button class="action-btn" data-action="edit" data-id="${u.id}" title="تعديل">
+                    <i data-lucide="edit"></i>
+                  </button>
+                  <button class="action-btn gold" data-action="reset-pwd" data-id="${u.id}" title="إعادة تعيين كلمة المرور">
+                    <i data-lucide="key-round"></i>
+                  </button>
+                  ${locked ? `
+                    <button class="action-btn success" data-action="unlock" data-id="${u.id}" title="فتح القفل">
+                      <i data-lucide="unlock"></i>
+                    </button>
+                  ` : ''}
+                  <button class="action-btn danger" data-action="delete" data-id="${u.id}" title="حذف">
+                    <i data-lucide="trash-2"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join('');
+
+        if (window.lucide) lucide.createIcons();
+        attachUsersTableEvents();
+      }
+
+      function attachUsersTableEvents() {
+        const tbody = document.getElementById('usersTableBody');
+        if (!tbody) return;
+
+        // Copy username
+        tbody.querySelectorAll('[data-copy-username]').forEach(el => {
+          el.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const username = el.dataset.copyUsername;
+            navigator.clipboard.writeText(username).then(() => {
+              Refad.toast.success('تم نسخ اسم المستخدم');
+            }).catch(() => {
+              Refad.toast.info('Username: ' + username);
+            });
+          });
+        });
+
+        // Reveal password
+        tbody.querySelectorAll('[data-reveal-pwd]').forEach(el => {
+          el.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const userId = parseInt(el.dataset.revealPwd, 10);
+            const user = state.allUsers.find(u => u.id === userId);
+            if (!user) return;
+
+            if (el.classList.contains('hidden-pwd')) {
+              el.textContent = user.password || '—';
+              el.classList.remove('hidden-pwd');
+              el.classList.add('just-revealed');
+              el.innerHTML = `<i data-lucide="eye-off" style="width:12px;height:12px;"></i> ${Refad.escapeHtml(user.password || '—')}`;
+              if (window.lucide) lucide.createIcons();
+              setTimeout(() => el.classList.remove('just-revealed'), 1000);
+            } else {
+              el.classList.add('hidden-pwd');
+              el.innerHTML = `<i data-lucide="eye" style="width:12px;height:12px;"></i> ••••••`;
+              if (window.lucide) lucide.createIcons();
+            }
+          });
+        });
+
+        // Action buttons
+        tbody.querySelectorAll('[data-action]').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const action = btn.dataset.action;
+            const userId = parseInt(btn.dataset.id, 10);
+            if (action === 'edit') openUserDetailsModal(userId);
+            else if (action === 'impersonate') askImpersonate(userId);
+            else if (action === 'reset-pwd') openResetPasswordModal(userId);
+            else if (action === 'unlock') unlockUser(userId);
+            else if (action === 'delete') deleteUser(userId);
           });
         });
       }
 
       // ============================================================
-      // Toggle Company Active
+      // 12) User Details Modal
+      // ============================================================
+      function openUserDetailsModal(userId) {
+        const u = state.allUsers.find(x => x.id === userId);
+        if (!u) return;
+
+        state.currentUserId = userId;
+        const company = state.companies.find(c => c.id === u.company_id);
+        const role = state.roles.find(r => r.id === u.role_id);
+        const initial = (u.full_name || '؟').trim().charAt(0);
+        const locked = isUserLocked(u);
+
+        document.getElementById('userDetailsTitle').textContent = 'تعديل: ' + (u.full_name || u.username);
+
+        const body = document.getElementById('userDetailsBody');
+        body.innerHTML = `
+          <div class="user-hero">
+            <div class="user-hero-avatar">
+              ${u.avatar_url ? `<img src="${Refad.escapeHtml(u.avatar_url)}" alt="">` : Refad.escapeHtml(initial)}
+            </div>
+            <div class="user-hero-info">
+              <div class="name">${Refad.escapeHtml(u.full_name || '—')}</div>
+              <div class="sub">
+                <span><i data-lucide="at-sign" style="width:12px;height:12px;display:inline;"></i> ${Refad.escapeHtml(u.username)}</span>
+                <span><i data-lucide="building-2" style="width:12px;height:12px;display:inline;"></i> ${Refad.escapeHtml(company?.name || '—')}</span>
+                ${locked ? '<span style="color:var(--danger);"><i data-lucide="lock" style="width:12px;height:12px;display:inline;"></i> مقفل</span>' : ''}
+              </div>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label>الشركة</label>
+              <input type="text" value="${Refad.escapeHtml(company?.name || '—')}" disabled>
+            </div>
+            <div class="form-group">
+              <label>الدور <span class="req">*</span></label>
+              <select id="editUserRole">
+                ${state.roles.filter(r => r.company_id === u.company_id).map(r =>
+                  `<option value="${r.id}" ${r.id === u.role_id ? 'selected' : ''}>${Refad.escapeHtml(r.name_ar || r.name)}</option>`
+                ).join('')}
+              </select>
+            </div>
+            <div class="form-group full">
+              <label>الاسم الكامل <span class="req">*</span></label>
+              <input type="text" id="editUserFullName" value="${Refad.escapeHtml(u.full_name || '')}" maxlength="120">
+            </div>
+            <div class="form-group">
+              <label>اسم المستخدم (Username) <span class="req">*</span></label>
+              <input type="text" id="editUserUsername" value="${Refad.escapeHtml(u.username || '')}" maxlength="50" dir="ltr" autocomplete="off">
+            </div>
+            <div class="form-group">
+              <label>كلمة المرور <span class="req">*</span></label>
+              <div class="password-input-wrap">
+                <input type="text" id="editUserPassword" value="${Refad.escapeHtml(u.password || '')}" maxlength="100" dir="ltr" autocomplete="off">
+                <button type="button" class="toggle-password" data-toggle="editUserPassword">
+                  <i data-lucide="eye"></i>
+                </button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>الهاتف</label>
+              <input type="tel" id="editUserPhone" value="${Refad.escapeHtml(u.phone || '')}" maxlength="30" dir="ltr">
+            </div>
+            <div class="form-group">
+              <label>البريد الإلكتروني</label>
+              <input type="email" id="editUserEmail" value="${Refad.escapeHtml(u.email || '')}" maxlength="120" dir="ltr">
+            </div>
+            <div class="form-group">
+              <label>الراتب</label>
+              <input type="number" id="editUserSalary" value="${Number(u.salary) || 0}" min="0" step="0.01">
+            </div>
+            <div class="form-group">
+              <label>الحالة</label>
+              <select id="editUserIsActive">
+                <option value="true" ${u.is_active !== false ? 'selected' : ''}>نشط</option>
+                <option value="false" ${u.is_active === false ? 'selected' : ''}>موقوف</option>
+              </select>
+            </div>
+          </div>
+
+          ${locked ? `
+            <div class="info-box warning" style="margin-top:14px;">
+              <i data-lucide="lock"></i>
+              <div>
+                <strong>الحساب مقفل حتى ${Refad.format.datetime(u.locked_until)}</strong>
+                <div style="font-size:11px;margin-top:4px;">محاولات فاشلة: ${u.failed_attempts || 0}</div>
+              </div>
+            </div>
+          ` : ''}
+        `;
+
+        document.getElementById('userDetailsModal').classList.add('show');
+        if (window.lucide) lucide.createIcons();
+      }
+
+      async function saveUserDetails() {
+        const userId = state.currentUserId;
+        if (!userId) return;
+
+        const u = state.allUsers.find(x => x.id === userId);
+        if (!u) return;
+
+        const newUsername = document.getElementById('editUserUsername').value.trim();
+        const newPassword = document.getElementById('editUserPassword').value.trim();
+        const newFullName = document.getElementById('editUserFullName').value.trim();
+        const newRoleId = parseInt(document.getElementById('editUserRole').value, 10);
+        const newPhone = document.getElementById('editUserPhone').value.trim() || null;
+        const newEmail = document.getElementById('editUserEmail').value.trim() || null;
+        const newSalary = Refad.toNum(document.getElementById('editUserSalary').value);
+        const newIsActive = document.getElementById('editUserIsActive').value === 'true';
+
+        if (!newUsername) { Refad.toast.warning('اسم المستخدم مطلوب'); return; }
+        if (!newPassword) { Refad.toast.warning('كلمة المرور مطلوبة'); return; }
+        if (newPassword.length < 4) { Refad.toast.warning('كلمة المرور 4 أحرف على الأقل'); return; }
+        if (!newFullName) { Refad.toast.warning('الاسم الكامل مطلوب'); return; }
+        if (!newRoleId) { Refad.toast.warning('اختر الدور'); return; }
+
+        const btn = document.getElementById('userDetailsSaveBtn');
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i data-lucide="loader-2" style="animation:spin 1s linear infinite;"></i> جارٍ الحفظ...';
+        if (window.lucide) lucide.createIcons();
+
+        try {
+          // Check username uniqueness within same company
+          if (newUsername !== u.username) {
+            const existing = await Refad.db.selectOne('users', {
+              eq: { company_id: u.company_id, username: newUsername }
+            }).catch(() => null);
+            if (existing && existing.id !== userId) {
+              throw new Error('اسم المستخدم مستخدم بالفعل في نفس الشركة');
+            }
+          }
+
+          await Refad.db.update('users', userId, {
+            full_name: newFullName,
+            username: newUsername,
+            password: newPassword,
+            role_id: newRoleId,
+            phone: newPhone,
+            email: newEmail,
+            salary: newSalary,
+            is_active: newIsActive
+          });
+
+          await Refad.logActivity('update_user_by_admin', 'admin',
+            `تعديل بيانات المستخدم: ${newFullName} (@${newUsername}) في ${u.company_id}`, userId);
+
+          Refad.toast.success('تم حفظ التعديلات');
+          document.getElementById('userDetailsModal').classList.remove('show');
+
+          // Update local state
+          Object.assign(u, {
+            full_name: newFullName,
+            username: newUsername,
+            password: newPassword,
+            role_id: newRoleId,
+            phone: newPhone,
+            email: newEmail,
+            salary: newSalary,
+            is_active: newIsActive
+          });
+
+          renderUsersTable();
+          renderStats();
+        } catch (e) {
+          console.error('[Admin] save user failed:', e);
+          Refad.toast.error('فشل: ' + (e.message || e));
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = originalText;
+          if (window.lucide) lucide.createIcons();
+        }
+      }
+
+      // ============================================================
+      // 13) Reset Password
+      // ============================================================
+      function openResetPasswordModal(userId) {
+        const u = state.allUsers.find(x => x.id === userId);
+        if (!u) return;
+
+        state.currentUserId = userId;
+        const newPassword = String(Math.floor(10000 + Math.random() * 90000));
+
+        document.getElementById('resetPasswordBody').innerHTML = `
+          <div style="text-align:center;padding:20px;background:linear-gradient(135deg,rgba(245,158,11,0.08),rgba(139,92,246,0.06));border-radius:12px;margin-bottom:14px;">
+            <div style="font-size:13px;color:var(--text-muted);margin-bottom:6px;">كلمة المرور الجديدة لـ <strong>${Refad.escapeHtml(u.full_name)}</strong></div>
+            <div style="font-family:'Courier New',monospace;font-size:32px;font-weight:800;color:var(--gold);letter-spacing:4px;">${newPassword}</div>
+          </div>
+          <div class="form-group">
+            <label>أو اكتب كلمة مرور مخصصة</label>
+            <input type="text" id="resetPasswordCustom" maxlength="100" dir="ltr" placeholder="اتركه فارغاً لاستخدام المولدة">
+          </div>
+        `;
+
+        document.getElementById('resetPasswordModal').classList.add('show');
+        if (window.lucide) lucide.createIcons();
+
+        // Store generated password
+        state.resetPasswordGenerated = newPassword;
+      }
+
+      async function confirmResetPassword() {
+        const userId = state.currentUserId;
+        if (!userId) return;
+
+        const u = state.allUsers.find(x => x.id === userId);
+        if (!u) return;
+
+        const custom = document.getElementById('resetPasswordCustom').value.trim();
+        const newPassword = custom || state.resetPasswordGenerated;
+
+        const btn = document.getElementById('resetPasswordConfirmBtn');
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i data-lucide="loader-2" style="animation:spin 1s linear infinite;"></i> جارٍ الحفظ...';
+        if (window.lucide) lucide.createIcons();
+
+        try {
+          await Refad.db.update('users', userId, { password: newPassword });
+          await Refad.logActivity('reset_user_password', 'admin',
+            `إعادة تعيين كلمة مرور المستخدم: ${u.full_name} (@${u.username})`, userId);
+
+          u.password = newPassword;
+          Refad.toast.success('تم إعادة تعيين كلمة المرور');
+          document.getElementById('resetPasswordModal').classList.remove('show');
+
+          // Copy to clipboard
+          try {
+            await navigator.clipboard.writeText(newPassword);
+            Refad.toast.info('تم نسخ كلمة المرور للحافظة');
+          } catch (e) {}
+
+          renderUsersTable();
+        } catch (e) {
+          console.error('[Admin] reset password failed:', e);
+          Refad.toast.error('فشل: ' + (e.message || e));
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = originalText;
+          if (window.lucide) lucide.createIcons();
+        }
+      }
+
+      // ============================================================
+      // 14) ✨ Impersonate
+      // ============================================================
+      function askImpersonate(userId) {
+        const u = state.allUsers.find(x => x.id === userId);
+        if (!u) return;
+
+        const company = state.companies.find(c => c.id === u.company_id);
+        state.impersonateTarget = u;
+
+        document.getElementById('impersonateConfirmBody').innerHTML = `
+          <div style="text-align:center;padding:16px;">
+            <div style="font-size:14px;color:var(--text-muted);margin-bottom:10px;">ستدخل باسم:</div>
+            <div style="font-size:18px;font-weight:800;color:var(--text);">${Refad.escapeHtml(u.full_name)}</div>
+            <div style="font-size:13px;color:var(--purple);margin-top:4px;">
+              @${Refad.escapeHtml(u.username)} • ${Refad.escapeHtml(company?.name || '')}
+            </div>
+          </div>
+        `;
+        document.getElementById('impersonateConfirmModal').classList.add('show');
+        if (window.lucide) lucide.createIcons();
+      }
+
+      async function doImpersonate() {
+        const u = state.impersonateTarget;
+        if (!u) return;
+
+        const btn = document.getElementById('impersonateConfirmBtn');
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i data-lucide="loader-2" style="animation:spin 1s linear infinite;"></i> جارٍ الدخول...';
+        if (window.lucide) lucide.createIcons();
+
+        try {
+          // Log the impersonation
+          await Refad.logActivity('admin_impersonate', 'admin',
+            `الأدمن ${session.full_name} دخل كمستخدم ${u.full_name} (@${u.username})`, u.id);
+
+          // Save original admin session
+          const currentAdminSession = {
+            user_id: session.user_id,
+            full_name: session.full_name,
+            username: session.username,
+            company_id: session.company_id,
+            started_at: new Date().toISOString()
+          };
+
+          localStorage.setItem('refad_admin_impersonate', JSON.stringify({
+            admin: currentAdminSession,
+            target: {
+              user_id: u.id,
+              full_name: u.full_name,
+              username: u.username,
+              company_id: u.company_id,
+              company_name: state.companies.find(c => c.id === u.company_id)?.name
+            }
+          }));
+
+          Refad.toast.success('جارٍ الدخول كمستخدم...');
+          setTimeout(() => {
+            window.location.href = 'dashboard.html';
+          }, 700);
+        } catch (e) {
+          console.error('[Admin] impersonate failed:', e);
+          Refad.toast.error('فشل: ' + (e.message || e));
+          btn.disabled = false;
+          btn.innerHTML = originalText;
+          if (window.lucide) lucide.createIcons();
+        }
+      }
+
+      // ✨ Setup impersonate bar (if in impersonate mode)
+      function setupImpersonateBar() {
+        if (!isImpersonating || !impersonateData) return;
+
+        document.body.classList.add('has-impersonate');
+        document.getElementById('impersonateBar').classList.add('show');
+        document.getElementById('impersonateUserName').textContent = impersonateData.target.full_name;
+        document.getElementById('impersonateCompanyName').textContent = '— ' + (impersonateData.target.company_name || '');
+
+        document.getElementById('impersonateBackBtn').addEventListener('click', () => {
+          localStorage.removeItem('refad_admin_impersonate');
+          window.location.href = 'admin.html';
+        });
+
+        document.getElementById('impersonateLogoutBtn').addEventListener('click', async () => {
+          localStorage.removeItem('refad_admin_impersonate');
+          await Refad.Auth.logout();
+        });
+
+        if (window.lucide) lucide.createIcons();
+      }
+
+      // ============================================================
+      // 15) Unlock / Delete User
+      // ============================================================
+      async function unlockUser(userId) {
+        const u = state.allUsers.find(x => x.id === userId);
+        if (!u) return;
+
+        try {
+          await Refad.db.update('users', userId, {
+            failed_attempts: 0,
+            locked_until: null
+          });
+          u.failed_attempts = 0;
+          u.locked_until = null;
+
+          await Refad.logActivity('unlock_user_by_admin', 'admin',
+            `فتح قفل المستخدم: ${u.full_name} (@${u.username})`, userId);
+
+          Refad.toast.success('تم فتح القفل');
+          renderUsersTable();
+        } catch (e) {
+          Refad.toast.error('فشل: ' + (e.message || e));
+        }
+      }
+
+      async function deleteUser(userId) {
+        const u = state.allUsers.find(x => x.id === userId);
+        if (!u) return;
+
+        const company = state.companies.find(c => c.id === u.company_id);
+
+        const ok = await Refad.alert.confirm(
+          'حذف المستخدم',
+          `سيتم حذف "${u.full_name}" (@${u.username}) من "${company?.name || ''}" نهائياً. متابعة؟`,
+          'حذف'
+        );
+        if (!ok) return;
+
+        try {
+          await Refad.db.remove('users', userId);
+          await Refad.logActivity('delete_user_by_admin', 'admin',
+            `حذف المستخدم: ${u.full_name} (@${u.username})`, userId);
+
+          state.allUsers = state.allUsers.filter(x => x.id !== userId);
+          renderUsersTable();
+          renderStats();
+
+          Refad.toast.success('تم الحذف');
+        } catch (e) {
+          console.error('[Admin] delete user failed:', e);
+          Refad.toast.error('فشل: ' + (e.message || e));
+        }
+      }
+
+      // ============================================================
+      // 16) Add User
+      // ============================================================
+      function openAddUserModal() {
+        const form = document.getElementById('addUserForm');
+        form.reset();
+        document.getElementById('newUserSalary').value = '0';
+        document.getElementById('newUserIsActive').value = 'true';
+        document.getElementById('newUserGeneratePassword').checked = false;
+        document.getElementById('newUserRole').innerHTML = '<option value="">اختر الشركة أولاً...</option>';
+        document.getElementById('addUserModal').classList.add('show');
+        if (window.lucide) lucide.createIcons();
+      }
+
+      function loadRolesForCompany(companyId) {
+        const roleSelect = document.getElementById('newUserRole');
+        if (!companyId) {
+          roleSelect.innerHTML = '<option value="">اختر الشركة أولاً...</option>';
+          return;
+        }
+        const companyRoles = state.roles.filter(r => r.company_id === companyId);
+        if (!companyRoles.length) {
+          roleSelect.innerHTML = '<option value="">لا توجد أدوار</option>';
+          return;
+        }
+        roleSelect.innerHTML = '<option value="">اختر الدور...</option>' +
+          companyRoles.map(r => `<option value="${r.id}">${Refad.escapeHtml(r.name_ar || r.name)}</option>`).join('');
+      }
+
+      async function submitAddUser(e) {
+        e.preventDefault();
+        const companyId = parseInt(document.getElementById('newUserCompany').value, 10);
+        const roleId = parseInt(document.getElementById('newUserRole').value, 10);
+        const fullName = document.getElementById('newUserFullName').value.trim();
+        const username = document.getElementById('newUserUsername').value.trim();
+        let password = document.getElementById('newUserPassword').value.trim();
+        const phone = document.getElementById('newUserPhone').value.trim() || null;
+        const email = document.getElementById('newUserEmail').value.trim() || null;
+        const salary = Refad.toNum(document.getElementById('newUserSalary').value);
+        const isActive = document.getElementById('newUserIsActive').value === 'true';
+        const generateRandom = document.getElementById('newUserGeneratePassword').checked;
+
+        if (!companyId) { Refad.toast.warning('اختر الشركة'); return; }
+        if (!roleId) { Refad.toast.warning('اختر الدور'); return; }
+        if (!fullName) { Refad.toast.warning('الاسم مطلوب'); return; }
+        if (!username) { Refad.toast.warning('اسم المستخدم مطلوب'); return; }
+
+        if (generateRandom && !password) {
+          password = String(Math.floor(10000 + Math.random() * 90000));
+        }
+        if (!password) { Refad.toast.warning('كلمة المرور مطلوبة'); return; }
+        if (password.length < 4) { Refad.toast.warning('كلمة المرور 4 أحرف على الأقل'); return; }
+
+        const btn = document.getElementById('addUserSubmitBtn');
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i data-lucide="loader-2" style="animation:spin 1s linear infinite;"></i> جارٍ الإضافة...';
+        if (window.lucide) lucide.createIcons();
+
+        try {
+          // Check username uniqueness in company
+          const existing = await Refad.db.selectOne('users', {
+            eq: { company_id: companyId, username: username }
+          }).catch(() => null);
+          if (existing) throw new Error('اسم المستخدم مستخدم بالفعل في هذه الشركة');
+
+          const created = await Refad.db.insert('users', {
+            company_id: companyId,
+            role_id: roleId,
+            full_name: fullName,
+            username,
+            password,
+            phone,
+            email,
+            salary,
+            is_active: isActive,
+            has_device: true
+          });
+
+          await Refad.logActivity('create_user_by_admin', 'admin',
+            `إضافة مستخدم جديد: ${fullName} (@${username})`, created.id);
+
+          Refad.toast.success('تم إضافة المستخدم');
+
+          if (generateRandom) {
+            try {
+              await navigator.clipboard.writeText(password);
+              Refad.toast.info(`كلمة المرور: ${password} (تم نسخها)`);
+            } catch (e) {
+              Refad.alert.info('كلمة المرور', `كلمة مرور ${fullName}: ${password}`);
+            }
+          }
+
+          document.getElementById('addUserModal').classList.remove('show');
+          await loadData();
+        } catch (e) {
+          console.error('[Admin] add user failed:', e);
+          Refad.toast.error('فشل: ' + (e.message || e));
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = originalText;
+          if (window.lucide) lucide.createIcons();
+        }
+      }
+
+      // ============================================================
+      // 17) Company Users Modal
+      // ============================================================
+      async function openCompanyUsersModal(companyId) {
+        const company = state.companies.find(c => c.id === companyId);
+        if (!company) return;
+
+        state.currentCompanyId = companyId;
+        document.getElementById('companyUsersTitle').textContent = 'مستخدمو ' + company.name;
+
+        const body = document.getElementById('companyUsersBody');
+        body.innerHTML = '<div class="loader"><i data-lucide="loader-2"></i><p>جارٍ التحميل...</p></div>';
+        document.getElementById('companyUsersModal').classList.add('show');
+        if (window.lucide) lucide.createIcons();
+
+        const users = state.allUsers.filter(u => u.company_id === companyId);
+
+        if (!users.length) {
+          body.innerHTML = `
+            <div class="empty-state" style="border:none;box-shadow:none;">
+              <i data-lucide="users"></i>
+              <h3>لا يوجد مستخدمون</h3>
+              <p>ابدأ بإضافة أول مستخدم لهذه الشركة</p>
+            </div>`;
+          if (window.lucide) lucide.createIcons();
+          return;
+        }
+
+        body.innerHTML = `
+          <div class="table-wrap" style="border:none;box-shadow:none;">
+            <div class="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th>المستخدم</th>
+                    <th>Username</th>
+                    <th>Password</th>
+                    <th>الدور</th>
+                    <th>الحالة</th>
+                    <th>إجراءات</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${users.map(u => {
+                    const initial = (u.full_name || '؟').trim().charAt(0);
+                    const locked = isUserLocked(u);
+                    const isActive = u.is_active !== false;
+
+                    const statusHtml = !isActive
+                      ? '<span class="status-pill-sm inactive">موقوف</span>'
+                      : locked
+                        ? '<span class="status-pill-sm locked">مقفل</span>'
+                        : '<span class="status-pill-sm active">نشط</span>';
+
+                    return `
+                      <tr>
+                        <td>
+                          <div class="user-cell">
+                            <div class="user-avatar-sm">
+                              ${u.avatar_url ? `<img src="${Refad.escapeHtml(u.avatar_url)}" alt="">` : Refad.escapeHtml(initial)}
+                            </div>
+                            <div class="user-cell-info">
+                              <div class="name">${Refad.escapeHtml(u.full_name || '—')}</div>
+                              ${u.phone ? `<div class="sub">${Refad.escapeHtml(u.phone)}</div>` : ''}
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <span class="username-badge">${Refad.escapeHtml(u.username)}</span>
+                        </td>
+                        <td>
+                          <span class="password-badge hidden-pwd" data-reveal-pwd-company="${u.id}">
+                            <i data-lucide="eye" style="width:12px;height:12px;"></i> ••••••
+                          </span>
+                        </td>
+                        <td>
+                          <span class="role-badge ${getRoleClass(u.role_id)}">
+                            ${Refad.escapeHtml(getRoleName(u.role_id))}
+                          </span>
+                        </td>
+                        <td>${statusHtml}</td>
+                        <td>
+                          <div style="display:flex;gap:4px;">
+                            <button class="action-btn purple" data-company-user-action="impersonate" data-id="${u.id}" title="دخول كمستخدم">
+                              <i data-lucide="user-check"></i>
+                            </button>
+                            <button class="action-btn" data-company-user-action="edit" data-id="${u.id}" title="تعديل">
+                              <i data-lucide="edit"></i>
+                            </button>
+                            <button class="action-btn gold" data-company-user-action="reset" data-id="${u.id}" title="إعادة تعيين كلمة المرور">
+                              <i data-lucide="key-round"></i>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    `;
+                  }).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        `;
+
+        if (window.lucide) lucide.createIcons();
+
+        // Events
+        body.querySelectorAll('[data-reveal-pwd-company]').forEach(el => {
+          el.addEventListener('click', () => {
+            const userId = parseInt(el.dataset.revealPwdCompany, 10);
+            const user = state.allUsers.find(x => x.id === userId);
+            if (!user) return;
+            if (el.classList.contains('hidden-pwd')) {
+              el.classList.remove('hidden-pwd');
+              el.innerHTML = `<i data-lucide="eye-off" style="width:12px;height:12px;"></i> ${Refad.escapeHtml(user.password || '—')}`;
+            } else {
+              el.classList.add('hidden-pwd');
+              el.innerHTML = `<i data-lucide="eye" style="width:12px;height:12px;"></i> ••••••`;
+            }
+            if (window.lucide) lucide.createIcons();
+          });
+        });
+
+        body.querySelectorAll('[data-company-user-action]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const userId = parseInt(btn.dataset.id, 10);
+            const action = btn.dataset.companyUserAction;
+            document.getElementById('companyUsersModal').classList.remove('show');
+            setTimeout(() => {
+              if (action === 'edit') openUserDetailsModal(userId);
+              else if (action === 'impersonate') askImpersonate(userId);
+              else if (action === 'reset') openResetPasswordModal(userId);
+            }, 200);
+          });
+        });
+      }
+
+      // ============================================================
+      // 18) Edit Company Modal
+      // ============================================================
+      function openEditCompanyModal(companyId) {
+        const c = state.companies.find(x => x.id === companyId);
+        if (!c) return;
+
+        state.currentCompanyId = companyId;
+        document.getElementById('editCompanyTitle').textContent = 'تعديل: ' + c.name;
+
+        document.getElementById('editCompanyName').value = c.name || '';
+        document.getElementById('editCompanyPhone').value = c.phone || '';
+        document.getElementById('editCompanyEmail').value = c.email || '';
+        document.getElementById('editCompanyTax').value = c.tax_number || '';
+        document.getElementById('editCompanyCurrency').value = c.currency || 'EGP';
+        document.getElementById('editCompanySubscriptionEnd').value = c.subscription_end || '';
+        document.getElementById('editCompanyIsActive').value = c.is_active !== false ? 'true' : 'false';
+        document.getElementById('editCompanyLogo').value = c.logo_url || '';
+        document.getElementById('editCompanyAddress').value = c.address || '';
+        document.getElementById('editCompanyNotes').value = c.notes || '';
+
+        document.getElementById('editCompanyModal').classList.add('show');
+        if (window.lucide) lucide.createIcons();
+      }
+
+      async function saveCompanyEdit(e) {
+        e.preventDefault();
+        const companyId = state.currentCompanyId;
+        if (!companyId) return;
+
+        const payload = {
+          name: document.getElementById('editCompanyName').value.trim(),
+          phone: document.getElementById('editCompanyPhone').value.trim() || null,
+          email: document.getElementById('editCompanyEmail').value.trim() || null,
+          tax_number: document.getElementById('editCompanyTax').value.trim() || null,
+          currency: document.getElementById('editCompanyCurrency').value,
+          subscription_end: document.getElementById('editCompanySubscriptionEnd').value || null,
+          is_active: document.getElementById('editCompanyIsActive').value === 'true',
+          logo_url: document.getElementById('editCompanyLogo').value.trim() || null,
+          address: document.getElementById('editCompanyAddress').value.trim() || null,
+          notes: document.getElementById('editCompanyNotes').value.trim() || null
+        };
+
+        if (!payload.name) { Refad.toast.warning('اسم الشركة مطلوب'); return; }
+
+        const btn = document.getElementById('editCompanySaveBtn');
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i data-lucide="loader-2" style="animation:spin 1s linear infinite;"></i> جارٍ الحفظ...';
+        if (window.lucide) lucide.createIcons();
+
+        try {
+          await Refad.db.update('companies', companyId, payload);
+          await Refad.logActivity('update_company_by_admin', 'admin',
+            `تعديل بيانات الشركة: ${payload.name}`, companyId);
+
+          Refad.toast.success('تم حفظ التعديلات');
+          document.getElementById('editCompanyModal').classList.remove('show');
+          await loadData();
+        } catch (e) {
+          console.error('[Admin] save company failed:', e);
+          Refad.toast.error('فشل: ' + (e.message || e));
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = originalText;
+          if (window.lucide) lucide.createIcons();
+        }
+      }
+
+      // ============================================================
+      // 19) Toggle Company Active
       // ============================================================
       async function toggleCompanyActive(cid, active) {
         const c = state.companies.find(x => x.id === cid);
@@ -1850,7 +3683,7 @@
       }
 
       // ============================================================
-      // Delete Company (with confirmation)
+      // 20) Delete Company
       // ============================================================
       async function deleteCompany(cid) {
         const c = state.companies.find(x => x.id === cid);
@@ -1879,7 +3712,7 @@
           confirmButtonColor: '#ef4444',
           preConfirm: (value) => {
             if (value !== 'DELETE') {
-              Swal.showValidationMessage('يجب كتابة DELETE بالضبط (بالحروف الإنجليزية)');
+              Swal.showValidationMessage('يجب كتابة DELETE بالضبط');
               return false;
             }
             return true;
@@ -1901,7 +3734,7 @@
       }
 
       // ============================================================
-      // Bulk Actions
+      // 21) Bulk Toggle All Companies
       // ============================================================
       async function toggleAllCompanies(active) {
         if (!state.companies.length) {
@@ -1953,102 +3786,75 @@
       }
 
       // ============================================================
-      // Payment Modal
+      // 22) Payment Modal
       // ============================================================
       function openPaymentModal(cid) {
         const c = state.companies.find(x => x.id === cid);
         if (!c) return;
 
-        const modalHtml = `
-          <div class="modal-backdrop show" id="paymentModalTemp">
-            <div class="modal">
-              <div class="modal-header">
-                <h3><i data-lucide="wallet"></i> تسجيل دفعة - ${Refad.escapeHtml(c.name)}</h3>
-                <button class="modal-close" onclick="this.closest('.modal-backdrop').remove()"><i data-lucide="x"></i></button>
-              </div>
-              <div class="modal-body">
-                <div class="form-grid">
-                  <div class="form-group">
-                    <label>المبلغ <span class="req">*</span></label>
-                    <input type="number" id="payAmountTemp" step="0.01" min="0" placeholder="0.00">
-                  </div>
-                  <div class="form-group">
-                    <label>طريقة الدفع</label>
-                    <select id="payMethodTemp">
-                      <option value="cash">نقدي</option>
-                      <option value="transfer">تحويل بنكي</option>
-                      <option value="vodafone">فودافون كاش</option>
-                    </select>
-                  </div>
-                  <div class="form-group">
-                    <label>تاريخ الدفع</label>
-                    <input type="date" id="payDateTemp" value="${Refad.date.today()}">
-                  </div>
-                  <div class="form-group">
-                    <label>تاريخ الاستحقاق القادم</label>
-                    <input type="date" id="payDueDateTemp" value="${Refad.date.addDays(Refad.date.today(), 30)}">
-                  </div>
-                  <div class="form-group full">
-                    <label>ملاحظات</label>
-                    <textarea id="payNotesTemp" maxlength="255"></textarea>
-                  </div>
-                </div>
-              </div>
-              <div class="modal-footer">
-                <button class="btn btn-outline" onclick="this.closest('.modal-backdrop').remove()">إلغاء</button>
-                <button class="btn btn-primary" id="savePaymentTempBtn">
-                  <i data-lucide="save"></i> تسجيل الدفعة
-                </button>
-              </div>
-            </div>
-          </div>
-        `;
-        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        state.currentCompanyId = cid;
+        document.getElementById('paymentModalTitle').textContent = 'تسجيل دفعة - ' + c.name;
+        document.getElementById('paymentForm').reset();
+        document.getElementById('payDate').value = Refad.date.today();
+        document.getElementById('payDueDate').value = Refad.date.addDays(Refad.date.today(), 30);
+        document.getElementById('paymentModal').classList.add('show');
+        if (window.lucide) lucide.createIcons();
+      }
+
+      async function savePayment(e) {
+        e.preventDefault();
+        const cid = state.currentCompanyId;
+        if (!cid) return;
+
+        const amount = Refad.toNum(document.getElementById('payAmount').value);
+        if (!amount || amount <= 0) {
+          Refad.toast.warning('المبلغ مطلوب');
+          return;
+        }
+
+        const btn = document.getElementById('savePaymentBtn');
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i data-lucide="loader-2" style="animation:spin 1s linear infinite;"></i> جارٍ الحفظ...';
         if (window.lucide) lucide.createIcons();
 
-        document.getElementById('savePaymentTempBtn').addEventListener('click', async () => {
-          const amount = Refad.toNum(document.getElementById('payAmountTemp').value);
-          if (!amount || amount <= 0) {
-            Refad.toast.warning('المبلغ مطلوب');
-            return;
-          }
-          const btn = document.getElementById('savePaymentTempBtn');
-          btn.disabled = true;
-          try {
-            await Refad.db.insert('admin_payments', {
-              company_id: cid,
-              amount,
-              payment_date: document.getElementById('payDateTemp').value,
-              due_date: document.getElementById('payDueDateTemp').value || null,
-              method: document.getElementById('payMethodTemp').value,
-              status: 'paid',
-              notes: document.getElementById('payNotesTemp').value.trim() || null
-            });
+        try {
+          const dueDate = document.getElementById('payDueDate').value;
 
-            const dueDate = document.getElementById('payDueDateTemp').value;
-            if (dueDate) {
-              await Refad.db.update('companies', cid, { subscription_end: dueDate });
-              const comp = state.companies.find(x => x.id === cid);
-              if (comp) comp.subscription_end = dueDate;
-            }
+          await Refad.db.insert('admin_payments', {
+            company_id: cid,
+            amount,
+            payment_date: document.getElementById('payDate').value,
+            due_date: dueDate || null,
+            method: document.getElementById('payMethod').value,
+            status: 'paid',
+            notes: document.getElementById('payNotes').value.trim() || null
+          });
 
-            document.getElementById('paymentModalTemp').remove();
-            await Refad.logActivity('register_payment', 'admin', `تسجيل دفعة ${Refad.format.money(amount)}`, cid);
-            Refad.toast.success('تم تسجيل الدفعة');
-            renderStats();
-            renderCompanies();
-            renderAlerts();
-            renderSystemHealth();
-          } catch (e) {
-            console.error('Payment failed:', e);
-            Refad.toast.error('فشل: ' + (e.message || e));
-            btn.disabled = false;
+          if (dueDate) {
+            await Refad.db.update('companies', cid, { subscription_end: dueDate });
+            const comp = state.companies.find(x => x.id === cid);
+            if (comp) comp.subscription_end = dueDate;
           }
-        });
+
+          await Refad.logActivity('register_payment', 'admin',
+            `تسجيل دفعة ${SafeSettings.locale.formatMoney(amount)}`, cid);
+
+          Refad.toast.success('تم تسجيل الدفعة');
+          document.getElementById('paymentModal').classList.remove('show');
+          await loadData();
+        } catch (e) {
+          console.error('[Admin] payment failed:', e);
+          Refad.toast.error('فشل: ' + (e.message || e));
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = originalText;
+          if (window.lucide) lucide.createIcons();
+        }
       }
 
       // ============================================================
-      // Alerts
+      // 23) Alerts
       // ============================================================
       function buildAlerts() {
         const alerts = [];
@@ -2107,7 +3913,7 @@
               title: `${c.name} — بدون تاريخ اشتراك`,
               desc: `لم يتم تحديد تاريخ انتهاء الاشتراك`,
               company: c.id,
-              action: { label: 'تحديد التاريخ', fn: () => { document.querySelector('.main-tab[data-panel="companies"]').click(); } }
+              action: { label: 'تحديد التاريخ', fn: () => { document.querySelector('.main-tab[data-panel="companies"]').click(); openEditCompanyModal(c.id); } }
             });
           }
         });
@@ -2135,7 +3941,7 @@
         const listEl = document.getElementById('alertsList');
 
         const emptyHtml = `
-          <div class="empty-state" style="padding:40px 20px;">
+          <div class="empty-state" style="padding:40px 20px;border:none;box-shadow:none;">
             <i data-lucide="check-circle" style="color:var(--success);"></i>
             <h3>كل شيء تمام</h3>
             <p>لا توجد تنبيهات حرجة حالياً</p>
@@ -2192,8 +3998,9 @@
         await new Promise(r => setTimeout(r, 200));
         renderAlerts();
       }
-            // ============================================================
-      // Activity Log
+
+      // ============================================================
+      // 24) Activity Log
       // ============================================================
       async function loadActivity() {
         const listEl = document.getElementById('activityList');
@@ -2218,7 +4025,7 @@
 
           if (!activities.length) {
             listEl.innerHTML = `
-              <div class="empty-state">
+              <div class="empty-state" style="border:none;box-shadow:none;">
                 <i data-lucide="history"></i>
                 <h3>لا يوجد نشاط</h3>
                 <p>لم يتم تسجيل أي عمليات بعد</p>
@@ -2229,20 +4036,23 @@
 
           listEl.innerHTML = activities.map(a => {
             const user = userMap.get(String(a.user_id));
-            const actionType = a.action?.includes('login') ? 'login'
+            const actionType = a.action?.includes('impersonate') ? 'impersonate'
+              : a.action?.includes('login') ? 'login'
               : a.action?.includes('logout') ? 'logout'
               : a.action?.includes('create') ? 'create'
               : a.action?.includes('delete') ? 'delete'
               : a.action?.includes('update') ? 'update' : 'default';
             
-            const icon = actionType === 'login' ? 'log-in'
+            const icon = actionType === 'impersonate' ? 'user-check'
+              : actionType === 'login' ? 'log-in'
               : actionType === 'logout' ? 'log-out'
               : actionType === 'create' ? 'plus-circle'
               : actionType === 'delete' ? 'trash-2'
               : actionType === 'update' ? 'edit'
               : 'activity';
 
-            const iconColor = actionType === 'login' ? 'var(--info)'
+            const iconColor = actionType === 'impersonate' ? 'var(--purple)'
+              : actionType === 'login' ? 'var(--info)'
               : actionType === 'logout' ? 'var(--text-muted)'
               : actionType === 'create' ? 'var(--success)'
               : actionType === 'delete' ? 'var(--danger)'
@@ -2286,8 +4096,35 @@
       }
 
       // ============================================================
-      // Export Companies
+      // 25) Export Users / Companies
       // ============================================================
+      function exportUsers() {
+        if (!state.allUsers.length) return Refad.toast.warning('لا توجد بيانات');
+
+        const data = state.allUsers.map((u, i) => {
+          const company = state.companies.find(c => c.id === u.company_id);
+          return {
+            '#': i + 1,
+            'الاسم': u.full_name,
+            'Username': u.username,
+            'Password': u.password || '',
+            'الشركة': company?.name || '',
+            'الدور': getRoleName(u.role_id),
+            'الهاتف': u.phone || '',
+            'البريد': u.email || '',
+            'الراتب': Number(u.salary) || 0,
+            'الحالة': u.is_active !== false ? 'نشط' : 'موقوف',
+            'مقفل': isUserLocked(u) ? 'نعم' : 'لا'
+          };
+        });
+
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Users');
+        XLSX.writeFile(wb, 'users_' + Refad.date.today() + '.xlsx');
+        Refad.toast.success('تم التصدير');
+      }
+
       function exportCompanies() {
         if (!state.companies.length) return Refad.toast.warning('لا توجد بيانات');
 
@@ -2315,7 +4152,7 @@
       }
 
       // ============================================================
-      // Backup: Setup Checkboxes
+      // 26) Backup Setup
       // ============================================================
       function setupBackupCheckboxes() {
         const listEl = document.getElementById('backupTablesList');
@@ -2346,14 +4183,10 @@
         document.getElementById('backupCompanySelect').value = cid;
       }
 
-      // ============================================================
-      // Backup: Fetch Table Data (smart - handles indirect company_id)
-      // ============================================================
       async function fetchTableData(tableConfig, companyId) {
         const tableName = tableConfig.key;
         
         try {
-          // 1) إذا كان الجدول companies
           if (tableConfig.isRoot) {
             const data = await Refad.db.select('companies', {
               columns: '*',
@@ -2363,7 +4196,6 @@
             return data || [];
           }
 
-          // 2) إذا كان الجدول يحتوي على company_id مباشر
           if (tableConfig.hasCompanyId) {
             const data = await Refad.db.select(tableName, {
               columns: '*',
@@ -2373,26 +4205,19 @@
             return data || [];
           }
 
-          // 3) الجداول غير المباشرة - جلب عبر الجدول الأب
           if (tableConfig.parent) {
             const parentTable = tableConfig.parent.table;
             const fk = tableConfig.parent.fk;
 
-            // ابحث عن parent config
             const parentConfig = BACKUP_TABLES.find(t => t.key === parentTable);
-            if (!parentConfig) {
-              console.warn(`[Backup] Parent config not found for ${tableName}`);
-              return [];
-            }
+            if (!parentConfig) return [];
 
-            // جلب parent IDs بنفس الطريقة (recursive)
             const parentRows = await fetchTableData(parentConfig, companyId);
             if (!parentRows.length) return [];
 
             const parentIds = parentRows.map(r => r.id);
             if (!parentIds.length) return [];
 
-            // جلب البيانات من الجدول الفرعي
             const data = await Refad.db.select(tableName, {
               columns: '*',
               in: { [fk]: parentIds },
@@ -2408,9 +4233,6 @@
         }
       }
 
-      // ============================================================
-      // Backup: Generate
-      // ============================================================
       async function generateBackup(companyId, selectedTables) {
         const company = state.companies.find(c => c.id === companyId);
         if (!company) throw new Error('الشركة غير موجودة');
@@ -2418,7 +4240,7 @@
         const backup = {
           meta: {
             version: '2.0.0',
-            system: 'Refad ERP',
+            system: SafeSettings.identity.getSystemName(),
             generated_at: new Date().toISOString(),
             generated_by: session.full_name,
             company_id: companyId,
@@ -2447,9 +4269,6 @@
         return backup;
       }
 
-      // ============================================================
-      // Backup: Download JSON
-      // ============================================================
       function downloadJSON(data, filename) {
         const json = JSON.stringify(data, null, 2);
         const blob = new Blob([json], { type: 'application/json' });
@@ -2461,9 +4280,6 @@
         setTimeout(() => URL.revokeObjectURL(url), 1000);
       }
 
-      // ============================================================
-      // Backup: Download Excel
-      // ============================================================
       function downloadExcelFromBackup(backup) {
         const wb = XLSX.utils.book_new();
         
@@ -2473,15 +4289,10 @@
           const cleanData = data.map(row => {
             const clean = {};
             for (const [k, v] of Object.entries(row)) {
-              if (v === null || v === undefined) {
-                clean[k] = '';
-              } else if (Array.isArray(v)) {
-                clean[k] = v.join(', ');
-              } else if (typeof v === 'object') {
-                clean[k] = JSON.stringify(v);
-              } else {
-                clean[k] = v;
-              }
+              if (v === null || v === undefined) clean[k] = '';
+              else if (Array.isArray(v)) clean[k] = v.join(', ');
+              else if (typeof v === 'object') clean[k] = JSON.stringify(v);
+              else clean[k] = v;
             }
             return clean;
           });
@@ -2510,19 +4321,10 @@
         XLSX.writeFile(wb, filename);
       }
 
-      // ============================================================
-      // Backup: Export
-      // ============================================================
       async function exportBackup(format) {
         const companyId = parseInt(document.getElementById('backupCompanySelect').value, 10);
-        if (!companyId) {
-          Refad.toast.warning('اختر الشركة أولاً');
-          return;
-        }
-        if (!state.selectedBackupTables.size) {
-          Refad.toast.warning('اختر جدولاً واحداً على الأقل');
-          return;
-        }
+        if (!companyId) { Refad.toast.warning('اختر الشركة أولاً'); return; }
+        if (!state.selectedBackupTables.size) { Refad.toast.warning('اختر جدولاً واحداً على الأقل'); return; }
 
         const btn = format === 'json' ? document.getElementById('exportBackupBtn') : document.getElementById('exportBackupExcelBtn');
         const originalText = btn.innerHTML;
@@ -2538,17 +4340,12 @@
           const company = state.companies.find(c => c.id === companyId);
           const filename = `backup_${companyId}_${(company?.name || 'company').replace(/[^a-z0-9]/gi, '_')}_${Refad.date.today()}`;
           
-          if (format === 'json') {
-            downloadJSON(backup, filename + '.json');
-          } else {
-            downloadExcelFromBackup(backup);
-          }
+          if (format === 'json') downloadJSON(backup, filename + '.json');
+          else downloadExcelFromBackup(backup);
 
           Refad.toast.success(`✅ تم التصدير (${backup.meta.total_records} سجل)`);
-          
           await Refad.logActivity('backup_export', 'admin', 
-            `تصدير ${format.toUpperCase()} لشركة ${company?.name || ''} (${backup.meta.total_records} سجل)`, 
-            companyId);
+            `تصدير ${format.toUpperCase()} لشركة ${company?.name || ''} (${backup.meta.total_records} سجل)`, companyId);
         } catch (e) {
           console.error('[Backup] export failed:', e);
           Refad.toast.error('فشل التصدير: ' + (e.message || e));
@@ -2559,9 +4356,6 @@
         }
       }
 
-      // ============================================================
-      // Backup: Restore
-      // ============================================================
       async function handleRestoreFile(file) {
         const previewEl = document.getElementById('restorePreview');
         const restoreBtn = document.getElementById('restoreBackupBtn');
@@ -2570,9 +4364,7 @@
           const text = await file.text();
           const backup = JSON.parse(text);
 
-          if (!backup.meta || !backup.data) {
-            throw new Error('ملف النسخة الاحتياطية غير صالح');
-          }
+          if (!backup.meta || !backup.data) throw new Error('ملف النسخة الاحتياطية غير صالح');
 
           state.restoreData = backup;
 
@@ -2622,16 +4414,10 @@
       }
 
       async function restoreBackup() {
-        if (!state.restoreData) {
-          Refad.toast.warning('لا توجد بيانات للاستعادة');
-          return;
-        }
+        if (!state.restoreData) { Refad.toast.warning('لا توجد بيانات للاستعادة'); return; }
 
         const targetCompanyId = parseInt(document.getElementById('restoreCompanySelect').value, 10);
-        if (!targetCompanyId) {
-          Refad.toast.warning('اختر الشركة الهدف');
-          return;
-        }
+        if (!targetCompanyId) { Refad.toast.warning('اختر الشركة الهدف'); return; }
 
         const targetCompany = state.companies.find(c => c.id === targetCompanyId);
         const confirmed = await Refad.alert.confirm(
@@ -2650,37 +4436,26 @@
         try {
           let totalInserted = 0;
           const errors = [];
-          const idMapping = {}; // For parent -> child mapping
+          const idMapping = {};
 
-          // ترتيب الجداول: الأباء أولاً
-          const orderedTables = BACKUP_TABLES
-            .map(t => t.key)
+          const orderedTables = BACKUP_TABLES.map(t => t.key)
             .filter(k => state.restoreData.data[k] && state.restoreData.data[k].length);
 
-          // إضافة أي جداول أخرى لم تكن في القائمة
           Object.keys(state.restoreData.data).forEach(k => {
-            if (!orderedTables.includes(k) && state.restoreData.data[k].length) {
-              orderedTables.push(k);
-            }
+            if (!orderedTables.includes(k) && state.restoreData.data[k].length) orderedTables.push(k);
           });
 
           for (const tableName of orderedTables) {
             const rows = state.restoreData.data[tableName];
             if (!rows || !rows.length) continue;
-
-            // تخطي companies (الشركة موجودة)
             if (tableName === 'companies') continue;
 
             const tableConfig = BACKUP_TABLES.find(t => t.key === tableName);
             const modifiedRows = rows.map(row => {
               const newRow = { ...row };
               
-              // استبدال company_id
-              if (tableConfig?.hasCompanyId) {
-                newRow.company_id = targetCompanyId;
-              }
+              if (tableConfig?.hasCompanyId) newRow.company_id = targetCompanyId;
               
-              // استبدال parent_id (لو موجود)
               if (tableConfig?.parent) {
                 const fk = tableConfig.parent.fk;
                 if (newRow[fk] && idMapping[tableConfig.parent.table]?.[newRow[fk]]) {
@@ -2688,13 +4463,10 @@
                 }
               }
 
-              // تجاهل id القديم (سيتم إنشاء جديد)
               delete newRow.id;
-
               return newRow;
             });
 
-            // إدراج على دفعات
             const batchSize = 50;
             for (let i = 0; i < modifiedRows.length; i += batchSize) {
               const batch = modifiedRows.slice(i, i + batchSize);
@@ -2702,8 +4474,6 @@
                 const inserted = await Refad.db.insertMany(tableName, batch);
                 totalInserted += inserted.length;
               } catch (batchError) {
-                console.error(`[Restore] ${tableName} batch failed:`, batchError);
-                // Fallback: فردي
                 for (const row of batch) {
                   try {
                     await Refad.db.insert(tableName, row);
@@ -2719,14 +4489,12 @@
           Refad.toast.success(`✅ تم استيراد ${totalInserted} سجل`);
           
           if (errors.length) {
-            console.warn('Restore errors:', errors);
             Refad.alert.warning('استعادة جزئية', 
               `تم استيراد ${totalInserted} سجل. فشل في: ${errors.length} صف.`);
           }
 
           await Refad.logActivity('backup_restore', 'admin', 
-            `استعادة ${totalInserted} سجل لشركة ${targetCompany?.name}`, 
-            targetCompanyId);
+            `استعادة ${totalInserted} سجل لشركة ${targetCompany?.name}`, targetCompanyId);
 
           state.restoreData = null;
           document.getElementById('restoreFileInput').value = '';
@@ -2743,7 +4511,7 @@
       }
 
       // ============================================================
-      // Cleanup: Populate Types Select
+      // 27) Cleanup
       // ============================================================
       function populateCleanupTypes() {
         const sel = document.getElementById('cleanupType');
@@ -2753,23 +4521,14 @@
           ).join('');
       }
 
-      // ============================================================
-      // Cleanup: Preview
-      // ============================================================
       async function previewCleanup() {
         const companyId = parseInt(document.getElementById('cleanupCompanySelect').value, 10);
         const type = document.getElementById('cleanupType').value;
         const fromDate = document.getElementById('cleanupFrom').value;
         const toDate = document.getElementById('cleanupTo').value;
 
-        if (!companyId || !type || !fromDate || !toDate) {
-          Refad.toast.warning('املأ جميع الحقول');
-          return;
-        }
-        if (fromDate > toDate) {
-          Refad.toast.warning('تاريخ البداية بعد تاريخ النهاية');
-          return;
-        }
+        if (!companyId || !type || !fromDate || !toDate) { Refad.toast.warning('املأ جميع الحقول'); return; }
+        if (fromDate > toDate) { Refad.toast.warning('تاريخ البداية بعد تاريخ النهاية'); return; }
 
         const btn = document.getElementById('previewCleanupBtn');
         const originalText = btn.innerHTML;
@@ -2780,11 +4539,9 @@
         try {
           const config = CLEANUP_TYPES[type];
           const dateField = config.dateField;
-
           let rows = [];
 
           if (config.hasCompanyId) {
-            // جدول مباشر
             rows = await Refad.db.select(type, {
               columns: 'id',
               eq: { company_id: companyId },
@@ -2793,7 +4550,6 @@
               limit: 10000
             });
           } else if (config.parent) {
-            // جدول فرعي - جلب عبر الأب
             const parentRows = await Refad.db.select(config.parent.table, {
               columns: 'id',
               eq: { company_id: companyId },
@@ -2836,7 +4592,6 @@
                     النوع: <strong>${config.label}</strong><br>
                     الفترة: من ${Refad.format.date(fromDate)} إلى ${Refad.format.date(toDate)}
                   </span>
-                  ${config.cascade.length ? `<br><span style="font-size:11px;color:var(--danger);">سيتم أيضاً حذف الجداول التابعة: ${config.cascade.map(c => c.table).join('، ')}</span>` : ''}
                 </div>
               </div>
             `;
@@ -2853,9 +4608,6 @@
         }
       }
 
-      // ============================================================
-      // Cleanup: Confirm
-      // ============================================================
       function openCleanupConfirm() {
         const companyId = parseInt(document.getElementById('cleanupCompanySelect').value, 10);
         const type = document.getElementById('cleanupType').value;
@@ -2879,9 +4631,6 @@
         if (window.lucide) lucide.createIcons();
       }
 
-      // ============================================================
-      // Cleanup: Execute
-      // ============================================================
       async function executeCleanup() {
         const companyId = parseInt(document.getElementById('cleanupCompanySelect').value, 10);
         const type = document.getElementById('cleanupType').value;
@@ -2899,7 +4648,6 @@
         if (window.lucide) lucide.createIcons();
 
         try {
-          // 1) جلب IDs للسجلات المطلوب حذفها
           let rows = [];
           
           if (config.hasCompanyId) {
@@ -2929,14 +4677,11 @@
             }
           }
 
-          if (!rows.length) {
-            Refad.toast.warning('لا توجد سجلات للحذف');
-            return;
-          }
+          if (!rows.length) { Refad.toast.warning('لا توجد سجلات للحذف'); return; }
 
           const ids = rows.map(r => r.id);
 
-          // 2) حذف الجداول التابعة أولاً
+          // Delete cascades first
           for (const cascade of config.cascade) {
             const batchSize = 100;
             for (let i = 0; i < ids.length; i += batchSize) {
@@ -2949,26 +4694,20 @@
             }
           }
 
-          // 3) حذف الجدول الرئيسي
-          const batchSize = 100;
+          // Delete main table
           let deletedCount = 0;
-          for (let i = 0; i < ids.length; i += batchSize) {
-            const batch = ids.slice(i, i + batchSize);
-            for (const id of batch) {
-              try {
-                await Refad.db.remove(type, id);
-                deletedCount++;
-              } catch (err) {
-                console.error(`[Cleanup] Failed to delete ${type}#${id}:`, err);
-              }
+          for (const id of ids) {
+            try {
+              await Refad.db.remove(type, id);
+              deletedCount++;
+            } catch (err) {
+              console.error(`[Cleanup] Failed to delete ${type}#${id}:`, err);
             }
           }
 
           Refad.toast.success(`✅ تم حذف ${deletedCount} سجل`);
-
           await Refad.logActivity('cleanup_execute', 'admin', 
-            `حذف ${deletedCount} سجل من ${config.label} لشركة ${company?.name}`, 
-            companyId);
+            `حذف ${deletedCount} سجل من ${config.label} لشركة ${company?.name}`, companyId);
 
           document.getElementById('cleanupConfirmModal').classList.remove('show');
           document.getElementById('cleanupPreview').innerHTML = '';
@@ -2985,27 +4724,11 @@
         }
       }
 
-      // ============================================================
-      // Quick Cleanup
-      // ============================================================
       async function quickCleanup(action) {
         const configs = {
-          old_notifications: {
-            table: 'notifications',
-            days: 90,
-            label: 'الإشعارات الأقدم من 90 يوم'
-          },
-          old_activity: {
-            table: 'activity_log',
-            days: 180,
-            label: 'النشاط الأقدم من 180 يوم'
-          },
-          old_chat: {
-            table: 'chat_messages',
-            days: 90,
-            label: 'رسائل الشات الأقدم من 90 يوم',
-            hasCompanyId: false
-          }
+          old_notifications: { table: 'notifications', days: 90, label: 'الإشعارات الأقدم من 90 يوم' },
+          old_activity: { table: 'activity_log', days: 180, label: 'النشاط الأقدم من 180 يوم' },
+          old_chat: { table: 'chat_messages', days: 90, label: 'رسائل الشات الأقدم من 90 يوم', hasCompanyId: false }
         };
 
         const config = configs[action];
@@ -3023,7 +4746,6 @@
           let rows = [];
 
           if (config.hasCompanyId === false && config.table === 'chat_messages') {
-            // جدول فرعي - اجلب من خلال الأب
             const convs = await Refad.db.select('chat_conversations', { columns: 'id', limit: 10000 });
             const convIds = convs.map(c => c.id);
             if (convIds.length) {
@@ -3042,22 +4764,15 @@
             }).catch(() => []);
           }
 
-          if (!rows.length) {
-            Refad.toast.info('لا توجد بيانات للحذف');
-            return;
-          }
+          if (!rows.length) { Refad.toast.info('لا توجد بيانات للحذف'); return; }
 
           let deleted = 0;
-          const batchSize = 50;
-          for (let i = 0; i < rows.length; i += batchSize) {
-            const batch = rows.slice(i, i + batchSize);
-            for (const row of batch) {
-              try {
-                await Refad.db.remove(config.table, row.id);
-                deleted++;
-              } catch (e) {
-                console.warn(`Delete ${row.id} failed:`, e);
-              }
+          for (const row of rows) {
+            try {
+              await Refad.db.remove(config.table, row.id);
+              deleted++;
+            } catch (e) {
+              console.warn(`Delete ${row.id} failed:`, e);
             }
           }
 
@@ -3072,104 +4787,14 @@
       }
 
       // ============================================================
-      // CSV Import - Schemas
-      // ============================================================
-      const IMPORT_SCHEMAS = {
-        products: {
-          label: 'الأصناف',
-          required: ['name'],
-          columns: {
-            'الاسم': 'name',
-            'الاسم بالإنجليزية': 'name_en',
-            'name': 'name',
-            'name_en': 'name_en',
-            'الشكل': 'form',
-            'form': 'form',
-            'الوحدة': 'unit',
-            'unit': 'unit',
-            'التصنيف': 'category',
-            'category': 'category',
-            'السعر': 'default_price',
-            'price': 'default_price',
-            'default_price': 'default_price',
-            'حد الطلب': 'reorder_level',
-            'reorder_level': 'reorder_level',
-            'ملاحظات': 'notes',
-            'notes': 'notes'
-          },
-          defaults: { is_active: true, min_order_qty: 1 }
-        },
-        customers: {
-          label: 'العملاء',
-          required: ['name'],
-          columns: {
-            'الاسم': 'name',
-            'name': 'name',
-            'الهاتف': 'phone',
-            'phone': 'phone',
-            'البريد': 'email',
-            'email': 'email',
-            'العنوان': 'address',
-            'address': 'address',
-            'ملاحظات': 'notes',
-            'notes': 'notes'
-          },
-          defaults: { balance: 0, is_active: true }
-        },
-        suppliers: {
-          label: 'الموردين',
-          required: ['name'],
-          columns: {
-            'الاسم': 'name',
-            'name': 'name',
-            'الهاتف': 'phone',
-            'phone': 'phone',
-            'البريد': 'email',
-            'email': 'email',
-            'العنوان': 'address',
-            'address': 'address',
-            'الرقم الضريبي': 'tax_number',
-            'tax_number': 'tax_number',
-            'ملاحظات': 'notes',
-            'notes': 'notes'
-          },
-          defaults: { balance: 0, is_active: true }
-        },
-        employees: {
-          label: 'الموظفين',
-          required: ['full_name', 'username', 'password'],
-          columns: {
-            'الاسم': 'full_name',
-            'full_name': 'full_name',
-            'اسم المستخدم': 'username',
-            'username': 'username',
-            'كلمة المرور': 'password',
-            'password': 'password',
-            'الهاتف': 'phone',
-            'phone': 'phone',
-            'البريد': 'email',
-            'email': 'email',
-            'الراتب': 'salary',
-            'salary': 'salary',
-            'تاريخ التعيين': 'hire_date',
-            'hire_date': 'hire_date'
-          },
-          defaults: { is_active: true, has_device: true, role_id: null }
-        }
-      };
-
-      // ============================================================
-      // CSV Import - Handle File
+      // 28) CSV Import
       // ============================================================
       async function handleCsvFile(file) {
         const previewEl = document.getElementById('importPreview');
         const importBtn = document.getElementById('executeImportBtn');
         const importType = document.getElementById('importType').value;
 
-        if (!importType) {
-          Refad.toast.warning('اختر نوع البيانات أولاً');
-          return;
-        }
+        if (!importType) { Refad.toast.warning('اختر نوع البيانات أولاً'); return; }
 
         try {
           const data = await file.arrayBuffer();
@@ -3177,10 +4802,7 @@
           const ws = wb.Sheets[wb.SheetNames[0]];
           const rows = XLSX.utils.sheet_to_json(ws, { defval: '', raw: false });
 
-          if (!rows.length) {
-            Refad.toast.warning('الملف فارغ');
-            return;
-          }
+          if (!rows.length) { Refad.toast.warning('الملف فارغ'); return; }
 
           const schema = IMPORT_SCHEMAS[importType];
           const mapping = schema.columns;
@@ -3202,12 +4824,7 @@
 
           const validation = mappedRows.map((row, i) => {
             const missing = schema.required.filter(col => !row[col]);
-            return {
-              index: i + 1,
-              row,
-              valid: missing.length === 0,
-              missing
-            };
+            return { index: i + 1, row, valid: missing.length === 0, missing };
           });
 
           state.csvImportData = validation;
@@ -3215,8 +4832,6 @@
 
           const validCount = validation.filter(v => v.valid).length;
           const invalidCount = validation.length - validCount;
-
-          // بناء أعمدة المعاينة
           const previewColumns = [...new Set(Object.values(mapping))].slice(0, 5);
 
           previewEl.innerHTML = `
@@ -3265,15 +4880,9 @@
         }
       }
 
-      // ============================================================
-      // CSV Import - Execute
-      // ============================================================
       async function executeImport() {
         const companyId = parseInt(document.getElementById('importCompanySelect').value, 10);
-        if (!companyId) {
-          Refad.toast.warning('اختر الشركة');
-          return;
-        }
+        if (!companyId) { Refad.toast.warning('اختر الشركة'); return; }
         if (!state.csvImportData || !state.csvImportType) return;
 
         const schema = IMPORT_SCHEMAS[state.csvImportType];
@@ -3289,10 +4898,7 @@
           let inserted = 0;
           let failed = 0;
 
-          const payloads = validRows.map(v => ({
-            ...v.row,
-            company_id: companyId
-          }));
+          const payloads = validRows.map(v => ({ ...v.row, company_id: companyId }));
 
           const batchSize = 50;
           for (let i = 0; i < payloads.length; i += batchSize) {
@@ -3301,13 +4907,11 @@
               const result = await Refad.db.insertMany(state.csvImportType, batch);
               inserted += result.length;
             } catch (batchError) {
-              console.error('Batch failed, trying individually:', batchError);
               for (const row of batch) {
                 try {
                   await Refad.db.insert(state.csvImportType, row);
                   inserted++;
                 } catch (rowError) {
-                  console.error('Row insert failed:', rowError);
                   failed++;
                 }
               }
@@ -3315,9 +4919,7 @@
           }
 
           Refad.toast.success(`✅ تم استيراد ${inserted} سجل${failed > 0 ? ` (فشل ${failed})` : ''}`);
-
-          await Refad.logActivity('csv_import', 'admin', 
-            `استيراد ${inserted} ${schema.label}`, companyId);
+          await Refad.logActivity('csv_import', 'admin', `استيراد ${inserted} ${schema.label}`, companyId);
 
           state.csvImportData = null;
           state.csvImportType = null;
@@ -3334,15 +4936,9 @@
         }
       }
 
-      // ============================================================
-      // CSV Template
-      // ============================================================
       function downloadCsvTemplate() {
         const importType = document.getElementById('importType').value;
-        if (!importType) {
-          Refad.toast.warning('اختر نوع البيانات أولاً');
-          return;
-        }
+        if (!importType) { Refad.toast.warning('اختر نوع البيانات أولاً'); return; }
 
         const schema = IMPORT_SCHEMAS[importType];
         const headers = [...new Set(Object.keys(schema.columns))].slice(0, 12);
@@ -3367,7 +4963,7 @@
       }
 
       // ============================================================
-      // Add Company (Full Featured)
+      // 29) Add Company (Full Featured)
       // ============================================================
       async function openAddCompanyModal() {
         const result = await Swal.fire({
@@ -3433,10 +5029,7 @@
           reverseButtons: true,
           preConfirm: () => {
             const name = document.getElementById('swal-name').value.trim();
-            if (!name) {
-              Swal.showValidationMessage('اسم الشركة مطلوب');
-              return false;
-            }
+            if (!name) { Swal.showValidationMessage('اسم الشركة مطلوب'); return false; }
             return {
               name,
               phone: document.getElementById('swal-phone').value.trim() || null,
@@ -3453,20 +5046,12 @@
 
         if (!result.isConfirmed) return;
 
-        const btn = Swal.getConfirmButton();
-        if (btn) {
-          btn.disabled = true;
-          btn.textContent = 'جارٍ الإنشاء...';
-        }
-
         let createdCompanyId = null;
         try {
-          // 1) إنشاء الشركة
           const company = await Refad.db.insert('companies', result.value);
           if (!company?.id) throw new Error('لم يتم استرجاع رقم الشركة');
           createdCompanyId = company.id;
 
-          // 2) إنشاء دور admin مع is_owner = true
           const role = await Refad.db.insert('roles', {
             company_id: company.id,
             name: 'admin',
@@ -3477,7 +5062,6 @@
           });
           if (!role?.id) throw new Error('تعذر إنشاء دور المدير');
 
-          // 3) ربط كل الصلاحيات (ما عدا admin.full)
           const perms = await Refad.db.select('permissions', { columns: 'id, code' });
           const companyPerms = perms
             .filter(p => p.code !== 'admin.full')
@@ -3487,11 +5071,10 @@
             await Refad.db.insertMany('role_permissions', companyPerms);
           }
 
-          // 4) إنشاء المستخدم admin
           const username = `admin_${company.id}`;
           const password = String(Math.floor(10000 + Math.random() * 90000));
           
-          await Refad.db.insert('users', {
+          const createdUser = await Refad.db.insert('users', {
             company_id: company.id,
             role_id: role.id,
             username,
@@ -3501,24 +5084,19 @@
             has_device: true
           });
 
-          // 5) إضافة المدير لكل القنوات
           try {
-            await Refad.db.rpc('join_user_to_all_channels', {
-              p_company_id: company.id,
-              p_user_id: (await Refad.db.selectOne('users', { 
-                columns: 'id', 
-                eq: { username } 
-              }))?.id
-            }).catch(() => {});
+            if (createdUser?.id) {
+              await Refad.db.rpc('join_user_to_all_channels', {
+                p_company_id: company.id,
+                p_user_id: createdUser.id
+              }).catch(() => {});
+            }
           } catch (channelError) {
             console.warn('Auto-join channels failed:', channelError);
           }
 
-          // 6) تسجيل النشاط
-          await Refad.logActivity('create_company', 'admin', 
-            `إنشاء شركة: ${company.name}`, company.id);
+          await Refad.logActivity('create_company', 'admin', `إنشاء شركة: ${company.name}`, company.id);
 
-          // 7) عرض بيانات الدخول
           await Swal.fire({
             icon: 'success',
             title: '✅ تم إنشاء الشركة',
@@ -3582,7 +5160,157 @@
       }
 
       // ============================================================
-      // Bind Events
+      // 30) ✨ Quick Search
+      // ============================================================
+      function openQuickSearch() {
+        const overlay = document.getElementById('quickSearchOverlay');
+        if (!overlay) return;
+        overlay.classList.add('show');
+        const input = document.getElementById('quickSearchInput');
+        input.value = '';
+        input.focus();
+        state.qsState.index = -1;
+        state.qsState.results = [];
+        renderQuickSearchResults('');
+      }
+
+      function closeQuickSearch() {
+        const overlay = document.getElementById('quickSearchOverlay');
+        if (overlay) overlay.classList.remove('show');
+      }
+
+      function renderQuickSearchResults(query) {
+        const container = document.getElementById('quickSearchResults');
+        if (!container) return;
+        const q = (query || '').toLowerCase().trim();
+
+        if (!q) {
+          container.innerHTML = '<div class="quick-search-empty">اكتب للبحث السريع...</div>';
+          state.qsState.results = [];
+          return;
+        }
+
+        // Search companies
+        const companyResults = state.companies
+          .filter(c =>
+            (c.name || '').toLowerCase().includes(q) ||
+            (c.phone || '').toLowerCase().includes(q) ||
+            (c.email || '').toLowerCase().includes(q)
+          )
+          .slice(0, 5)
+          .map(c => ({
+            type: 'company',
+            id: c.id,
+            name: c.name,
+            sub: `${state.usersCountMap[c.id] || 0} مستخدم`,
+            initial: (c.name || '?').charAt(0)
+          }));
+
+        // Search users
+        const userResults = state.allUsers
+          .filter(u =>
+            (u.full_name || '').toLowerCase().includes(q) ||
+            (u.username || '').toLowerCase().includes(q) ||
+            (u.phone || '').toLowerCase().includes(q)
+          )
+          .slice(0, 5)
+          .map(u => {
+            const company = state.companies.find(c => c.id === u.company_id);
+            return {
+              type: 'user',
+              id: u.id,
+              name: u.full_name,
+              sub: `@${u.username} • ${company?.name || ''}`,
+              initial: (u.full_name || '?').charAt(0)
+            };
+          });
+
+        state.qsState.results = [...companyResults, ...userResults];
+        state.qsState.index = state.qsState.results.length ? 0 : -1;
+
+        if (!state.qsState.results.length) {
+          container.innerHTML = '<div class="quick-search-empty">لا توجد نتائج</div>';
+          return;
+        }
+
+        container.innerHTML = state.qsState.results.map((r, i) => `
+          <div class="quick-search-item ${i === 0 ? 'selected' : ''}" data-idx="${i}">
+            <div class="qs-icon">${Refad.escapeHtml(r.initial)}</div>
+            <div class="qs-body">
+              <div class="qs-name">${Refad.escapeHtml(r.name)}</div>
+              <div class="qs-sub">${Refad.escapeHtml(r.sub)}</div>
+            </div>
+            <i data-lucide="arrow-left" style="width:16px;height:16px;color:var(--text-muted);"></i>
+          </div>
+        `).join('');
+
+        if (window.lucide) lucide.createIcons();
+        container.querySelectorAll('.quick-search-item').forEach(el => {
+          el.addEventListener('click', () => navigateQuickSearch(Number(el.dataset.idx)));
+        });
+      }
+
+      function navigateQuickSearch(idx) {
+        const r = state.qsState.results[idx];
+        if (!r) return;
+        closeQuickSearch();
+
+        if (r.type === 'company') {
+          document.querySelector('.main-tab[data-panel="companies"]').click();
+          setTimeout(() => openEditCompanyModal(r.id), 200);
+        } else if (r.type === 'user') {
+          document.querySelector('.main-tab[data-panel="users"]').click();
+          setTimeout(() => openUserDetailsModal(r.id), 200);
+        }
+      }
+
+      function updateQuickSearchSelection() {
+        const container = document.getElementById('quickSearchResults');
+        if (!container) return;
+        container.querySelectorAll('.quick-search-item').forEach((el, i) => {
+          el.classList.toggle('selected', i === state.qsState.index);
+        });
+        const selected = container.querySelector('.quick-search-item.selected');
+        if (selected) selected.scrollIntoView({ block: 'nearest' });
+      }
+
+      function setupQuickSearch() {
+        const overlay = document.getElementById('quickSearchOverlay');
+        const input = document.getElementById('quickSearchInput');
+        if (!overlay || !input) return;
+
+        overlay.addEventListener('click', e => {
+          if (e.target === overlay) closeQuickSearch();
+        });
+
+        input.addEventListener('input', e => renderQuickSearchResults(e.target.value));
+
+        input.addEventListener('keydown', e => {
+          if (e.key === 'Escape') {
+            e.preventDefault();
+            closeQuickSearch();
+          } else if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            if (state.qsState.results.length) {
+              state.qsState.index = Math.min(state.qsState.index + 1, state.qsState.results.length - 1);
+              updateQuickSearchSelection();
+            }
+          } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            if (state.qsState.results.length) {
+              state.qsState.index = Math.max(state.qsState.index - 1, 0);
+              updateQuickSearchSelection();
+            }
+          } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (state.qsState.index >= 0) navigateQuickSearch(state.qsState.index);
+            else if (state.qsState.results.length) navigateQuickSearch(0);
+          }
+        });
+      }
+
+      // ============================================================
+      // 31) Bind Events
       // ============================================================
       function bindEvents() {
         // Refresh
@@ -3598,11 +5326,76 @@
           searchInput.addEventListener('input', Refad.debounce(() => renderCompanies(), 200));
         }
 
+        // Users search & filters
+        const usersSearchInput = document.getElementById('usersSearchInput');
+        if (usersSearchInput) {
+          usersSearchInput.addEventListener('input', Refad.debounce(() => renderUsersTable(), 200));
+        }
+
+        ['usersCompanyFilter', 'usersRoleFilter', 'usersStatusFilter'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.addEventListener('change', renderUsersTable);
+        });
+
         // Company actions
         document.getElementById('addCompanyBtn').addEventListener('click', openAddCompanyModal);
         document.getElementById('exportCompaniesBtn').addEventListener('click', exportCompanies);
+        document.getElementById('exportUsersBtn').addEventListener('click', exportUsers);
+        document.getElementById('addUserBtn').addEventListener('click', openAddUserModal);
         document.getElementById('suspendAllBtn').addEventListener('click', () => toggleAllCompanies(false));
         document.getElementById('activateAllBtn').addEventListener('click', () => toggleAllCompanies(true));
+
+        // Add User form
+        document.getElementById('addUserForm').addEventListener('submit', submitAddUser);
+        document.getElementById('newUserCompany').addEventListener('change', (e) => {
+          loadRolesForCompany(parseInt(e.target.value, 10));
+        });
+        document.getElementById('newUserGeneratePassword').addEventListener('change', (e) => {
+          const pwdInput = document.getElementById('newUserPassword');
+          if (e.target.checked) {
+            const pwd = String(Math.floor(10000 + Math.random() * 90000));
+            pwdInput.value = pwd;
+            pwdInput.disabled = true;
+          } else {
+            pwdInput.value = '';
+            pwdInput.disabled = false;
+          }
+        });
+
+        // User details save
+        document.getElementById('userDetailsSaveBtn').addEventListener('click', saveUserDetails);
+        document.getElementById('userDetailsImpersonateBtn').addEventListener('click', () => {
+          if (state.currentUserId) {
+            document.getElementById('userDetailsModal').classList.remove('show');
+            setTimeout(() => askImpersonate(state.currentUserId), 200);
+          }
+        });
+
+        // Company users modal
+        document.getElementById('companyUsersAddBtn').addEventListener('click', () => {
+          const cid = state.currentCompanyId;
+          document.getElementById('companyUsersModal').classList.remove('show');
+          setTimeout(() => {
+            openAddUserModal();
+            if (cid) {
+              const sel = document.getElementById('newUserCompany');
+              sel.value = cid;
+              loadRolesForCompany(cid);
+            }
+          }, 200);
+        });
+
+        // Edit company form
+        document.getElementById('editCompanyForm').addEventListener('submit', saveCompanyEdit);
+
+        // Impersonate confirm
+        document.getElementById('impersonateConfirmBtn').addEventListener('click', doImpersonate);
+
+        // Reset password
+        document.getElementById('resetPasswordConfirmBtn').addEventListener('click', confirmResetPassword);
+
+        // Payment form
+        document.getElementById('paymentForm').addEventListener('submit', savePayment);
 
         // Backup
         document.getElementById('exportBackupBtn').addEventListener('click', () => exportBackup('json'));
@@ -3659,22 +5452,33 @@
 
         document.addEventListener('keydown', e => {
           if (e.key === 'Escape') {
+            if (document.getElementById('quickSearchOverlay')?.classList.contains('show')) {
+              closeQuickSearch();
+              return;
+            }
             document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.remove('show'));
+          }
+          if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+            e.preventDefault();
+            openQuickSearch();
           }
         });
 
-        // Sidebar mobile
-        const menuToggle = document.getElementById('menuToggle');
-        if (menuToggle) {
-          menuToggle.addEventListener('click', () => {
-            document.getElementById('sidebar').classList.add('open');
-            document.getElementById('overlay').classList.add('show');
-          });
-          document.getElementById('overlay').addEventListener('click', () => {
-            document.getElementById('sidebar').classList.remove('open');
-            document.getElementById('overlay').classList.remove('show');
-          });
-        }
+        // Password toggle buttons (global)
+        document.addEventListener('click', (e) => {
+          const toggle = e.target.closest('[data-toggle]');
+          if (toggle) {
+            const targetId = toggle.dataset.toggle;
+            const input = document.getElementById(targetId);
+            if (input) {
+              const isPassword = input.type === 'password';
+              input.type = isPassword ? 'text' : 'password';
+              const icon = toggle.querySelector('i');
+              if (icon) icon.setAttribute('data-lucide', isPassword ? 'eye-off' : 'eye');
+              if (window.lucide) lucide.createIcons();
+            }
+          }
+        });
 
         // Default cleanup dates
         const today = Refad.date.today();
@@ -3686,12 +5490,12 @@
       }
 
       // ============================================================
-      // Init
+      // 32) Init
       // ============================================================
       async function init() {
-        // UI Setup
-        buildSidebar();
+        Refad.buildMenu('admin.html');
         fillUser();
+        applyIdentity();
         setupTheme();
         setupSidebarMobile();
         setupUserMenu();
@@ -3699,14 +5503,16 @@
         setupBackupCheckboxes();
         populateCleanupTypes();
         bindEvents();
+        setupImpersonateBar();
+        setupQuickSearch();
 
-        // Load Data
         await loadData();
+        populateRoleSelects();
 
-        // Register SW
         if (Refad.registerServiceWorker) Refad.registerServiceWorker();
 
-        console.log('%c[Refad] Admin PRO v2 ready', 'color:#14B8A6;font-weight:bold');
+        console.log('%c[Refad] Admin v3 GOD MODE ready', 'color:#a855f7;font-weight:bold;font-size:14px');
+        console.log('%c[Refad] Features: Companies + Users + Backup + Cleanup + Import + Activity + Alerts + Impersonate + Quick Search', 'color:#14B8A6;font-weight:bold');
       }
 
       if (document.readyState === 'loading') {
@@ -3714,11 +5520,6 @@
       } else {
         init();
       }
-
-      // Spinner animation
-      const spinnerStyle = document.createElement('style');
-      spinnerStyle.textContent = '@keyframes spin { to { transform: rotate(360deg); } }';
-      document.head.appendChild(spinnerStyle);
 
     })();
   </script>
