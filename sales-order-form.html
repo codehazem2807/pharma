@@ -61,6 +61,15 @@
       --sidebar-text: #94a3b8;
     }
 
+    /* ✨ Reduced-motion */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
     html, body {
       height: 100%;
       font-family: 'Cairo', sans-serif;
@@ -71,7 +80,7 @@
 
     body { display: flex; min-height: 100vh; overflow-x: hidden; }
 
-    /* Sidebar */
+    /* ============ Sidebar ============ */
     .sidebar {
       width: var(--sidebar-w); height: 100vh;
       background: var(--sidebar-bg); color: var(--sidebar-text);
@@ -90,12 +99,13 @@
       background: linear-gradient(135deg, var(--accent), var(--accent-dark));
       border-radius: 12px; display: flex; align-items: center; justify-content: center;
       flex-shrink: 0; box-shadow: 0 4px 12px rgba(20,184,166,0.4);
+      overflow: hidden;
     }
     .sidebar-logo img { width: 70%; height: 70%; object-fit: contain; }
     .sidebar-logo .fallback { color: white; font-weight: 800; font-size: 18px; }
     .sidebar-brand h2 { color: white; font-size: 20px; font-weight: 800; line-height: 1.2; }
     .sidebar-brand p { font-size: 10px; opacity: 0.7; margin-top: 2px; }
-    .sidebar-nav { flex: 1; overflow-y: auto; padding: 12px 0; }
+    .sidebar-nav { flex: 1; overflow-y: auto; padding: 12px 0; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.15) transparent; }
     .sidebar-nav::-webkit-scrollbar { width: 5px; }
     .sidebar-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 10px; }
     .nav-section { padding: 8px 20px 4px; font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 1px; margin-top: 8px; }
@@ -115,7 +125,7 @@
     .nav-item .badge.gold { background: var(--gold); }
     .nav-item .badge.new { background: var(--purple); }
 
-    /* Main */
+    /* ============ Main ============ */
     .main { flex: 1; margin-right: var(--sidebar-w); min-width: 0; display: flex; flex-direction: column; }
     .topbar {
       height: var(--topbar-h); background: var(--card);
@@ -160,7 +170,7 @@
     .dropdown-item i { width: 16px; height: 16px; }
     .dropdown-divider { height: 1px; background: var(--border); margin: 6px 0; }
 
-    /* Content */
+    /* ============ Content ============ */
     .content { padding: 24px; flex: 1; }
     .page-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
     .page-head h1 { font-size: 22px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
@@ -201,16 +211,9 @@
     .wh-info-box i { width: 18px; height: 18px; color: var(--info); flex-shrink: 0; }
     .wh-info-box strong { color: var(--primary); }
     .wh-info-box select {
-      padding: 6px 12px;
-      font-family: inherit;
-      font-size: 13px;
-      font-weight: 600;
-      background: var(--card);
-      border: 1.5px solid var(--border);
-      border-radius: 6px;
-      color: var(--text);
-      outline: none;
-      cursor: pointer;
+      padding: 6px 12px; font-family: inherit; font-size: 13px; font-weight: 600;
+      background: var(--card); border: 1.5px solid var(--border);
+      border-radius: 6px; color: var(--text); outline: none; cursor: pointer;
       margin-right: auto;
     }
     .wh-info-box select:focus { border-color: var(--accent); }
@@ -229,20 +232,10 @@
       flex-wrap: wrap;
     }
     .customer-info-box.show { display: flex; }
-    .customer-info-box.warning {
-      background: rgba(245,158,11,0.06);
-      border-color: rgba(245,158,11,0.3);
-    }
-    .customer-info-box.danger {
-      background: rgba(239,68,68,0.06);
-      border-color: rgba(239,68,68,0.3);
-    }
+    .customer-info-box.warning { background: rgba(245,158,11,0.06); border-color: rgba(245,158,11,0.3); }
+    .customer-info-box.danger { background: rgba(239,68,68,0.06); border-color: rgba(239,68,68,0.3); }
     .customer-info-box i { width: 16px; height: 16px; flex-shrink: 0; }
-    .customer-info-box .cib-item {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
+    .customer-info-box .cib-item { display: flex; align-items: center; gap: 6px; }
     .customer-info-box .cib-item .lbl { color: var(--text-muted); font-weight: 600; }
     .customer-info-box .cib-item .val { font-weight: 800; }
 
@@ -404,6 +397,12 @@
     }
     .product-search-wrap input:focus { border-color: var(--accent); background: var(--card); box-shadow: 0 0 0 3px rgba(20,184,166,0.1); }
     .product-search-wrap i { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--text-muted); pointer-events: none; }
+    .product-search-wrap kbd {
+      position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+      font-family: 'Courier New', monospace; font-size: 10px;
+      padding: 2px 6px; background: var(--border); color: var(--text-muted);
+      border-radius: 4px; font-weight: 700; pointer-events: none;
+    }
 
     .search-results {
       position: absolute; top: calc(100% + 6px); right: 0; left: 0;
@@ -496,11 +495,113 @@
       box-shadow: 0 2px 8px rgba(20,184,166,0.4);
     }
 
+    /* Badge Tags */
+    .badge-tag {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 4px 10px; font-size: 11px; font-weight: 700;
+      border-radius: 20px; white-space: nowrap;
+    }
+    .badge-tag.gray { background: rgba(148,163,184,0.15); color: var(--text-muted); }
+    .badge-tag.blue { background: rgba(59,130,246,0.12); color: var(--info); }
+    .badge-tag.green { background: rgba(16,185,129,0.12); color: var(--success); }
+    .badge-tag.red { background: rgba(239,68,68,0.12); color: var(--danger); }
+
     /* Overlay */
     .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; opacity: 0; transition: opacity 0.3s; }
     .overlay.show { display: block; opacity: 1; }
 
-    /* Responsive */
+    /* ✨ Quick Search Overlay */
+    .quick-search-overlay {
+      position: fixed; inset: 0;
+      z-index: 600;
+      display: none;
+      align-items: flex-start; justify-content: center;
+      padding: 80px 20px 20px;
+      background: rgba(15,23,42,0.6);
+      backdrop-filter: blur(6px);
+      animation: qsFadeIn 0.2s;
+    }
+    .quick-search-overlay.show { display: flex; }
+    @keyframes qsFadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes qsSlideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .quick-search-box {
+      width: min(600px, 100%);
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+      animation: qsSlideUp 0.25s;
+    }
+    .quick-search-input-wrap { position: relative; }
+    .quick-search-input {
+      width: 100%;
+      padding: 18px 60px 18px 18px;
+      font-family: inherit;
+      font-size: 16px; font-weight: 600;
+      background: var(--card);
+      border: none;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+      outline: none;
+    }
+    .quick-search-input-wrap > i {
+      position: absolute; right: 20px; top: 50%;
+      transform: translateY(-50%);
+      width: 22px; height: 22px;
+      color: var(--accent);
+      pointer-events: none;
+    }
+    .quick-search-kbd {
+      position: absolute; left: 18px; top: 50%;
+      transform: translateY(-50%);
+      font-size: 10px;
+      padding: 3px 8px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-muted);
+      font-family: 'Courier New', monospace;
+      font-weight: 700;
+    }
+    .quick-search-results { max-height: 400px; overflow-y: auto; padding: 8px; }
+    .quick-search-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .quick-search-item:hover, .quick-search-item.selected { background: rgba(20,184,166,0.1); }
+    .quick-search-item .qs-icon {
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: white;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 15px;
+      flex-shrink: 0;
+    }
+    .quick-search-item .qs-body { flex: 1; min-width: 0; }
+    .quick-search-item .qs-name { font-weight: 700; font-size: 14px; color: var(--text); }
+    .quick-search-item .qs-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .quick-search-empty { text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 13px; }
+    .quick-search-footer {
+      padding: 10px 16px;
+      border-top: 1px solid var(--border);
+      background: var(--bg);
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 11px; color: var(--text-muted);
+    }
+    .quick-search-footer kbd {
+      font-family: 'Courier New', monospace;
+      padding: 2px 6px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-weight: 700;
+    }
+
+    /* ============ Responsive ============ */
     @media (max-width: 1024px) {
       .sidebar { transform: translateX(100%); }
       .sidebar.open { transform: translateX(0); }
@@ -517,24 +618,26 @@
       .page-head h1 { font-size: 18px; }
       .card-header { flex-wrap: wrap; gap: 12px; }
       .product-search-wrap { min-width: 100%; max-width: none; }
+      .product-search-wrap kbd { display: none; }
       .items-table-wrap { min-height: 180px; }
       .form-grid { grid-template-columns: 1fr; }
       .summary-grid { grid-template-columns: repeat(2, 1fr); }
       .modal-footer { flex-direction: column-reverse; }
       .modal-footer .btn { width: 100%; justify-content: center; }
+      .quick-search-overlay { padding: 20px 10px; }
     }
   </style>
-</head>
-<body>
+</head><body>
 
+  <!-- Sidebar -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
-      <div class="sidebar-logo">
-        <img src="logo.png" alt="رفاد" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=fallback>R</span>';">
+      <div class="sidebar-logo" id="sidebarLogo">
+        <img src="logo.png" alt="رفاد" id="sidebarLogoImg" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=fallback>R</span>';">
       </div>
       <div class="sidebar-brand">
-        <h2>رفاد</h2>
-        <p>نظام إدارة الأدوية</p>
+        <h2 id="sidebarBrandName">رفاد</h2>
+        <p id="sidebarBrandDesc">نظام إدارة الأدوية</p>
       </div>
     </div>
     <nav class="sidebar-nav" id="sidebarNav"></nav>
@@ -671,6 +774,7 @@
           <div class="product-search-wrap">
             <input type="text" id="productSearch" placeholder="ابحث عن صنف بالاسم أو الباركود... (F2 للمسح)">
             <i data-lucide="search"></i>
+            <kbd>Ctrl+K</kbd>
             <div class="search-results" id="searchResults"></div>
           </div>
         </div>
@@ -803,13 +907,77 @@
     </div>
   </div>
 
+  <!-- ✨ Quick Search Overlay -->
+  <div class="quick-search-overlay" id="quickSearchOverlay">
+    <div class="quick-search-box">
+      <div class="quick-search-input-wrap">
+        <input type="text" class="quick-search-input" id="quickSearchInput" placeholder="ابحث في الأصناف المتاحة..." autocomplete="off">
+        <i data-lucide="search"></i>
+        <span class="quick-search-kbd">ESC</span>
+      </div>
+      <div class="quick-search-results" id="quickSearchResults">
+        <div class="quick-search-empty">اكتب للبحث السريع...</div>
+      </div>
+      <div class="quick-search-footer">
+        <span><kbd>↑</kbd> <kbd>↓</kbd> للتنقل</span>
+        <span><kbd>Enter</kbd> للإضافة</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- Scripts -->
+  <!-- ============================================================ -->
   <script src="refad-core.js"></script>
   <script src="refad-auth.js"></script>
+  <script src="refad-theme-sync.js"></script>
+  <script src="refad-settings.js"></script>
   <script src="refad-warehouse.js"></script>
-  <script src="refad-quarantine.js"></script>
-  <script>
+  <script src="refad-quarantine.js"></script>  <script>
     (function () {
       'use strict';
+
+      // ============================================================
+      // 0) Safe Settings Wrapper
+      // ============================================================
+      const SafeSettings = {
+        locale: {
+          formatMoney: function (v) {
+            try {
+              if (window.RefadSettings?.locale?.formatMoney) {
+                return RefadSettings.locale.formatMoney(v);
+              }
+            } catch (e) {}
+            return Refad.format.money(v);
+          }
+        },
+        identity: {
+          getSystemName: function () {
+            try {
+              if (window.RefadSettings?.identity?.getSystemName) {
+                return RefadSettings.identity.getSystemName();
+              }
+            } catch (e) {}
+            return 'رفاد';
+          },
+          getTagline: function () {
+            try {
+              if (window.RefadSettings?.identity?.getTagline) {
+                return RefadSettings.identity.getTagline();
+              }
+            } catch (e) {}
+            return 'نظام إدارة الأدوية';
+          },
+          getLogoUrl: function () {
+            try {
+              if (window.RefadSettings?.identity?.getLogoUrl) {
+                return RefadSettings.identity.getLogoUrl();
+              }
+            } catch (e) {}
+            return null;
+          }
+        }
+      };
 
       // ============================================================
       // 1) Guard
@@ -834,10 +1002,7 @@
         return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
           .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
       }
-      function fmtMoney(v) {
-        if (typeof Refad.format?.money === 'function') return Refad.format.money(v);
-        return Number(v || 0).toFixed(2);
-      }
+      function fmtMoney(v) { return SafeSettings.locale.formatMoney(v); }
       function fmtNumber(v) {
         if (typeof Refad.format?.number === 'function') return Refad.format.number(v);
         return String(v || 0);
@@ -874,77 +1039,13 @@
         currentBatchProduct: null,
         activeWarehouseId: null,
         warehouses: [],
-        quarantinedBatches: [],
-        blacklist: [],
-        customerCreditInfo: null
+        customerCreditInfo: null,
+        realtimeChannel: null,
+        qsState: { index: -1, results: [] }
       };
 
       // ============================================================
-      // 5) Sidebar
-      // ============================================================
-      const MENU = [
-        { section: 'الرئيسية', items: [
-          { label: 'لوحة التحكم', icon: 'layout-dashboard', href: 'dashboard.html' },
-          { label: 'الشات', icon: 'message-circle', href: 'chat.html', permission: 'chat.use' },
-          { label: 'الإشعارات', icon: 'bell', href: 'notifications.html', permission: 'notifications.view' }
-        ]},
-        { section: 'العمليات', items: [
-          { label: 'الأصناف', icon: 'package', href: 'products.html', permission: 'products.view' },
-          { label: 'المخزون', icon: 'warehouse', href: 'inventory.html', permission: 'inventory.view' },
-          { label: 'طلبات الشراء', icon: 'clipboard-list', href: 'purchase-requests.html', permission: 'purchases.view' },
-          { label: 'الاستلامات', icon: 'package-check', href: 'receipts.html', permission: 'purchases.receive' },
-          { label: 'طلبات البيع', icon: 'shopping-cart', href: 'sales-orders.html', permission: 'sales.view' },
-          { label: 'الفواتير', icon: 'receipt', href: 'invoices.html', permission: 'sales.view' }
-        ]},
-        { section: 'الأطراف', items: [
-          { label: 'الموردين', icon: 'truck', href: 'suppliers.html', permission: 'suppliers.view' },
-          { label: 'العملاء', icon: 'users', href: 'customers.html', permission: 'customers.view' }
-        ]},
-        { section: 'المخزون', items: [
-          { label: 'المخازن', icon: 'warehouse', href: 'warehouses.html' },
-          { label: 'التحويلات', icon: 'repeat', href: 'warehouse-transfers.html' },
-          { label: 'الجرد', icon: 'clipboard-check', href: 'stocktake.html', permission: 'inventory.stocktake' },
-          { label: 'التسويات', icon: 'sliders-horizontal', href: 'adjustments.html', permission: 'inventory.adjust' }
-        ]},
-        { section: 'الموارد البشرية', items: [
-          { label: 'الموظفين', icon: 'user-cog', href: 'employees.html', permission: 'employees.view' },
-          { label: 'الحضور', icon: 'calendar-check', href: 'attendance.html', permission: 'attendance.view' },
-          { label: 'الرواتب', icon: 'wallet', href: 'payroll.html', permission: 'payroll.view' }
-        ]},
-        { section: 'المالية', items: [
-          { label: 'الحسابات', icon: 'landmark', href: 'accounts.html', permission: 'company.owner' },
-          { label: 'المصاريف', icon: 'banknote', href: 'expenses.html', permission: 'expenses.view' },
-          { label: 'الشيكات', icon: 'file-check', href: 'cheques.html', badge: 'جديد', badgeClass: 'new' },
-          { label: 'التقارير', icon: 'bar-chart-3', href: 'reports.html', permission: 'reports.view' }
-        ]},
-        { section: 'النظام', items: [
-          { label: 'إعدادات الشركة', icon: 'settings', href: 'company-settings.html', permission: 'settings.view' }
-        ]}
-      ];
-
-      function buildSidebar() {
-        const nav = document.getElementById('sidebarNav');
-        const frag = document.createDocumentFragment();
-        MENU.forEach(group => {
-          const allowed = group.items.filter(it => !it.permission || Refad.Session.has(it.permission));
-          if (!allowed.length) return;
-          frag.appendChild(Refad.el('div', { class: 'nav-section' }, group.section));
-          allowed.forEach(item => {
-            const a = Refad.el('a', {
-              href: item.href,
-              class: 'nav-item' + (item.href === 'sales-orders.html' ? ' active' : '')
-            });
-            a.innerHTML = `<i data-lucide="${item.icon}"></i><span>${esc(item.label)}</span>${item.badge ? `<span class="badge ${item.badgeClass || ''}">${item.badge}</span>` : ''}`;
-            frag.appendChild(a);
-          });
-        });
-        nav.innerHTML = '';
-        nav.appendChild(frag);
-        if (window.lucide) lucide.createIcons();
-      }
-
-      // ============================================================
-      // 6) UI helpers
+      // 5) UI Setup
       // ============================================================
       function fillUser() {
         const av = document.getElementById('userAvatar');
@@ -953,6 +1054,26 @@
         else av.textContent = initial;
         document.getElementById('userName').textContent = session.full_name || '—';
         document.getElementById('userRole').textContent = isOwner ? 'صاحب الشركة' : 'موظف';
+      }
+
+      // ✨ Apply Identity
+      function applyIdentity() {
+        const name = SafeSettings.identity.getSystemName();
+        const tagline = SafeSettings.identity.getTagline();
+        const logoUrl = SafeSettings.identity.getLogoUrl();
+        const brandName = document.getElementById('sidebarBrandName');
+        const brandDesc = document.getElementById('sidebarBrandDesc');
+        const logoImg = document.getElementById('sidebarLogoImg');
+        if (brandName) brandName.textContent = name;
+        if (brandDesc) brandDesc.textContent = tagline;
+        if (logoImg && logoUrl) {
+          logoImg.src = logoUrl;
+          logoImg.onerror = function () {
+            this.style.display = 'none';
+            const parent = this.parentElement;
+            if (parent) parent.innerHTML = '<span class="fallback">' + (name.charAt(0) || 'R') + '</span>';
+          };
+        }
       }
 
       function setupTheme() {
@@ -997,8 +1118,15 @@
         });
       }
 
+      // ✨ Realtime Theme
+      function setupRealtimeTheme() {
+        window.addEventListener('refad:theme-changed', () => {
+          applyIdentity();
+        });
+      }
+
       // ============================================================
-      // 7) Load Warehouses
+      // 6) Load Warehouses
       // ============================================================
       async function loadWarehouses() {
         try {
@@ -1023,7 +1151,7 @@
       }
 
       // ============================================================
-      // 8) Load Customers & Suppliers
+      // 7) Load Customers & Suppliers
       // ============================================================
       async function loadCustomers() {
         try {
@@ -1048,9 +1176,6 @@
             const opt = document.createElement('option');
             opt.value = c.id;
             opt.textContent = c.name + (c.phone ? ` (${c.phone})` : '');
-            opt.dataset.balance = c.balance || 0;
-            opt.dataset.creditLimit = c.credit_limit || 0;
-            opt.dataset.paymentTerms = c.payment_terms_days || 0;
             customerSel.appendChild(opt);
           });
 
@@ -1083,7 +1208,7 @@
       }
 
       // ============================================================
-      // 9) Customer change → check credit limit
+      // 8) Customer Change → Credit Limit
       // ============================================================
       function setupCustomerChange() {
         const sel = document.getElementById('customerSelect');
@@ -1094,10 +1219,8 @@
             state.customerCreditInfo = null;
             return;
           }
-
           const customer = state.customers.find(c => Number(c.id) === cid);
           if (!customer) return;
-
           state.customerCreditInfo = customer;
           renderCustomerInfoBox();
         });
@@ -1154,7 +1277,6 @@
 
         if (window.lucide) lucide.createIcons();
 
-        // تاريخ الاستحقاق
         if (c.payment_terms_days > 0) {
           document.getElementById('dueDateField').style.display = '';
           const orderDate = document.getElementById('orderDate').value || Refad.date.today();
@@ -1166,7 +1288,7 @@
       }
 
       // ============================================================
-      // 10) Load Products + Batches + Bonus Schemes
+      // 9) Load Products + Batches + Bonus Schemes
       // ============================================================
       async function loadProductsAndBatches() {
         try {
@@ -1200,7 +1322,7 @@
             if (b.barcode) state.barcodeMap[b.barcode.trim().toUpperCase()] = b.product_id;
           });
 
-          // Batches per product — sort by expiry (FEFO)
+          // Batches per product — sort by FEFO (expiry ASC)
           state.batchesByProduct = {};
           batches
             .filter(b => b.warehouse_id === state.activeWarehouseId || !b.warehouse_id)
@@ -1241,7 +1363,7 @@
       }
 
       // ============================================================
-      // 11) Bonus Schemes logic
+      // 10) Bonus Schemes
       // ============================================================
       function findApplicableSchemes(productId, qty) {
         const product = state.allProducts.find(p => p.id === productId);
@@ -1297,12 +1419,11 @@
       }
 
       // ============================================================
-      // 12) Quarantine Check
+      // 11) Quarantine
       // ============================================================
       function checkBatchQuarantine(batch) {
         if (!batch) return null;
 
-        // 1) is_quarantined field
         if (batch.is_quarantined === true) {
           return {
             blocked: true,
@@ -1312,7 +1433,6 @@
           };
         }
 
-        // 2) Refad.Quarantine checkBlacklist
         if (typeof Refad.Quarantine !== 'undefined' && batch.batch_number) {
           try {
             const bl = Refad.Quarantine.checkBlacklist(batch.batch_number);
@@ -1333,7 +1453,7 @@
       }
 
       // ============================================================
-      // 13) Profit Calculation
+      // 12) Profit Calculation
       // ============================================================
       function calcLineTotal(it) {
         const qty = it.quantity || 0;
@@ -1347,9 +1467,7 @@
         const saleNetUnit = (it.sale_price || 0) * (1 - (it.sale_discount || 0) / 100);
         const costNetUnit = (it.cost_price || 0) * (1 - (it.purchase_discount || 0) / 100);
 
-        // الإيراد = الكمية الأساسية فقط (البونص مجاني للعميل)
         const revenue = saleNetUnit * qty;
-        // التكلفة = (الكمية + البونص) × تكلفة الوحدة
         const totalCost = costNetUnit * (qty + bonus);
 
         return revenue - totalCost;
@@ -1361,14 +1479,12 @@
         it._total = calcLineTotal(it);
         it._profit = calcLineProfit(it);
 
-        // التكلفة الفعلية للوحدة (للعرض)
-        const totalQty = (it.quantity || 0) + (it.bonus_qty || 0);
         const costNetUnit = (it.cost_price || 0) * (1 - (it.purchase_discount || 0) / 100);
-        it._effectiveCost = totalQty > 0 ? costNetUnit : costNetUnit;
+        it._effectiveCost = costNetUnit;
       }
 
       // ============================================================
-      // 14) Product Search
+      // 13) Product Search
       // ============================================================
       function setupProductSearch() {
         const input = document.getElementById('productSearch');
@@ -1459,11 +1575,15 @@
 
         document.addEventListener('keydown', e => {
           if (e.key === 'F2') { e.preventDefault(); startScanner(); }
+          if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+            e.preventDefault();
+            openQuickSearch();
+          }
         });
       }
 
       // ============================================================
-      // 15) Add product → batch picker
+      // 14) Add Product → Batch Picker
       // ============================================================
       function addProductToOrder(pid) {
         const p = state.allProducts.find(x => x.id === pid);
@@ -1482,7 +1602,7 @@
         state.currentBatchProduct = product;
         const list = document.getElementById('batchList');
 
-        // FEFO: أول تشغيلة غير محظورة و صالحة = suggested
+        // FEFO: first non-blocked, non-expired batch
         let fefoSuggestedId = null;
         for (const b of batches) {
           const q = checkBatchQuarantine(b);
@@ -1517,7 +1637,6 @@
 
             const purchaseDisc = b.purchase_discount || state.purchaseDiscountMap[product.id] || 0;
 
-            // عرض سبب الحظر
             let blockReasonHtml = '';
             if (isBlocked) {
               const r = quarantine.type === 'blacklist'
@@ -1563,7 +1682,6 @@
 
       function setupBatchPicker() {
         document.getElementById('batchList').addEventListener('click', e => {
-          // منع اختيار المحظور
           const blockedItem = e.target.closest('.batch-option.blocked');
           if (blockedItem) {
             Refad.toast.error('🚫 هذه التشغيلة محظورة ولا يمكن بيعها');
@@ -1579,7 +1697,6 @@
           const batch = batches[idx];
           if (!batch) return;
 
-          // فحص نهائي
           const quarantine = checkBatchQuarantine(batch);
           if (quarantine) {
             Refad.toast.error('🚫 هذه التشغيلة محظورة');
@@ -1594,7 +1711,13 @@
           b.addEventListener('click', closeAllModals);
         });
         document.addEventListener('keydown', e => {
-          if (e.key === 'Escape') closeAllModals();
+          if (e.key === 'Escape') {
+            if (document.getElementById('quickSearchOverlay')?.classList.contains('show')) {
+              closeQuickSearch();
+              return;
+            }
+            closeAllModals();
+          }
         });
         document.querySelectorAll('.modal-backdrop').forEach(m => {
           m.addEventListener('click', e => {
@@ -1604,7 +1727,6 @@
       }
 
       function pickBatch(product, batch) {
-        // فحص التكرار بنفس التشغيلة
         const existing = state.items.find(it => it.batch_id === batch.id);
         if (existing) {
           existing.quantity += 1;
@@ -1638,16 +1760,10 @@
         state.items.push(newItem);
         const idx = state.items.length - 1;
         recalcItemProfit(idx);
-
-        // اقتراح البونص تلقائياً
         autoSuggestBonus(idx);
-
         renderItems();
 
-        // فحص Credit Limit بعد الإضافة
-        if (state.customerCreditInfo) {
-          renderCustomerInfoBox();
-        }
+        if (state.customerCreditInfo) renderCustomerInfoBox();
       }
 
       function closeAllModals() {
@@ -1655,7 +1771,7 @@
       }
 
       // ============================================================
-      // 16) Render Items
+      // 15) Render Items
       // ============================================================
       function renderItems() {
         const tbody = document.getElementById('itemsBody');
@@ -1777,7 +1893,6 @@
             const it = state.items[idx];
 
             if (field === 'quantity' && !state._silentBonus) {
-              // اقتراح البونص من الشرائح لو الكمية اتغيرت
               const suggestion = suggestBonusFromSchemes(it.product_id, it.quantity);
               if (suggestion && suggestion.bonusQty > 0 && it.bonus_qty === 0) {
                 state._silentBonus = true;
@@ -1881,7 +1996,7 @@
       }
 
       // ============================================================
-      // 17) Barcode Scanner
+      // 16) Barcode Scanner
       // ============================================================
       function setupScanner() {
         document.getElementById('scanBtn').addEventListener('click', startScanner);
@@ -1945,7 +2060,134 @@
       }
 
       // ============================================================
-      // 18) Save with Credit Limit Check
+      // 17) ✨ Quick Search
+      // ============================================================
+      function openQuickSearch() {
+        const overlay = document.getElementById('quickSearchOverlay');
+        if (!overlay) return;
+        overlay.classList.add('show');
+        const input = document.getElementById('quickSearchInput');
+        input.value = '';
+        input.focus();
+        state.qsState.index = -1;
+        state.qsState.results = [];
+        renderQuickSearchResults('');
+      }
+
+      function closeQuickSearch() {
+        const overlay = document.getElementById('quickSearchOverlay');
+        if (overlay) overlay.classList.remove('show');
+      }
+
+      function renderQuickSearchResults(query) {
+        const container = document.getElementById('quickSearchResults');
+        if (!container) return;
+        const q = (query || '').toLowerCase().trim();
+
+        if (!q) {
+          container.innerHTML = '<div class="quick-search-empty">اكتب للبحث السريع في الأصناف...</div>';
+          state.qsState.results = [];
+          return;
+        }
+
+        // Search products with stock
+        const results = state.allProducts
+          .filter(p =>
+            (p.total_stock > 0) && (
+              (p.name || '').toLowerCase().includes(q) ||
+              (p.name_en || '').toLowerCase().includes(q) ||
+              (p.form || '').toLowerCase().includes(q) ||
+              (p.category || '').toLowerCase().includes(q)
+            )
+          )
+          .slice(0, 10)
+          .map(p => ({
+            type: 'product',
+            id: p.id,
+            name: p.name,
+            sub: `${p.form || ''} ${p.unit || ''} • ${fmtNumber(p.total_stock)} متوفر • ${fmtMoney(p.default_price || 0)}`,
+            initial: (p.name || '?').charAt(0)
+          }));
+
+        state.qsState.results = results;
+        state.qsState.index = results.length ? 0 : -1;
+
+        if (!results.length) {
+          container.innerHTML = '<div class="quick-search-empty">لا توجد نتائج</div>';
+          return;
+        }
+
+        container.innerHTML = results.map((r, i) => `
+          <div class="quick-search-item ${i === 0 ? 'selected' : ''}" data-idx="${i}">
+            <div class="qs-icon">${esc(r.initial)}</div>
+            <div class="qs-body">
+              <div class="qs-name">${esc(r.name)}</div>
+              <div class="qs-sub">${esc(r.sub)}</div>
+            </div>
+            <i data-lucide="plus-circle" style="width:16px;height:16px;color:var(--accent);"></i>
+          </div>
+        `).join('');
+
+        if (window.lucide) lucide.createIcons();
+        container.querySelectorAll('.quick-search-item').forEach(el => {
+          el.addEventListener('click', () => navigateQuickSearch(Number(el.dataset.idx)));
+        });
+      }
+
+      function navigateQuickSearch(idx) {
+        const r = state.qsState.results[idx];
+        if (!r) return;
+        closeQuickSearch();
+        if (r.type === 'product') {
+          addProductToOrder(r.id);
+        }
+      }
+
+      function updateQuickSearchSelection() {
+        const container = document.getElementById('quickSearchResults');
+        if (!container) return;
+        container.querySelectorAll('.quick-search-item').forEach((el, i) => {
+          el.classList.toggle('selected', i === state.qsState.index);
+        });
+        const selected = container.querySelector('.quick-search-item.selected');
+        if (selected) selected.scrollIntoView({ block: 'nearest' });
+      }
+
+      function setupQuickSearch() {
+        const overlay = document.getElementById('quickSearchOverlay');
+        const input = document.getElementById('quickSearchInput');
+        if (!overlay || !input) return;
+
+        overlay.addEventListener('click', e => {
+          if (e.target === overlay) closeQuickSearch();
+        });
+
+        input.addEventListener('input', e => renderQuickSearchResults(e.target.value));
+
+        input.addEventListener('keydown', e => {
+          if (e.key === 'Escape') {
+            e.preventDefault();
+            closeQuickSearch();
+          } else if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            if (state.qsState.results.length) {
+              state.qsState.index = Math.min(state.qsState.index + 1, state.qsState.results.length - 1);
+              updateQuickSearchSelection();
+            }
+          } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            if (state.qsState.results.length) {
+              state.qsState.index = Math.max(state.qsState.index - 1, 0);
+              updateQuickSearchSelection();
+            }
+          } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (state.qsState.index >= 0) navigateQuickSearch(state.qsState.index);
+            else if (state.qsState.results.length) navigateQuickSearch(0);
+          }
+        });
+      }      // ============================================================
+      // 18) Save Order
       // ============================================================
       async function save() {
         const isSupplierBuyer = document.getElementById('buyerType').value === 'supplier';
@@ -1974,7 +2216,7 @@
           }
         }
 
-        // Credit Limit check
+        // Credit Limit Check
         if (customerId && !isSupplierBuyer) {
           const customer = state.customers.find(c => Number(c.id) === customerId);
           if (customer && Number(customer.credit_limit) > 0) {
@@ -1992,7 +2234,6 @@
                 return;
               }
 
-              // Owner — confirmation
               const ok = await Refad.alert.confirm(
                 '⚠️ تجاوز حد الائتمان',
                 `العميل "${customer.name}" سيتجاوز حد الائتمان بمقدار ${fmtMoney(newBalance - creditLimit)}.\n\nهل أنت متأكد كصاحب الشركة؟`,
@@ -2113,7 +2354,7 @@
       }
 
       // ============================================================
-      // 19) Load Order (edit)
+      // 19) Load Existing Order
       // ============================================================
       async function loadOrder() {
         try {
@@ -2142,9 +2383,7 @@
             document.getElementById('buyerType').value = 'customer';
             document.getElementById('customerSelect').value = o.customer_id || '';
             const customer = state.customers.find(c => Number(c.id) === Number(o.customer_id));
-            if (customer) {
-              state.customerCreditInfo = customer;
-            }
+            if (customer) state.customerCreditInfo = customer;
           }
 
           document.getElementById('orderNumber').value = o.order_number;
@@ -2171,7 +2410,6 @@
             eq: { order_id: orderId },
             order: { column: 'id', ascending: true }
           }).catch(async () => {
-            // fallback بدون bonus_qty
             return await Refad.db.select('sales_order_items', {
               columns: 'id, product_id, batch_id, quantity, unit_price, sale_discount, purchase_discount, cost_price, products(id, name, name_en, form, unit)',
               eq: { order_id: orderId },
@@ -2192,7 +2430,7 @@
           state.items = items.filter(it => it.products).map(it => {
             const b = batchMap[it.batch_id] || {};
             const purchaseDisc = it.purchase_discount || b.purchase_discount || state.purchaseDiscountMap[it.product_id] || 0;
-            const newItem = {
+            return {
               product_id: it.product_id,
               product: it.products,
               batch_id: it.batch_id,
@@ -2206,7 +2444,6 @@
               sale_discount: it.sale_discount || 0,
               purchase_discount: purchaseDisc
             };
-            return newItem;
           });
 
           state.items.forEach((_, i) => recalcItemProfit(i));
@@ -2234,7 +2471,7 @@
       }
 
       // ============================================================
-      // 20) Confirm / Convert
+      // 20) Confirm Order
       // ============================================================
       async function confirmOrder() {
         if (!orderId) return;
@@ -2252,10 +2489,13 @@
         }
       }
 
+      // ============================================================
+      // 21) Convert to Invoice
+      // ============================================================
       async function convertToInvoice() {
         if (!orderId) return;
 
-        // فحص الحظر قبل التحويل
+        // Pre-check for quarantined batches
         const blockedItems = state.items.filter(it => {
           const batch = (state.batchesByProduct[it.product_id] || []).find(b => b.id === it.batch_id);
           return batch && checkBatchQuarantine(batch);
@@ -2344,7 +2584,7 @@
               user_id: session.user_id
             });
 
-            // خصم الكمية من التشغيلة يدوياً
+            // Deduct stock from batch
             const batch = await Refad.db.selectOne('batches', { eq: { id: it.batch_id } });
             if (batch) {
               await Refad.db.update('batches', it.batch_id, {
@@ -2352,7 +2592,7 @@
               });
             }
 
-            // تحديث خصم البيع للصنف
+            // Update sale discount
             const existing = await Refad.db.selectOne('product_discounts', {
               eq: { product_id: it.product_id }
             }).catch(() => null);
@@ -2375,9 +2615,9 @@
           }
 
           await Refad.db.update('sales_orders', orderId, { status: 'invoiced' });
-          Refad.scanInventoryAlerts(session.company_id).catch(() => {});
+          if (Refad.scanInventoryAlerts) Refad.scanInventoryAlerts(session.company_id).catch(() => {});
 
-          // تحديث رصيد العميل
+          // Update customer balance
           const customerId = parseInt(document.getElementById('customerSelect').value, 10);
           if (customerId) {
             const cust = await Refad.db.selectOne('customers', { eq: { id: customerId } });
@@ -2403,7 +2643,7 @@
       }
 
       // ============================================================
-      // 21) Print
+      // 22) Print
       // ============================================================
       function printOrder() {
         if (!state.items.length) return Refad.toast.warning('لا يوجد محتوى');
@@ -2479,7 +2719,39 @@
       }
 
       // ============================================================
-      // 22) Events
+      // 23) ✨ Realtime Sync
+      // ============================================================
+      function setupRealtime() {
+        if (!orderId) return; // Only for existing orders
+
+        try {
+          state.realtimeChannel = Refad.sb
+            .channel('sales-order-' + orderId)
+            .on('postgres_changes', {
+              event: '*', schema: 'public', table: 'sales_orders',
+              filter: 'id=eq.' + orderId
+            }, () => { loadOrder(); })
+            .on('postgres_changes', {
+              event: '*', schema: 'public', table: 'sales_order_items',
+              filter: 'order_id=eq.' + orderId
+            }, () => { loadOrder(); })
+            .subscribe();
+        } catch (e) {
+          console.warn('Realtime not available:', e.message);
+        }
+      }
+
+      function cleanupRealtime() {
+        try {
+          if (state.realtimeChannel) {
+            Refad.sb.removeChannel(state.realtimeChannel);
+            state.realtimeChannel = null;
+          }
+        } catch (e) {}
+      }
+
+      // ============================================================
+      // 24) Bind Events
       // ============================================================
       function bindEvents() {
         document.getElementById('saveBtn').addEventListener('click', save);
@@ -2490,9 +2762,7 @@
         document.getElementById('whSelect').addEventListener('change', e => {
           state.activeWarehouseId = Number(e.target.value);
           updateActiveWhDisplay();
-          // إعادة تحميل التشغيلات
           loadProductsAndBatches().then(() => {
-            // حذف الأصناف اللي مش في المخزن الجديد
             state.items = state.items.filter(it => {
               const batches = state.batchesByProduct[it.product_id] || [];
               return batches.some(b => b.id === it.batch_id);
@@ -2506,29 +2776,43 @@
           document.getElementById('orderDate').value = Refad.date.today();
         }
 
+        // Global keyboard shortcuts
         document.addEventListener('keydown', e => {
           if ((e.ctrlKey || e.metaKey) && e.key === 's') {
             e.preventDefault();
             save();
           }
+          if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+            e.preventDefault();
+            openQuickSearch();
+          }
+          if (e.key === 'Escape') {
+            if (document.getElementById('quickSearchOverlay')?.classList.contains('show')) {
+              closeQuickSearch();
+              return;
+            }
+            closeAllModals();
+          }
         });
+
+        window.addEventListener('beforeunload', cleanupRealtime);
       }
 
       // ============================================================
-      // 23) Init
+      // 25) Init
       // ============================================================
       async function init() {
-        buildSidebar();
+        Refad.buildMenu('sales-orders.html');
         fillUser();
+        applyIdentity();
         setupTheme();
         setupSidebarMobile();
         setupUserMenu();
         setupNotifBtn();
+        setupRealtimeTheme();
 
-        // تحميل المخازن
         await loadWarehouses();
 
-        // Warehouse change subscription
         if (typeof Refad.Warehouse.onChange === 'function') {
           Refad.Warehouse.onChange(() => {
             state.activeWarehouseId = Refad.Warehouse.getActiveId();
@@ -2540,7 +2824,6 @@
 
         try { Refad.Warehouse.injectSelector(); } catch (e) {}
 
-        // Quarantine module
         if (typeof Refad.Quarantine !== 'undefined') {
           await Refad.Quarantine.ensureLoaded().catch(() => {});
         }
@@ -2550,6 +2833,7 @@
         setupProductSearch();
         setupBatchPicker();
         setupScanner();
+        setupQuickSearch();
         bindEvents();
 
         await loadCustomers();
@@ -2557,11 +2841,12 @@
 
         if (isEdit) {
           await loadOrder();
+          setupRealtime();
         }
 
         try { Refad.registerServiceWorker(); } catch (e) {}
 
-        console.log('%c[Refad] Sales Order Form v2 ready', 'color:#14B8A6;font-weight:bold');
+        console.log('%c[Refad] Sales Order Form v3 ready (Theme Sync + Settings + Quick Search + Realtime)', 'color:#14B8A6;font-weight:bold;font-size:14px');
       }
 
       if (document.readyState === 'loading') {
