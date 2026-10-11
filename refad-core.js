@@ -1,14 +1,16 @@
 /* ============================================================
  * Refad ERP - Core Module
- * Version: 1.1.0
+ * Version: 2.0.0
  * Dependencies: @supabase/supabase-js@2 (must be loaded before)
  * 
- * Changelog v1.1.0:
- *   - Silent Realtime Fallback (لو فشل realtime، مايطلعش رسالة مزعجة)
- *   - Throttled Error Messages (مرة واحدة كل 5 دقايق)
- *   - Auto-retry with exponential backoff
- *   - Skip realtime if no session
- *   - Prevent duplicate subscription attempts
+ * Changelog v2.0.0:
+ *   ✅ قراءة session_hours و idle_timeout من الإعدادات
+ *   ✅ قراءة العملة من الإعدادات (formatMoney)
+ *   ✅ applyGlobalSettings — تطبيق الهوية/اللغة/الحواف تلقائياً
+ *   ✅ قراءة بيانات الشركة تلقائياً (Refad.company)
+ *   ✅ Silent Realtime Fallback (من v1.1.0)
+ *   ✅ Throttled Error Messages
+ *   ✅ Unified Menu Builder
  * ============================================================ */
 
 (function (window) {
@@ -22,16 +24,16 @@
     SUPABASE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZib3d0bmJxZm50cXVidXlkenhkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTExOTIzOTksImV4cCI6MjEwNjc2ODM5OX0.KDG64v6zJZXOJJOizxp5NaGfECprbH0sxDTRfLSN_hg',
     SESSION_KEY: 'refad_session',
     THEME_KEY: 'refad_theme',
+    // ✅ قيم افتراضية (يتم تجاوزها من الإعدادات لو متاحة)
     IDLE_TIMEOUT_MIN: 30,
     SESSION_HOURS: 8,
     APP_NAME: 'رفاد',
-    APP_VERSION: '1.1.0',
-    // ✨ إعدادات جديدة للتحكم في realtime
+    APP_VERSION: '2.0.0',
     REALTIME: {
-      MAX_RETRIES: 3,           // عدد محاولات إعادة الاتصال
-      RETRY_DELAY_MS: 5000,     // تأخير أولي (يتضاعف كل مرة)
-      ERROR_THROTTLE_MS: 300000, // رسالة الخطأ مرة كل 5 دقايق
-      SILENT_ERRORS: true       // true = مايطلعش toast، فقط console
+      MAX_RETRIES: 3,
+      RETRY_DELAY_MS: 5000,
+      ERROR_THROTTLE_MS: 300000,
+      SILENT_ERRORS: true
     }
   };
 
@@ -45,12 +47,36 @@
   const sb = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY, {
     auth: { persistSession: false, autoRefreshToken: false },
     global: { headers: { 'x-application-name': 'refad-erp' } },
-    realtime: {
-      params: {
-        eventsPerSecond: 10
-      }
-    }
+    realtime: { params: { eventsPerSecond: 10 } }
   });
+
+  // ============================================================
+  // ✅ Helper: قراءة الإعدادات بأمان
+  // ============================================================
+  function getSettingValue(section, key, defaultValue) {
+    try {
+      if (window.RefadSettings && typeof RefadSettings.get === 'function') {
+        const val = RefadSettings.get(section, key, defaultValue);
+        return val !== undefined && val !== null ? val : defaultValue;
+      }
+    } catch (e) {
+      // silent
+    }
+    return defaultValue;
+  }
+
+  function getSettingNumber(section, key, defaultValue) {
+    const v = getSettingValue(section, key, defaultValue);
+    const n = Number(v);
+    return isNaN(n) ? defaultValue : n;
+  }
+
+  function getSettingBoolean(section, key, defaultValue) {
+    const v = getSettingValue(section, key, defaultValue);
+    if (typeof v === 'boolean') return v;
+    if (typeof v === 'string') return v === 'true';
+    return !!v;
+  }
 
   // ============================================================
   // 3) Session Manager
@@ -94,6 +120,10 @@
 
     set(data) {
       const now = Date.now();
+
+      // ✅ قراءة session_hours من الإعدادات
+      const sessionHours = getSettingNumber('security', 'session_hours', CONFIG.SESSION_HOURS);
+
       const session = {
         user_id: data.user_id,
         company_id: data.company_id,
@@ -105,11 +135,22 @@
         is_superadmin: data.is_superadmin === true,
         permissions: data.permissions || [],
         login_time: now,
-        expires_at: now + CONFIG.SESSION_HOURS * 60 * 60 * 1000,
+        expires_at: now + sessionHours * 60 * 60 * 1000,
         last_activity: now
       };
       localStorage.setItem(CONFIG.SESSION_KEY, JSON.stringify(session));
+
+      // ✅ ابدأ realtime notification
       startNotificationRealtime();
+
+      // ✅ حمّل بيانات الشركة
+      loadCompanyData().catch(() => {});
+
+      // ✅ طبّق الإعدادات العامة
+      if (typeof applyGlobalSettings === 'function') {
+        setTimeout(() => applyGlobalSettings(), 300);
+      }
+
       return session;
     },
 
@@ -307,33 +348,62 @@
   }
 
   // ============================================================
-  // 7) Formatters
+  // 7) Formatters — ✅ محسّن لقراءة العملة من الإعدادات
   // ============================================================
   const format = {
     money(v, currency) {
       const n = Number(v) || 0;
-      const cur = currency || 'ج.م';
+
+      // ✅ قراءة العملة من الإعدادات (لو مش محددة)
+      let cur = currency;
+      if (!cur) {
+        try {
+          if (window.RefadSettings && RefadSettings.locale && typeof RefadSettings.locale.getCurrencySymbol === 'function') {
+            cur = RefadSettings.locale.getCurrencySymbol();
+          }
+        } catch (e) { /* silent */ }
+      }
+      cur = cur || 'ج.م';
+
       return n.toLocaleString('ar-EG', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ' + cur;
     },
+
     number(v, decimals) {
       const n = Number(v) || 0;
       const d = decimals === undefined ? 0 : decimals;
       return n.toLocaleString('ar-EG', { minimumFractionDigits: d, maximumFractionDigits: d });
     },
+
     date(v, format) {
       if (!v) return '—';
       const d = (typeof dayjs !== 'undefined') ? dayjs(v) : new Date(v);
       if (typeof dayjs !== 'undefined') {
-        return d.format(format || 'YYYY/MM/DD');
+        // ✅ قراءة date_format من الإعدادات
+        let fmt = format;
+        if (!fmt) {
+          try {
+            if (window.RefadSettings && RefadSettings.locale && typeof RefadSettings.locale.getDateFormat === 'function') {
+              fmt = RefadSettings.locale.getDateFormat();
+              // تحويل DD/MM/YYYY إلى YYYY/MM/DD (dayjs format)
+              if (fmt === 'DD/MM/YYYY') fmt = 'DD/MM/YYYY';
+              else if (fmt === 'MM/DD/YYYY') fmt = 'MM/DD/YYYY';
+              else if (fmt === 'YYYY-MM-DD') fmt = 'YYYY-MM-DD';
+            }
+          } catch (e) { /* silent */ }
+        }
+        return d.format(fmt || 'YYYY/MM/DD');
       }
       return d.toLocaleDateString('ar-EG');
     },
+
     datetime(v) {
       return this.date(v, 'YYYY/MM/DD HH:mm');
     },
+
     time(v) {
       return this.date(v, 'HH:mm');
     },
+
     relative(v) {
       if (!v || typeof dayjs === 'undefined') return '—';
       const d = dayjs(v);
@@ -344,10 +414,12 @@
       if (diff < 365) return `منذ ${Math.floor(diff / 30)} شهر`;
       return `منذ ${Math.floor(diff / 365)} سنة`;
     },
+
     daysLeft(date) {
       if (!date || typeof dayjs === 'undefined') return null;
       return dayjs(date).diff(dayjs(), 'day');
     },
+
     phone(v) {
       if (!v) return '—';
       return String(v).replace(/(\d{4})(\d{3})(\d{4})/, '$1 $2 $3');
@@ -570,18 +642,23 @@
   };
 
   // ============================================================
-  // 12) Idle Timer
+  // 12) Idle Timer — ✅ محسّن لقراءة idle_timeout من الإعدادات
   // ============================================================
   let _idleTimer = null;
+
   function resetIdleTimer() {
     if (_idleTimer) clearTimeout(_idleTimer);
     if (!Session.get()) return;
+
+    // ✅ قراءة idle_timeout من الإعدادات
+    const idleMin = getSettingNumber('security', 'idle_timeout_min', CONFIG.IDLE_TIMEOUT_MIN);
+
     _idleTimer = setTimeout(() => {
       Session.clear();
       alert.warning('انتهت الجلسة', 'تم تسجيل خروجك تلقائياً بسبب عدم النشاط').then(() => {
         window.location.href = 'index.html';
       });
-    }, CONFIG.IDLE_TIMEOUT_MIN * 60 * 1000);
+    }, idleMin * 60 * 1000);
   }
 
   function initIdleWatcher() {
@@ -617,7 +694,7 @@
   }
 
   // ============================================================
-  // 14) Notification Helper
+  // 14) Notification Helpers
   // ============================================================
   async function notify(userId, companyId, title, body, type, referenceId) {
     const user = await db.selectOne('users', {
@@ -736,11 +813,14 @@
       inventoryByProduct.set(key, (inventoryByProduct.get(key) || 0) + (Number(batch.quantity_left) || 0));
     });
 
+    // ✅ قراءة expiry_alert_days من الإعدادات
+    const expiryDays = getSettingNumber('inventory', 'expiry_alert_days', 90);
+
     const lowStock = products.filter(product => {
       const threshold = Number(product.reorder_level) || 0;
       return threshold > 0 && (inventoryByProduct.get(String(product.id)) || 0) <= threshold;
     });
-    const in90Days = dateUtil.addDays(dateUtil.today(), 90);
+    const in90Days = dateUtil.addDays(dateUtil.today(), expiryDays);
     const expiring = batches.filter(batch => batch.expiry_date && batch.expiry_date <= in90Days);
     const alerts = [
       ...lowStock.map(product => notifyCompanyDaily(
@@ -816,11 +896,9 @@
         ? rows[rows.length - 1].created_at
         : new Date().toISOString();
     } catch (error) {
-      // ✨ تعديل: رسالة هادئة مرة كل دقيقة، بدون toast مزعج
       if (Date.now() - notificationPollWarningAt > 60000) {
         notificationPollWarningAt = Date.now();
         console.warn('[Refad] Notification polling failed:', error.message);
-        // مافيش toast — فقط console
       }
     }
   }
@@ -832,11 +910,10 @@
     notificationPollTimer = window.setInterval(pollNotifications, 20000);
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // ✨ 15) Realtime Notification Subscription (v2 — Silent)
-  // ═══════════════════════════════════════════════════════════
+  // ============================================================
+  // 15) Realtime Notification Subscription
+  // ============================================================
   function showRealtimeError(message) {
-    // ✨ Throttle: مرة واحدة كل 5 دقايق، فقط في console
     if (CONFIG.REALTIME.SILENT_ERRORS) {
       if (Date.now() - notificationLastErrorAt > CONFIG.REALTIME.ERROR_THROTTLE_MS) {
         notificationLastErrorAt = Date.now();
@@ -845,7 +922,6 @@
       }
       return;
     }
-    // وضع غير صامت (للـ debugging فقط)
     if (Date.now() - notificationLastErrorAt > CONFIG.REALTIME.ERROR_THROTTLE_MS) {
       notificationLastErrorAt = Date.now();
       toast.warning(message, 5000);
@@ -868,20 +944,12 @@
 
   function startNotificationRealtime() {
     const session = Session.get();
-
-    // ✨ Guard: ما تعملش subscribe بدون session
-    if (!session?.user_id || !session.company_id) {
-      return;
-    }
-
-    // ✨ Guard: لو channel موجود، ما تكررش
+    if (!session?.user_id || !session.company_id) return;
     if (notificationRealtimeChannel) return;
 
-    // ✨ Guard: تأكد من الصلاحيات
     const hasAnyPermission = Object.values(notificationPermissionByType).some(permission => Session.has(permission));
     if (!hasAnyPermission && !Session.has('notifications.view')) return;
 
-    // ✨ ابدأ polling كـ fallback أولاً
     startNotificationPolling();
 
     try {
@@ -897,20 +965,16 @@
         })
         .subscribe(status => {
           if (status === 'SUBSCRIBED') {
-            // ✅ نجح الاتصال — صفّر الـ retries
             notificationRealtimeRetry = 0;
             console.log('[Refad] ✅ Notification realtime subscribed');
           } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-            // ⚠️ فشل — استخدم polling فقط
             showRealtimeError('تعذّر الاتصال بالإشعارات الفورية؛ سيتم الاعتماد على التحديث الدوري');
-            // امسح الـ channel القديم
             if (notificationRealtimeChannel) {
               try {
                 sb.removeChannel(notificationRealtimeChannel).catch(() => {});
               } catch (e) {}
               notificationRealtimeChannel = null;
             }
-            // ✨ جدول retry
             scheduleRealtimeRetry();
           } else if (status === 'CLOSED') {
             notificationRealtimeChannel = null;
@@ -924,7 +988,150 @@
   }
 
   // ============================================================
-  // 16) Global Navigation Helper
+  // 16) ✅ Load Company Data (Refad.company)
+  // ============================================================
+  async function loadCompanyData() {
+    const session = Session.get();
+    if (!session) return null;
+
+    try {
+      const company = await db.selectOne('companies', {
+        columns: 'id, name, phone, email, address, tax_number, logo_url, notes, subscription_end, currency',
+        eq: { id: session.company_id }
+      });
+
+      if (company) {
+        Refad.company = company;
+        // ✅ طبق الشعار تلقائياً
+        if (company.logo_url) {
+          const logoUrl = company.logo_url;
+          try {
+            if (window.RefadSettings) {
+              await RefadSettings.set('identity', 'logo_url', logoUrl);
+            }
+          } catch (e) { /* silent */ }
+        }
+        return company;
+      }
+    } catch (e) {
+      console.warn('[Refad] Load company data failed:', e.message);
+    }
+    return null;
+  }
+
+  // ============================================================
+  // 17) ✅ Apply Global Settings (تطبيق الإعدادات على كل صفحة)
+  // ============================================================
+  async function applyGlobalSettings() {
+    if (!window.RefadSettings) {
+      return;
+    }
+
+    try {
+      // 1) حمّل الأقسام الأساسية
+      await Promise.all([
+        RefadSettings.ensure('theme'),
+        RefadSettings.ensure('identity'),
+        RefadSettings.ensure('locale'),
+        RefadSettings.ensure('security')
+      ]);
+
+      // 2) تطبيق الألوان (من theme-sync لو موجود)
+      if (window.RefadThemeSync && typeof RefadThemeSync.refresh === 'function') {
+        try {
+          await RefadThemeSync.refresh();
+        } catch (e) {
+          console.warn('[Refad] ThemeSync refresh failed:', e.message);
+        }
+      }
+
+      // 3) تطبيق الهوية (اسم النظام، الحواف، الكثافة)
+      let systemName = 'رفاد';
+      let tagline = 'نظام إدارة الأدوية';
+      let radius = 14;
+      let density = 'comfortable';
+
+      try {
+        if (RefadSettings.identity) {
+          if (typeof RefadSettings.identity.getSystemName === 'function') {
+            systemName = RefadSettings.identity.getSystemName();
+          }
+          if (typeof RefadSettings.identity.getTagline === 'function') {
+            tagline = RefadSettings.identity.getTagline();
+          }
+          if (typeof RefadSettings.identity.getBorderRadius === 'function') {
+            radius = RefadSettings.identity.getBorderRadius();
+          }
+          if (typeof RefadSettings.identity.getDensity === 'function') {
+            density = RefadSettings.identity.getDensity();
+          }
+        }
+      } catch (e) { /* silent */ }
+
+      // طبّق radius
+      document.documentElement.style.setProperty('--radius', radius + 'px');
+      document.documentElement.style.setProperty('--radius-sm', Math.max(6, radius - 4) + 'px');
+
+      // طبّق density
+      const densityMap = { compact: '0.85', comfortable: '1', spacious: '1.15' };
+      document.documentElement.style.setProperty('--density', densityMap[density] || '1');
+
+      // 4) تطبيق اللغة
+      let lang = 'ar';
+      try {
+        if (RefadSettings.locale && typeof RefadSettings.locale.getLanguage === 'function') {
+          lang = RefadSettings.locale.getLanguage();
+        }
+      } catch (e) { /* silent */ }
+
+      document.documentElement.lang = lang;
+      document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+
+      // 5) تحديث اسم النظام في sidebar
+      const brandName = document.getElementById('sidebarBrandName');
+      const brandDesc = document.getElementById('sidebarBrandDesc');
+      if (brandName) brandName.textContent = systemName;
+      if (brandDesc) brandDesc.textContent = tagline;
+
+      // 6) تحديث الشعار
+      let logoUrl = null;
+      try {
+        if (RefadSettings.identity && typeof RefadSettings.identity.getLogoUrl === 'function') {
+          logoUrl = RefadSettings.identity.getLogoUrl();
+        }
+      } catch (e) { /* silent */ }
+
+      if (logoUrl) {
+        document.querySelectorAll('img[id*="Logo"], img[id*="logo"]').forEach(img => {
+          if (img.src !== logoUrl) {
+            img.src = logoUrl;
+            img.onerror = function () {
+              this.style.display = 'none';
+            };
+          }
+        });
+      }
+
+      // 7) تحديث title
+      const pageTitle = document.title.split(' - ')[0];
+      if (pageTitle && systemName) {
+        document.title = pageTitle + ' - ' + systemName;
+      }
+
+      // 8) Trigger event
+      window.dispatchEvent(new CustomEvent('refad:settings-applied', {
+        detail: { systemName, tagline, lang, radius, density }
+      }));
+
+      console.log('[Refad] ✅ Global settings applied');
+
+    } catch (e) {
+      console.warn('[Refad] Apply global settings failed:', e.message);
+    }
+  }
+
+  // ============================================================
+  // 18) Global Navigation Helper
   // ============================================================
   function ensureGlobalNavigation(nav) {
     if (!nav) return;
@@ -979,7 +1186,7 @@
   }
 
   // ============================================================
-  // 17) Debounce / Throttle
+  // 19) Debounce / Throttle / Pagination / Params
   // ============================================================
   function debounce(fn, ms) {
     let t;
@@ -1000,9 +1207,6 @@
     };
   }
 
-  // ============================================================
-  // 18) Pagination Helper
-  // ============================================================
   function paginate(array, page, perPage) {
     const p = Math.max(1, page || 1);
     const pp = perPage || 20;
@@ -1020,9 +1224,6 @@
     };
   }
 
-  // ============================================================
-  // 19) Query String Helpers
-  // ============================================================
   function getParam(name) {
     return new URLSearchParams(window.location.search).get(name);
   }
@@ -1037,9 +1238,6 @@
     window.history.replaceState({}, '', url);
   }
 
-  // ============================================================
-  // 20) UUID/Token Generator
-  // ============================================================
   function randomToken(len) {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     const n = len || 32;
@@ -1050,9 +1248,6 @@
     return out;
   }
 
-  // ============================================================
-  // 21) Number/Currency Utils
-  // ============================================================
   function toNum(v) {
     const n = Number(v);
     return isNaN(n) ? 0 : n;
@@ -1062,9 +1257,6 @@
     return Math.round(toNum(v) * 100) / 100;
   }
 
-  // ============================================================
-  // 22) PWA Registration
-  // ============================================================
   function registerServiceWorker() {
     if ('serviceWorker' in navigator && location.protocol === 'https:') {
       navigator.serviceWorker.register('sw.js').catch(err => {
@@ -1073,15 +1265,12 @@
     }
   }
 
-  // ============================================================
-  // 23) Global Error Handler
-  // ============================================================
   window.addEventListener('unhandledrejection', (e) => {
     console.error('[Refad] Unhandled:', e.reason);
   });
 
   // ============================================================
-  // 24) Export Global Object
+  // 20) Export Global Object
   // ============================================================
   const Refad = {
     CONFIG,
@@ -1115,16 +1304,25 @@
     round2,
     registerServiceWorker,
     initIdleWatcher,
+    applyGlobalSettings,
+    loadCompanyData,
     version: CONFIG.APP_VERSION
   };
 
   window.Refad = Refad;
 
-  // ✨ بدء realtime فقط لو فيه session
+  // ✅ بدء realtime فقط لو فيه session
   if (Session.get()) {
     startNotificationRealtime();
+    // ✅ حمّل بيانات الشركة
+    loadCompanyData().catch(() => {});
+    // ✅ طبّق الإعدادات
+    setTimeout(() => applyGlobalSettings(), 400);
   }
 
+  // ============================================================
+  // 21) Responsive Styles
+  // ============================================================
   const responsiveStyle = document.createElement('style');
   responsiveStyle.textContent = `
     .modal-backdrop {
@@ -1177,18 +1375,16 @@
     }
   `;
   document.head.appendChild(responsiveStyle);
+
   // ============================================================
-  // ✨ 25) Unified Menu Builder (القائمة الموحّدة الكاملة)
+  // 22) Unified Menu Builder
   // ============================================================
   const MENU = [
-    // ─── الرئيسية ───
     { section: 'الرئيسية', items: [
       { label: 'لوحة التحكم', icon: 'layout-dashboard', href: 'dashboard.html' },
       { label: 'الشات', icon: 'message-circle', href: 'chat.html', permission: 'chat.use' },
       { label: 'الإشعارات', icon: 'bell', href: 'notifications.html', permission: 'notifications.view', id: 'notifNavItem' }
     ]},
-
-    // ─── العمليات ───
     { section: 'العمليات', items: [
       { label: 'الأصناف', icon: 'package', href: 'products.html', permission: 'products.view' },
       { label: 'المخزون', icon: 'warehouse', href: 'inventory.html', permission: 'inventory.view' },
@@ -1199,23 +1395,17 @@
       { label: 'الفواتير', icon: 'receipt', href: 'invoices.html', permission: 'sales.view' },
       { label: 'المرتجعات', icon: 'undo-2', href: 'returns.html', permission: 'sales.view' }
     ]},
-
-    // ─── الأطراف ───
     { section: 'الأطراف', items: [
       { label: 'الموردين', icon: 'truck', href: 'suppliers.html', permission: 'suppliers.view' },
       { label: 'العملاء', icon: 'users', href: 'customers.html', permission: 'customers.view' },
       { label: 'المندوبين', icon: 'user-check', href: 'sales-reps.html', permission: 'company.owner', badge: 'جديد', badgeClass: 'new' }
     ]},
-
-    // ─── المخزون ───
     { section: 'المخزون', items: [
       { label: 'المخازن', icon: 'building-2', href: 'warehouses.html', permission: 'inventory.view' },
       { label: 'التحويلات', icon: 'arrow-right-left', href: 'warehouse-transfers.html', permission: 'inventory.view', badge: 'جديد', badgeClass: 'new' },
       { label: 'الجرد', icon: 'clipboard-check', href: 'stocktake.html', permission: 'inventory.stocktake' },
       { label: 'التسويات', icon: 'sliders-horizontal', href: 'adjustments.html', permission: 'inventory.adjust' }
     ]},
-
-    // ─── الموارد البشرية ───
     { section: 'الموارد البشرية', items: [
       { label: 'الموظفين', icon: 'user-cog', href: 'employees.html', permission: 'employees.view' },
       { label: 'الصلاحيات', icon: 'shield-check', href: 'permissions.html', permission: 'permissions.manage' },
@@ -1223,8 +1413,6 @@
       { label: 'الرواتب', icon: 'wallet', href: 'payroll.html', permission: 'payroll.view' },
       { label: 'البدلات والحوافز', icon: 'gift', href: 'bonus-schemes.html', permission: 'payroll.view', badge: 'جديد', badgeClass: 'new' }
     ]},
-
-    // ─── المالية ───
     { section: 'المالية', items: [
       { label: 'الحسابات', icon: 'landmark', href: 'accounts.html', permission: 'company.owner' },
       { label: 'الشيكات', icon: 'file-check-2', href: 'cheques.html', permission: 'company.owner', badge: 'جديد', badgeClass: 'new' },
@@ -1233,8 +1421,6 @@
       { label: 'المصاريف', icon: 'receipt-text', href: 'expenses.html', permission: 'expenses.view' },
       { label: 'التقارير', icon: 'bar-chart-3', href: 'reports.html', permission: 'reports.view' }
     ]},
-
-    // ─── النظام ───
     { section: 'النظام', items: [
       { label: 'إعدادات الشركة', icon: 'settings', href: 'company-settings.html', permission: 'settings.view' },
       { label: 'نسخ احتياطي', icon: 'database', href: 'backup.html', permission: 'company.owner' },
@@ -1242,11 +1428,6 @@
     ]}
   ];
 
-  /**
-   * ✨ دالة موحّدة لبناء القائمة الجانبية في كل الصفحات
-   * @param {string} activePage - اسم الصفحة الحالية (مثال: 'products.html')
-   * @param {string} navId - ID عنصر القائمة (افتراضي: 'sidebarNav')
-   */
   function buildMenu(activePage, navId) {
     const nav = document.getElementById(navId || 'sidebarNav');
     if (!nav) {
@@ -1287,11 +1468,10 @@
     if (window.lucide) window.lucide.createIcons();
   }
 
-  // ✅ صدّر الدالة للـ Refad
   Refad.buildMenu = buildMenu;
   Refad.MENU = MENU;
   theme.init();
 
-  console.log(`%c[Refad] Core v${CONFIG.APP_VERSION} loaded (Silent Realtime)`, 'color:#14B8A6;font-weight:bold');
+  console.log(`%c[Refad] Core v${CONFIG.APP_VERSION} loaded (Settings-aware)`, 'color:#14B8A6;font-weight:bold');
 
 })(window);
