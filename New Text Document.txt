@@ -1,0 +1,125 @@
+SELECT
+  t.table_name,
+  c.column_name,
+  c.data_type,
+  c.is_nullable,
+  COALESCE(c.column_default, '') AS default_value
+FROM information_schema.tables t
+JOIN information_schema.columns c
+  ON c.table_schema = t.table_schema
+ AND c.table_name = t.table_name
+WHERE t.table_schema = 'public'
+  AND t.table_type = 'BASE TABLE'
+  AND t.table_name NOT LIKE 'pg_%'
+ORDER BY t.table_name, c.ordinal_position;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+SELECT
+  tc.table_name,
+  tc.constraint_type,
+  kcu.column_name,
+  COALESCE(ccu.table_name, '') AS ref_table,
+  COALESCE(ccu.column_name, '') AS ref_column,
+  tc.constraint_name
+FROM information_schema.table_constraints tc
+JOIN information_schema.key_column_usage kcu
+  ON tc.constraint_name = kcu.constraint_name
+ AND tc.table_schema = kcu.table_schema
+LEFT JOIN information_schema.constraint_column_usage ccu
+  ON ccu.constraint_name = tc.constraint_name
+WHERE tc.table_schema = 'public'
+  AND tc.constraint_type IN ('PRIMARY KEY', 'FOREIGN KEY')
+ORDER BY tc.table_name, tc.constraint_type, kcu.column_name;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+SELECT
+  p.proname AS function_name,
+  pg_catalog.pg_get_function_result(p.oid) AS return_type,
+  pg_catalog.pg_get_function_arguments(p.oid) AS arguments
+FROM pg_proc p
+JOIN pg_namespace n ON p.pronamespace = n.oid
+WHERE n.nspname = 'public'
+  AND p.prokind IN ('f', 'p')
+ORDER BY p.proname;
+
+
+
+
+
+
+
+
+
+
+
+
+SELECT
+  event_object_table AS table_name,
+  trigger_name,
+  event_manipulation AS event,
+  action_timing AS timing
+FROM information_schema.triggers
+WHERE trigger_schema = 'public'
+ORDER BY event_object_table, trigger_name;
+
+
+
+
+
+
+
+
+
+
+
+SELECT
+  table_name AS view_name,
+  view_definition
+FROM information_schema.views
+WHERE table_schema = 'public'
+ORDER BY table_name;
+
+
+
+SELECT
+  t.typname AS enum_name,
+  string_agg(e.enumlabel, ', ' ORDER BY e.enumsortorder) AS enum_values
+FROM pg_type t
+JOIN pg_enum e ON t.oid = e.enumtypid
+JOIN pg_namespace n ON t.typnamespace = n.oid
+WHERE n.nspname = 'public'
+GROUP BY t.typname
+ORDER BY t.typname;
+
+
+
+

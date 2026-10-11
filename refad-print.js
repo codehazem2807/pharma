@@ -1,15 +1,19 @@
 /* ============================================================
    Refad ERP - Print Helper
-   Version: 2.1.0
+   Version: 3.0.0
    Dependencies: jsPDF + jspdf-autotable (اختياري)
+   
    Features:
      - 3 page sizes: A4 / A5 / 80mm
      - Multi-copy printing (1-3 copies per page)
-     - Invoice with discount column (A4/A5/80mm)
-     - QR code + barcode
-     - Arabic + English dual dates
-     - Amount in Arabic words
-     - "نظام رفاد - 01063060576" footer signature
+     - ✅ قراءة الإعدادات من RefadSettings (بادئة، تذييل، شروط، ضريبة)
+     - ✅ شعار الشركة + QR Code (اختياري)
+     - ✅ Arabic + English dual dates + Hijri
+     - ✅ Amount in Arabic words
+     - ✅ "نظام رفاد - 01063060576" footer signature
+     - ✅ تذييل الفاتورة من الإعدادات
+     - ✅ الشروط والأحكام من الإعدادات
+     - ✅ رقم الفاتورة من الإعدادات
    ============================================================ */
 
 (function (global) {
@@ -94,7 +98,7 @@
   };
 
   // ============================================================
-  // Helper: Barcode SVG (JSBarcode)
+  // Helper: Barcode SVG
   // ============================================================
   function generateBarcodeSVG(code, options = {}) {
     if (typeof JsBarcode === 'undefined') return '';
@@ -133,10 +137,81 @@
   }
 
   // ============================================================
+  // ✅ Helper: قراءة الإعدادات بأمان
+  // ============================================================
+  function safeGetSettings() {
+    const defaults = {
+      invoice_prefix: 'INV',
+      purchase_prefix: 'PUR',
+      default_tax_rate: '0',
+      default_discount: '0',
+      invoice_footer: '',
+      invoice_terms: '',
+      show_logo_on_invoice: 'true',
+      show_qr_code: 'false',
+      currency_symbol: 'ج.م',
+      system_name: 'رفاد',
+      system_tagline: 'نظام إدارة الأدوية'
+    };
+
+    if (!global.RefadSettings) {
+      console.warn('[Print] RefadSettings not loaded — using defaults');
+      return defaults;
+    }
+
+    try {
+      return {
+        invoice_prefix: RefadSettings.get('invoice', 'invoice_prefix', defaults.invoice_prefix),
+        purchase_prefix: RefadSettings.get('invoice', 'purchase_prefix', defaults.purchase_prefix),
+        default_tax_rate: RefadSettings.get('invoice', 'default_tax_rate', defaults.default_tax_rate),
+        default_discount: RefadSettings.get('invoice', 'default_discount', defaults.default_discount),
+        invoice_footer: RefadSettings.get('invoice', 'invoice_footer', defaults.invoice_footer),
+        invoice_terms: RefadSettings.get('invoice', 'invoice_terms', defaults.invoice_terms),
+        show_logo_on_invoice: RefadSettings.get('invoice', 'show_logo_on_invoice', defaults.show_logo_on_invoice),
+        show_qr_code: RefadSettings.get('invoice', 'show_qr_code', defaults.show_qr_code),
+        currency_symbol: RefadSettings.locale ? RefadSettings.locale.getCurrencySymbol() : defaults.currency_symbol,
+        system_name: RefadSettings.identity ? RefadSettings.identity.getSystemName() : defaults.system_name,
+        system_tagline: RefadSettings.identity ? RefadSettings.identity.getTagline() : defaults.system_tagline
+      };
+    } catch (e) {
+      console.warn('[Print] Read settings failed:', e.message);
+      return defaults;
+    }
+  }
+
+  // ============================================================
+  // ✅ Helper: قراءة بيانات الشركة
+  // ============================================================
+  async function safeGetCompany() {
+    if (global.Refad.company && global.Refad.company.id) {
+      return global.Refad.company;
+    }
+
+    try {
+      const session = Refad.Session.get();
+      if (!session) return {};
+
+      const company = await Refad.db.selectOne('companies', {
+        columns: 'id, name, phone, email, address, tax_number, logo_url, notes',
+        eq: { id: session.company_id }
+      });
+
+      if (company) {
+        global.Refad.company = company;
+        return company;
+      }
+    } catch (e) {
+      console.warn('[Print] Load company failed:', e.message);
+    }
+
+    return {};
+  }
+
+  // ============================================================
   // Print Module
   // ============================================================
   const Print = {
-    version: '2.1.0',
+    version: '3.0.0',
 
     // --------------------------------------------------------
     // Generic HTML Print
@@ -286,33 +361,22 @@
     },
 
     // --------------------------------------------------------
-    // Invoice Print - Enhanced Version (with 80mm discount)
+    // ✅ Invoice Print - Enhanced Version 3.0
     // --------------------------------------------------------
-    invoice(invoice, opts) {
+    async invoice(invoice, opts) {
       opts = opts || {};
       const pageSize = opts.pageSize || 'A4';
       const copies = Math.max(1, Math.min(3, parseInt(opts.copies, 10) || 1));
-      const company = opts.company || Refad.company || {};
+
+      // ✅ قراءة الإعدادات
+      const settings = safeGetSettings();
+
+      // ✅ قراءة الشركة
+      const company = opts.company || await safeGetCompany();
       if (!company.id) {
         Refad.toast?.error('تعذّر تحميل بيانات الشركة؛ لا يمكن طباعة الفاتورة');
         return;
       }
-
-      // إعدادات الفاتورة من company.notes
-      let invoiceSettings = {};
-      try {
-        if (typeof company.notes === 'string' && company.notes.trim().startsWith('{')) {
-          invoiceSettings = JSON.parse(company.notes);
-        }
-      } catch (error) {
-        console.warn('[Refad.Print] Invoice settings could not be read:', error);
-      }
-
-      // تواريخ
-      const now = new Date();
-      const gregorian = now.toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });
-      const hijri = getHijriDate(now);
-      const time = now.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
 
       // بيانات الفاتورة
       const invoiceNum = invoice.number || '';
@@ -320,6 +384,8 @@
       const customerName = customer.name || 'عميل نقدي';
       const discountTotal = Number(invoice.discount_total ?? invoice.discount) || 0;
       const subtotal = Number(invoice.subtotal) || 0;
+      const taxAmount = Number(invoice.tax_amount ?? invoice.tax) || 0;
+      const taxRate = Number(invoice.tax_rate) || parseFloat(settings.default_tax_rate) || 0;
       const total = Number(invoice.total ?? invoice.grand_total) || 0;
       const paidAmount = invoice.paid_amount != null ? Number(invoice.paid_amount) : null;
       const remaining = paidAmount != null ? Math.max(0, total - paidAmount) : null;
@@ -328,9 +394,11 @@
       const cashier = invoice.cashier_name || invoice.cashier || '';
       const salesRep = invoice.sales_rep || invoice.representative_name || '';
       const notes = invoice.notes || '';
-      const footer = invoice.footer || invoiceSettings.invoice_footer || '';
-      const terms = invoice.terms || invoiceSettings.invoice_terms || '';
       const invoiceType = invoice.invoice_type === 'return' ? 'مرتجع بيع' : 'فاتورة بيع';
+
+      // ✅ التذييل والشروط من الإعدادات (مع إمكانية override من الفاتورة)
+      const footer = invoice.footer || settings.invoice_footer || '';
+      const terms = invoice.terms || settings.invoice_terms || '';
 
       // ⭐ التوقيع الموحّد
       const SIGNATURE = 'نظام رفاد 01063060576';
@@ -342,20 +410,26 @@
         fontSize: pageSize === '80mm' ? 8 : 10
       }) : '';
 
+      // تواريخ
+      const now = new Date();
+      const gregorian = now.toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });
+      const hijri = getHijriDate(now);
+      const time = now.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+
       // ============================================================
       // BODY: بناء نسخة واحدة (Copy)
       // ============================================================
       const buildSingleCopy = (copyLabel = '') => {
         const isReceipt = pageSize === '80mm';
-        const isA5 = pageSize === 'A5';
+        const showLogo = settings.show_logo_on_invoice === 'true' || settings.show_logo_on_invoice === true;
 
         // 1. Header
         const headerHtml = `
           <div class="invoice-header">
             <div class="header-right">
-              ${company.logo_url ? `<img src="${Refad.escapeHtml(company.logo_url)}" alt="${Refad.escapeHtml(company.name || '')}" onerror="this.style.display='none'">` : ''}
+              ${showLogo && company.logo_url ? `<img src="${Refad.escapeHtml(company.logo_url)}" alt="${Refad.escapeHtml(company.name || '')}" onerror="this.style.display='none'">` : ''}
               <div class="company-info">
-                <h1>${Refad.escapeHtml(company.name || '')}</h1>
+                <h1>${Refad.escapeHtml(company.name || settings.system_name)}</h1>
                 ${company.address ? `<div>${Refad.escapeHtml(company.address)}</div>` : ''}
                 <div>
                   ${company.phone ? `📞 ${Refad.escapeHtml(company.phone)}` : ''}
@@ -372,7 +446,7 @@
           </div>
         `;
 
-        // 2. Meta Info (العميل والتاريخ)
+        // 2. Meta Info
         const metaHtml = `
           <div class="invoice-meta">
             <div class="meta-item">
@@ -440,7 +514,6 @@
           const name = it.name || product.name || '—';
           const unit = product.unit || '';
 
-          // ⭐ 80mm receipt: بيحسب الخصم كمان
           if (isReceipt) {
             const hasDiscount = discount > 0;
             return `
@@ -457,7 +530,6 @@
             `;
           }
 
-          // A4 / A5 format
           return `
             <tr>
               <td class="center">${i + 1}</td>
@@ -487,7 +559,7 @@
           </table>
         `;
 
-        // 4. Totals — ⭐ بيظهر الخصم دايماً لو موجود (حتى في 80mm)
+        // 4. Totals
         const totalsHtml = `
           <div class="invoice-totals">
             <div class="totals-row">
@@ -498,6 +570,12 @@
               <div class="totals-row discount">
                 <span>إجمالي الخصم:</span>
                 <strong>-${Refad.format.money(discountTotal)}</strong>
+              </div>
+            ` : ''}
+            ${taxAmount && !isReceipt ? `
+              <div class="totals-row">
+                <span>الضريبة (${taxRate}%):</span>
+                <strong>${Refad.format.money(taxAmount)}</strong>
               </div>
             ` : ''}
             <div class="totals-row grand-total">
@@ -528,21 +606,25 @@
         // 5. Amount in Arabic
         const amountInWords = !isReceipt ? `
           <div class="amount-words">
-            <strong>المبلغ كتابةً:</strong> ${NumberToArabic.format(total, invoiceSettings.currency || 'جنيه')}
+            <strong>المبلغ كتابةً:</strong> ${NumberToArabic.format(total, settings.currency_symbol || 'جنيه')}
           </div>
         ` : '';
 
-        // 6. Notes
+        // 6. Notes (ملاحظات الفاتورة)
         const notesHtml = notes ? `
           <div class="invoice-notes">
             <strong>ملاحظات:</strong> ${Refad.escapeHtml(notes)}
           </div>
         ` : '';
 
-        // 7. Terms
-        const termsHtml = terms && !isReceipt ? `
+        // ✅ 7. Terms & Conditions (الشروط والأحكام من الإعدادات)
+        const termsHtml = terms ? `
           <div class="invoice-terms">
-            <strong>الشروط:</strong> ${Refad.escapeHtml(terms)}
+            <div class="terms-header">
+              <i>📋</i>
+              <strong>الشروط والأحكام</strong>
+            </div>
+            <div class="terms-body">${Refad.escapeHtml(terms).replace(/\n/g, '<br>')}</div>
           </div>
         ` : '';
 
@@ -560,11 +642,11 @@
           </div>
         ` : '';
 
-        // 9. Footer — ⭐ التوقيع الموحّد
-        const footerText = footer || `شكراً لتعاملكم معنا • ${company.name || ''}`;
+        // ✅ 9. Footer (تذييل الفاتورة من الإعدادات)
+        const footerText = footer || `شكراً لتعاملكم معنا • ${company.name || settings.system_name}`;
         const footerHtml = `
           <div class="invoice-footer">
-            ${Refad.escapeHtml(footerText)}
+            <div class="footer-main">${Refad.escapeHtml(footerText).replace(/\n/g, '<br>')}</div>
             <div class="refad-signature">${Refad.escapeHtml(SIGNATURE)}</div>
           </div>
         `;
@@ -736,7 +818,7 @@
         }
 
         /* ===== Notes ===== */
-        .invoice-notes, .invoice-terms {
+        .invoice-notes {
           margin-top: 10px;
           padding: ${isReceipt ? '4px 6px' : '8px 10px'};
           background: #f8fafc;
@@ -745,7 +827,38 @@
           color: #475569;
         }
 
-        .invoice-terms { font-size: ${isReceipt ? '8px' : '10px'}; }
+        /* ===== ✅ Terms & Conditions (محسّن) ===== */
+        .invoice-terms {
+          margin-top: 12px;
+          padding: ${isReceipt ? '6px 8px' : '10px 12px'};
+          background: #f1f5f9;
+          border-right: 4px solid #0B2C4D;
+          border-radius: 6px;
+          font-size: ${isReceipt ? '8px' : '10px'};
+          color: #334155;
+          line-height: 1.6;
+        }
+
+        .terms-header {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          margin-bottom: 6px;
+          padding-bottom: 4px;
+          border-bottom: 1px dashed #cbd5e1;
+          color: #0B2C4D;
+          font-size: ${isReceipt ? '9px' : '11px'};
+        }
+
+        .terms-header i {
+          font-style: normal;
+          font-size: ${isReceipt ? '10px' : '12px'};
+        }
+
+        .terms-body {
+          white-space: pre-line;
+          word-wrap: break-word;
+        }
 
         /* ===== Signatures ===== */
         .invoice-signatures {
@@ -759,19 +872,27 @@
         .signature-item { text-align: center; }
         .signature-item div:first-child { margin-bottom: 4px; }
 
-        /* ===== Footer ===== */
+        /* ===== ✅ Footer (محسّن) ===== */
         .invoice-footer {
           margin-top: 15px;
-          padding-top: 8px;
-          border-top: 1px dashed #cbd5e1;
+          padding-top: 10px;
+          border-top: 2px dashed #cbd5e1;
           text-align: center;
           font-size: ${isReceipt ? '9px' : '11px'};
-          color: #94a3b8;
+          color: #475569;
+          line-height: 1.6;
         }
 
-        /* ⭐ التوقيع الموحّد - خط صغير خالص */
+        .footer-main {
+          color: #0B2C4D;
+          font-weight: 600;
+          margin-bottom: 6px;
+          white-space: pre-line;
+          word-wrap: break-word;
+        }
+
         .refad-signature {
-          margin-top: 4px;
+          margin-top: 6px;
           font-size: ${isReceipt ? '7px' : '9px'};
           color: #94a3b8;
           letter-spacing: 0.3px;
@@ -797,10 +918,12 @@
           .invoice-copy:not(:last-child) { page-break-after: always; }
         }
 
-        /* ⭐ في 80mm: نخفي بس التوقيعات والـ amount words، لكن نسيّب الخصم ظاهر */
+        /* ⭐ في 80mm: نخفي بس التوقيعات والـ amount words */
         ${isReceipt ? `
-          .invoice-signatures, .amount-words, .invoice-terms { display: none; }
+          .invoice-signatures, .amount-words { display: none; }
           .invoice-totals { width: 100%; }
+          .invoice-terms { font-size: 8px; padding: 4px 6px; }
+          .invoice-footer { font-size: 8px; padding-top: 6px; margin-top: 10px; }
         ` : ''}
       `;
 
@@ -821,6 +944,6 @@
   };
 
   global.Refad.Print = Print;
-  console.log('%c[Refad] Print v' + Print.version + ' loaded', 'color:#F59E0B;font-weight:bold');
+  console.log('%c[Refad] Print v' + Print.version + ' loaded (Settings-aware)', 'color:#F59E0B;font-weight:bold');
 
 })(typeof window !== 'undefined' ? window : this);

@@ -222,6 +222,8 @@
     .btn-danger:hover:not(:disabled) { background: #b91c1c; }
     .btn-success { background: var(--success); color: white; }
     .btn-success:hover:not(:disabled) { background: #047857; }
+    .btn-warning { background: var(--gold); color: white; }
+    .btn-warning:hover:not(:disabled) { background: #d97706; }
     .btn-sm { padding: 6px 12px; font-size: 12px; }
 
     /* ============ Stats ============ */
@@ -343,7 +345,7 @@
       width: 100%;
       border-collapse: collapse;
       font-size: 13px;
-      min-width: 1000px;
+      min-width: 1050px;
     }
     table.data-table thead { background: var(--bg); border-bottom: 1px solid var(--border); }
     table.data-table th {
@@ -362,6 +364,7 @@
     }
     table.data-table tbody tr:hover { background: var(--bg); }
     table.data-table tbody tr:last-child { border-bottom: none; }
+    table.data-table tbody tr.inactive-row { opacity: 0.6; }
     table.data-table td { padding: 11px 10px; color: var(--text); vertical-align: middle; }
 
     .supplier-cell { display: flex; align-items: center; gap: 10px; }
@@ -374,6 +377,7 @@
       font-weight: 800; font-size: 14px;
       flex-shrink: 0;
     }
+    .supplier-avatar.inactive { background: linear-gradient(135deg, #64748b, #94a3b8); }
     .supplier-info { min-width: 0; }
     .supplier-info .name { font-weight: 700; color: var(--text); font-size: 13px; }
     .supplier-info .sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
@@ -391,7 +395,7 @@
       white-space: nowrap;
     }
     .status-pill.active { background: rgba(16,185,129,0.12); color: var(--success); }
-    .status-pill.inactive { background: rgba(239,68,68,0.12); color: var(--danger); }
+    .status-pill.inactive { background: rgba(245,158,11,0.15); color: var(--gold); }
 
     /* Credit badge */
     .credit-badge {
@@ -439,6 +443,8 @@
     }
     .action-btn:hover { border-color: var(--accent); color: var(--accent); }
     .action-btn.danger:hover { border-color: var(--danger); color: var(--danger); background: rgba(239,68,68,0.06); }
+    .action-btn.warning:hover { border-color: var(--gold); color: var(--gold); background: rgba(245,158,11,0.08); }
+    .action-btn.success:hover { border-color: var(--success); color: var(--success); background: rgba(16,185,129,0.08); }
     .action-btn i { width: 14px; height: 14px; }
 
     /* ============ Cards Grid ============ */
@@ -470,8 +476,10 @@
       border-color: var(--accent);
     }
     .supplier-card.inactive {
-      opacity: 0.6;
-      filter: grayscale(0.5);
+      opacity: 0.7;
+    }
+    .supplier-card.inactive::before {
+      background: linear-gradient(180deg, #64748b, #94a3b8);
     }
     .sc-header {
       display: flex; align-items: flex-start; justify-content: space-between;
@@ -487,6 +495,9 @@
       display: flex; align-items: center; justify-content: center;
       font-weight: 800; font-size: 18px;
       flex-shrink: 0;
+    }
+    .sc-avatar.inactive {
+      background: linear-gradient(135deg, #64748b, #94a3b8);
     }
     .sc-info { flex: 1; min-width: 0; }
     .sc-name { font-size: 15px; font-weight: 800; color: var(--text); margin-bottom: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -525,9 +536,11 @@
       padding-right: 8px;
       padding-top: 10px;
       border-top: 1px solid var(--border);
+      flex-wrap: wrap;
     }
     .sc-actions .btn {
       flex: 1;
+      min-width: 60px;
       justify-content: center;
       padding: 6px 10px;
       font-size: 11px;
@@ -704,7 +717,8 @@
       .suppliers-grid { grid-template-columns: 1fr; }
     }
   </style>
-</head><body>
+</head>
+<body>
 
   <!-- Sidebar -->
   <aside class="sidebar" id="sidebar">
@@ -789,7 +803,15 @@
           <div class="stat-body">
             <div class="label">موردين نشطين</div>
             <div class="value" id="statActive">0</div>
-            <div class="sub">حالة نشطة</div>
+            <div class="sub" id="statActiveSub">حالة نشطة</div>
+          </div>
+        </div>
+        <div class="stat-card gold">
+          <div class="stat-icon gold"><i data-lucide="pause-circle"></i></div>
+          <div class="stat-body">
+            <div class="label">موردين موقوفين</div>
+            <div class="value" id="statInactive">0</div>
+            <div class="sub">يمكن إرجاعهم</div>
           </div>
         </div>
         <div class="stat-card danger">
@@ -806,14 +828,6 @@
             <div class="label">إجمالي لنا</div>
             <div class="value" id="statPositive">0.00</div>
             <div class="sub">أرصدة لنا عندهم</div>
-          </div>
-        </div>
-        <div class="stat-card purple">
-          <div class="stat-icon purple"><i data-lucide="wallet"></i></div>
-          <div class="stat-body">
-            <div class="label">إجمالي حدود الائتمان</div>
-            <div class="value" id="statTotalCreditLimit">0.00</div>
-            <div class="sub" id="statTotalCreditLimitSub">—</div>
           </div>
         </div>
         <div class="stat-card info">
@@ -874,7 +888,7 @@
                 <th>المتاح</th>
                 <th>السداد</th>
                 <th>الحالة</th>
-                <th style="width:130px;">إجراءات</th>
+                <th style="width:160px;">إجراءات</th>
               </tr>
             </thead>
             <tbody id="tableBody">
@@ -885,9 +899,7 @@
       </div>
 
       <!-- Cards View -->
-      <div class="suppliers-grid" id="cardsView" style="display:none;">
-        <!-- JS -->
-      </div>
+      <div class="suppliers-grid" id="cardsView" style="display:none;"></div>
 
     </main>
   </div>
@@ -996,10 +1008,8 @@
     </div>
   </div>
 
-  <!-- ⏭️ الـ JavaScript هيتم إضافته في الجزء 3 -->
-   
   <!-- ============================================================
-       SCRIPTS — الترتيب مهم جداً
+       SCRIPTS
        ============================================================ -->
   <script src="refad-core.js"></script>
   <script src="refad-auth.js"></script>
@@ -1071,7 +1081,7 @@
       const canDelete = Refad.Session.has('suppliers.delete') || Refad.Session.has('company.owner');
 
       // ============================================================
-      // 2) Sidebar — Unified Menu
+      // 2) Sidebar
       // ============================================================
       function buildSidebar() {
         Refad.buildMenu('suppliers.html');
@@ -1169,6 +1179,7 @@
       const state = {
         suppliers: [],
         receiptsCountMap: {},
+        paymentsCountMap: {},
         filtered: [],
         editingId: null,
         viewMode: 'table',
@@ -1208,11 +1219,24 @@
             limit: 5000
           }).catch(() => []);
 
+          const payments = await Refad.db.select('payments', {
+            columns: 'id, supplier_id',
+            eq: { company_id: session.company_id },
+            limit: 5000
+          }).catch(() => []);
+
           state.suppliers = suppliers || [];
           state.receiptsCountMap = {};
+          state.paymentsCountMap = {};
+
           receipts.forEach(r => {
             if (!r.supplier_id) return;
             state.receiptsCountMap[r.supplier_id] = (state.receiptsCountMap[r.supplier_id] || 0) + 1;
+          });
+
+          payments.forEach(p => {
+            if (!p.supplier_id) return;
+            state.paymentsCountMap[p.supplier_id] = (state.paymentsCountMap[p.supplier_id] || 0) + 1;
           });
 
           renderStats();
@@ -1237,10 +1261,10 @@
         const list = state.suppliers;
         const total = list.length;
         const active = list.filter(s => s.is_active !== false).length;
+        const inactive = list.filter(s => s.is_active === false).length;
 
         let negative = 0, positive = 0;
         let totalCreditLimit = 0;
-        let overLimit = 0;
 
         list.forEach(s => {
           const b = parseFloat(s.balance) || 0;
@@ -1248,21 +1272,17 @@
           else if (b > 0) positive += b;
 
           const limit = parseFloat(s.credit_limit) || 0;
-          if (limit > 0) {
-            totalCreditLimit += limit;
-            if (Math.abs(b) > limit) overLimit++;
-          }
+          if (limit > 0) totalCreditLimit += limit;
         });
 
         const totalReceipts = Object.values(state.receiptsCountMap).reduce((s, c) => s + c, 0);
 
         document.getElementById('statTotal').textContent = fmtNumber(total);
-        document.getElementById('statTotalSub').textContent = `${active} نشط`;
+        document.getElementById('statTotalSub').textContent = `${active} نشط + ${inactive} موقوف`;
         document.getElementById('statActive').textContent = fmtNumber(active);
+        document.getElementById('statInactive').textContent = fmtNumber(inactive);
         document.getElementById('statNegative').textContent = fmtMoney(negative);
         document.getElementById('statPositive').textContent = fmtMoney(positive);
-        document.getElementById('statTotalCreditLimit').textContent = fmtMoney(totalCreditLimit);
-        document.getElementById('statTotalCreditLimitSub').textContent = `${list.filter(s => parseFloat(s.credit_limit) > 0).length} مورد بحد`;
         document.getElementById('statReceipts').textContent = fmtNumber(totalReceipts);
       }
 
@@ -1382,13 +1402,15 @@
           const isActive = s.is_active !== false;
           const initials = esc((s.name || '؟').charAt(0));
           const receiptCount = state.receiptsCountMap[s.id] || 0;
+          const paymentCount = state.paymentsCountMap[s.id] || 0;
+          const hasLinkedData = receiptCount > 0 || paymentCount > 0;
 
           return `
-            <tr data-id="${s.id}" tabindex="0">
+            <tr data-id="${s.id}" tabindex="0" class="${isActive ? '' : 'inactive-row'}">
               <td style="color:var(--text-muted);font-weight:700;text-align:center;">${i + 1}</td>
               <td>
                 <div class="supplier-cell">
-                  <div class="supplier-avatar">${initials}</div>
+                  <div class="supplier-avatar ${isActive ? '' : 'inactive'}">${initials}</div>
                   <div class="supplier-info">
                     <div class="name">${esc(s.name)}</div>
                     ${s.address ? `<div class="sub">${esc(s.address)}</div>` : (receiptCount > 0 ? `<div class="sub">${receiptCount} استلام</div>` : '')}
@@ -1424,15 +1446,26 @@
                   ${isActive ? 'نشط' : 'موقوف'}
                 </span>
               </td>
-              <td>
+              <td style="white-space:nowrap;">
                 <a href="supplier-details.html?id=${s.id}" class="action-btn" title="التفاصيل" onclick="event.stopPropagation();">
                   <i data-lucide="eye"></i>
                 </a>
                 <button class="action-btn" data-action="edit" data-id="${s.id}" title="تعديل">
                   <i data-lucide="edit"></i>
                 </button>
-                ${canDelete ? `
-                  <button class="action-btn danger" data-action="delete" data-id="${s.id}" title="حذف">
+                ${canEdit ? `
+                  ${isActive ? `
+                    <button class="action-btn warning" data-action="deactivate" data-id="${s.id}" title="إيقاف المورد">
+                      <i data-lucide="pause-circle"></i>
+                    </button>
+                  ` : `
+                    <button class="action-btn success" data-action="activate" data-id="${s.id}" title="إرجاع المورد">
+                      <i data-lucide="play-circle"></i>
+                    </button>
+                  `}
+                ` : ''}
+                ${canDelete && !hasLinkedData ? `
+                  <button class="action-btn danger" data-action="delete" data-id="${s.id}" title="حذف نهائي">
                     <i data-lucide="trash-2"></i>
                   </button>
                 ` : ''}
@@ -1457,6 +1490,8 @@
             const sid = parseInt(btn.dataset.id, 10);
             if (action === 'edit') openEdit(sid);
             else if (action === 'delete') deleteSupplier(sid);
+            else if (action === 'deactivate') deactivateSupplier(sid);
+            else if (action === 'activate') activateSupplier(sid);
           });
         });
       }
@@ -1509,7 +1544,7 @@
           return `
             <div class="supplier-card ${isActive ? '' : 'inactive'}" data-id="${s.id}">
               <div class="sc-header">
-                <div class="sc-avatar">${initials}</div>
+                <div class="sc-avatar ${isActive ? '' : 'inactive'}">${initials}</div>
                 <div class="sc-info">
                   <div class="sc-name">${esc(s.name)}</div>
                   ${s.phone ? `<div class="sc-contact"><i data-lucide="phone"></i>${esc(s.phone)}</div>` : ''}
@@ -1560,6 +1595,17 @@
                     <i data-lucide="edit"></i> تعديل
                   </button>
                 ` : ''}
+                ${canEdit ? `
+                  ${isActive ? `
+                    <button class="btn btn-warning" data-action="deactivate" data-id="${s.id}" onclick="event.stopPropagation();" title="إيقاف">
+                      <i data-lucide="pause-circle"></i>
+                    </button>
+                  ` : `
+                    <button class="btn btn-success" data-action="activate" data-id="${s.id}" onclick="event.stopPropagation();" title="إرجاع">
+                      <i data-lucide="play-circle"></i>
+                    </button>
+                  `}
+                ` : ''}
               </div>
             </div>
           `;
@@ -1578,7 +1624,10 @@
           btn.addEventListener('click', (e) => {
             e.stopPropagation();
             const sid = parseInt(btn.dataset.id, 10);
-            if (btn.dataset.action === 'edit') openEdit(sid);
+            const action = btn.dataset.action;
+            if (action === 'edit') openEdit(sid);
+            else if (action === 'deactivate') deactivateSupplier(sid);
+            else if (action === 'activate') activateSupplier(sid);
           });
         });
       }
@@ -1695,16 +1744,87 @@
       }
 
       // ============================================================
-      // 12) Delete
+      // 12.a) Deactivate Supplier (إيقاف)
+      // ============================================================
+      async function deactivateSupplier(sid) {
+        const s = state.suppliers.find(x => x.id === sid);
+        if (!s) return;
+
+        const ok = await Refad.alert.confirm(
+          'إيقاف المورد',
+          `سيتم إيقاف "${s.name}".\n\n` +
+          `البيانات (الفواتير، الدفعات) هتفضل موجودة،\n` +
+          `وممكن ترجّعه في أي وقت.`,
+          'إيقاف'
+        );
+        if (!ok) return;
+
+        try {
+          await Refad.db.update('suppliers', sid, { is_active: false });
+          await Refad.logActivity('deactivate_supplier', 'suppliers', `إيقاف مورد: ${s.name}`, sid);
+          Refad.toast.success(`تم إيقاف "${s.name}"`);
+          await loadData();
+        } catch (e) {
+          console.error('[Suppliers] deactivate failed:', e);
+          Refad.toast.error('فشل الإيقاف: ' + (e.message || e));
+        }
+      }
+
+      // ============================================================
+      // 12.b) Activate Supplier (إرجاع)
+      // ============================================================
+      async function activateSupplier(sid) {
+        const s = state.suppliers.find(x => x.id === sid);
+        if (!s) return;
+
+        const ok = await Refad.alert.confirm(
+          'إرجاع المورد',
+          `سيتم إرجاع "${s.name}" للحالة النشطة.\n\n` +
+          `هيظهر تاني في القوائم والاستلامات.`,
+          'إرجاع'
+        );
+        if (!ok) return;
+
+        try {
+          await Refad.db.update('suppliers', sid, { is_active: true });
+          await Refad.logActivity('activate_supplier', 'suppliers', `إرجاع مورد: ${s.name}`, sid);
+          Refad.toast.success(`تم إرجاع "${s.name}"`);
+          await loadData();
+        } catch (e) {
+          console.error('[Suppliers] activate failed:', e);
+          Refad.toast.error('فشل الإرجاع: ' + (e.message || e));
+        }
+      }
+
+      // ============================================================
+      // 12.c) Delete Supplier (حذف نهائي — بس لو مفيش بيانات)
       // ============================================================
       async function deleteSupplier(sid) {
         const s = state.suppliers.find(x => x.id === sid);
         if (!s) return;
 
+        const receiptCount = state.receiptsCountMap[sid] || 0;
+        const paymentCount = state.paymentsCountMap[sid] || 0;
+
+        if (receiptCount > 0 || paymentCount > 0) {
+          Refad.alert.warning(
+            'لا يمكن الحذف',
+            `المورد "${s.name}" مرتبط بـ:\n` +
+            `• ${receiptCount} فاتورة استلام\n` +
+            `• ${paymentCount} دفعة\n\n` +
+            `الحذف ممكن بس لو المورد ملوش أي تعاملات.\n\n` +
+            `استخدم "إيقاف" بدلاً من الحذف.`,
+            'حسناً'
+          );
+          return;
+        }
+
         const ok = await Refad.alert.confirm(
-          'حذف المورد',
-          `سيتم حذف "${s.name}" نهائياً. الفواتير المرتبطة لن تُحذف لكنها ستفقد الربط. متابعة؟`,
-          'حذف'
+          '⚠️ حذف نهائي',
+          `سيتم حذف "${s.name}" نهائياً.\n\n` +
+          `لا يمكن التراجع!\n\n` +
+          `متابعة؟`,
+          'حذف نهائي'
         );
         if (!ok) return;
 
@@ -1738,6 +1858,7 @@
           'المتاح': (parseFloat(s.credit_limit) || 0) - Math.abs(parseFloat(s.balance) || 0),
           'فترة السداد (يوم)': parseInt(s.payment_terms_days, 10) || 0,
           'عدد الاستلامات': state.receiptsCountMap[s.id] || 0,
+          'عدد الدفعات': state.paymentsCountMap[s.id] || 0,
           'الحالة': s.is_active === false ? 'موقوف' : 'نشط'
         }));
 
@@ -1835,7 +1956,7 @@
 
         if (Refad.registerServiceWorker) Refad.registerServiceWorker();
 
-        console.log('%c[Refad] Suppliers v3 ready (Theme Sync + Settings + buildMenu)', 'color:#14B8A6;font-weight:bold');
+        console.log('%c[Refad] Suppliers v5 — Activate/Deactivate + Smart Delete', 'color:#14B8A6;font-weight:bold');
       }
 
       if (document.readyState === 'loading') {

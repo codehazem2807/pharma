@@ -382,7 +382,7 @@
     .credit-badge.none { background: rgba(148,163,184,0.15); color: var(--text-muted); }
     .credit-badge i { width: 10px; height: 10px; }
 
-    /* Progress bar for credit usage */
+    /* Progress bar */
     .credit-progress {
       height: 4px;
       background: var(--border);
@@ -515,7 +515,6 @@
       box-shadow: 0 0 0 3px rgba(20,184,166,0.1);
     }
 
-    /* Form section title */
     .form-section-title {
       font-size: 11px;
       font-weight: 800;
@@ -532,7 +531,6 @@
     }
     .form-section-title i { width: 14px; height: 14px; }
 
-    /* Credit Info Box */
     .credit-info-box {
       grid-column: 1 / -1;
       background: linear-gradient(135deg, rgba(139,92,246,0.06), rgba(20,184,166,0.04));
@@ -548,40 +546,6 @@
       margin-bottom: 4px;
     }
     .credit-info-box i { width: 16px; height: 16px; color: var(--purple); flex-shrink: 0; margin-top: 2px; }
-
-    /* Checkbox pill */
-    .check-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 12px;
-      border: 1.5px solid var(--border);
-      border-radius: var(--radius-sm);
-      background: var(--bg);
-      cursor: pointer;
-      transition: all 0.2s;
-      grid-column: 1 / -1;
-    }
-    .check-row:hover { border-color: var(--accent); }
-    .check-row input[type="checkbox"] {
-      width: 18px;
-      height: 18px;
-      accent-color: var(--accent);
-      cursor: pointer;
-      flex-shrink: 0;
-    }
-    .check-row span {
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--text);
-    }
-    .check-row small {
-      display: block;
-      color: var(--text-muted);
-      font-size: 11px;
-      font-weight: 500;
-      margin-top: 2px;
-    }
 
     /* Overlay */
     .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; opacity: 0; transition: opacity 0.3s; }
@@ -669,6 +633,9 @@
           <p>قائمة كاملة بكل عملاء الشركة مع الأرصدة وحدود الائتمان</p>
         </div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn btn-outline btn-sm" id="toggleDeletedBtn" title="عرض/إخفاء المحذوفين">
+            <i data-lucide="archive"></i> <span id="toggleDeletedText">عرض المعطّلين</span>
+          </button>
           <button class="btn btn-outline btn-sm" id="refreshBtn">
             <i data-lucide="refresh-cw"></i> تحديث
           </button>
@@ -774,7 +741,7 @@
                 <th>السداد</th>
                 <th>الفواتير</th>
                 <th>الحالة</th>
-                <th style="width:130px;">إجراءات</th>
+                <th style="width:150px;">إجراءات</th>
               </tr>
             </thead>
             <tbody id="tableBody">
@@ -871,22 +838,20 @@
     </div>
   </div>
 
-  <!-- ⏭️ الـ JavaScript هيتم إضافته في الجزء 3 -->
-   
-  <!-- ============================================================
-       SCRIPTS — الترتيب مهم جداً
-       ============================================================ -->
+  <!-- ============================================================ -->
+  <!-- SCRIPTS -->
+  <!-- ============================================================ -->
   <script src="refad-core.js"></script>
   <script src="refad-auth.js"></script>
   <script src="refad-theme-sync.js"></script>
   <script src="refad-settings.js"></script>
 
-  <script>
+  <!-- ⏭️ JavaScript هيتضاف في الجزء الثالث -->  <script>
     (function () {
       'use strict';
 
       // ============================================================
-      // 0) Safe Wrappers
+      // 0) Safe Settings Wrapper
       // ============================================================
       const SafeSettings = {
         locale: {
@@ -897,38 +862,24 @@
               }
             } catch (e) {}
             return Refad.format.money(v);
-          },
-          getCurrencySymbol: function () {
-            try {
-              if (window.RefadSettings?.locale?.getCurrencySymbol) {
-                return RefadSettings.locale.getCurrencySymbol();
-              }
-            } catch (e) {}
-            return 'ج.م';
           }
         },
         identity: {
           getSystemName: function () {
             try {
-              if (window.RefadSettings?.identity?.getSystemName) {
-                return RefadSettings.identity.getSystemName();
-              }
+              if (window.RefadSettings?.identity?.getSystemName) return RefadSettings.identity.getSystemName();
             } catch (e) {}
             return 'رفاد';
           },
           getTagline: function () {
             try {
-              if (window.RefadSettings?.identity?.getTagline) {
-                return RefadSettings.identity.getTagline();
-              }
+              if (window.RefadSettings?.identity?.getTagline) return RefadSettings.identity.getTagline();
             } catch (e) {}
             return 'نظام إدارة الأدوية';
           },
           getLogoUrl: function () {
             try {
-              if (window.RefadSettings?.identity?.getLogoUrl) {
-                return RefadSettings.identity.getLogoUrl();
-              }
+              if (window.RefadSettings?.identity?.getLogoUrl) return RefadSettings.identity.getLogoUrl();
             } catch (e) {}
             return null;
           }
@@ -950,13 +901,12 @@
         return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
           .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
       }
-      function fmtMoney(v) {
-        return SafeSettings.locale.formatMoney(v);
-      }
+      function fmtMoney(v) { return SafeSettings.locale.formatMoney(v); }
       function fmtNumber(v) {
         if (typeof Refad.format?.number === 'function') return Refad.format.number(v);
         return String(v || 0);
       }
+      function toNum(v) { return Number(v) || 0; }
 
       // ============================================================
       // 3) State
@@ -966,11 +916,12 @@
         invoicesCountMap: {},
         filtered: [],
         editingId: null,
+        showDeleted: false,
         filters: { search: '', balance: '', credit: '', status: '' }
       };
 
       // ============================================================
-      // 4) Sidebar — Unified Menu
+      // 4) Sidebar
       // ============================================================
       function buildSidebar() {
         Refad.buildMenu('customers.html');
@@ -1059,7 +1010,7 @@
       }
 
       // ============================================================
-      // 6) Load Data
+      // 6) Load Data — v2 (مع deleted_at)
       // ============================================================
       async function loadData() {
         document.getElementById('tableBody').innerHTML =
@@ -1070,19 +1021,31 @@
           let customers;
           try {
             customers = await Refad.db.select('customers', {
-              columns: 'id, name, phone, email, address, balance, credit_limit, payment_terms_days, notes, is_active, created_at',
+              columns: 'id, name, phone, email, address, balance, credit_limit, payment_terms_days, notes, is_active, created_at, deleted_at',
               eq: { company_id: session.company_id },
               order: { column: 'name', ascending: true },
               limit: 3000
             });
           } catch (e) {
             console.warn('[Customers] Full columns failed, fallback:', e.message);
-            customers = await Refad.db.select('customers', {
-              columns: 'id, name, phone, email, address, balance, notes, is_active, created_at',
-              eq: { company_id: session.company_id },
-              order: { column: 'name', ascending: true },
-              limit: 3000
-            });
+            try {
+              customers = await Refad.db.select('customers', {
+                columns: 'id, name, phone, email, address, balance, credit_limit, payment_terms_days, notes, is_active, created_at',
+                eq: { company_id: session.company_id },
+                order: { column: 'name', ascending: true },
+                limit: 3000
+              });
+              // ✅ نضيف deleted_at = null
+              customers = customers.map(c => ({ ...c, deleted_at: null }));
+            } catch (e2) {
+              customers = await Refad.db.select('customers', {
+                columns: 'id, name, phone, email, address, balance, notes, is_active, created_at',
+                eq: { company_id: session.company_id },
+                order: { column: 'name', ascending: true },
+                limit: 3000
+              });
+              customers = customers.map(c => ({ ...c, deleted_at: null, credit_limit: 0, payment_terms_days: 0 }));
+            }
           }
 
           const invoices = await Refad.db.select('sales_invoices', {
@@ -1116,7 +1079,7 @@
       // 7) Stats
       // ============================================================
       function renderStats() {
-        const list = state.customers;
+        const list = state.customers.filter(c => !c.deleted_at);
         const total = list.length;
         const active = list.filter(c => c.is_active !== false).length;
 
@@ -1151,6 +1114,13 @@
       // ============================================================
       function applyFilters() {
         let list = state.customers.slice();
+
+        // ✅ فلترة المحذوفين
+        if (state.showDeleted) {
+          list = list.filter(c => c.deleted_at); // المعطّلين فقط
+        } else {
+          list = list.filter(c => !c.deleted_at); // النشطين فقط
+        }
 
         if (state.filters.search) {
           const q = state.filters.search.toLowerCase();
@@ -1205,12 +1175,20 @@
         const list = state.filtered;
 
         if (!list.length) {
+          const msg = state.showDeleted
+            ? 'لا يوجد عملاء معطّلين'
+            : (state.customers.filter(c => !c.deleted_at).length ? 'لا توجد نتائج مطابقة' : 'لا يوجد عملاء بعد');
+
+          const sub = state.showDeleted
+            ? 'كل العملاء نشطين'
+            : (state.customers.filter(c => !c.deleted_at).length ? 'جرّب تعديل الفلاتر' : 'ابدأ بإضافة عميل جديد');
+
           tbody.innerHTML = `
             <tr><td colspan="10">
               <div class="empty-state">
-                <i data-lucide="users"></i>
-                <h3>${state.customers.length ? 'لا توجد نتائج مطابقة' : 'لا يوجد عملاء بعد'}</h3>
-                <p>${state.customers.length ? 'جرّب تعديل الفلاتر' : 'ابدأ بإضافة عميل جديد'}</p>
+                <i data-lucide="${state.showDeleted ? 'archive' : 'users'}"></i>
+                <h3>${msg}</h3>
+                <p>${sub}</p>
               </div>
             </td></tr>`;
           if (window.lucide) lucide.createIcons();
@@ -1257,17 +1235,18 @@
 
           const invCount = state.invoicesCountMap[c.id] || 0;
           const isActive = c.is_active !== false;
+          const isDeleted = !!c.deleted_at;
           const initials = esc((c.name || '؟').charAt(0));
           const isOverLimit = hasLimit && balance > creditLimit;
 
           return `
-            <tr data-id="${c.id}" tabindex="0" class="${isOverLimit ? 'row-overdue' : ''}">
+            <tr data-id="${c.id}" tabindex="0" class="${isOverLimit ? 'row-overdue' : ''} ${isDeleted ? 'row-deleted' : ''}" style="${isDeleted ? 'opacity:0.6;' : ''}">
               <td style="color:var(--text-muted);font-weight:700;text-align:center;">${i + 1}</td>
               <td>
                 <div class="customer-cell">
                   <div class="customer-avatar">${initials}</div>
                   <div class="customer-info">
-                    <div class="name">${esc(c.name)}</div>
+                    <div class="name">${esc(c.name)} ${isDeleted ? '<span style="font-size:10px;color:var(--danger);font-weight:700;">[معطّل]</span>' : ''}</div>
                     ${c.address ? `<div class="sub">${esc(c.address)}</div>` : ''}
                   </div>
                 </div>
@@ -1298,20 +1277,30 @@
               </td>
               <td style="text-align:center;font-weight:700;">${invCount}</td>
               <td>
-                <span class="status-pill ${isActive ? 'active' : 'inactive'}">
-                  ${isActive ? 'نشط' : 'موقوف'}
-                </span>
+                ${isDeleted ? `
+                  <span class="status-pill inactive">معطّل</span>
+                ` : `
+                  <span class="status-pill ${isActive ? 'active' : 'inactive'}">
+                    ${isActive ? 'نشط' : 'موقوف'}
+                  </span>
+                `}
               </td>
               <td>
                 <a href="customer-details.html?id=${c.id}" class="action-btn" title="التفاصيل">
                   <i data-lucide="eye"></i>
                 </a>
-                <button class="action-btn" data-action="edit" data-id="${c.id}" title="تعديل">
-                  <i data-lucide="edit"></i>
-                </button>
-                <button class="action-btn danger" data-action="delete" data-id="${c.id}" title="حذف">
-                  <i data-lucide="trash-2"></i>
-                </button>
+                ${!isDeleted ? `
+                  <button class="action-btn" data-action="edit" data-id="${c.id}" title="تعديل">
+                    <i data-lucide="edit"></i>
+                  </button>
+                  <button class="action-btn danger" data-action="delete" data-id="${c.id}" title="حذف/تعطيل">
+                    <i data-lucide="trash-2"></i>
+                  </button>
+                ` : `
+                  <button class="action-btn" data-action="restore" data-id="${c.id}" title="استعادة" style="border-color:var(--success);color:var(--success);">
+                    <i data-lucide="rotate-ccw"></i>
+                  </button>
+                `}
               </td>
             </tr>
           `;
@@ -1339,6 +1328,7 @@
             const cid = parseInt(btn.dataset.id, 10);
             if (action === 'edit') openEdit(cid);
             else if (action === 'delete') deleteCustomer(cid);
+            else if (action === 'restore') restoreCustomer(cid);
           });
         });
       }
@@ -1439,33 +1429,197 @@
         }
       }
 
+      // ============================================================
+      // 11) Delete — v2 (Soft Delete للعملاء اللي عندهم حركات)
+      // ============================================================
       async function deleteCustomer(cid) {
         const c = state.customers.find(x => x.id === cid);
         if (!c) return;
 
-        const ok = await Refad.alert.confirm(
-          'حذف العميل',
-          `سيتم حذف "${c.name}" نهائياً. الفواتير المرتبطة لن تُحذف لكنها ستفقد الربط. متابعة؟`,
-          'حذف'
-        );
-        if (!ok) return;
+        // ✅ جلب عدد الحركات المرتبطة
+        let paymentsCount = 0;
+        let invoicesCount = 0;
+        let notesCount = 0;
+        let returnsCount = 0;
 
         try {
-          await Refad.db.remove('customers', cid);
-          await Refad.logActivity('delete_customer', 'customers', `حذف عميل: ${c.name}`, cid);
-          Refad.toast.success('تم الحذف');
-          await loadData();
-        } catch (e) {
-          console.error('[Customers] delete failed:', e);
-          Refad.toast.error('فشل الحذف: ' + (e.message || e));
+          paymentsCount = await Refad.db.count('payments', {
+            eq: { customer_id: cid, company_id: session.company_id }
+          });
+        } catch (e) { paymentsCount = 0; }
+
+        try {
+          invoicesCount = await Refad.db.count('sales_invoices', {
+            eq: { customer_id: cid, company_id: session.company_id }
+          });
+        } catch (e) { invoicesCount = 0; }
+
+        try {
+          notesCount = await Refad.db.count('credit_notes', {
+            eq: { customer_id: cid, company_id: session.company_id }
+          });
+        } catch (e) { notesCount = 0; }
+
+        try {
+          returnsCount = await Refad.db.count('inventory_returns', {
+            eq: { customer_id: cid, company_id: session.company_id }
+          });
+        } catch (e) { returnsCount = 0; }
+
+        const hasTransactions = (paymentsCount + invoicesCount + notesCount + returnsCount) > 0;
+
+        if (hasTransactions) {
+          // ✅ Soft Delete
+          const msg = `"${c.name}" عنده:\n` +
+            (invoicesCount > 0 ? `• ${invoicesCount} فاتورة\n` : '') +
+            (paymentsCount > 0 ? `• ${paymentsCount} دفعة\n` : '') +
+            (notesCount > 0 ? `• ${notesCount} إشعار\n` : '') +
+            (returnsCount > 0 ? `• ${returnsCount} مرتجع\n` : '') +
+            `\nلا يمكن حذفه نهائياً للحفاظ على السجلات المحاسبية.\n` +
+            `سيتم تعطيله (Soft Delete) — مش هيظهر في القايمة لكن البيانات محفوظة.`;
+
+          const ok = await Refad.alert.confirm('تعطيل العميل', msg, 'تعطيل');
+          if (!ok) return;
+
+          try {
+            const { data, error } = await Refad.sb.rpc('soft_delete_customer', {
+              p_customer_id: cid,
+              p_user_id: session.user_id
+            });
+
+            if (error) throw error;
+
+            await Refad.logActivity(
+              'soft_delete_customer',
+              'customers',
+              `تعطيل عميل: ${c.name} (${invoicesCount} فاتورة, ${paymentsCount} دفعة)`,
+              cid
+            );
+
+            Refad.toast.success(`تم تعطيل العميل "${c.name}" — البيانات محفوظة`);
+            await loadData();
+          } catch (rpcError) {
+            console.warn('[Customers] RPC failed, using direct UPDATE:', rpcError.message);
+
+            // ✅ Fallback: تحديث مباشر
+            try {
+              await Refad.db.update('customers', cid, {
+                deleted_at: new Date().toISOString(),
+                is_active: false
+              });
+              await Refad.logActivity('soft_delete_customer', 'customers', `تعطيل عميل: ${c.name}`, cid);
+              Refad.toast.success(`تم تعطيل العميل "${c.name}" — البيانات محفوظة`);
+              await loadData();
+            } catch (e) {
+              console.error('[Customers] soft delete failed:', e);
+              Refad.toast.error('فشل تعطيل العميل: ' + (e.message || e));
+            }
+          }
+        } else {
+          // ✅ Hard Delete (مفيش حركات)
+          const ok = await Refad.alert.confirm(
+            'حذف العميل',
+            `"${c.name}" ليس عنده أي حركات. سيتم حذفه نهائياً. متابعة؟`,
+            'حذف'
+          );
+          if (!ok) return;
+
+          try {
+            await Refad.db.remove('customers', cid);
+            await Refad.logActivity('delete_customer', 'customers', `حذف عميل: ${c.name}`, cid);
+            Refad.toast.success('تم الحذف');
+            await loadData();
+          } catch (e) {
+            console.error('[Customers] delete failed:', e);
+
+            // ✅ لو لسه فيه مشكلة FK
+            if (e.message && e.message.includes('foreign key')) {
+              const ok2 = await Refad.alert.confirm(
+                'لا يمكن الحذف',
+                'العميل مرتبط بحركات (فواتير/دفعات/إشعارات).\n\nهل تريد تعطيله بدلاً من حذفه؟',
+                'تعطيل'
+              );
+              if (ok2) {
+                try {
+                  await Refad.db.update('customers', cid, {
+                    deleted_at: new Date().toISOString(),
+                    is_active: false
+                  });
+                  await Refad.logActivity('soft_delete_customer', 'customers', `تعطيل عميل: ${c.name}`, cid);
+                  Refad.toast.success(`تم تعطيل العميل "${c.name}"`);
+                  await loadData();
+                } catch (e2) {
+                  Refad.toast.error('فشل التعطيل: ' + (e2.message || e2));
+                }
+              }
+            } else {
+              Refad.toast.error('فشل الحذف: ' + (e.message || e));
+            }
+          }
         }
       }
 
       // ============================================================
-      // 11) Export
+      // 12) Restore Customer
+      // ============================================================
+      async function restoreCustomer(cid) {
+        const c = state.customers.find(x => x.id === cid);
+        if (!c) return;
+
+        const ok = await Refad.alert.confirm(
+          'استعادة العميل',
+          `سيتم استعادة "${c.name}" وتفعيله مرة أخرى. متابعة؟`,
+          'استعادة'
+        );
+        if (!ok) return;
+
+        try {
+          // ✅ استخدام RPC لو موجودة
+          try {
+            const { data, error } = await Refad.sb.rpc('restore_customer', {
+              p_customer_id: cid
+            });
+            if (error) throw error;
+          } catch (rpcError) {
+            console.warn('[Customers] Restore RPC failed, using direct UPDATE:', rpcError.message);
+            // ✅ Fallback
+            await Refad.db.update('customers', cid, {
+              deleted_at: null,
+              is_active: true
+            });
+          }
+
+          await Refad.logActivity('restore_customer', 'customers', `استعادة عميل: ${c.name}`, cid);
+          Refad.toast.success(`تم استعادة "${c.name}"`);
+          await loadData();
+        } catch (e) {
+          console.error('[Customers] restore failed:', e);
+          Refad.toast.error('فشل الاستعادة: ' + (e.message || e));
+        }
+      }
+
+      // ============================================================
+      // 13) Toggle Deleted View
+      // ============================================================
+      function setupToggleDeleted() {
+        const btn = document.getElementById('toggleDeletedBtn');
+        const text = document.getElementById('toggleDeletedText');
+
+        btn.addEventListener('click', () => {
+          state.showDeleted = !state.showDeleted;
+          text.textContent = state.showDeleted ? 'عرض النشطين' : 'عرض المعطّلين';
+          btn.querySelector('i').setAttribute('data-lucide', state.showDeleted ? 'users' : 'archive');
+          if (window.lucide) lucide.createIcons();
+          applyFilters();
+          renderStats();
+        });
+      }
+
+      // ============================================================
+      // 14) Export
       // ============================================================
       function exportExcel() {
-        const list = state.filtered.length ? state.filtered : state.customers;
+        const list = state.filtered.length ? state.filtered : state.customers.filter(c => !c.deleted_at);
         if (!list.length) return Refad.toast.warning('لا توجد بيانات');
 
         const data = list.map((c, i) => ({
@@ -1479,7 +1633,7 @@
           'المتاح': (parseFloat(c.credit_limit) || 0) - (parseFloat(c.balance) || 0),
           'فترة السداد (يوم)': parseInt(c.payment_terms_days, 10) || 0,
           'عدد الفواتير': state.invoicesCountMap[c.id] || 0,
-          'الحالة': c.is_active === false ? 'موقوف' : 'نشط'
+          'الحالة': c.deleted_at ? 'معطّل' : (c.is_active === false ? 'موقوف' : 'نشط')
         }));
 
         const ws = XLSX.utils.json_to_sheet(data);
@@ -1490,7 +1644,7 @@
       }
 
       // ============================================================
-      // 12) Events
+      // 15) Events
       // ============================================================
       function bindEvents() {
         document.getElementById('addBtn').addEventListener('click', openAdd);
@@ -1535,7 +1689,7 @@
       }
 
       // ============================================================
-      // 13) Init
+      // 16) Init
       // ============================================================
       async function init() {
         buildSidebar();
@@ -1546,13 +1700,14 @@
         setupUserMenu();
         setupNotifBtn();
         setupRealtimeTheme();
+        setupToggleDeleted();
         bindEvents();
 
         await loadData();
 
         if (Refad.registerServiceWorker) Refad.registerServiceWorker();
 
-        console.log('%c[Refad] Customers v3 ready (Theme Sync + Settings + buildMenu)', 'color:#14B8A6;font-weight:bold');
+        console.log('%c[Refad] Customers v4 — Soft Delete ready', 'color:#14B8A6;font-weight:bold');
       }
 
       if (document.readyState === 'loading') {

@@ -797,6 +797,54 @@
     .modal-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
     .modal-footer { padding: 12px 16px; padding-bottom: calc(12px + var(--safe-bottom)); border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; background: var(--bg); flex-shrink: 0; flex-wrap: wrap; }
 
+    /* Payment Type Picker */
+    .type-picker {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+    }
+    .type-option {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      padding: 14px 8px;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      background: var(--bg);
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+    .type-option:hover { border-color: var(--accent); transform: translateY(-2px); }
+    .type-option.selected {
+      border-color: var(--accent);
+      background: rgba(20,184,166,0.08);
+      box-shadow: 0 0 0 3px rgba(20,184,166,0.1);
+    }
+    .type-option[data-ptype="cash"].selected {
+      border-color: var(--success);
+      background: rgba(16,185,129,0.08);
+      box-shadow: 0 0 0 3px rgba(16,185,129,0.1);
+    }
+    .type-option[data-ptype="credit"].selected {
+      border-color: var(--gold);
+      background: rgba(245,158,11,0.08);
+      box-shadow: 0 0 0 3px rgba(245,158,11,0.1);
+    }
+    .type-option[data-ptype="partial"].selected {
+      border-color: var(--info);
+      background: rgba(59,130,246,0.08);
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+    }
+    .type-option i { width: 24px; height: 24px; color: var(--text-muted); }
+    .type-option.selected i { color: var(--accent); }
+    .type-option[data-ptype="cash"].selected i { color: var(--success); }
+    .type-option[data-ptype="credit"].selected i { color: var(--gold); }
+    .type-option[data-ptype="partial"].selected i { color: var(--info); }
+    .type-option span { font-size: 13px; font-weight: 800; color: var(--text); }
+
     /* ============ Smart Scanner ============ */
     .smart-scan-layout { display: grid; grid-template-columns: 1fr 340px; min-height: 400px; }
     .scan-camera-area { background: #000; position: relative; display: flex; align-items: center; justify-content: center; min-height: 300px; }
@@ -977,6 +1025,7 @@
       .wh-info-box { padding: 6px 12px; font-size: 12px; }
       .wh-info-box select { max-width: 140px; font-size: 11px; }
       .credit-info-box { padding: 6px 12px; font-size: 11px; }
+      .type-picker { grid-template-columns: 1fr; }
     }
     @media (max-width: 480px) {
       .mode-tab span { display: none; }
@@ -994,7 +1043,8 @@
       .pos-search input { padding-left: 20px; }
     }
   </style>
-</head><body>
+</head>
+<body>
 
   <!-- ============================================================
        Sidebar
@@ -1219,7 +1269,6 @@
           <div id="loadedOrderInfo" style="margin-top:10px;display:none;"></div>
         </div>
 
-        <!-- Order Purchase Discounts Card -->
         <div class="summary-card" id="orderDiscountsCard" style="display:none;">
           <h4 class="purple"><i data-lucide="percent"></i> خصومات طلب الشراء</h4>
           <div class="stat-row">
@@ -1244,7 +1293,6 @@
           </button>
         </div>
 
-        <!-- Bonus Schemes -->
         <div class="summary-card" id="bonusSchemesCard" style="display:none;">
           <h4 class="purple"><i data-lucide="gift"></i> شرائح البونص المتاحة</h4>
           <div id="bonusSchemesList" style="max-height:200px;overflow-y:auto;"></div>
@@ -1375,6 +1423,95 @@
             <span id="mobileCheckoutText">دفع (F4)</span>
           </button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       Modal: POS Payment (Checkout)
+       ============================================================ -->
+  <div class="modal-backdrop" id="posPaymentModal">
+    <div class="modal" style="max-width:520px;">
+      <div class="modal-header">
+        <h3><i data-lucide="credit-card"></i> <span id="posPaymentTitle">إتمام الدفع</span></h3>
+        <button type="button" class="modal-close" id="closePosPaymentBtn"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body">
+        <div style="background:linear-gradient(135deg,rgba(20,184,166,0.06),rgba(59,130,246,0.04));border:1.5px solid rgba(20,184,166,0.25);border-radius:12px;padding:14px;margin-bottom:16px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <span style="font-size:13px;font-weight:700;color:var(--text-muted);">الإجمالي المطلوب</span>
+            <span style="font-size:22px;font-weight:800;color:var(--accent);" id="posPayTotal">0.00</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;">
+            <span style="color:var(--text-muted);">عدد الأصناف</span>
+            <span style="font-weight:700;" id="posPayItemsCount">0</span>
+          </div>
+        </div>
+
+        <div style="margin-bottom:14px;">
+          <label style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px;display:block;">
+            نوع الدفع <span style="color:var(--danger);">*</span>
+          </label>
+          <div class="type-picker" id="posPaymentTypePicker">
+            <div class="type-option" data-ptype="cash">
+              <i data-lucide="banknote"></i>
+              <span>نقدي</span>
+              <small style="font-size:10px;color:var(--text-muted);font-weight:600;">دفع كامل</small>
+            </div>
+            <div class="type-option selected" data-ptype="credit">
+              <i data-lucide="clock"></i>
+              <span>آجل</span>
+              <small style="font-size:10px;color:var(--text-muted);font-weight:600;">بدون دفع</small>
+            </div>
+            <div class="type-option" data-ptype="partial">
+              <i data-lucide="pie-chart"></i>
+              <span>جزئي</span>
+              <small style="font-size:10px;color:var(--text-muted);font-weight:600;">دفع جزء</small>
+            </div>
+          </div>
+          <input type="hidden" id="posPaymentType" value="credit">
+        </div>
+
+        <div id="posPaidAmountField" style="display:none;margin-bottom:14px;">
+          <label style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px;display:block;">
+            المبلغ المدفوع <span style="color:var(--danger);">*</span>
+          </label>
+          <input type="number" id="posPaidAmount" min="0" step="0.01" value="0"
+                 style="width:100%;padding:12px 14px;font-family:inherit;font-size:16px;font-weight:700;text-align:center;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;color:var(--text);outline:none;">
+        </div>
+
+        <div id="posPaymentAccountField" style="display:none;margin-bottom:14px;">
+          <label style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px;display:block;">
+            الحساب المستلم <span style="color:var(--danger);">*</span>
+          </label>
+          <select id="posPaymentAccount"
+                  style="width:100%;padding:12px 14px;font-family:inherit;font-size:14px;font-weight:600;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;color:var(--text);outline:none;">
+            <option value="">— اختر الحساب —</option>
+          </select>
+        </div>
+
+        <div id="posPaymentInfoBox" style="display:none;background:var(--bg);border:1.5px solid var(--border);border-radius:12px;padding:12px;margin-bottom:14px;">
+          <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;">
+            <span style="color:var(--text-muted);font-weight:600;">المطلوب</span>
+            <span style="font-weight:800;" id="posPayRequired">0.00</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;">
+            <span style="color:var(--text-muted);font-weight:600;">المدفوع</span>
+            <span style="font-weight:800;color:var(--success);" id="posPayPaid">0.00</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-top:1px dashed var(--border);margin-top:4px;padding-top:8px;">
+            <span style="color:var(--text-muted);font-weight:600;">المتبقي (دين)</span>
+            <span style="font-weight:800;" id="posPayRemaining">0.00</span>
+          </div>
+        </div>
+
+        <div id="posPaymentCustomerInfo" style="display:none;"></div>
+      </div>
+      <div class="modal-footer" style="flex-wrap:wrap;gap:8px;">
+        <button type="button" class="btn btn-outline" id="cancelPosPaymentBtn">إلغاء</button>
+        <button type="button" class="btn btn-primary" id="confirmPosPaymentBtn">
+          <i data-lucide="check-circle"></i> <span id="confirmPosPaymentText">إتمام الدفع</span>
+        </button>
       </div>
     </div>
   </div>
@@ -1521,7 +1658,7 @@
   </div>
 
   <!-- ============================================================
-       SCRIPTS — الترتيب مهم جداً
+       SCRIPTS
        ============================================================ -->
   <script src="refad-core.js"></script>
   <script src="refad-auth.js"></script>
@@ -1532,8 +1669,8 @@
   <script src="refad-warehouse.js"></script>
   <script src="refad-quarantine.js"></script>
 
-  <!-- ⏭️ JavaScript هيتم إضافته في الجزء 3 -->
-  <script>
+  <!-- ⏭️ JavaScript في الرسالة الجاية -->
+     <script>
     (function () {
       'use strict';
 
@@ -1638,6 +1775,10 @@
 
         sessionStats: { invoices: 0, sales: 0, profit: 0 },
         holds: [],
+
+        // ✅ جديد — للحسابات
+        accounts: [],
+        posPaymentIntent: 'checkout',
 
         isMobile: window.innerWidth <= 1024,
         mobileCartOpen: false
@@ -1888,6 +2029,35 @@
           }
         } catch (e) {
           console.error('[POS] Customers load failed:', e);
+        }
+      }
+
+      // ============================================================
+      // 7.b) Load Accounts ✅ NEW
+      // ============================================================
+      async function loadAccounts() {
+        try {
+          const rows = await Refad.db.select('accounts', {
+            columns: 'id, name, type, current_balance, is_default, is_active',
+            eq: { company_id: session.company_id, is_active: true },
+            order: { column: 'is_default', ascending: false }
+          }).catch(() => []);
+          state.accounts = rows || [];
+
+          const sel = document.getElementById('posPaymentAccount');
+          if (sel) {
+            sel.innerHTML = '<option value="">— اختر الحساب —</option>';
+            state.accounts.forEach(a => {
+              const opt = document.createElement('option');
+              opt.value = a.id;
+              opt.textContent = `${a.name} — ${fmtMoney(a.current_balance)}`;
+              if (a.is_default) opt.selected = true;
+              sel.appendChild(opt);
+            });
+          }
+        } catch (e) {
+          console.error('[POS] Accounts load failed:', e);
+          state.accounts = [];
         }
       }
 
@@ -3423,8 +3593,9 @@
         }
       }
 
-      // ============================================================
-      // 26) Checkout
+      // ⏭️ باقي الـ JavaScript في الجزء الثالث
+            // ============================================================
+      // 26) Checkout — v4 (Payment Modal Flow)
       // ============================================================
       async function checkout() {
         if (!state.cart.length) {
@@ -3433,6 +3604,7 @@
           return;
         }
 
+        // Credit limit check (before payment)
         const customerId = parseInt(document.getElementById('customerSelect')?.value, 10) || null;
         if (customerId) {
           const customer = state.customers.find(c => Number(c.id) === customerId);
@@ -3442,30 +3614,242 @@
             const newBalance = currentBalance + totalOrder;
             const creditLimit = Number(customer.credit_limit);
 
-            if (newBalance > creditLimit) {
-              if (!isOwner) {
-                await Refad.alert.error(
-                  '🚫 تجاوز حد الائتمان',
-                  `العميل "${customer.name}" وصل للحد الأقصى.\n\nالرصيد: ${fmtMoney(currentBalance)}\nالحد: ${fmtMoney(creditLimit)}\nالمطلوب: ${fmtMoney(totalOrder)}\n\nيجب تسديد المستحقات.`
-                );
-                return;
-              }
-              const ok = await Refad.alert.confirm(
-                '⚠️ تجاوز حد الائتمان',
-                `العميل "${customer.name}" سيتجاوز الحد بـ ${fmtMoney(newBalance - creditLimit)}.\n\nمتابعة كصاحب الشركة؟`,
-                'متابعة'
+            if (newBalance > creditLimit && !isOwner) {
+              await Refad.alert.error(
+                '🚫 تجاوز حد الائتمان',
+                `العميل "${customer.name}" وصل للحد الأقصى.\n\nالرصيد: ${fmtMoney(currentBalance)}\nالحد: ${fmtMoney(creditLimit)}\nالمطلوب: ${fmtMoney(totalOrder)}\n\nيجب تسديد المستحقات قبل البيع.`
               );
-              if (!ok) return;
+              return;
             }
           }
         }
 
+        // Order mode → convert
         if (state.mode === 'order') {
-          return convertOrderToInvoice();
+          return openPosPaymentModal('convert');
         }
 
-        const btn = document.getElementById('checkoutBtn');
-        if (btn) btn.disabled = true;
+        return openPosPaymentModal('checkout');
+      }
+
+      // ============================================================
+      // 26.b) Payment Modal Logic
+      // ============================================================
+      function openPosPaymentModal(intent) {
+        state.posPaymentIntent = intent === 'convert' ? 'convert' : 'checkout';
+
+        const total = state.cart.reduce((s, it) => s + calcLineTotal(it), 0);
+        const itemsCount = state.cart.length;
+        const customerId = parseInt(document.getElementById('customerSelect')?.value, 10) || null;
+        const isCashCustomer = !customerId;
+
+        // اختيار نوع الدفع الافتراضي
+        const defaultType = isCashCustomer ? 'cash' : 'credit';
+
+        document.getElementById('posPayTotal').textContent = fmtMoney(total);
+        document.getElementById('posPayItemsCount').textContent = fmtNumber(itemsCount);
+        document.getElementById('posPaymentTitle').textContent =
+          state.posPaymentIntent === 'convert' ? 'تحويل الطلب لفاتورة' : 'إتمام الدفع';
+
+        // تعطيل credit/partial لو عميل نقدي
+        const cashOption = document.querySelector('#posPaymentTypePicker [data-ptype="cash"]');
+        const creditOption = document.querySelector('#posPaymentTypePicker [data-ptype="credit"]');
+        const partialOption = document.querySelector('#posPaymentTypePicker [data-ptype="partial"]');
+
+        if (isCashCustomer) {
+          [creditOption, partialOption].forEach(el => {
+            if (el) {
+              el.style.opacity = '0.4';
+              el.style.pointerEvents = 'none';
+            }
+          });
+          if (cashOption) {
+            cashOption.style.opacity = '1';
+            cashOption.style.pointerEvents = '';
+          }
+        } else {
+          [cashOption, creditOption, partialOption].forEach(el => {
+            if (el) {
+              el.style.opacity = '1';
+              el.style.pointerEvents = '';
+            }
+          });
+        }
+
+        setPosPaymentType(defaultType);
+
+        // زر الإتمام
+        const confirmText = document.getElementById('confirmPosPaymentText');
+        if (confirmText) {
+          confirmText.textContent = state.posPaymentIntent === 'convert' ? 'تحويل لفاتورة' : 'إتمام الدفع';
+        }
+
+        document.getElementById('posPaymentModal').classList.add('show');
+        if (window.lucide) lucide.createIcons();
+
+        if (defaultType === 'partial') {
+          setTimeout(() => document.getElementById('posPaidAmount')?.focus(), 200);
+        }
+      }
+
+      function closePosPaymentModal() {
+        document.getElementById('posPaymentModal').classList.remove('show');
+      }
+
+      function setPosPaymentType(type) {
+        document.getElementById('posPaymentType').value = type;
+
+        document.querySelectorAll('#posPaymentTypePicker .type-option').forEach(opt => {
+          opt.classList.toggle('selected', opt.dataset.ptype === type);
+        });
+
+        const total = state.cart.reduce((s, it) => s + calcLineTotal(it), 0);
+        const paidField = document.getElementById('posPaidAmountField');
+        const accountField = document.getElementById('posPaymentAccountField');
+        const infoBox = document.getElementById('posPaymentInfoBox');
+        const customerInfo = document.getElementById('posPaymentCustomerInfo');
+        const paidInput = document.getElementById('posPaidAmount');
+
+        if (type === 'cash') {
+          paidField.style.display = 'none';
+          accountField.style.display = '';
+          infoBox.style.display = 'flex';
+          infoBox.style.flexDirection = 'column';
+          paidInput.value = total.toFixed(2);
+        } else if (type === 'credit') {
+          paidField.style.display = 'none';
+          accountField.style.display = 'none';
+          infoBox.style.display = 'flex';
+          infoBox.style.flexDirection = 'column';
+          paidInput.value = '0';
+        } else if (type === 'partial') {
+          paidField.style.display = '';
+          accountField.style.display = '';
+          infoBox.style.display = 'flex';
+          infoBox.style.flexDirection = 'column';
+          if (!paidInput.value || Refad.toNum(paidInput.value) === 0) {
+            paidInput.value = (total / 2).toFixed(2);
+          }
+        }
+
+        // Customer credit info (if credit or partial)
+        const customerId = parseInt(document.getElementById('customerSelect')?.value, 10) || null;
+        const customer = customerId ? state.customers.find(c => Number(c.id) === customerId) : null;
+
+        if (customer && (type === 'credit' || type === 'partial')) {
+          const creditLimit = Number(customer.credit_limit) || 0;
+          if (creditLimit > 0) {
+            customerInfo.style.display = 'block';
+            const currentBalance = Number(customer.balance) || 0;
+
+            let paid = 0;
+            if (type === 'partial') paid = Refad.toNum(paidInput.value);
+            const debt = total - paid;
+            const newBalance = currentBalance + debt;
+            const willExceed = newBalance > creditLimit;
+            const remaining = creditLimit - newBalance;
+
+            customerInfo.innerHTML = `
+              <div style="padding:10px 12px;border-radius:10px;background:${willExceed ? 'rgba(239,68,68,0.08)' : 'rgba(16,185,129,0.06)'};border:1.5px solid ${willExceed ? 'rgba(239,68,68,0.3)' : 'rgba(16,185,129,0.25)'};font-size:12px;line-height:1.7;">
+                <div style="display:flex;justify-content:space-between;color:${willExceed ? 'var(--danger)' : 'var(--success)'};font-weight:700;">
+                  <span>${willExceed ? '⚠️ تجاوز الحد بمقدار' : '✅ متاح بعد العملية'}</span>
+                  <span>${fmtMoney(Math.abs(remaining))}</span>
+                </div>
+                <div style="color:var(--text-muted);margin-top:4px;">
+                  الرصيد الحالي: ${fmtMoney(currentBalance)} • الدين الجديد: ${fmtMoney(debt)} • حد الائتمان: ${fmtMoney(creditLimit)}
+                </div>
+              </div>
+            `;
+          } else {
+            customerInfo.style.display = 'none';
+          }
+        } else {
+          customerInfo.style.display = 'none';
+        }
+
+        updatePosPaymentInfo();
+      }
+
+      function updatePosPaymentInfo() {
+        const total = state.cart.reduce((s, it) => s + calcLineTotal(it), 0);
+        const type = document.getElementById('posPaymentType').value;
+        let paid = 0;
+
+        if (type === 'cash') paid = total;
+        else if (type === 'partial') paid = Refad.toNum(document.getElementById('posPaidAmount').value);
+        else paid = 0;
+
+        if (paid > total) paid = total;
+        const remaining = Math.max(0, total - paid);
+
+        document.getElementById('posPayRequired').textContent = fmtMoney(total);
+        document.getElementById('posPayPaid').textContent = fmtMoney(paid);
+        const remEl = document.getElementById('posPayRemaining');
+        remEl.textContent = fmtMoney(remaining);
+        remEl.style.color = remaining > 0 ? 'var(--danger)' : 'var(--success)';
+      }
+
+      function setupPosPaymentModal() {
+        document.querySelectorAll('#posPaymentTypePicker .type-option').forEach(opt => {
+          opt.addEventListener('click', () => {
+            if (opt.style.pointerEvents === 'none') return;
+            setPosPaymentType(opt.dataset.ptype);
+          });
+        });
+
+        const paidInput = document.getElementById('posPaidAmount');
+        if (paidInput) {
+          paidInput.addEventListener('input', updatePosPaymentInfo);
+          paidInput.addEventListener('blur', (e) => {
+            const total = state.cart.reduce((s, it) => s + calcLineTotal(it), 0);
+            let v = Refad.toNum(e.target.value);
+            if (v < 0) v = 0;
+            if (v > total) v = total;
+            e.target.value = v.toFixed(2);
+            updatePosPaymentInfo();
+          });
+        }
+
+        document.getElementById('closePosPaymentBtn')?.addEventListener('click', closePosPaymentModal);
+        document.getElementById('cancelPosPaymentBtn')?.addEventListener('click', closePosPaymentModal);
+        document.getElementById('confirmPosPaymentBtn')?.addEventListener('click', submitPosPayment);
+
+        document.getElementById('posPaymentModal')?.addEventListener('click', e => {
+          if (e.target.id === 'posPaymentModal') closePosPaymentModal();
+        });
+      }
+
+      // ============================================================
+      // 26.c) Submit POS Payment
+      // ============================================================
+      async function submitPosPayment() {
+        const btn = document.getElementById('confirmPosPaymentBtn');
+        const originalText = document.getElementById('confirmPosPaymentText').textContent;
+
+        const total = state.cart.reduce((s, it) => s + calcLineTotal(it), 0);
+        const type = document.getElementById('posPaymentType').value;
+        const customerId = parseInt(document.getElementById('customerSelect')?.value, 10) || null;
+        const accountId = parseInt(document.getElementById('posPaymentAccount')?.value, 10) || null;
+
+        let paidAmount = 0;
+        if (type === 'cash') paidAmount = total;
+        else if (type === 'partial') paidAmount = Refad.toNum(document.getElementById('posPaidAmount').value);
+        else paidAmount = 0;
+
+        if (paidAmount > total) paidAmount = total;
+
+        // Validation
+        if ((type === 'cash' || type === 'partial') && !accountId) {
+          Refad.toast.warning('اختر الحساب المستلم');
+          return;
+        }
+        if (type === 'partial' && (paidAmount <= 0 || paidAmount >= total)) {
+          Refad.toast.warning(`المبلغ الجزئي يجب أن يكون بين 0 و ${fmtMoney(total)}`);
+          return;
+        }
+
+        btn.disabled = true;
+        document.getElementById('confirmPosPaymentText').textContent = 'جارٍ المعالجة...';
 
         try {
           const count = await Refad.db.count('sales_invoices', {
@@ -3480,52 +3864,106 @@
             const st = (it.quantity || 0) * (it.sale_price || 0);
             return s + st * ((it.sale_discount || 0) / 100);
           }, 0);
-          const total = state.cart.reduce((s, it) => s + calcLineTotal(it), 0);
           const profit = state.cart.reduce((s, it) => s + calcLineProfit(it), 0);
 
+          let invoiceStatus = 'unpaid';
+          if (paidAmount >= total - 0.01) invoiceStatus = 'paid';
+          else if (paidAmount > 0) invoiceStatus = 'partial';
+
+          const paymentTypeLabel = type === 'cash' ? 'cash' : (type === 'partial' ? 'partial' : 'credit');
+
+          // ✅ 1) إنشاء الفاتورة
           const invoice = await Refad.db.insert('sales_invoices', {
             company_id: session.company_id,
             customer_id: customerId,
+            order_id: state.posPaymentIntent === 'convert' ? state.loadedOrder?.id : null,
             warehouse_id: state.activeWarehouseId,
             invoice_number: invoiceNumber,
             invoice_type: 'sale',
-            payment_type: 'cash',
+            payment_type: paymentTypeLabel,
             subtotal,
             discount_total: discountTotal,
             grand_total: total,
             total_profit: profit,
-            paid_amount: total,
-            status: 'paid',
+            paid_amount: paidAmount,
+            status: invoiceStatus,
             cashier_id: session.user_id,
-            invoice_date: Refad.date.today()
+            invoice_date: Refad.date.today(),
+            notes: state.posPaymentIntent === 'convert'
+              ? `تم التحويل من طلب: ${state.loadedOrder?.order_number || ''}`
+              : null
           });
 
+          // ✅ 2) حفظ الأصناف + حركات المخزون
           await processSaleItems(invoice.id, invoiceNumber);
 
-          if (customerId) {
-            const cust = await Refad.db.selectOne('customers', { eq: { id: customerId } });
-            if (cust) {
-              await Refad.db.update('customers', customerId, {
-                balance: (cust.balance || 0) + total
+          // ✅ 3) تسجيل الدفعة في payments + account_transactions (لو فيه دفع)
+          if (paidAmount > 0 && customerId && accountId) {
+            try {
+              const { data: payData, error: payErr } = await Refad.sb.rpc('add_customer_payment', {
+                p_customer_id: customerId,
+                p_company_id: session.company_id,
+                p_amount: paidAmount,
+                p_direction: 'in',
+                p_account_id: accountId,
+                p_method: 'cash',
+                p_invoice_id: invoice.id,
+                p_date: Refad.date.today(),
+                p_notes: `دفعة POS مع فاتورة ${invoiceNumber} (${type === 'cash' ? 'كامل' : 'جزئي'})`,
+                p_user_id: session.user_id
               });
+
+              if (payErr) {
+                console.warn('[POS] Payment RPC failed:', payErr.message);
+                Refad.toast.warning('الفاتورة تمت لكن تعذّر تسجيل الدفعة في الخزينة');
+              } else {
+                console.log('[POS] Payment registered:', payData);
+              }
+            } catch (payE) {
+              console.warn('[POS] Payment registration failed:', payE.message);
             }
           }
 
-          await Refad.logActivity('pos_sale', 'sales', `فاتورة POS ${invoiceNumber}`, invoice.id);
+          // ✅ 4) لو تحويل من طلب → تحديث حالة الطلب
+          if (state.posPaymentIntent === 'convert' && state.loadedOrder) {
+            await Refad.db.update('sales_orders', state.loadedOrder.id, { status: 'invoiced' });
 
+            for (const [pid, oi] of Object.entries(state.orderItemsMap)) {
+              if (oi.scanned_qty > 0 && oi.order_item?.id) {
+                await Refad.db.update('sales_order_items', oi.order_item.id, {
+                  quantity: oi.scanned_qty
+                });
+              }
+            }
+          }
+
+          // ⚠️ ملاحظة: مفيش تحديث مباشر لـ customers.balance
+          // الـ Trigger هيتكفل بالرصيد تلقائيًا
+
+          await Refad.logActivity(
+            state.posPaymentIntent === 'convert' ? 'pos_convert_order' : 'pos_sale',
+            'sales',
+            `${state.posPaymentIntent === 'convert' ? `تحويل طلب ${state.loadedOrder?.order_number} →` : ''} فاتورة POS ${invoiceNumber} (${type === 'cash' ? 'نقدي' : type === 'partial' ? 'جزئي' : 'آجل'})`,
+            invoice.id
+          );
+
+          // إشعار
           try {
-            await Refad.notifyCompany(
-              session.company_id,
-              'تم إصدار فاتورة بيع جديدة',
-              `الفاتورة ${invoiceNumber} بقيمة ${fmtMoney(total)}.`,
-              'invoice',
-              invoice.id,
-              session.user_id
-            );
+            if (Refad.notifyCompany) {
+              await Refad.notifyCompany(
+                session.company_id,
+                'تم إصدار فاتورة بيع جديدة',
+                `الفاتورة ${invoiceNumber} بقيمة ${fmtMoney(total)} (${invoiceStatus === 'paid' ? 'مدفوعة' : invoiceStatus === 'partial' ? 'جزئية' : 'آجلة'}).`,
+                'invoice',
+                invoice.id,
+                session.user_id
+              );
+            }
           } catch (notifErr) {
             console.warn('Notification failed:', notifErr);
           }
 
+          // ✅ حفظ آخر فاتورة
           state.lastInvoice = {
             id: invoice.id,
             number: invoiceNumber,
@@ -3533,7 +3971,8 @@
             subtotal,
             discount: discountTotal,
             total,
-            paid_amount: total,
+            paid_amount: paidAmount,
+            status: invoiceStatus,
             items: [...state.cart],
             customer: state.customers.find(c => Number(c.id) === customerId)
           };
@@ -3544,12 +3983,27 @@
           saveSessionStats();
           renderSessionStats();
 
+          // ✅ مسح السلة
           state.cart = [];
           state.selectedCartIndex = -1;
+          state.loadedOrder = null;
+          state.orderItemsMap = {};
+          state.orderScanStack = [];
+          state.purchaseDiscountsByProduct = {};
+
+          const info = document.getElementById('loadedOrderInfo');
+          if (info) info.style.display = 'none';
+          const orderDiscCard = document.getElementById('orderDiscountsCard');
+          if (orderDiscCard) orderDiscCard.style.display = 'none';
+
+          closePosPaymentModal();
+          updateScanProgress();
           renderCart();
           updateCreditInfo();
           await loadProductsAndBatches();
           renderProductsGrid();
+          renderOrderItemsChips();
+          updateLoadOrderFabVisibility();
 
           showSuccessModal(invoiceNumber, total);
           SoundEngine.success();
@@ -3559,7 +4013,8 @@
           Refad.toast.error('فشل الدفع: ' + err.message);
           SoundEngine.error();
         } finally {
-          if (btn) btn.disabled = false;
+          btn.disabled = false;
+          document.getElementById('confirmPosPaymentText').textContent = originalText;
         }
       }
 
@@ -3596,129 +4051,7 @@
           if (!confirmed) return;
         }
 
-        const btn = document.getElementById('checkoutBtn');
-        if (btn) btn.disabled = true;
-
-        try {
-          const count = await Refad.db.count('sales_invoices', {
-            eq: { company_id: session.company_id }
-          });
-          const year = new Date().getFullYear();
-          const prefix = SafeSettings.invoice.getPrefix();
-          const invoiceNumber = `${prefix}-${year}-${String(count + 1).padStart(5, '0')}`;
-
-          const subtotal = state.cart.reduce((s, it) => s + ((it.quantity || 0) * (it.sale_price || 0)), 0);
-          const discountTotal = state.cart.reduce((s, it) => {
-            const st = (it.quantity || 0) * (it.sale_price || 0);
-            return s + st * ((it.sale_discount || 0) / 100);
-          }, 0);
-          const total = state.cart.reduce((s, it) => s + calcLineTotal(it), 0);
-          const profit = state.cart.reduce((s, it) => s + calcLineProfit(it), 0);
-          const customerId = state.loadedOrder.customer_id || null;
-
-          const invoice = await Refad.db.insert('sales_invoices', {
-            company_id: session.company_id,
-            customer_id: customerId,
-            order_id: state.loadedOrder.id,
-            warehouse_id: state.activeWarehouseId,
-            invoice_number: invoiceNumber,
-            invoice_type: 'sale',
-            payment_type: 'cash',
-            subtotal,
-            discount_total: discountTotal,
-            grand_total: total,
-            total_profit: profit,
-            paid_amount: total,
-            status: 'paid',
-            cashier_id: session.user_id,
-            invoice_date: Refad.date.today(),
-            notes: `تم التحويل من طلب: ${state.loadedOrder.order_number}`
-          });
-
-          await processSaleItems(invoice.id, invoiceNumber);
-
-          await Refad.db.update('sales_orders', state.loadedOrder.id, { status: 'invoiced' });
-
-          for (const [pid, oi] of Object.entries(state.orderItemsMap)) {
-            if (oi.scanned_qty > 0 && oi.order_item?.id) {
-              await Refad.db.update('sales_order_items', oi.order_item.id, {
-                quantity: oi.scanned_qty
-              });
-            }
-          }
-
-          if (customerId) {
-            const cust = await Refad.db.selectOne('customers', { eq: { id: customerId } });
-            if (cust) {
-              await Refad.db.update('customers', customerId, {
-                balance: (cust.balance || 0) + total
-              });
-            }
-          }
-
-          await Refad.logActivity('pos_convert_order', 'sales',
-            `تحويل طلب ${state.loadedOrder.order_number} → فاتورة ${invoiceNumber}`, invoice.id);
-
-          try {
-            await Refad.notifyCompany(
-              session.company_id,
-              'تم تحويل طلب إلى فاتورة',
-              `الطلب ${state.loadedOrder.order_number} → فاتورة ${invoiceNumber} بقيمة ${fmtMoney(total)}.`,
-              'invoice',
-              invoice.id,
-              session.user_id
-            );
-          } catch (notifErr) {
-            console.warn('Notif failed:', notifErr);
-          }
-
-          state.lastInvoice = {
-            id: invoice.id,
-            number: invoiceNumber,
-            date: invoice.invoice_date,
-            subtotal,
-            discount: discountTotal,
-            total,
-            paid_amount: total,
-            items: [...state.cart],
-            customer: state.customers.find(c => Number(c.id) === customerId)
-          };
-
-          state.sessionStats.invoices += 1;
-          state.sessionStats.sales += total;
-          state.sessionStats.profit += profit;
-          saveSessionStats();
-          renderSessionStats();
-
-          state.cart = [];
-          state.selectedCartIndex = -1;
-          state.loadedOrder = null;
-          state.orderItemsMap = {};
-          state.orderScanStack = [];
-          state.purchaseDiscountsByProduct = {};
-
-          const info = document.getElementById('loadedOrderInfo');
-          if (info) info.style.display = 'none';
-          document.getElementById('orderDiscountsCard').style.display = 'none';
-
-          updateScanProgress();
-          renderCart();
-          renderProductsGrid();
-          renderOrderItemsChips();
-          updateLoadOrderFabVisibility();
-          await loadProductsAndBatches();
-          renderProductsGrid();
-
-          showSuccessModal(invoiceNumber, total);
-          SoundEngine.success();
-
-        } catch (err) {
-          console.error('Convert failed:', err);
-          Refad.toast.error('فشل التحويل: ' + err.message);
-          SoundEngine.error();
-        } finally {
-          if (btn) btn.disabled = false;
-        }
+        return openPosPaymentModal('convert');
       }
 
       // ============================================================
@@ -4351,6 +4684,7 @@
             document.getElementById('helpModal')?.classList.remove('show');
             document.getElementById('orderPickerModal')?.classList.remove('show');
             document.getElementById('mobileCartSheet')?.classList.remove('show');
+            document.getElementById('posPaymentModal')?.classList.remove('show');
           }
         });
       }
@@ -4431,6 +4765,7 @@
         setupOrderPicker();
         setupMobileCart();
         setupRealtimeTheme();
+        setupPosPaymentModal();     // ✅ جديد
 
         document.getElementById('clearCartBtn')?.addEventListener('click', clearCart);
         document.getElementById('holdBtn')?.addEventListener('click', holdCart);
@@ -4467,7 +4802,7 @@
         bindEvents();
 
         try {
-          await Promise.all([loadCompany(), loadCustomers()]);
+          await Promise.all([loadCompany(), loadCustomers(), loadAccounts()]);   // ✅ loadAccounts
           await loadProductsAndBatches();
           renderCategories();
           renderProductsGrid();
@@ -4485,7 +4820,7 @@
         setTimeout(() => document.getElementById('searchInput')?.focus(), 300);
         try { Refad.registerServiceWorker(); } catch (e) {}
 
-        console.log('%c[Refad] POS v3 ready (Theme Sync + Settings + buildMenu)', 'color:#14B8A6;font-weight:bold;font-size:14px');
+        console.log('%c[Refad] POS v4 ready (Payment Modes: Cash / Credit / Partial)', 'color:#14B8A6;font-weight:bold;font-size:14px');
         console.log('  ✅ المخزن النشط + dropdown');
         console.log('  ✅ فحص Quarantine + Blacklist');
         console.log('  ✅ فحص Credit Limit');
@@ -4493,6 +4828,8 @@
         console.log('  ✅ FEFO ذكي');
         console.log('  ✅ زر تحميل الطلب');
         console.log('  ✅ ثيم موحّد + هوية ديناميكية');
+        console.log('  🆕 مودال الدفع: نقدي / آجل / جزئي');
+        console.log('  🆕 تسجيل الدفعات في الخزينة تلقائيًا');
       }
 
       if (document.readyState === 'loading') {

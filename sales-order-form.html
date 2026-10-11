@@ -61,7 +61,6 @@
       --sidebar-text: #94a3b8;
     }
 
-    /* ✨ Reduced-motion */
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after {
         animation-duration: 0.01ms !important;
@@ -275,6 +274,27 @@
       box-shadow: 0 0 0 3px rgba(20,184,166,0.1);
     }
     .form-group input:disabled, .form-group select:disabled { opacity: 0.65; cursor: not-allowed; }
+
+    /* Payment Info Box */
+    .payment-info-box {
+      grid-column: 1 / -1;
+      background: linear-gradient(135deg, rgba(20,184,166,0.06), rgba(59,130,246,0.04));
+      border: 1.5px solid rgba(20,184,166,0.25);
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      font-size: 13px;
+    }
+    .payment-info-box.danger { background: rgba(239,68,68,0.06); border-color: rgba(239,68,68,0.3); }
+    .payment-info-box .pib-label { font-weight: 700; color: var(--text-muted); font-size: 11px; text-transform: uppercase; }
+    .payment-info-box .pib-value { font-weight: 800; font-size: 16px; }
+    .payment-info-box .pib-value.success { color: var(--success); }
+    .payment-info-box .pib-value.danger { color: var(--danger); }
+    .payment-info-box .pib-value.gold { color: var(--gold); }
 
     /* Items Table */
     .items-table-wrap { width: 100%; min-height: 240px; overflow-x: auto; overscroll-behavior-inline: contain; scrollbar-width: thin; }
@@ -495,7 +515,6 @@
       box-shadow: 0 2px 8px rgba(20,184,166,0.4);
     }
 
-    /* Badge Tags */
     .badge-tag {
       display: inline-flex; align-items: center; gap: 4px;
       padding: 4px 10px; font-size: 11px; font-weight: 700;
@@ -505,12 +524,13 @@
     .badge-tag.blue { background: rgba(59,130,246,0.12); color: var(--info); }
     .badge-tag.green { background: rgba(16,185,129,0.12); color: var(--success); }
     .badge-tag.red { background: rgba(239,68,68,0.12); color: var(--danger); }
+    .badge-tag.gold { background: rgba(245,158,11,0.12); color: var(--gold); }
 
     /* Overlay */
     .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; opacity: 0; transition: opacity 0.3s; }
     .overlay.show { display: block; opacity: 1; }
 
-    /* ✨ Quick Search Overlay */
+    /* Quick Search Overlay */
     .quick-search-overlay {
       position: fixed; inset: 0;
       z-index: 600;
@@ -601,7 +621,7 @@
       font-weight: 700;
     }
 
-    /* ============ Responsive ============ */
+    /* Responsive */
     @media (max-width: 1024px) {
       .sidebar { transform: translateX(100%); }
       .sidebar.open { transform: translateX(0); }
@@ -627,7 +647,8 @@
       .quick-search-overlay { padding: 20px 10px; }
     }
   </style>
-</head><body>
+</head>
+<body>
 
   <!-- Sidebar -->
   <aside class="sidebar" id="sidebar">
@@ -716,10 +737,8 @@
         <select id="whSelect"></select>
       </div>
 
-      <!-- Customer Info (Credit Limit) -->
-      <div class="customer-info-box" id="customerInfoBox">
-        <!-- يُملأ ديناميكياً -->
-      </div>
+      <!-- Customer Info -->
+      <div class="customer-info-box" id="customerInfoBox"></div>
 
       <!-- Header form -->
       <div class="card">
@@ -759,9 +778,43 @@
               <label>تاريخ الاستحقاق</label>
               <input type="date" id="dueDate">
             </div>
+            <div class="form-group">
+              <label for="paymentType">نوع الدفع <span class="req">*</span></label>
+              <select id="paymentType">
+                <option value="cash">نقدي (دفع كامل)</option>
+                <option value="credit" selected>آجل (بدون دفع)</option>
+                <option value="partial">دفع جزئي</option>
+              </select>
+            </div>
+            <div class="form-group" id="paidAmountField" style="display:none;">
+              <label for="paidAmount">المبلغ المدفوع <span class="req">*</span></label>
+              <input type="number" id="paidAmount" min="0" step="0.01" value="0">
+            </div>
+            <div class="form-group" id="paymentAccountField" style="display:none;">
+              <label for="paymentAccount">الحساب المستلم <span class="req">*</span></label>
+              <select id="paymentAccount">
+                <option value="">— اختر الحساب —</option>
+              </select>
+            </div>
             <div class="form-group full">
               <label>ملاحظات</label>
               <textarea id="orderNotes" maxlength="500" placeholder="ملاحظات إضافية..."></textarea>
+            </div>
+
+            <!-- Payment Info Summary -->
+            <div class="payment-info-box" id="paymentInfoBox" style="display:none;">
+              <div>
+                <div class="pib-label">المطلوب دفعه</div>
+                <div class="pib-value" id="pibRequired">0.00</div>
+              </div>
+              <div>
+                <div class="pib-label">المدفوع</div>
+                <div class="pib-value success" id="pibPaid">0.00</div>
+              </div>
+              <div>
+                <div class="pib-label">المتبقي (دين)</div>
+                <div class="pib-value danger" id="pibRemaining">0.00</div>
+              </div>
             </div>
           </div>
         </div>
@@ -807,7 +860,6 @@
           </table>
         </div>
 
-        <!-- Bonus Summary -->
         <div class="bonus-summary" id="bonusSummary">
           <div class="bs-item">
             <div class="lbl">إجمالي البونص</div>
@@ -892,22 +944,7 @@
     </div>
   </div>
 
-  <!-- Modal: Credit Limit Warning -->
-  <div class="modal-backdrop" id="creditModal">
-    <div class="modal" style="max-width: 480px;">
-      <div class="modal-header">
-        <h3><i data-lucide="alert-triangle" style="color:var(--danger);"></i> تحذير: تجاوز حد الائتمان</h3>
-        <button class="modal-close" data-close><i data-lucide="x"></i></button>
-      </div>
-      <div class="modal-body" id="creditModalBody"></div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-outline" id="creditCancelBtn">إلغاء</button>
-        <button type="button" class="btn btn-danger" id="creditContinueBtn">متابعة (Owner فقط)</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ✨ Quick Search Overlay -->
+  <!-- Quick Search Overlay -->
   <div class="quick-search-overlay" id="quickSearchOverlay">
     <div class="quick-search-box">
       <div class="quick-search-input-wrap">
@@ -925,15 +962,14 @@
     </div>
   </div>
 
-  <!-- ============================================================ -->
-  <!-- Scripts -->
-  <!-- ============================================================ -->
   <script src="refad-core.js"></script>
   <script src="refad-auth.js"></script>
   <script src="refad-theme-sync.js"></script>
   <script src="refad-settings.js"></script>
   <script src="refad-warehouse.js"></script>
-  <script src="refad-quarantine.js"></script>  <script>
+  <script src="refad-quarantine.js"></script>
+
+  <script>
     (function () {
       'use strict';
 
@@ -944,36 +980,22 @@
         locale: {
           formatMoney: function (v) {
             try {
-              if (window.RefadSettings?.locale?.formatMoney) {
-                return RefadSettings.locale.formatMoney(v);
-              }
+              if (window.RefadSettings?.locale?.formatMoney) return RefadSettings.locale.formatMoney(v);
             } catch (e) {}
             return Refad.format.money(v);
           }
         },
         identity: {
           getSystemName: function () {
-            try {
-              if (window.RefadSettings?.identity?.getSystemName) {
-                return RefadSettings.identity.getSystemName();
-              }
-            } catch (e) {}
+            try { if (window.RefadSettings?.identity?.getSystemName) return RefadSettings.identity.getSystemName(); } catch (e) {}
             return 'رفاد';
           },
           getTagline: function () {
-            try {
-              if (window.RefadSettings?.identity?.getTagline) {
-                return RefadSettings.identity.getTagline();
-              }
-            } catch (e) {}
+            try { if (window.RefadSettings?.identity?.getTagline) return RefadSettings.identity.getTagline(); } catch (e) {}
             return 'نظام إدارة الأدوية';
           },
           getLogoUrl: function () {
-            try {
-              if (window.RefadSettings?.identity?.getLogoUrl) {
-                return RefadSettings.identity.getLogoUrl();
-              }
-            } catch (e) {}
+            try { if (window.RefadSettings?.identity?.getLogoUrl) return RefadSettings.identity.getLogoUrl(); } catch (e) {}
             return null;
           }
         }
@@ -1003,9 +1025,9 @@
           .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
       }
       function fmtMoney(v) { return SafeSettings.locale.formatMoney(v); }
-      function fmtNumber(v) {
+      function fmtNumber(v, d) {
         if (typeof Refad.format?.number === 'function') return Refad.format.number(v);
-        return String(v || 0);
+        return Number(v || 0).toFixed(d ?? 0);
       }
       function fmtDate(v) {
         if (typeof Refad.format?.date === 'function') return Refad.format.date(v);
@@ -1032,6 +1054,7 @@
         batchesByProduct: {},
         bonusSchemes: [],
         purchaseDiscountMap: {},
+        accounts: [],
         items: [],
         orderNumber: null,
         status: 'draft',
@@ -1056,7 +1079,6 @@
         document.getElementById('userRole').textContent = isOwner ? 'صاحب الشركة' : 'موظف';
       }
 
-      // ✨ Apply Identity
       function applyIdentity() {
         const name = SafeSettings.identity.getSystemName();
         const tagline = SafeSettings.identity.getTagline();
@@ -1118,11 +1140,8 @@
         });
       }
 
-      // ✨ Realtime Theme
       function setupRealtimeTheme() {
-        window.addEventListener('refad:theme-changed', () => {
-          applyIdentity();
-        });
+        window.addEventListener('refad:theme-changed', () => { applyIdentity(); });
       }
 
       // ============================================================
@@ -1151,11 +1170,11 @@
       }
 
       // ============================================================
-      // 7) Load Customers & Suppliers
+      // 7) Load Customers & Suppliers & Accounts
       // ============================================================
       async function loadCustomers() {
         try {
-          const [customers, suppliers] = await Promise.all([
+          const [customers, suppliers, accounts] = await Promise.all([
             Refad.db.select('customers', {
               columns: 'id, name, phone, balance, credit_limit, payment_terms_days',
               eq: { company_id: session.company_id, is_active: true },
@@ -1165,11 +1184,17 @@
               columns: 'id, name, phone',
               eq: { company_id: session.company_id, is_active: true },
               order: { column: 'name', ascending: true }
-            })
+            }),
+            Refad.db.select('accounts', {
+              columns: 'id, name, type, current_balance, is_default, is_active',
+              eq: { company_id: session.company_id, is_active: true },
+              order: { column: 'is_default', ascending: false }
+            }).catch(() => [])
           ]);
 
           state.customers = customers;
           state.suppliers = suppliers;
+          state.accounts = accounts;
 
           const customerSel = document.getElementById('customerSelect');
           customers.forEach(c => {
@@ -1186,6 +1211,16 @@
             opt.textContent = s.name + (s.phone ? ` (${s.phone})` : '');
             supplierSel.appendChild(opt);
           });
+
+          // ✅ Payment accounts
+          const payAccSel = document.getElementById('paymentAccount');
+          accounts.forEach(a => {
+            const opt = document.createElement('option');
+            opt.value = a.id;
+            opt.textContent = `${a.name} — ${fmtMoney(a.current_balance)}`;
+            if (a.is_default) opt.selected = true;
+            payAccSel.appendChild(opt);
+          });
         } catch (e) {
           console.error('Customers load failed:', e);
           Refad.toast.error('تعذّر تحميل العملاء والموردين');
@@ -1201,6 +1236,9 @@
           if (isSupplier) {
             document.getElementById('customerSelect').value = '';
             document.getElementById('customerInfoBox').classList.remove('show');
+            // المورد مايدفعش نقدي هنا — بس آجل
+            document.getElementById('paymentType').value = 'credit';
+            updatePaymentTypeFields();
           } else {
             document.getElementById('supplierSelect').value = '';
           }
@@ -1208,7 +1246,87 @@
       }
 
       // ============================================================
-      // 8) Customer Change → Credit Limit
+      // 8) Payment Type Logic ✅ NEW
+      // ============================================================
+      function setupPaymentType() {
+        const pt = document.getElementById('paymentType');
+        pt.addEventListener('change', updatePaymentTypeFields);
+
+        const paidInput = document.getElementById('paidAmount');
+        paidInput.addEventListener('input', () => {
+          const total = state.items.reduce((s, it) => s + (it._total || 0), 0);
+          const val = Refad.toNum(paidInput.value);
+          if (val > total) {
+            paidInput.value = total.toFixed(2);
+          }
+          updatePaymentInfoBox();
+        });
+
+        updatePaymentTypeFields();
+      }
+
+      function updatePaymentTypeFields() {
+        const isSupplier = document.getElementById('buyerType').value === 'supplier';
+        const pt = document.getElementById('paymentType').value;
+
+        // المورد لا يدفع: نخفيه ونخليها credit
+        if (isSupplier) {
+          document.getElementById('paymentType').value = 'credit';
+        }
+
+        const effective = isSupplier ? 'credit' : pt;
+
+        const paidField = document.getElementById('paidAmountField');
+        const accField = document.getElementById('paymentAccountField');
+        const infoBox = document.getElementById('paymentInfoBox');
+
+        if (effective === 'credit') {
+          paidField.style.display = 'none';
+          accField.style.display = 'none';
+          infoBox.style.display = 'none';
+        } else if (effective === 'cash') {
+          paidField.style.display = 'none';
+          accField.style.display = '';
+          infoBox.style.display = 'flex';
+        } else if (effective === 'partial') {
+          paidField.style.display = '';
+          accField.style.display = '';
+          infoBox.style.display = 'flex';
+          // اقتراح: نص المبلغ
+          const paidInput = document.getElementById('paidAmount');
+          if (!paidInput.value || Refad.toNum(paidInput.value) === 0) {
+            const total = state.items.reduce((s, it) => s + (it._total || 0), 0);
+            if (total > 0) paidInput.value = (total / 2).toFixed(2);
+          }
+        }
+
+        updatePaymentInfoBox();
+      }
+
+      function updatePaymentInfoBox() {
+        const isSupplier = document.getElementById('buyerType').value === 'supplier';
+        const pt = isSupplier ? 'credit' : document.getElementById('paymentType').value;
+        const total = state.items.reduce((s, it) => s + (it._total || 0), 0);
+
+        let paid = 0;
+        if (pt === 'cash') paid = total;
+        else if (pt === 'partial') paid = Refad.toNum(document.getElementById('paidAmount').value);
+        else paid = 0;
+
+        const remaining = total - paid;
+
+        document.getElementById('pibRequired').textContent = fmtMoney(total);
+        document.getElementById('pibPaid').textContent = fmtMoney(paid);
+        const remEl = document.getElementById('pibRemaining');
+        remEl.textContent = fmtMoney(remaining);
+        remEl.className = 'pib-value ' + (remaining > 0 ? 'danger' : 'success');
+
+        const box = document.getElementById('paymentInfoBox');
+        box.className = 'payment-info-box ' + (remaining > 0 ? 'danger' : '');
+      }
+
+      // ============================================================
+      // 9) Customer Change → Credit Limit
       // ============================================================
       function setupCustomerChange() {
         const sel = document.getElementById('customerSelect');
@@ -1231,8 +1349,16 @@
         if (!c) return;
 
         const box = document.getElementById('customerInfoBox');
-        const totalOrder = state.items.reduce((s, it) => s + calcLineTotal(it), 0);
-        const newBalance = (Number(c.balance) || 0) + totalOrder;
+        const totalOrder = state.items.reduce((s, it) => s + (it._total || 0), 0);
+
+        // ✅ الدين الفعلي = total - المدفوع
+        const pt = document.getElementById('paymentType').value;
+        let paid = 0;
+        if (pt === 'cash') paid = totalOrder;
+        else if (pt === 'partial') paid = Refad.toNum(document.getElementById('paidAmount').value);
+        const actualDebt = totalOrder - paid;
+
+        const newBalance = (Number(c.balance) || 0) + actualDebt;
         const creditLimit = Number(c.credit_limit) || 0;
         const available = creditLimit > 0 ? creditLimit - (Number(c.balance) || 0) : Infinity;
         const willExceed = creditLimit > 0 && newBalance > creditLimit;
@@ -1267,6 +1393,13 @@
               <span class="val">${c.payment_terms_days} يوم</span>
             </div>
           ` : ''}
+          ${actualDebt > 0 ? `
+            <div class="cib-item">
+              <i data-lucide="file-text"></i>
+              <span class="lbl">دين الطلب الحالي:</span>
+              <span class="val" style="color:var(--gold);">${fmtMoney(actualDebt)}</span>
+            </div>
+          ` : ''}
           ${willExceed ? `
             <div class="cib-item" style="color:var(--danger);width:100%;">
               <i data-lucide="alert-triangle"></i>
@@ -1288,7 +1421,7 @@
       }
 
       // ============================================================
-      // 9) Load Products + Batches + Bonus Schemes
+      // 10) Load Products + Batches
       // ============================================================
       async function loadProductsAndBatches() {
         try {
@@ -1316,13 +1449,11 @@
             }).catch(() => [])
           ]);
 
-          // Barcode map
           state.barcodeMap = {};
           barcodes.forEach(b => {
             if (b.barcode) state.barcodeMap[b.barcode.trim().toUpperCase()] = b.product_id;
           });
 
-          // Batches per product — sort by FEFO (expiry ASC)
           state.batchesByProduct = {};
           batches
             .filter(b => b.warehouse_id === state.activeWarehouseId || !b.warehouse_id)
@@ -1336,7 +1467,6 @@
               state.batchesByProduct[b.product_id].push(b);
             });
 
-          // Purchase discounts
           const dMap = {};
           discounts.forEach(d => { dMap[d.product_id] = d; });
           state.purchaseDiscountMap = {};
@@ -1344,7 +1474,6 @@
             state.purchaseDiscountMap[d.product_id] = d.last_purchase_discount || 0;
           });
 
-          // Bonus schemes
           state.bonusSchemes = schemes || [];
 
           state.allProducts = products.map(p => ({
@@ -1363,7 +1492,7 @@
       }
 
       // ============================================================
-      // 10) Bonus Schemes
+      // 11) Bonus Schemes
       // ============================================================
       function findApplicableSchemes(productId, qty) {
         const product = state.allProducts.find(p => p.id === productId);
@@ -1419,7 +1548,7 @@
       }
 
       // ============================================================
-      // 11) Quarantine
+      // 12) Quarantine
       // ============================================================
       function checkBatchQuarantine(batch) {
         if (!batch) return null;
@@ -1453,7 +1582,7 @@
       }
 
       // ============================================================
-      // 12) Profit Calculation
+      // 13) Profit Calculation
       // ============================================================
       function calcLineTotal(it) {
         const qty = it.quantity || 0;
@@ -1484,7 +1613,7 @@
       }
 
       // ============================================================
-      // 13) Product Search
+      // 14) Product Search
       // ============================================================
       function setupProductSearch() {
         const input = document.getElementById('productSearch');
@@ -1495,7 +1624,6 @@
           const q = v.toLowerCase().trim();
           const code = v.trim().toUpperCase();
 
-          // Barcode
           const barcodePid = state.barcodeMap[code];
           if (barcodePid) {
             const p = state.allProducts.find(x => x.id === barcodePid);
@@ -1583,7 +1711,7 @@
       }
 
       // ============================================================
-      // 14) Add Product → Batch Picker
+      // 15) Add Product → Batch Picker
       // ============================================================
       function addProductToOrder(pid) {
         const p = state.allProducts.find(x => x.id === pid);
@@ -1602,7 +1730,6 @@
         state.currentBatchProduct = product;
         const list = document.getElementById('batchList');
 
-        // FEFO: first non-blocked, non-expired batch
         let fefoSuggestedId = null;
         for (const b of batches) {
           const q = checkBatchQuarantine(b);
@@ -1736,7 +1863,7 @@
           }
           recalcItemProfit(state.items.indexOf(existing));
           renderItems();
-          Refad.toast.success('تم زيادة الكمية');
+          updatePaymentInfoBox();
           return;
         }
 
@@ -1762,6 +1889,7 @@
         recalcItemProfit(idx);
         autoSuggestBonus(idx);
         renderItems();
+        updatePaymentInfoBox();
 
         if (state.customerCreditInfo) renderCustomerInfoBox();
       }
@@ -1771,7 +1899,7 @@
       }
 
       // ============================================================
-      // 15) Render Items
+      // 16) Render Items
       // ============================================================
       function renderItems() {
         const tbody = document.getElementById('itemsBody');
@@ -1884,6 +2012,7 @@
             updateRowDisplay(idx);
             updateSummary();
             updateBonusSummary();
+            updatePaymentInfoBox();
             if (state.customerCreditInfo) renderCustomerInfoBox();
           });
 
@@ -1915,6 +2044,7 @@
               recalcItemProfit(idx);
               updateRowDisplay(idx);
               updateSummary();
+              updatePaymentInfoBox();
             }
           });
 
@@ -1933,6 +2063,7 @@
             const idx = parseInt(btn.dataset.remove, 10);
             state.items.splice(idx, 1);
             renderItems();
+            updatePaymentInfoBox();
           });
         });
       }
@@ -1996,7 +2127,7 @@
       }
 
       // ============================================================
-      // 16) Barcode Scanner
+      // 17) Barcode Scanner
       // ============================================================
       function setupScanner() {
         document.getElementById('scanBtn').addEventListener('click', startScanner);
@@ -2060,7 +2191,7 @@
       }
 
       // ============================================================
-      // 17) ✨ Quick Search
+      // 18) Quick Search
       // ============================================================
       function openQuickSearch() {
         const overlay = document.getElementById('quickSearchOverlay');
@@ -2090,7 +2221,6 @@
           return;
         }
 
-        // Search products with stock
         const results = state.allProducts
           .filter(p =>
             (p.total_stock > 0) && (
@@ -2138,9 +2268,7 @@
         const r = state.qsState.results[idx];
         if (!r) return;
         closeQuickSearch();
-        if (r.type === 'product') {
-          addProductToOrder(r.id);
-        }
+        if (r.type === 'product') addProductToOrder(r.id);
       }
 
       function updateQuickSearchSelection() {
@@ -2186,8 +2314,10 @@
             else if (state.qsState.results.length) navigateQuickSearch(0);
           }
         });
-      }      // ============================================================
-      // 18) Save Order
+      }
+
+      // ============================================================
+      // 19) Save Order
       // ============================================================
       async function save() {
         const isSupplierBuyer = document.getElementById('buyerType').value === 'supplier';
@@ -2222,14 +2352,22 @@
           if (customer && Number(customer.credit_limit) > 0) {
             const currentBalance = Number(customer.balance) || 0;
             const totalOrder = state.items.reduce((s, it) => s + (it._total || 0), 0);
-            const newBalance = currentBalance + totalOrder;
+
+            // ✅ الدين الفعلي حسب نوع الدفع
+            const pt = document.getElementById('paymentType').value;
+            let paid = 0;
+            if (pt === 'cash') paid = totalOrder;
+            else if (pt === 'partial') paid = Refad.toNum(document.getElementById('paidAmount').value);
+            const actualDebt = totalOrder - paid;
+
+            const newBalance = currentBalance + actualDebt;
             const creditLimit = Number(customer.credit_limit);
 
             if (newBalance > creditLimit) {
               if (!isOwner) {
                 await Refad.alert.error(
                   '🚫 تجاوز حد الائتمان',
-                  `العميل "${customer.name}" وصل للحد الأقصى.\n\nالرصيد الحالي: ${fmtMoney(currentBalance)}\nحد الائتمان: ${fmtMoney(creditLimit)}\nالمطلوب إضافته: ${fmtMoney(totalOrder)}\n\nيجب تسديد مستحقات قبل إتمام الطلب.`
+                  `العميل "${customer.name}" وصل للحد الأقصى.\n\nالرصيد الحالي: ${fmtMoney(currentBalance)}\nحد الائتمان: ${fmtMoney(creditLimit)}\nالدين المتوقع: ${fmtMoney(actualDebt)}\n\nيجب تسديد مستحقات قبل إتمام الطلب.`
                 );
                 return;
               }
@@ -2354,7 +2492,7 @@
       }
 
       // ============================================================
-      // 19) Load Existing Order
+      // 20) Load Existing Order
       // ============================================================
       async function loadOrder() {
         try {
@@ -2379,6 +2517,7 @@
             document.getElementById('supplierSelect').value = o.supplier_id;
             document.getElementById('customerField').style.display = 'none';
             document.getElementById('supplierField').style.display = '';
+            document.getElementById('paymentType').value = 'credit';
           } else {
             document.getElementById('buyerType').value = 'customer';
             document.getElementById('customerSelect').value = o.customer_id || '';
@@ -2397,6 +2536,7 @@
           }
 
           updateStatusBadge(o.status);
+          updatePaymentTypeFields();
 
           document.getElementById('printBtn').style.display = 'inline-flex';
           if (o.status === 'draft') document.getElementById('confirmBtn').style.display = 'inline-flex';
@@ -2448,6 +2588,7 @@
 
           state.items.forEach((_, i) => recalcItemProfit(i));
           renderItems();
+          updatePaymentInfoBox();
 
           if (state.customerCreditInfo) renderCustomerInfoBox();
         } catch (e) {
@@ -2471,7 +2612,7 @@
       }
 
       // ============================================================
-      // 20) Confirm Order
+      // 21) Confirm Order
       // ============================================================
       async function confirmOrder() {
         if (!orderId) return;
@@ -2490,12 +2631,11 @@
       }
 
       // ============================================================
-      // 21) Convert to Invoice
+      // 22) Convert to Invoice ✅ (with Payment Logic)
       // ============================================================
       async function convertToInvoice() {
         if (!orderId) return;
 
-        // Pre-check for quarantined batches
         const blockedItems = state.items.filter(it => {
           const batch = (state.batchesByProduct[it.product_id] || []).find(b => b.id === it.batch_id);
           return batch && checkBatchQuarantine(batch);
@@ -2506,11 +2646,47 @@
           return;
         }
 
-        const ok = await Refad.alert.confirm(
-          'تحويل لفاتورة',
-          'سيتم إنشاء فاتورة بيع من هذا الطلب، وخصم الكميات من التشغيلات. متابعة؟',
-          'تحويل'
-        );
+        const isSupplierBuyer = document.getElementById('buyerType').value === 'supplier';
+        const customerId = isSupplierBuyer ? null : (parseInt(document.getElementById('customerSelect').value, 10) || null);
+        const total = state.items.reduce((s, it) => s + (it._total || 0), 0);
+
+        // ✅ حساب المدفوع حسب نوع الدفع
+        const ptRaw = document.getElementById('paymentType').value;
+        const pt = isSupplierBuyer ? 'credit' : ptRaw;
+
+        let paidAmount = 0;
+        if (pt === 'cash') paidAmount = total;
+        else if (pt === 'partial') paidAmount = Refad.toNum(document.getElementById('paidAmount').value);
+
+        // تحقق من صحة المبلغ الجزئي
+        if (pt === 'partial' && (paidAmount <= 0 || paidAmount >= total)) {
+          Refad.toast.warning(`المبلغ الجزئي يجب أن يكون بين 0 و ${fmtMoney(total)}`);
+          return;
+        }
+
+        // الحساب المستلم (لو فيه دفع)
+        let accountId = null;
+        if (paidAmount > 0 && !isSupplierBuyer) {
+          accountId = parseInt(document.getElementById('paymentAccount').value, 10) || null;
+          if (!accountId) {
+            Refad.toast.warning('اختر الحساب المستلم للمبلغ المدفوع');
+            return;
+          }
+        }
+
+        // حساب حالة الفاتورة
+        let invoiceStatus = 'unpaid';
+        if (paidAmount >= total - 0.01) invoiceStatus = 'paid';
+        else if (paidAmount > 0) invoiceStatus = 'partial';
+
+        // رسالة تأكيد
+        let confirmMsg = 'سيتم إنشاء فاتورة بيع من هذا الطلب، وخصم الكميات من التشغيلات.\n\n';
+        confirmMsg += `💰 الإجمالي: ${fmtMoney(total)}\n`;
+        confirmMsg += `✅ المدفوع: ${fmtMoney(paidAmount)}\n`;
+        confirmMsg += `📌 المتبقي (دين): ${fmtMoney(total - paidAmount)}\n\n`;
+        confirmMsg += 'متابعة؟';
+
+        const ok = await Refad.alert.confirm('تحويل لفاتورة', confirmMsg, 'تحويل');
         if (!ok) return;
 
         const btn = document.getElementById('convertBtn');
@@ -2528,30 +2704,31 @@
             const st = (it.quantity || 0) * (it.sale_price || 0);
             return s + st * ((it.sale_discount || 0) / 100);
           }, 0);
-          const total = state.items.reduce((s, it) => s + (it._total || 0), 0);
           const profit = state.items.reduce((s, it) => s + (it._profit || 0), 0);
 
+          // ✅ 1) إنشاء الفاتورة بالـ paid_amount و status الصح
           const invoice = await Refad.db.insert('sales_invoices', {
             company_id: session.company_id,
-            customer_id: parseInt(document.getElementById('customerSelect').value, 10) || null,
-            supplier_id: document.getElementById('buyerType').value === 'supplier'
+            customer_id: customerId,
+            supplier_id: isSupplierBuyer
               ? (parseInt(document.getElementById('supplierSelect').value, 10) || null)
               : null,
             order_id: orderId,
             warehouse_id: state.activeWarehouseId,
             invoice_number: invoiceNumber,
             invoice_type: 'sale',
-            payment_type: document.getElementById('buyerType').value === 'supplier' ? 'credit' : 'cash',
+            payment_type: pt === 'cash' ? 'cash' : (pt === 'partial' ? 'partial' : 'credit'),
             subtotal,
             discount_total: discountTotal,
             grand_total: total,
             total_profit: profit,
-            paid_amount: document.getElementById('buyerType').value === 'supplier' ? 0 : total,
-            status: document.getElementById('buyerType').value === 'supplier' ? 'unpaid' : 'paid',
+            paid_amount: paidAmount,        // ✅ صح
+            status: invoiceStatus,          // ✅ صح
             cashier_id: session.user_id,
             invoice_date: Refad.date.today()
           });
 
+          // ✅ 2) إضافة أصناف الفاتورة + حركات المخزون
           for (const it of state.items) {
             const totalQtyOut = (it.quantity || 0) + (it.bonus_qty || 0);
 
@@ -2584,7 +2761,6 @@
               user_id: session.user_id
             });
 
-            // Deduct stock from batch
             const batch = await Refad.db.selectOne('batches', { eq: { id: it.batch_id } });
             if (batch) {
               await Refad.db.update('batches', it.batch_id, {
@@ -2592,7 +2768,6 @@
               });
             }
 
-            // Update sale discount
             const existing = await Refad.db.selectOne('product_discounts', {
               eq: { product_id: it.product_id }
             }).catch(() => null);
@@ -2614,27 +2789,51 @@
             }
           }
 
+          // ✅ 3) تحديث حالة الطلب
           await Refad.db.update('sales_orders', orderId, { status: 'invoiced' });
           if (Refad.scanInventoryAlerts) Refad.scanInventoryAlerts(session.company_id).catch(() => {});
 
-          // Update customer balance
-          const customerId = parseInt(document.getElementById('customerSelect').value, 10);
-          if (customerId) {
-            const cust = await Refad.db.selectOne('customers', { eq: { id: customerId } });
-            if (cust) {
-              await Refad.db.update('customers', customerId, {
-                balance: (cust.balance || 0) + total
+          // ✅ 4) تسجيل الدفعة في payments + account_transactions
+          // ⚠️ مهم: ده بيحدّث رصيد العميل تلقائيًا من الـ Trigger
+          if (paidAmount > 0 && customerId && accountId) {
+            try {
+              const { data: payData, error: payErr } = await Refad.sb.rpc('add_customer_payment', {
+                p_customer_id: customerId,
+                p_company_id: session.company_id,
+                p_amount: paidAmount,
+                p_direction: 'in',
+                p_account_id: accountId,
+                p_method: 'cash',
+                p_invoice_id: invoice.id,
+                p_date: Refad.date.today(),
+                p_notes: `${pt === 'cash' ? 'دفعة نقدية' : 'دفعة جزئية'} مع فاتورة ${invoiceNumber}`,
+                p_user_id: session.user_id
               });
+
+              if (payErr) {
+                console.warn('[Convert] Payment RPC failed:', payErr.message);
+                Refad.toast.warning('تم إنشاء الفاتورة لكن تعذّر تسجيل الدفعة في الخزينة');
+              } else {
+                console.log('[Convert] Payment registered:', payData);
+              }
+            } catch (payE) {
+              console.warn('[Convert] Payment registration failed:', payE.message);
             }
           }
 
-          await Refad.logActivity('convert_to_invoice', 'sales',
-            `تحويل طلب ${state.orderNumber} لفاتورة ${invoiceNumber}`, invoice.id);
+          // ⚠️ ملاحظة: مفيش تحديث مباشر لـ customers.balance
+          // الـ Trigger هيتكفل بالرصيد تلقائيًا عند:
+          //   - إدراج sales_invoices (بـ grand_total و paid_amount الجديدين)
+          //   - إدراج payments (لو تمت إضافتها في الخطوة 4)
 
-          Refad.toast.success('تم إنشاء الفاتورة');
+          await Refad.logActivity('convert_to_invoice', 'sales',
+            `تحويل طلب ${state.orderNumber} لفاتورة ${invoiceNumber} (مدفوع: ${fmtMoney(paidAmount)})`,
+            invoice.id);
+
+          Refad.toast.success(`✅ تم إنشاء الفاتورة ${invoiceNumber}`);
           setTimeout(() => {
             window.location.href = `invoices.html?id=${invoice.id}`;
-          }, 800);
+          }, 900);
         } catch (err) {
           console.error('Convert failed:', err);
           Refad.toast.error('فشل التحويل: ' + err.message);
@@ -2643,7 +2842,7 @@
       }
 
       // ============================================================
-      // 22) Print
+      // 23) Print
       // ============================================================
       function printOrder() {
         if (!state.items.length) return Refad.toast.warning('لا يوجد محتوى');
@@ -2660,6 +2859,13 @@
         const total = state.items.reduce((s, it) => s + (it._total || 0), 0);
         const profit = state.items.reduce((s, it) => s + (it._profit || 0), 0);
         const totalBonus = state.items.reduce((s, it) => s + (it.bonus_qty || 0), 0);
+
+        // Payment info
+        const pt = isSupplierBuyer ? 'credit' : document.getElementById('paymentType').value;
+        let paid = 0;
+        if (pt === 'cash') paid = total;
+        else if (pt === 'partial') paid = Refad.toNum(document.getElementById('paidAmount').value);
+        const remaining = total - paid;
 
         const w = window.open('', '_blank');
         w.document.write(`
@@ -2679,14 +2885,25 @@
             .totals .row strong { min-width: 130px; display: inline-block; }
             .totals .grand { font-size: 17px; color: #14B8A6; font-weight: 800; }
             .totals .profit { font-size: 14px; color: #10b981; font-weight: 700; }
+            .totals .paid { color: #10b981; }
+            .totals .remaining { color: #ef4444; font-weight: 700; }
             .bonus-tag { background: rgba(139,92,246,0.15); color: #8b5cf6; padding: 2px 6px; border-radius: 6px; font-size: 10px; font-weight: 700; }
             .footer { margin-top: 30px; text-align: center; font-size: 11px; color: #94a3b8; }
+            .payment-badge { display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 700; }
+            .payment-badge.cash { background: rgba(16,185,129,0.15); color: #047857; }
+            .payment-badge.credit { background: rgba(245,158,11,0.15); color: #b45309; }
+            .payment-badge.partial { background: rgba(59,130,246,0.15); color: #1d4ed8; }
           </style></head><body>
           <h1>طلب بيع رقم: ${esc(state.orderNumber || '')}</h1>
           <div class="sub">التاريخ: ${fmtDate(new Date())}</div>
           <div class="info">
             <div><strong>${isSupplierBuyer ? 'المورد المشتري:' : 'العميل:'}</strong> ${esc(customer?.name || 'نقدي')}</div>
             ${customer?.phone ? `<div><strong>الهاتف:</strong> ${esc(customer.phone)}</div>` : ''}
+            <div><strong>نوع الدفع:</strong>
+              <span class="payment-badge ${pt}">
+                ${pt === 'cash' ? 'نقدي (كامل)' : (pt === 'partial' ? 'دفع جزئي' : 'آجل')}
+              </span>
+            </div>
           </div>
           <table><thead><tr>
             <th>#</th><th>الصنف</th><th>التشغيلة</th><th>الكمية</th><th>البونص</th><th>السعر</th><th>خصم البيع%</th><th>الإجمالي</th>
@@ -2709,6 +2926,8 @@
             <div class="row"><strong>إجمالي الخصم:</strong> <span>${fmtMoney(discountTotal)}</span></div>
             ${totalBonus > 0 ? `<div class="row"><strong>إجمالي البونص:</strong> <span>${fmtNumber(totalBonus)}</span></div>` : ''}
             <div class="row grand"><strong>الإجمالي النهائي:</strong> <span>${fmtMoney(total)}</span></div>
+            ${paid > 0 ? `<div class="row paid"><strong>المدفوع:</strong> <span>${fmtMoney(paid)}</span></div>` : ''}
+            ${remaining > 0 ? `<div class="row remaining"><strong>المتبقي (دين):</strong> <span>${fmtMoney(remaining)}</span></div>` : ''}
             <div class="row profit"><strong>إجمالي الربح:</strong> <span>${fmtMoney(profit)}</span></div>
           </div>
           <div class="footer">تم الإنشاء من نظام رفاد</div>
@@ -2719,11 +2938,10 @@
       }
 
       // ============================================================
-      // 23) ✨ Realtime Sync
+      // 24) Realtime Sync
       // ============================================================
       function setupRealtime() {
-        if (!orderId) return; // Only for existing orders
-
+        if (!orderId) return;
         try {
           state.realtimeChannel = Refad.sb
             .channel('sales-order-' + orderId)
@@ -2751,7 +2969,7 @@
       }
 
       // ============================================================
-      // 24) Bind Events
+      // 25) Bind Events
       // ============================================================
       function bindEvents() {
         document.getElementById('saveBtn').addEventListener('click', save);
@@ -2776,7 +2994,6 @@
           document.getElementById('orderDate').value = Refad.date.today();
         }
 
-        // Global keyboard shortcuts
         document.addEventListener('keydown', e => {
           if ((e.ctrlKey || e.metaKey) && e.key === 's') {
             e.preventDefault();
@@ -2799,7 +3016,7 @@
       }
 
       // ============================================================
-      // 25) Init
+      // 26) Init
       // ============================================================
       async function init() {
         Refad.buildMenu('sales-orders.html');
@@ -2829,6 +3046,7 @@
         }
 
         setupBuyerType();
+        setupPaymentType();       // ✅ جديد
         setupCustomerChange();
         setupProductSearch();
         setupBatchPicker();
@@ -2846,7 +3064,7 @@
 
         try { Refad.registerServiceWorker(); } catch (e) {}
 
-        console.log('%c[Refad] Sales Order Form v3 ready (Theme Sync + Settings + Quick Search + Realtime)', 'color:#14B8A6;font-weight:bold;font-size:14px');
+        console.log('%c[Refad] Sales Order Form v4 — Payment Type + Auto-Trigger', 'color:#14B8A6;font-weight:bold;font-size:14px');
       }
 
       if (document.readyState === 'loading') {
