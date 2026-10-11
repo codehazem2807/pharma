@@ -276,6 +276,9 @@
     .btn-danger { background: var(--danger); color: white; }
     .btn-danger:hover:not(:disabled) { background: #b91c1c; }
 
+    .btn-warning { background: var(--warning); color: white; }
+    .btn-warning:hover:not(:disabled) { background: #d97706; }
+
     .btn-sm { padding: 6px 12px; font-size: 12px; }
 
     /* Mini stats */
@@ -2272,25 +2275,109 @@
       }
 
       // ============================================================
-      // 15) Delete
+      // 15) ✅ Delete — مع فحص الارتباطات
       // ============================================================
       async function deleteReceipt(id, num) {
         const r = state.all.find(x => x.id === id);
-        if (r?.is_locked) {
+        if (!r) return;
+
+        if (r.is_locked) {
           Refad.toast.error('لا يمكن حذف فاتورة مقفلة');
           return;
         }
 
+        // ✅ 1) اتحقق من الدفعات المرتبطة
+        let paymentsCount = 0;
+        try {
+          paymentsCount = await Refad.db.count('payments', {
+            eq: { reference_receipt_id: id }
+          });
+        } catch (e) {
+          console.warn('[Delete] Payments check failed:', e.message);
+        }
+
+        if (paymentsCount > 0) {
+          Refad.alert.warning(
+            'لا يمكن الحذف',
+            `الاستلام "${num}" مرتبط بـ ${paymentsCount} دفعة.\n\n` +
+            `لازم تحذف الدفعات الأول، أو تلغي ربطها بالاستلام.`,
+            'حسناً'
+          );
+          return;
+        }
+
+        // ✅ 2) اتحقق من المرتجعات المرتبطة
+        let returnsCount = 0;
+        try {
+          returnsCount = await Refad.db.count('inventory_returns', {
+            eq: { reference_receipt_id: id }
+          });
+        } catch (e) {
+          console.warn('[Delete] Returns check failed:', e.message);
+        }
+
+        if (returnsCount > 0) {
+          Refad.alert.warning(
+            'لا يمكن الحذف',
+            `الاستلام "${num}" مرتبط بـ ${returnsCount} مرتجع.\n\n` +
+            `لازم تحذف المرتجعات الأول.`,
+            'حسناً'
+          );
+          return;
+        }
+
+        // ✅ 3) اتحقق من الإشعارات الدائنة
+        let notesCount = 0;
+        try {
+          notesCount = await Refad.db.count('credit_notes', {
+            eq: { reference_receipt_id: id }
+          });
+        } catch (e) {
+          console.warn('[Delete] Notes check failed:', e.message);
+        }
+
+        if (notesCount > 0) {
+          Refad.alert.warning(
+            'لا يمكن الحذف',
+            `الاستلام "${num}" مرتبط بـ ${notesCount} إشعار.\n\n` +
+            `لازم تحذف الإشعارات الأول.`,
+            'حسناً'
+          );
+          return;
+        }
+
+        // ✅ 4) اتحقق من batches المرتبطة (لو موجود)
+        let batchesCount = 0;
+        try {
+          batchesCount = await Refad.db.count('batches', {
+            eq: { receipt_id: id }
+          });
+        } catch (e) {
+          // الجدول مش موجود أو مش مرتبط — نتجاهل
+        }
+
+        // ✅ 5) لو مفيش ارتباطات → اسمح بالحذف
         const ok = await Refad.alert.confirm(
           'حذف الاستلام',
-          `هل أنت متأكد من حذف الاستلام "${num}"؟ سيتم حذف كل الأصناف والتشغيلات المرتبطة.`,
+          `هل أنت متأكد من حذف الاستلام "${num}"؟\n\n` +
+          `سيتم حذف:\n` +
+          `• الأصناف (${r.receipt_items?.length || 0})\n` +
+          (batchesCount > 0 ? `• التشغيلات (${batchesCount})\n` : '') +
+          `\n⚠️ لا يمكن التراجع!`,
           'حذف'
         );
         if (!ok) return;
 
         try {
+          // احذف الأصناف
           await Refad.db.removeWhere('receipt_items', { receipt_id: id });
-          await Refad.db.removeWhere('batches', { receipt_id: id });
+
+          // احذف التشغيلات (لو موجود)
+          if (batchesCount > 0) {
+            await Refad.db.removeWhere('batches', { receipt_id: id });
+          }
+
+          // احذف الاستلام
           await Refad.db.remove('receipts', id);
 
           await Refad.logActivity('delete_receipt', 'receipts', `حذف استلام: ${num}`, id);
@@ -2298,7 +2385,18 @@
           await loadReceipts(true);
         } catch (err) {
           console.error('[Delete] failed:', err);
-          Refad.toast.error('فشل الحذف: ' + err.message);
+
+          // ✅ رسالة أوضح لو FK فشل
+          if (err.message && err.message.includes('foreign key')) {
+            Refad.alert.error(
+              'فيه بيانات مرتبطة',
+              `مش قادر يحذف الاستلام "${num}" لأن فيه بيانات مرتبطة بيه في قاعدة البيانات.\n\n` +
+              `تواصل مع الدعم الفني.`,
+              'حسناً'
+            );
+          } else {
+            Refad.toast.error('فشل الحذف: ' + err.message);
+          }
         }
       }
 
@@ -2685,7 +2783,7 @@
 
         try { Refad.registerServiceWorker(); } catch (e) {}
 
-        console.log('%c[Refad] Receipts v3 ready (Theme Sync + Settings + Quick Search)', 'color:#14B8A6;font-weight:bold;font-size:14px');
+        console.log('%c[Refad] Receipts v4 ready (Safe Delete + Settings + Quick Search)', 'color:#14B8A6;font-weight:bold;font-size:14px');
       }
 
       if (document.readyState === 'loading') {

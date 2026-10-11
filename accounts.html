@@ -474,7 +474,6 @@
     </main>
   </div>
 
-  <!-- Modal: Account -->
   <div class="modal-backdrop" id="accountModal">
     <div class="modal">
       <div class="modal-header">
@@ -511,7 +510,6 @@
     </div>
   </div>
 
-  <!-- Modal: Payment (4 اتجاهات) -->
   <div class="modal-backdrop" id="paymentModal">
     <div class="modal">
       <div class="modal-header">
@@ -574,7 +572,6 @@
     </div>
   </div>
 
-  <!-- Modal: Transfer -->
   <div class="modal-backdrop" id="transferModal">
     <div class="modal">
       <div class="modal-header">
@@ -599,7 +596,6 @@
     </div>
   </div>
 
-  <!-- Modal: Statement -->
   <div class="modal-backdrop" id="statementModal">
     <div class="modal modal-lg">
       <div class="modal-header">
@@ -614,7 +610,6 @@
     </div>
   </div>
 
-  <!-- Modal: Salary -->
   <div class="modal-backdrop" id="salaryModal">
     <div class="modal">
       <div class="modal-header">
@@ -686,7 +681,12 @@
         customerBalances: {}, supplierBalances: {},
         editingAccountId: null, selectedType: 'cash',
         txFilterAccount: '', txFilterType: '', journalFilterType: '',
-        currentStatement: null
+        currentStatement: null,
+        // ✅ منع Double Submit
+        isSubmittingPayment: false,
+        isSubmittingTransfer: false,
+        isSubmittingSalary: false,
+        isSubmittingAccount: false
       };
 
       function fillUser() {
@@ -749,6 +749,28 @@
         document.getElementById('notifBtn').addEventListener('click', () => {
           window.location.href = 'notifications.html';
         });
+      }
+
+      // ═══════════════════════════════════════════════════════════
+      // ✅ NEW: حساب المبلغ المدفوع لفاتورة من payments مباشرة
+      // ═══════════════════════════════════════════════════════════
+      function getReceiptPaidAmount(receiptId) {
+        if (!receiptId) return 0;
+        return state.payments
+          .filter(p => String(p.reference_receipt_id) === String(receiptId) && p.direction === 'out')
+          .reduce((sum, p) => sum + amount(p.amount), 0);
+      }
+
+      // ═══════════════════════════════════════════════════════════
+      // ✅ NEW: حساب حالة الفاتورة بناءً على payments
+      // ═══════════════════════════════════════════════════════════
+      function getReceiptStatus(receipt) {
+        if (receipt.status === 'cancelled') return 'cancelled';
+        const total = amount(receipt.total_amount);
+        const paid = getReceiptPaidAmount(receipt.id);
+        if (paid >= total - 0.01 && total > 0) return 'completed';
+        if (paid > 0.01) return 'partial';
+        return 'pending';
       }
 
       async function loadAllData() {
@@ -1229,6 +1251,7 @@
         if (window.lucide) lucide.createIcons();
       }
 
+      // ✅ محسّن: يستخدم getReceiptPaidAmount
       function renderPayables() {
         const suppliersWithDue = state.suppliers
           .map(s => {
@@ -1241,11 +1264,11 @@
             );
             const receiptsTotal = supReceipts.reduce((sum, r) => sum + amount(r.total_amount), 0);
             const returnsTotal = supReturns.reduce((sum, i) => sum + amount(i.grand_total), 0);
-            const receiptsPaid = supReceipts.reduce((sum, r) => sum + amount(r.paid_amount), 0);
-            const extraPayments = state.payments.filter(p =>
-              String(p.supplier_id) === String(sid) && p.direction === 'out'
-            ).reduce((sum, p) => sum + amount(p.amount), 0);
-            const totalPaid = receiptsPaid + extraPayments;
+            
+            // ✅ احسب المدفوع من payments مباشرة
+            const totalPaid = state.payments
+              .filter(p => String(p.supplier_id) === String(sid) && p.direction === 'out')
+              .reduce((sum, p) => sum + amount(p.amount), 0);
 
             const balance = state.supplierBalances[sid] !== undefined
               ? state.supplierBalances[sid]
@@ -1565,10 +1588,21 @@
         if (window.lucide) lucide.createIcons();
       }
 
+      // ✅ submitPayment — محمي من Double Submit + يحدّث الفواتير
       async function submitPayment(e) {
         e.preventDefault();
+
+        if (state.isSubmittingPayment) {
+          console.warn('[Accounts] Payment already in progress');
+          return;
+        }
+        state.isSubmittingPayment = true;
+
         const btn = document.getElementById('paymentSubmitBtn');
         btn.disabled = true;
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<i data-lucide="loader-2" class="spin"></i> جارٍ التسجيل...';
+        if (window.lucide) lucide.createIcons();
 
         try {
           const direction = document.getElementById('paymentDirection').value;
@@ -1581,9 +1615,9 @@
           const reference = document.getElementById('paymentReference').value.trim();
           const notes = document.getElementById('paymentNotes').value.trim();
 
-          if (!partyId) { Refad.toast.warning('اختر الطرف'); btn.disabled = false; return; }
-          if (!accountId) { Refad.toast.warning('اختر الحساب'); btn.disabled = false; return; }
-          if (amountVal <= 0) { Refad.toast.warning('أدخل مبلغاً صحيحاً'); btn.disabled = false; return; }
+          if (!partyId) { Refad.toast.warning('اختر الطرف'); return; }
+          if (!accountId) { Refad.toast.warning('اختر الحساب'); return; }
+          if (amountVal <= 0) { Refad.toast.warning('أدخل مبلغاً صحيحاً'); return; }
 
           const finalNotes = [notes, reference].filter(Boolean).join(' • ') || null;
 
@@ -1630,19 +1664,17 @@
 
           const result = Array.isArray(data) ? data[0] : data || {};
 
-          // ✅ مزامنة الرصيد المخزّن (fallback لو الـ Trigger مش شغال)
+          // ✅ مزامنة الرصيد المخزّن (fallback)
           try {
             if (partyType === 'supplier') {
               const { data: newBal } = await Refad.sb.rpc('get_supplier_balance', { p_supplier_id: partyId });
               if (newBal !== null && newBal !== undefined) {
                 await Refad.db.update('suppliers', partyId, { balance: Number(newBal) || 0 });
-                console.log('[Accounts] Supplier balance synced:', newBal);
               }
             } else {
               const { data: newBal } = await Refad.sb.rpc('get_customer_balance', { p_customer_id: partyId });
               if (newBal !== null && newBal !== undefined) {
                 await Refad.db.update('customers', partyId, { balance: Number(newBal) || 0 });
-                console.log('[Accounts] Customer balance synced:', newBal);
               }
             }
           } catch (e) {
@@ -1659,7 +1691,7 @@
           Refad.toast.success(`تم تسجيل ${label} ${money(amountVal)}`);
           document.getElementById('paymentModal').classList.remove('show');
 
-          await new Promise(r => setTimeout(r, 500));
+          await new Promise(r => setTimeout(r, 300));
           await loadAllData();
           renderAll();
 
@@ -1667,7 +1699,10 @@
           console.error('[Payment] Failed:', err);
           Refad.toast.error('فشل: ' + err.message);
         } finally {
+          state.isSubmittingPayment = false;
           btn.disabled = false;
+          btn.innerHTML = originalHTML;
+          if (window.lucide) lucide.createIcons();
         }
       }
 
@@ -1690,6 +1725,9 @@
 
       async function submitTransfer(e) {
         e.preventDefault();
+        if (state.isSubmittingTransfer) return;
+        state.isSubmittingTransfer = true;
+
         const btn = document.getElementById('transferSubmitBtn');
         btn.disabled = true;
 
@@ -1700,9 +1738,9 @@
           const dateVal = document.getElementById('trDate').value || today();
           const notes = document.getElementById('trNotes').value.trim() || null;
 
-          if (!fromId || !toId) { Refad.toast.warning('اختر الحسابين'); btn.disabled = false; return; }
-          if (fromId === toId) { Refad.toast.warning('لا يمكن التحويل لنفس الحساب'); btn.disabled = false; return; }
-          if (amountVal <= 0) { Refad.toast.warning('أدخل مبلغاً صحيحاً'); btn.disabled = false; return; }
+          if (!fromId || !toId) { Refad.toast.warning('اختر الحسابين'); return; }
+          if (fromId === toId) { Refad.toast.warning('لا يمكن التحويل لنفس الحساب'); return; }
+          if (amountVal <= 0) { Refad.toast.warning('أدخل مبلغاً صحيحاً'); return; }
 
           const fromAcc = state.accounts.find(a => a.id === fromId);
           const toAcc = state.accounts.find(a => a.id === toId);
@@ -1712,7 +1750,7 @@
           if (fromBalance < amountVal) {
             const ok = await Refad.alert.confirm('رصيد غير كافٍ',
               `رصيد "${fromAcc.name}" هو ${money(fromBalance)} فقط. متابعة؟`, 'متابعة');
-            if (!ok) { btn.disabled = false; return; }
+            if (!ok) return;
           }
 
           const newFromBalance = fromBalance - amountVal;
@@ -1747,6 +1785,7 @@
           console.error('[Transfer] Failed:', err);
           Refad.toast.error('فشل: ' + err.message);
         } finally {
+          state.isSubmittingTransfer = false;
           btn.disabled = false;
         }
       }
@@ -1771,6 +1810,9 @@
 
       async function submitSalary(e) {
         e.preventDefault();
+        if (state.isSubmittingSalary) return;
+        state.isSubmittingSalary = true;
+
         const btn = document.getElementById('salarySubmitBtn');
         btn.disabled = true;
 
@@ -1781,9 +1823,9 @@
           const dateVal = document.getElementById('salaryDate').value || today();
           const desc = document.getElementById('salaryDesc').value.trim() || 'راتب شهري';
 
-          if (!empId) { Refad.toast.warning('اختر الموظف'); btn.disabled = false; return; }
-          if (!accountId) { Refad.toast.warning('اختر الحساب'); btn.disabled = false; return; }
-          if (amountVal <= 0) { Refad.toast.warning('أدخل مبلغاً صحيحاً'); btn.disabled = false; return; }
+          if (!empId) { Refad.toast.warning('اختر الموظف'); return; }
+          if (!accountId) { Refad.toast.warning('اختر الحساب'); return; }
+          if (amountVal <= 0) { Refad.toast.warning('أدخل مبلغاً صحيحاً'); return; }
 
           const emp = state.users.find(u => u.id === empId);
           const account = state.accounts.find(a => a.id === accountId);
@@ -1828,6 +1870,7 @@
           console.error('[Salary] Failed:', err);
           Refad.toast.error('فشل: ' + err.message);
         } finally {
+          state.isSubmittingSalary = false;
           btn.disabled = false;
         }
       }
@@ -2218,7 +2261,7 @@
 
         if (Refad.registerServiceWorker) Refad.registerServiceWorker();
 
-        console.log('%c[Refad] Accounts v7 — 4-Way Payments + Balance Sync', 'color:#14B8A6;font-weight:bold;font-size:14px');
+        console.log('%c[Refad] Accounts v8 — Receipts Auto-Update via FIFO', 'color:#14B8A6;font-weight:bold;font-size:14px');
       }
 
       if (document.readyState === 'loading') {
