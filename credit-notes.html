@@ -124,9 +124,6 @@
     .nav-item.active::before { content: ''; position: absolute; right: 0; top: 50%; transform: translateY(-50%); width: 3px; height: 60%; background: var(--accent); border-radius: 0 4px 4px 0; }
     .nav-item i, .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; opacity: 0.85; }
     .nav-item .badge { margin-right: auto; background: var(--danger); color: white; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
-    .nav-item .badge.teal { background: var(--accent); }
-    .nav-item .badge.gold { background: var(--gold); }
-    .nav-item .badge.new { background: var(--purple); }
 
     /* ============ Main ============ */
     .main { flex: 1; margin-right: var(--sidebar-w); min-width: 0; display: flex; flex-direction: column; }
@@ -141,7 +138,6 @@
       box-shadow: var(--shadow-sm);
     }
     .menu-toggle { display: none; background: transparent; border: none; color: var(--text); cursor: pointer; padding: 8px; border-radius: 8px; }
-    .menu-toggle:hover { background: var(--bg); }
     .topbar-title { font-size: 18px; font-weight: 700; color: var(--text); flex-shrink: 0; }
     .topbar-actions { display: flex; align-items: center; gap: 8px; margin-right: auto; }
     .icon-btn {
@@ -185,7 +181,6 @@
     .dropdown-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; color: var(--text); font-size: 13px; font-weight: 500; cursor: pointer; transition: background 0.15s; text-decoration: none; }
     .dropdown-item:hover { background: var(--bg); }
     .dropdown-item.danger { color: var(--danger); }
-    .dropdown-item.danger:hover { background: rgba(239,68,68,0.08); }
     .dropdown-item i { width: 16px; height: 16px; }
     .dropdown-divider { height: 1px; background: var(--border); margin: 6px 0; }
 
@@ -219,11 +214,8 @@
     .btn-outline { background: var(--card); color: var(--text); border: 1px solid var(--border); }
     .btn-outline:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
     .btn-success { background: var(--success); color: white; }
-    .btn-success:hover:not(:disabled) { background: #047857; }
     .btn-danger { background: var(--danger); color: white; }
-    .btn-danger:hover:not(:disabled) { background: #b91c1c; }
     .btn-gold { background: var(--gold); color: white; }
-    .btn-gold:hover:not(:disabled) { background: #d97706; }
     .btn-sm { padding: 6px 12px; font-size: 12px; }
 
     /* ============ Stats ============ */
@@ -907,13 +899,13 @@
               <div>
                 <b>إشعار الدائن:</b> يقلل المبلغ المستحق على الطرف (خصم/مرتجع).<br>
                 <b>إشعار المدين:</b> يزيد المبلغ المستحق على الطرف (رسوم/تصحيح).<br>
-                <b>ملاحظة:</b> الإشعار يُسجل فقط، والتطبيق على الرصيد يحصل عند الضغط على "تطبيق".
+                <b>ملاحظة:</b> الإشعار يُطبَّق تلقائياً على الرصيد بمجرد الحفظ.
               </div>
             </div>
 
             <div class="form-group">
               <label>رقم الإشعار <span class="hint">يُولّد تلقائياً إن تُرك فارغاً</span></label>
-              <input type="text" id="cNoteNumber" maxlength="50" placeholder="CN-2025-00001">
+              <input type="text" id="cNoteNumber" maxlength="50" placeholder="CN-2026-00001">
             </div>
 
             <div class="form-group">
@@ -985,9 +977,6 @@
     </div>
   </div>
 
-  <!-- ============================================================
-       SCRIPTS — الترتيب مهم جداً
-       ============================================================ -->
   <script src="refad-core.js"></script>
   <script src="refad-auth.js"></script>
   <script src="refad-theme-sync.js"></script>
@@ -997,81 +986,39 @@
     (function () {
       'use strict';
 
-      // ============================================================
-      // 0) Safe Wrappers
-      // ============================================================
       const SafeSettings = {
         locale: {
           formatMoney: function (v) {
             try {
-              if (window.RefadSettings?.locale?.formatMoney) {
-                return RefadSettings.locale.formatMoney(v);
-              }
+              if (window.RefadSettings?.locale?.formatMoney) return RefadSettings.locale.formatMoney(v);
             } catch (e) {}
             return Refad.format.money(v);
           }
         },
         identity: {
           getSystemName: function () {
-            try {
-              if (window.RefadSettings?.identity?.getSystemName) {
-                return RefadSettings.identity.getSystemName();
-              }
-            } catch (e) {}
+            try { if (window.RefadSettings?.identity?.getSystemName) return RefadSettings.identity.getSystemName(); } catch (e) {}
             return 'رفاد';
           },
           getTagline: function () {
-            try {
-              if (window.RefadSettings?.identity?.getTagline) {
-                return RefadSettings.identity.getTagline();
-              }
-            } catch (e) {}
+            try { if (window.RefadSettings?.identity?.getTagline) return RefadSettings.identity.getTagline(); } catch (e) {}
             return 'نظام إدارة الأدوية';
           },
           getLogoUrl: function () {
-            try {
-              if (window.RefadSettings?.identity?.getLogoUrl) {
-                return RefadSettings.identity.getLogoUrl();
-              }
-            } catch (e) {}
+            try { if (window.RefadSettings?.identity?.getLogoUrl) return RefadSettings.identity.getLogoUrl(); } catch (e) {}
             return null;
           }
         }
       };
 
-      // ============================================================
-      // 1) Guard
-      // ============================================================
       const session = Refad.Auth.guardPage('company.owner');
       if (!session) return;
 
-      // ============================================================
-      // 2) Constants
-      // ============================================================
-      const NOTE_TYPE_LABELS = {
-        credit: 'إشعار دائن',
-        debit: 'إشعار مدين'
-      };
+      const NOTE_TYPE_LABELS = { credit: 'إشعار دائن', debit: 'إشعار مدين' };
+      const NOTE_TYPE_ICONS = { credit: 'arrow-down-circle', debit: 'arrow-up-circle' };
+      const STATUS_LABELS = { active: 'نشط', applied: 'مُطبّق', cancelled: 'ملغي' };
+      const PARTY_TYPE_LABELS = { customer: 'عميل', supplier: 'مورد' };
 
-      const NOTE_TYPE_ICONS = {
-        credit: 'arrow-down-circle',
-        debit: 'arrow-up-circle'
-      };
-
-      const STATUS_LABELS = {
-        active: 'نشط',
-        applied: 'مُطبّق',
-        cancelled: 'ملغي'
-      };
-
-      const PARTY_TYPE_LABELS = {
-        customer: 'عميل',
-        supplier: 'مورد'
-      };
-
-      // ============================================================
-      // 3) UI Helpers
-      // ============================================================
       function esc(s) { return Refad.escapeHtml(s); }
       function money(v) { return SafeSettings.locale.formatMoney(v); }
       function amount(v) { return Number(v) || 0; }
@@ -1090,11 +1037,9 @@
         const name = SafeSettings.identity.getSystemName();
         const tagline = SafeSettings.identity.getTagline();
         const logoUrl = SafeSettings.identity.getLogoUrl();
-
         const brandName = document.getElementById('sidebarBrandName');
         const brandDesc = document.getElementById('sidebarBrandDesc');
         const logoImg = document.getElementById('sidebarLogoImg');
-
         if (brandName) brandName.textContent = name;
         if (brandDesc) brandDesc.textContent = tagline;
         if (logoImg && logoUrl) {
@@ -1150,14 +1095,9 @@
       }
 
       function setupRealtimeTheme() {
-        window.addEventListener('refad:theme-changed', () => {
-          applyIdentity();
-        });
+        window.addEventListener('refad:theme-changed', () => { applyIdentity(); });
       }
 
-      // ============================================================
-      // 4) State
-      // ============================================================
       const state = {
         notes: [],
         customers: [],
@@ -1167,17 +1107,28 @@
         users: [],
         filtered: [],
         editingId: null,
-        filters: {
-          type: '',
-          search: '',
-          party: '',
-          status: ''
-        }
+        filters: { type: '', search: '', party: '', status: '' }
       };
 
-      // ============================================================
-      // 5) Load Data
-      // ============================================================
+      // ═══════════════════════════════════════════════════════════
+      // ✅ توليد رقم الإشعار — نفس منطق صفحة المورد (count من DB)
+      // ═══════════════════════════════════════════════════════════
+      async function generateNoteNumber(type) {
+        const prefix = type === 'credit' ? 'CN' : 'DN';
+        const year = new Date().getFullYear();
+
+        try {
+          // نفس منطق صفحة المورد: count من credit_notes
+          const count = await Refad.db.count('credit_notes', {
+            eq: { company_id: session.company_id, note_type: type }
+          });
+          return `${prefix}-${year}-${String((count || 0) + 1).padStart(5, '0')}`;
+        } catch (e) {
+          console.warn('[CreditNotes] count failed, using timestamp:', e);
+          return `${prefix}-${year}-${String(Date.now()).slice(-5)}`;
+        }
+      }
+
       async function loadData() {
         const tbody = document.getElementById('tableBody');
         tbody.innerHTML = '<tr><td colspan="10"><div class="loader"><i data-lucide="loader-2"></i><p>جارٍ التحميل...</p></div></td></tr>';
@@ -1237,9 +1188,6 @@
         }
       }
 
-      // ============================================================
-      // 6) Helpers
-      // ============================================================
       function partyName(n) {
         if (n.customer_id) {
           const c = state.customers.find(x => String(x.id) === String(n.customer_id));
@@ -1268,42 +1216,29 @@
         return null;
       }
 
-      // ============================================================
-      // 7) Render Stats
-      // ============================================================
       function renderStats() {
         const list = state.notes;
         const active = list.filter(n => n.status !== 'cancelled');
-
         const creditNotes = active.filter(n => n.note_type === 'credit');
         const debitNotes = active.filter(n => n.note_type === 'debit');
-
         const creditTotal = creditNotes.reduce((s, n) => s + amount(n.amount), 0);
         const debitTotal = debitNotes.reduce((s, n) => s + amount(n.amount), 0);
-
         const customerNotes = active.filter(n => n.party_type === 'customer');
         const supplierNotes = active.filter(n => n.party_type === 'supplier');
-
         const customerTotal = customerNotes.reduce((s, n) => s + amount(n.amount), 0);
         const supplierTotal = supplierNotes.reduce((s, n) => s + amount(n.amount), 0);
-
         const applied = list.filter(n => n.status === 'applied');
 
         document.getElementById('statTotal').textContent = Refad.format.number(list.length);
         document.getElementById('statTotalSub').textContent = `${applied.length} مُطبّق`;
-
         document.getElementById('statCredit').textContent = money(creditTotal);
         document.getElementById('statCreditSub').textContent = `${creditNotes.length} إشعار`;
-
         document.getElementById('statDebit').textContent = money(debitTotal);
         document.getElementById('statDebitSub').textContent = `${debitNotes.length} إشعار`;
-
         document.getElementById('statCustomers').textContent = money(customerTotal);
         document.getElementById('statCustomersSub').textContent = `${customerNotes.length} إشعار`;
-
         document.getElementById('statSuppliers').textContent = money(supplierTotal);
         document.getElementById('statSuppliersSub').textContent = `${supplierNotes.length} إشعار`;
-
         document.getElementById('statApplied').textContent = Refad.format.number(applied.length);
         document.getElementById('statAppliedSub').textContent =
           applied.length ? money(applied.reduce((s, n) => s + amount(n.amount), 0)) : '—';
@@ -1311,22 +1246,13 @@
 
       function renderTypeCounts() {
         document.getElementById('countAll').textContent = state.notes.length;
-        document.getElementById('countCredit').textContent =
-          state.notes.filter(n => n.note_type === 'credit').length;
-        document.getElementById('countDebit').textContent =
-          state.notes.filter(n => n.note_type === 'debit').length;
+        document.getElementById('countCredit').textContent = state.notes.filter(n => n.note_type === 'credit').length;
+        document.getElementById('countDebit').textContent = state.notes.filter(n => n.note_type === 'debit').length;
       }
 
-      // ============================================================
-      // 8) Apply Filters
-      // ============================================================
       function applyFilters() {
         let list = state.notes.slice();
-
-        if (state.filters.type) {
-          list = list.filter(n => n.note_type === state.filters.type);
-        }
-
+        if (state.filters.type) list = list.filter(n => n.note_type === state.filters.type);
         if (state.filters.search) {
           const q = state.filters.search.toLowerCase();
           list = list.filter(n =>
@@ -1336,22 +1262,12 @@
             (partyName(n) || '').toLowerCase().includes(q)
           );
         }
-
-        if (state.filters.party) {
-          list = list.filter(n => n.party_type === state.filters.party);
-        }
-
-        if (state.filters.status) {
-          list = list.filter(n => n.status === state.filters.status);
-        }
-
+        if (state.filters.party) list = list.filter(n => n.party_type === state.filters.party);
+        if (state.filters.status) list = list.filter(n => n.status === state.filters.status);
         state.filtered = list;
         renderTable();
       }
 
-      // ============================================================
-      // 9) Render Table
-      // ============================================================
       function renderTable() {
         const tbody = document.getElementById('tableBody');
         const list = state.filtered;
@@ -1415,15 +1331,13 @@
                 </span>
               </td>
               <td>
-                ${n.status === 'active' ? `
-                  <button class="action-btn success" data-action="apply" data-id="${n.id}" title="تطبيق على الرصيد">
-                    <i data-lucide="check-circle"></i>
-                  </button>
-                ` : ''}
                 <button class="action-btn" data-action="view" data-id="${n.id}" title="تفاصيل">
                   <i data-lucide="eye"></i>
                 </button>
                 ${n.status === 'active' ? `
+                  <button class="action-btn success" data-action="apply" data-id="${n.id}" title="تأكيد التطبيق">
+                    <i data-lucide="check-circle"></i>
+                  </button>
                   <button class="action-btn" data-action="edit" data-id="${n.id}" title="تعديل">
                     <i data-lucide="edit"></i>
                   </button>
@@ -1464,9 +1378,6 @@
         });
       }
 
-      // ============================================================
-      // 10) Type Picker
-      // ============================================================
       function setNoteType(type) {
         document.getElementById('cNoteType').value = type;
         document.querySelectorAll('#noteTypePicker .type-option').forEach(opt => {
@@ -1474,14 +1385,10 @@
         });
       }
 
-      // ============================================================
-      // 11) Populate Party Select
-      // ============================================================
       function populatePartySelect(selectedId) {
         const partyType = document.getElementById('cPartyType').value;
         const sel = document.getElementById('cPartyId');
         sel.innerHTML = '<option value="">— اختر —</option>';
-
         const list = partyType === 'customer' ? state.customers : state.suppliers;
         list.forEach(item => {
           const opt = document.createElement('option');
@@ -1490,13 +1397,9 @@
           opt.textContent = item.name + (balance !== 0 ? ` (رصيد: ${money(balance)})` : '');
           sel.appendChild(opt);
         });
-
         if (selectedId) sel.value = selectedId;
       }
 
-      // ============================================================
-      // 12) Populate Reference Selects
-      // ============================================================
       function populateReferenceSelects(partyType, partyId) {
         const invGroup = document.getElementById('refInvoiceGroup');
         const recGroup = document.getElementById('refReceiptGroup');
@@ -1534,18 +1437,9 @@
                 opt.dataset.due = due;
                 invSel.appendChild(opt);
               });
-            } else {
-              const opt = document.createElement('option');
-              opt.disabled = true;
-              opt.textContent = '— لا توجد فواتير لهذا العميل —';
-              invSel.appendChild(opt);
             }
           } else {
             invHint.textContent = 'اختر عميلاً أولاً';
-            const opt = document.createElement('option');
-            opt.disabled = true;
-            opt.textContent = '— اختر عميلاً أولاً —';
-            invSel.appendChild(opt);
           }
         }
 
@@ -1555,10 +1449,7 @@
 
           if (partyId) {
             const receipts = state.receipts
-              .filter(r =>
-                String(r.supplier_id) === String(partyId) &&
-                r.status !== 'cancelled'
-              )
+              .filter(r => String(r.supplier_id) === String(partyId) && r.status !== 'cancelled')
               .sort((a, b) => String(b.receipt_date).localeCompare(String(a.receipt_date)))
               .slice(0, 100);
 
@@ -1574,86 +1465,49 @@
                 opt.dataset.due = due;
                 recSel.appendChild(opt);
               });
-            } else {
-              const opt = document.createElement('option');
-              opt.disabled = true;
-              opt.textContent = '— لا توجد استلامات لهذا المورد —';
-              recSel.appendChild(opt);
             }
           } else {
             recHint.textContent = 'اختر مورداً أولاً';
-            const opt = document.createElement('option');
-            opt.disabled = true;
-            opt.textContent = '— اختر مورداً أولاً —';
-            recSel.appendChild(opt);
           }
         }
       }
 
-      // ============================================================
-      // 13) Update Balance Info
-      // ============================================================
       function updateBalanceInfo() {
         const partyType = document.getElementById('cPartyType').value;
         const partyId = parseInt(document.getElementById('cPartyId').value, 10);
         const box = document.getElementById('balanceInfo');
         const valueEl = document.getElementById('balanceValue');
 
-        if (!partyId) {
-          box.classList.remove('show');
-          return;
-        }
+        if (!partyId) { box.classList.remove('show'); return; }
 
         const list = partyType === 'customer' ? state.customers : state.suppliers;
         const party = list.find(p => String(p.id) === String(partyId));
-        if (!party) {
-          box.classList.remove('show');
-          return;
-        }
+        if (!party) { box.classList.remove('show'); return; }
 
         const balance = amount(party.balance);
         valueEl.textContent = money(balance);
         box.classList.add('show');
       }
 
-      // ============================================================
-      // 14) Generate Note Number
-      // ============================================================
-      function generateNoteNumber(type) {
-        const prefix = type === 'credit' ? 'CN' : 'DN';
-        const year = new Date().getFullYear();
-        const count = state.notes.filter(n =>
-          n.note_number && n.note_number.startsWith(`${prefix}-${year}`)
-        ).length;
-        return `${prefix}-${year}-${String(count + 1).padStart(5, '0')}`;
-      }
-
-      // ============================================================
-      // 15) Open Add
-      // ============================================================
       function openAdd() {
         state.editingId = null;
         document.getElementById('modalTitle').textContent = 'إشعار جديد';
         document.getElementById('submitText').textContent = 'إضافة الإشعار';
         document.getElementById('noteForm').reset();
-
         document.getElementById('cNoteDate').value = today();
         document.getElementById('cPartyType').value = 'customer';
         document.getElementById('cTaxAmount').value = 0;
         document.getElementById('balanceInfo').classList.remove('show');
-
+        document.getElementById('cNoteNumber').value = '';
+        document.getElementById('cNoteNumber').placeholder = 'CN-' + new Date().getFullYear() + '-XXXXX';
         setNoteType('credit');
         populatePartySelect();
         populateReferenceSelects('customer', null);
-
         document.getElementById('noteModal').classList.add('show');
         setTimeout(() => document.getElementById('cAmount').focus(), 150);
         if (window.lucide) lucide.createIcons();
       }
 
-      // ============================================================
-      // 16) Open Edit
-      // ============================================================
       function openEdit(id) {
         const n = state.notes.find(x => x.id === id);
         if (!n) return;
@@ -1665,7 +1519,6 @@
         state.editingId = id;
         document.getElementById('modalTitle').textContent = 'تعديل ' + n.note_number;
         document.getElementById('submitText').textContent = 'حفظ التعديلات';
-
         setNoteType(n.note_type);
         document.getElementById('cPartyType').value = n.party_type;
         document.getElementById('cNoteNumber').value = n.note_number || '';
@@ -1696,19 +1549,22 @@
         if (window.lucide) lucide.createIcons();
       }
 
-      // ============================================================
-      // 17) Submit Form
-      // ============================================================
+      // ═══════════════════════════════════════════════════════════
+      // ✅ submitForm — نفس منطق صفحة المورد
+      // ═══════════════════════════════════════════════════════════
       async function submitForm(e) {
         e.preventDefault();
         const btn = document.getElementById('submitBtn');
         btn.disabled = true;
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<i data-lucide="loader-2"></i> جارٍ الحفظ...';
+        if (window.lucide) lucide.createIcons();
 
         try {
           const noteType = document.getElementById('cNoteType').value;
           const partyType = document.getElementById('cPartyType').value;
           const partyId = parseInt(document.getElementById('cPartyId').value, 10);
-          const noteNumber = document.getElementById('cNoteNumber').value.trim() || generateNoteNumber(noteType);
+          const userNoteNumber = document.getElementById('cNoteNumber').value.trim();
           const amountVal = Refad.toNum(document.getElementById('cAmount').value);
           const taxAmount = Refad.toNum(document.getElementById('cTaxAmount').value);
           const noteDate = document.getElementById('cNoteDate').value || today();
@@ -1717,9 +1573,15 @@
           const refInvoiceId = parseInt(document.getElementById('cRefInvoice').value, 10) || null;
           const refReceiptId = parseInt(document.getElementById('cRefReceipt').value, 10) || null;
 
-          if (!partyId) { Refad.toast.warning('اختر الطرف'); btn.disabled = false; return; }
-          if (amountVal <= 0) { Refad.toast.warning('أدخل مبلغاً صحيحاً'); btn.disabled = false; return; }
-          if (!reason) { Refad.toast.warning('السبب مطلوب'); btn.disabled = false; return; }
+          if (!partyId) { Refad.toast.warning('اختر الطرف'); return; }
+          if (amountVal <= 0) { Refad.toast.warning('أدخل مبلغاً صحيحاً'); return; }
+          if (!reason) { Refad.toast.warning('السبب مطلوب'); return; }
+
+          // ✅ نفس منطق صفحة المورد: لو مفيش رقم، ولّده من count
+          let noteNumber = userNoteNumber;
+          if (!noteNumber) {
+            noteNumber = await generateNoteNumber(noteType);
+          }
 
           const payload = {
             company_id: session.company_id,
@@ -1728,8 +1590,8 @@
             party_type: partyType,
             customer_id: partyType === 'customer' ? partyId : null,
             supplier_id: partyType === 'supplier' ? partyId : null,
-            reference_invoice_id: refInvoiceId,
-            reference_receipt_id: refReceiptId,
+            reference_invoice_id: partyType === 'customer' ? refInvoiceId : null,
+            reference_receipt_id: partyType === 'supplier' ? refReceiptId : null,
             amount: amountVal,
             tax_amount: taxAmount,
             reason: reason,
@@ -1752,6 +1614,25 @@
           }
 
           document.getElementById('noteModal').classList.remove('show');
+
+          // ✅ مزامنة الرصيد (نفس منطق صفحة المورد)
+          try {
+            if (partyType === 'supplier') {
+              const { data: newBal } = await Refad.sb.rpc('get_supplier_balance', { p_supplier_id: partyId });
+              if (newBal !== null && newBal !== undefined) {
+                await Refad.db.update('suppliers', partyId, { balance: Number(newBal) || 0 });
+              }
+            } else {
+              const { data: newBal } = await Refad.sb.rpc('get_customer_balance', { p_customer_id: partyId });
+              if (newBal !== null && newBal !== undefined) {
+                await Refad.db.update('customers', partyId, { balance: Number(newBal) || 0 });
+              }
+            }
+          } catch (syncErr) {
+            console.warn('[CreditNotes] Balance sync failed:', syncErr);
+          }
+
+          await new Promise(r => setTimeout(r, 300));
           await loadData();
 
         } catch (err) {
@@ -1759,68 +1640,27 @@
           Refad.toast.error('فشل الحفظ: ' + (err.message || err));
         } finally {
           btn.disabled = false;
+          btn.innerHTML = originalHTML;
+          if (window.lucide) lucide.createIcons();
         }
       }
 
-      // ============================================================
-      // 18) Apply Note
-      // ============================================================
       async function applyNote(id) {
         const n = state.notes.find(x => x.id === id);
         if (!n) return;
-        if (n.status !== 'active') {
-          Refad.toast.warning('الإشعار ليس نشطاً');
-          return;
-        }
+        if (n.status !== 'active') { Refad.toast.warning('الإشعار ليس نشطاً'); return; }
 
         const totalAmount = amount(n.amount) + amount(n.tax_amount);
-        const isCredit = n.note_type === 'credit';
         const party = partyName(n);
 
-        let impactLabel;
-        let impactSign;
-        if (n.party_type === 'customer') {
-          impactLabel = isCredit ? 'يقلل رصيد العميل' : 'يزيد رصيد العميل';
-          impactSign = isCredit ? -1 : 1;
-        } else {
-          impactLabel = isCredit ? 'يقلل رصيد المورد' : 'يزيد رصيد المورد';
-          impactSign = isCredit ? -1 : 1;
-        }
-
         const ok = await Refad.alert.confirm(
-          'تطبيق الإشعار',
-          `سيتم تطبيق ${NOTE_TYPE_LABELS[n.note_type]} بمبلغ ${money(totalAmount)} على ${party}.\n\nالتأثير: ${impactLabel}\n\nمتابعة؟`,
-          'تطبيق'
+          'تأكيد الإشعار',
+          `سيتم تحويل حالة ${n.note_number} إلى "مُطبّق" بمبلغ ${money(totalAmount)} على ${party}.\n\nملاحظة: الرصيد تم تحديثه تلقائياً عند الحفظ.`,
+          'تأكيد'
         );
         if (!ok) return;
 
         try {
-          const table = n.party_type === 'customer' ? 'customers' : 'suppliers';
-          const partyData = await Refad.db.selectOne(table, {
-            columns: 'id, balance',
-            eq: { id: n.customer_id || n.supplier_id }
-          });
-
-          if (!partyData) throw new Error('الطرف غير موجود');
-
-          const currentBalance = amount(partyData.balance);
-          const newBalance = currentBalance + (impactSign * totalAmount);
-
-          await Refad.db.update(table, partyData.id, { balance: newBalance });
-
-          if (n.party_type === 'supplier') {
-            await Refad.db.insert('supplier_transactions', {
-              supplier_id: partyData.id,
-              company_id: session.company_id,
-              type: isCredit ? 'credit_note' : 'debit_note',
-              amount: totalAmount,
-              balance_after: newBalance,
-              reference_id: id,
-              notes: `${NOTE_TYPE_LABELS[n.note_type]}: ${n.note_number} — ${n.reason}`,
-              user_id: session.user_id
-            });
-          }
-
           await Refad.db.update('credit_notes', id, {
             status: 'applied',
             applied_at: new Date().toISOString(),
@@ -1828,39 +1668,49 @@
           });
 
           await Refad.logActivity('apply_credit_note', 'credit_notes',
-            `تطبيق ${n.note_number} على ${party} بمبلغ ${money(totalAmount)}`, id);
+            `تأكيد ${n.note_number} على ${party} بمبلغ ${money(totalAmount)}`, id);
 
-          Refad.toast.success(`تم تطبيق الإشعار. رصيد ${party} الجديد: ${money(newBalance)}`);
+          Refad.toast.success('تم تأكيد الإشعار');
           await loadData();
-
         } catch (err) {
           console.error('[CreditNotes] Apply failed:', err);
           Refad.toast.error('فشل التطبيق: ' + err.message);
         }
       }
 
-      // ============================================================
-      // 19) Cancel Note
-      // ============================================================
       async function cancelNote(id) {
         const n = state.notes.find(x => x.id === id);
         if (!n) return;
-        if (n.status !== 'active') {
-          Refad.toast.warning('لا يمكن إلغاء إشعار في هذه الحالة');
-          return;
-        }
+        if (n.status !== 'active') { Refad.toast.warning('لا يمكن إلغاء إشعار في هذه الحالة'); return; }
 
         const ok = await Refad.alert.confirm(
           'إلغاء الإشعار',
-          `سيتم إلغاء ${n.note_number} بمبلغ ${money(amount(n.amount))}. متابعة؟`,
+          `سيتم إلغاء ${n.note_number} بمبلغ ${money(amount(n.amount))} وإرجاع الرصيد. متابعة؟`,
           'إلغاء الإشعار'
         );
         if (!ok) return;
 
         try {
           await Refad.db.update('credit_notes', id, { status: 'cancelled' });
-          await Refad.logActivity('cancel_credit_note', 'credit_notes',
-            `إلغاء ${n.note_number}`, id);
+
+          // ✅ مزامنة الرصيد بعد الإلغاء
+          try {
+            if (n.party_type === 'supplier') {
+              const { data: newBal } = await Refad.sb.rpc('get_supplier_balance', { p_supplier_id: n.supplier_id });
+              if (newBal !== null && newBal !== undefined) {
+                await Refad.db.update('suppliers', n.supplier_id, { balance: Number(newBal) || 0 });
+              }
+            } else {
+              const { data: newBal } = await Refad.sb.rpc('get_customer_balance', { p_customer_id: n.customer_id });
+              if (newBal !== null && newBal !== undefined) {
+                await Refad.db.update('customers', n.customer_id, { balance: Number(newBal) || 0 });
+              }
+            }
+          } catch (syncErr) {
+            console.warn('[CreditNotes] Balance sync failed:', syncErr);
+          }
+
+          await Refad.logActivity('cancel_credit_note', 'credit_notes', `إلغاء ${n.note_number}`, id);
           Refad.toast.success('تم الإلغاء');
           await loadData();
         } catch (err) {
@@ -1869,29 +1719,17 @@
         }
       }
 
-      // ============================================================
-      // 20) Delete Note
-      // ============================================================
       async function deleteNote(id) {
         const n = state.notes.find(x => x.id === id);
         if (!n) return;
+        if (n.status === 'applied') { Refad.toast.error('لا يمكن حذف إشعار مُطبّق'); return; }
 
-        if (n.status === 'applied') {
-          Refad.toast.error('لا يمكن حذف إشعار مُطبّق');
-          return;
-        }
-
-        const ok = await Refad.alert.confirm(
-          'حذف الإشعار',
-          `سيتم حذف ${n.note_number} نهائياً. متابعة؟`,
-          'حذف'
-        );
+        const ok = await Refad.alert.confirm('حذف الإشعار', `سيتم حذف ${n.note_number} نهائياً. متابعة؟`, 'حذف');
         if (!ok) return;
 
         try {
           await Refad.db.remove('credit_notes', id);
-          await Refad.logActivity('delete_credit_note', 'credit_notes',
-            `حذف ${n.note_number}`, id);
+          await Refad.logActivity('delete_credit_note', 'credit_notes', `حذف ${n.note_number}`, id);
           Refad.toast.success('تم الحذف');
           await loadData();
         } catch (err) {
@@ -1900,9 +1738,6 @@
         }
       }
 
-      // ============================================================
-      // 21) Open Details
-      // ============================================================
       function openDetails(id) {
         const n = state.notes.find(x => x.id === id);
         if (!n) return;
@@ -1912,7 +1747,6 @@
         const statusLabel = STATUS_LABELS[n.status] || n.status;
         const totalAmount = amount(n.amount) + amount(n.tax_amount);
         const reference = getReference(n);
-
         const typeColor = isCredit ? '#10b981' : '#ef4444';
         const typeColorDark = isCredit ? '#047857' : '#b91c1c';
 
@@ -2000,28 +1834,23 @@
         if (window.lucide) lucide.createIcons();
       }
 
-      // ============================================================
-      // 22) Export
-      // ============================================================
       function exportExcel() {
         const list = state.filtered.length ? state.filtered : state.notes;
         if (!list.length) { Refad.toast.warning('لا توجد بيانات'); return; }
 
-        const data = list.map(n => {
-          return {
-            'رقم الإشعار': n.note_number,
-            'النوع': NOTE_TYPE_LABELS[n.note_type],
-            'الطرف': partyName(n),
-            'نوع الطرف': PARTY_TYPE_LABELS[n.party_type] || '',
-            'المبلغ': amount(n.amount),
-            'الضريبة': amount(n.tax_amount),
-            'الإجمالي': amount(n.amount) + amount(n.tax_amount),
-            'السبب': n.reason || '',
-            'التاريخ': n.note_date || '',
-            'الحالة': STATUS_LABELS[n.status] || n.status,
-            'ملاحظات': n.notes || ''
-          };
-        });
+        const data = list.map(n => ({
+          'رقم الإشعار': n.note_number,
+          'النوع': NOTE_TYPE_LABELS[n.note_type],
+          'الطرف': partyName(n),
+          'نوع الطرف': PARTY_TYPE_LABELS[n.party_type] || '',
+          'المبلغ': amount(n.amount),
+          'الضريبة': amount(n.tax_amount),
+          'الإجمالي': amount(n.amount) + amount(n.tax_amount),
+          'السبب': n.reason || '',
+          'التاريخ': n.note_date || '',
+          'الحالة': STATUS_LABELS[n.status] || n.status,
+          'ملاحظات': n.notes || ''
+        }));
 
         const ws = XLSX.utils.json_to_sheet(data);
         const wb = XLSX.utils.book_new();
@@ -2030,9 +1859,6 @@
         Refad.toast.success('تم التصدير');
       }
 
-      // ============================================================
-      // 23) Bind Events
-      // ============================================================
       function bindEvents() {
         document.getElementById('addBtn').addEventListener('click', openAdd);
 
@@ -2075,7 +1901,8 @@
             setNoteType(opt.dataset.type);
             const numInput = document.getElementById('cNoteNumber');
             if (!numInput.value) {
-              numInput.placeholder = generateNoteNumber(opt.dataset.type);
+              const prefix = opt.dataset.type === 'credit' ? 'CN' : 'DN';
+              numInput.placeholder = `${prefix}-${new Date().getFullYear()}-XXXXX`;
             }
           });
         });
@@ -2112,9 +1939,6 @@
         });
       }
 
-      // ============================================================
-      // 24) Init
-      // ============================================================
       async function init() {
         Refad.buildMenu('credit-notes.html');
         fillUser();
@@ -2130,7 +1954,7 @@
 
         Refad.registerServiceWorker();
 
-        console.log('%c[Refad] Credit Notes v2 ready (Theme Sync + Settings)', 'color:#14B8A6;font-weight:bold');
+        console.log('%c[Refad] Credit Notes v4 — Same Logic as Supplier Details', 'color:#14B8A6;font-weight:bold');
       }
 
       if (document.readyState === 'loading') {

@@ -131,6 +131,8 @@
     .type-link { color: var(--accent); font-weight: 700; text-decoration: none; }
     .pay-btn { border: 0; padding: 6px 10px; border-radius: 8px; font-weight: 700; font-size: 11px; cursor: pointer; color: white; background: var(--primary); }
     .pay-btn:hover { background: var(--primary-light); }
+    .pay-btn.collect { background: var(--success); }
+    .pay-btn.pay { background: var(--danger); }
     .action-btn { width: 30px; height: 30px; border-radius: 7px; border: 1px solid var(--border); background: var(--card); color: var(--text-muted); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
     .action-btn:hover { border-color: var(--accent); color: var(--accent); }
     .action-btn i { width: 14px; height: 14px; }
@@ -322,8 +324,8 @@
         <button class="tab" data-tab="transactions"><i data-lucide="history"></i> الحركات</button>
         <button class="tab" data-tab="journal"><i data-lucide="book-open"></i> القيود المحاسبية</button>
         <button class="tab" data-tab="overview"><i data-lucide="layout-dashboard"></i> نظرة عامة</button>
-        <button class="tab" data-tab="receivables"><i data-lucide="arrow-down-circle"></i> ذمم العملاء</button>
-        <button class="tab" data-tab="payables"><i data-lucide="arrow-up-circle"></i> ذمم الموردين</button>
+        <button class="tab" data-tab="debit"><i data-lucide="arrow-down-circle"></i> ذمم مدينة (لنا)</button>
+        <button class="tab" data-tab="credit"><i data-lucide="arrow-up-circle"></i> ذمم دائنة (علينا)</button>
         <button class="tab" data-tab="payroll"><i data-lucide="users"></i> المرتبات</button>
         <button class="tab" data-tab="pl"><i data-lucide="bar-chart-3"></i> الأرباح والخسائر</button>
       </div>
@@ -405,31 +407,71 @@
         </div>
       </div>
 
-      <div class="tab-panel" data-panel="receivables">
+      <div class="tab-panel" data-panel="debit">
+        <div class="notice" style="background:rgba(239,68,68,0.06);border-color:rgba(239,68,68,0.2);color:var(--danger);">
+          <i data-lucide="arrow-down-circle"></i>
+          <div>
+            <strong>ذمم مدينة — لنا عند الآخرين</strong><br>
+            تشمل: العملاء اللي عليهم فلوس لينا + الموردين اللي لينا عندهم فلوس.
+          </div>
+        </div>
         <div class="card">
           <div class="card-header">
-            <h3><i data-lucide="users"></i> ذمم العملاء (لك عند العملاء)</h3>
-            <span class="status-badge red" id="receivablesTotal">—</span>
+            <h3><i data-lucide="arrow-down-circle"></i> إجمالي الذمم المدينة</h3>
+            <span class="status-badge red" id="debitTotal" style="font-size:14px;padding:6px 16px;">—</span>
           </div>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>العميل</th><th>الهاتف</th><th>إجمالي الفواتير</th><th>المحصل</th><th>الرصيد المتبقي</th><th>آخر فاتورة</th><th>إجراءات</th></tr></thead>
-              <tbody id="receivablesRows"><tr><td colspan="7" class="empty">جارٍ التحميل...</td></tr></tbody>
+              <thead>
+                <tr>
+                  <th>الطرف</th>
+                  <th>النوع</th>
+                  <th>الهاتف</th>
+                  <th>إجمالي التعاملات</th>
+                  <th>المدفوع / المحصل</th>
+                  <th>الرصيد المتبقي</th>
+                  <th>آخر حركة</th>
+                  <th>إجراءات</th>
+                </tr>
+              </thead>
+              <tbody id="debitRows">
+                <tr><td colspan="8" class="empty">جارٍ التحميل...</td></tr>
+              </tbody>
             </table>
           </div>
         </div>
       </div>
 
-      <div class="tab-panel" data-panel="payables">
+      <div class="tab-panel" data-panel="credit">
+        <div class="notice" style="background:rgba(245,158,11,0.06);border-color:rgba(245,158,11,0.2);color:var(--gold);">
+          <i data-lucide="arrow-up-circle"></i>
+          <div>
+            <strong>ذمم دائنة — علينا للآخرين</strong><br>
+            تشمل: الموردين اللي عليهم فلوس لينا + العملاء اللي إحنا مدينين لهم.
+          </div>
+        </div>
         <div class="card">
           <div class="card-header">
-            <h3><i data-lucide="truck"></i> ذمم الموردين (عليك للموردين)</h3>
-            <span class="status-badge gold" id="payablesTotal">—</span>
+            <h3><i data-lucide="arrow-up-circle"></i> إجمالي الذمم الدائنة</h3>
+            <span class="status-badge gold" id="creditTotal" style="font-size:14px;padding:6px 16px;">—</span>
           </div>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>المورد</th><th>الهاتف</th><th>إجمالي المشتريات</th><th>المدفوع</th><th>الرصيد المتبقي</th><th>آخر استلام</th><th>إجراءات</th></tr></thead>
-              <tbody id="payablesRows"><tr><td colspan="7" class="empty">جارٍ التحميل...</td></tr></tbody>
+              <thead>
+                <tr>
+                  <th>الطرف</th>
+                  <th>النوع</th>
+                  <th>الهاتف</th>
+                  <th>إجمالي التعاملات</th>
+                  <th>المدفوع / المسدد</th>
+                  <th>الرصيد المتبقي</th>
+                  <th>آخر حركة</th>
+                  <th>إجراءات</th>
+                </tr>
+              </thead>
+              <tbody id="creditRows">
+                <tr><td colspan="8" class="empty">جارٍ التحميل...</td></tr>
+              </tbody>
             </table>
           </div>
         </div>
@@ -474,6 +516,7 @@
     </main>
   </div>
 
+  <!-- Modal: Account -->
   <div class="modal-backdrop" id="accountModal">
     <div class="modal">
       <div class="modal-header">
@@ -510,6 +553,7 @@
     </div>
   </div>
 
+  <!-- Modal: Payment -->
   <div class="modal-backdrop" id="paymentModal">
     <div class="modal">
       <div class="modal-header">
@@ -572,6 +616,7 @@
     </div>
   </div>
 
+  <!-- Modal: Transfer -->
   <div class="modal-backdrop" id="transferModal">
     <div class="modal">
       <div class="modal-header">
@@ -596,6 +641,7 @@
     </div>
   </div>
 
+  <!-- Modal: Statement -->
   <div class="modal-backdrop" id="statementModal">
     <div class="modal modal-lg">
       <div class="modal-header">
@@ -610,6 +656,7 @@
     </div>
   </div>
 
+  <!-- Modal: Salary -->
   <div class="modal-backdrop" id="salaryModal">
     <div class="modal">
       <div class="modal-header">
@@ -643,15 +690,22 @@
     </div>
   </div>
 
+  <!-- ✅ المكتبات — لازم قبل JavaScript -->
   <script src="refad-core.js"></script>
   <script src="refad-auth.js"></script>
   <script src="refad-theme-sync.js"></script>
   <script src="refad-settings.js"></script>
 
+  <!-- ✅ JavaScript الكامل — هيتبعت في الرسالة الجاية -->
+  <!-- <script> ... </script> -->
+
   <script>
     (function () {
       'use strict';
 
+      // ═══════════════════════════════════════════════════════════
+      // 1) Guard + Helpers
+      // ═══════════════════════════════════════════════════════════
       const session = Refad.Auth.guardPage('company.owner');
       if (!session) return;
 
@@ -674,6 +728,9 @@
         transport: 'مواصلات', maintenance: 'صيانة', marketing: 'تسويق', other: 'أخرى'
       };
 
+      // ═══════════════════════════════════════════════════════════
+      // 2) State
+      // ═══════════════════════════════════════════════════════════
       const state = {
         accounts: [], transactions: [], journalEntries: [], journalLines: [],
         invoices: [], receipts: [], expenses: [], suppliers: [], customers: [],
@@ -682,13 +739,14 @@
         editingAccountId: null, selectedType: 'cash',
         txFilterAccount: '', txFilterType: '', journalFilterType: '',
         currentStatement: null,
-        // ✅ منع Double Submit
         isSubmittingPayment: false,
         isSubmittingTransfer: false,
-        isSubmittingSalary: false,
-        isSubmittingAccount: false
+        isSubmittingSalary: false
       };
 
+      // ═══════════════════════════════════════════════════════════
+      // 3) UI Setup
+      // ═══════════════════════════════════════════════════════════
       function fillUser() {
         const av = document.getElementById('userAvatar');
         const initial = (session.full_name || '؟').trim().charAt(0);
@@ -752,27 +810,8 @@
       }
 
       // ═══════════════════════════════════════════════════════════
-      // ✅ NEW: حساب المبلغ المدفوع لفاتورة من payments مباشرة
+      // 4) Load Data
       // ═══════════════════════════════════════════════════════════
-      function getReceiptPaidAmount(receiptId) {
-        if (!receiptId) return 0;
-        return state.payments
-          .filter(p => String(p.reference_receipt_id) === String(receiptId) && p.direction === 'out')
-          .reduce((sum, p) => sum + amount(p.amount), 0);
-      }
-
-      // ═══════════════════════════════════════════════════════════
-      // ✅ NEW: حساب حالة الفاتورة بناءً على payments
-      // ═══════════════════════════════════════════════════════════
-      function getReceiptStatus(receipt) {
-        if (receipt.status === 'cancelled') return 'cancelled';
-        const total = amount(receipt.total_amount);
-        const paid = getReceiptPaidAmount(receipt.id);
-        if (paid >= total - 0.01 && total > 0) return 'completed';
-        if (paid > 0.01) return 'partial';
-        return 'pending';
-      }
-
       async function loadAllData() {
         const btn = document.getElementById('refreshBtn');
         const errorBox = document.getElementById('errorBox');
@@ -912,6 +951,267 @@
         }
       }
 
+      // ═══════════════════════════════════════════════════════════
+      // 5) Helper: Summary لكل طرف
+      // ═══════════════════════════════════════════════════════════
+      function getCustomerSummary(customer) {
+        const cid = customer.id;
+        const custInvoices = state.invoices.filter(i =>
+          String(i.customer_id) === String(cid) &&
+          i.status !== 'cancelled' &&
+          (i.invoice_type || 'sale') === 'sale'
+        );
+        const custReturns = state.invoices.filter(i =>
+          String(i.customer_id) === String(cid) &&
+          i.status !== 'cancelled' &&
+          i.invoice_type === 'return'
+        );
+
+        const invoiceTotal = custInvoices.reduce((s, i) => s + amount(i.grand_total), 0);
+        const returnsTotal = custReturns.reduce((s, i) => s + amount(i.grand_total), 0);
+        const totalBusiness = invoiceTotal - returnsTotal;
+
+        const invoicePaid = custInvoices.reduce((s, i) => s + amount(i.paid_amount), 0);
+        const extraPayments = state.payments
+          .filter(p => String(p.customer_id) === String(cid) && p.direction === 'in')
+          .reduce((s, p) => s + amount(p.amount), 0);
+        const outPayments = state.payments
+          .filter(p => String(p.customer_id) === String(cid) && p.direction === 'out')
+          .reduce((s, p) => s + amount(p.amount), 0);
+
+        const totalPaid = invoicePaid + extraPayments;
+
+        const balance = state.customerBalances[cid] !== undefined
+          ? state.customerBalances[cid]
+          : (totalBusiness - totalPaid + outPayments);
+
+        const lastDate = custInvoices
+          .sort((a, b) => String(b.invoice_date || '').localeCompare(String(a.invoice_date || '')))[0]
+          ?.invoice_date;
+
+        return {
+          id: cid,
+          partyType: 'customer',
+          typeLabel: 'عميل',
+          typeIcon: 'user',
+          typeColor: 'blue',
+          name: customer.name,
+          phone: customer.phone,
+          totalBusiness,
+          totalPaid,
+          balance,
+          lastDate
+        };
+      }
+
+      function getSupplierSummary(supplier) {
+        const sid = supplier.id;
+        const supReceipts = state.receipts.filter(r =>
+          String(r.supplier_id) === String(sid) && r.status !== 'cancelled'
+        );
+        const supReturns = state.invoices.filter(i =>
+          String(i.supplier_id) === String(sid) &&
+          i.status !== 'cancelled' &&
+          i.invoice_type === 'return'
+        );
+        const supSalesToHim = state.invoices.filter(i =>
+          String(i.supplier_id) === String(sid) &&
+          i.status !== 'cancelled' &&
+          (i.invoice_type || 'sale') === 'sale'
+        );
+
+        const receiptsTotal = supReceipts.reduce((sum, r) => sum + amount(r.total_amount), 0);
+        const returnsTotal = supReturns.reduce((sum, i) => sum + amount(i.grand_total), 0);
+        const salesTotal = supSalesToHim.reduce((sum, i) => sum + amount(i.grand_total), 0);
+
+        const totalBusiness = receiptsTotal + salesTotal - returnsTotal;
+
+        const paymentsOut = state.payments
+          .filter(p => String(p.supplier_id) === String(sid) && p.direction === 'out')
+          .reduce((sum, p) => sum + amount(p.amount), 0);
+        const paymentsIn = state.payments
+          .filter(p => String(p.supplier_id) === String(sid) && p.direction === 'in')
+          .reduce((sum, p) => sum + amount(p.amount), 0);
+
+        const totalPaid = paymentsOut + paymentsIn;
+
+        const balance = state.supplierBalances[sid] !== undefined
+          ? state.supplierBalances[sid]
+          : (receiptsTotal - salesTotal - returnsTotal - paymentsOut + paymentsIn);
+
+        const lastReceipt = supReceipts
+          .sort((a, b) => String(b.receipt_date || '').localeCompare(String(a.receipt_date || '')))[0];
+        const lastSale = supSalesToHim
+          .sort((a, b) => String(b.invoice_date || '').localeCompare(String(a.invoice_date || '')))[0];
+
+        const lastDate = [lastReceipt?.receipt_date, lastSale?.invoice_date]
+          .filter(Boolean)
+          .sort((a, b) => String(b).localeCompare(String(a)))[0] || null;
+
+        return {
+          id: sid,
+          partyType: 'supplier',
+          typeLabel: 'مورد',
+          typeIcon: 'truck',
+          typeColor: 'purple',
+          name: supplier.name,
+          phone: supplier.phone,
+          totalBusiness,
+          totalPaid,
+          balance,
+          lastDate
+        };
+      }
+
+      // ═══════════════════════════════════════════════════════════
+      // 6) ذمم مدينة (لنا)
+      // ═══════════════════════════════════════════════════════════
+      function renderDebitAccounts() {
+        const all = [];
+
+        // العملاء اللي عليهم فلوس لينا
+        state.customers.forEach(c => {
+          const s = getCustomerSummary(c);
+          if (s.balance > 0.01) {
+            all.push({
+              ...s,
+              actionLabel: 'تحصيل',
+              actionDirection: 'in',
+              actionClass: 'collect'
+            });
+          }
+        });
+
+        // الموردين اللي لينا عندهم فلوس (رصيد سالب)
+        state.suppliers.forEach(s => {
+          const sum = getSupplierSummary(s);
+          if (sum.balance < -0.01) {
+            all.push({
+              ...sum,
+              balance: Math.abs(sum.balance),
+              actionLabel: 'قبض',
+              actionDirection: 'in',
+              actionClass: 'collect'
+            });
+          }
+        });
+
+        all.sort((a, b) => b.balance - a.balance);
+        const total = all.reduce((s, e) => s + e.balance, 0);
+
+        document.getElementById('debitTotal').textContent = money(total);
+
+        const tbody = document.getElementById('debitRows');
+        if (!all.length) {
+          tbody.innerHTML = '<tr><td colspan="8" class="empty"><i data-lucide="check-circle"></i><p>لا توجد ذمم مدينة</p></td></tr>';
+          if (window.lucide) lucide.createIcons();
+          return;
+        }
+
+        tbody.innerHTML = all.map(e => `
+          <tr>
+            <td><strong>${esc(e.name)}</strong></td>
+            <td>
+              <span class="status-badge ${e.typeColor}">
+                <i data-lucide="${e.typeIcon}" style="width:10px;height:10px;"></i>
+                ${esc(e.typeLabel)}
+              </span>
+            </td>
+            <td>${esc(e.phone || '—')}</td>
+            <td>${money(e.totalBusiness)}</td>
+            <td style="color:var(--success);">${money(e.totalPaid)}</td>
+            <td><strong style="color:var(--danger);">${money(e.balance)}</strong></td>
+            <td>${e.lastDate ? Refad.format.date(e.lastDate) : '—'}</td>
+            <td>
+              <button class="pay-btn ${e.actionClass}" data-action="${e.actionDirection}" data-type="${e.partyType}" data-id="${e.id}" data-due="${e.balance}">
+                ${esc(e.actionLabel)}
+              </button>
+              <button class="action-btn" data-statement="${e.partyType}" data-id="${e.id}">
+                <i data-lucide="file-text"></i>
+              </button>
+            </td>
+          </tr>
+        `).join('');
+
+        if (window.lucide) lucide.createIcons();
+      }
+
+      // ═══════════════════════════════════════════════════════════
+      // 7) ذمم دائنة (علينا)
+      // ═══════════════════════════════════════════════════════════
+      function renderCreditAccounts() {
+        const all = [];
+
+        // الموردين اللي عليهم فلوس لينا (رصيد موجب)
+        state.suppliers.forEach(s => {
+          const sum = getSupplierSummary(s);
+          if (sum.balance > 0.01) {
+            all.push({
+              ...sum,
+              actionLabel: 'دفع',
+              actionDirection: 'out',
+              actionClass: 'pay'
+            });
+          }
+        });
+
+        // العملاء اللي إحنا مدينين لهم (رصيد سالب)
+        state.customers.forEach(c => {
+          const s = getCustomerSummary(c);
+          if (s.balance < -0.01) {
+            all.push({
+              ...s,
+              balance: Math.abs(s.balance),
+              actionLabel: 'دفع',
+              actionDirection: 'out',
+              actionClass: 'pay'
+            });
+          }
+        });
+
+        all.sort((a, b) => b.balance - a.balance);
+        const total = all.reduce((s, e) => s + e.balance, 0);
+
+        document.getElementById('creditTotal').textContent = money(total);
+
+        const tbody = document.getElementById('creditRows');
+        if (!all.length) {
+          tbody.innerHTML = '<tr><td colspan="8" class="empty"><i data-lucide="check-circle"></i><p>لا توجد ذمم دائنة</p></td></tr>';
+          if (window.lucide) lucide.createIcons();
+          return;
+        }
+
+        tbody.innerHTML = all.map(e => `
+          <tr>
+            <td><strong>${esc(e.name)}</strong></td>
+            <td>
+              <span class="status-badge ${e.typeColor}">
+                <i data-lucide="${e.typeIcon}" style="width:10px;height:10px;"></i>
+                ${esc(e.typeLabel)}
+              </span>
+            </td>
+            <td>${esc(e.phone || '—')}</td>
+            <td>${money(e.totalBusiness)}</td>
+            <td style="color:var(--success);">${money(e.totalPaid)}</td>
+            <td><strong style="color:var(--gold);">${money(e.balance)}</strong></td>
+            <td>${e.lastDate ? Refad.format.date(e.lastDate) : '—'}</td>
+            <td>
+              <button class="pay-btn ${e.actionClass}" data-action="${e.actionDirection}" data-type="${e.partyType}" data-id="${e.id}" data-due="${e.balance}">
+                ${esc(e.actionLabel)}
+              </button>
+              <button class="action-btn" data-statement="${e.partyType}" data-id="${e.id}">
+                <i data-lucide="file-text"></i>
+              </button>
+            </td>
+          </tr>
+        `).join('');
+
+        if (window.lucide) lucide.createIcons();
+      }
+
+      // ═══════════════════════════════════════════════════════════
+      // 8) Accounts Grid + Metrics
+      // ═══════════════════════════════════════════════════════════
       function renderAccountsMetrics() {
         const active = state.accounts.filter(a => a.is_active !== false);
         const totalBalance = active.reduce((s, a) => s + amount(a.current_balance), 0);
@@ -1006,6 +1306,9 @@
         });
       }
 
+      // ═══════════════════════════════════════════════════════════
+      // 9) Transactions + Journal
+      // ═══════════════════════════════════════════════════════════
       function renderTransactionsTable() {
         const filterSel = document.getElementById('txFilterAccount');
         const curVal = filterSel.value;
@@ -1086,6 +1389,9 @@
         `).join('');
       }
 
+      // ═══════════════════════════════════════════════════════════
+      // 10) Date Range Helpers
+      // ═══════════════════════════════════════════════════════════
       function periodRange(value) {
         const now = today();
         if (value === 'today') return { from: now, to: now };
@@ -1103,6 +1409,9 @@
         return true;
       }
 
+      // ═══════════════════════════════════════════════════════════
+      // 11) Overview Metrics + Recent
+      // ═══════════════════════════════════════════════════════════
       function renderMetrics() {
         const range = periodRange(document.getElementById('periodSelect').value);
 
@@ -1119,10 +1428,17 @@
         const salaryExpenses = expenses.filter(e => e.category === 'salary').reduce((s, e) => s + amount(e.amount), 0);
         const netResult = profit - expenseValue;
 
-        const customerDue = Object.values(state.customerBalances)
-          .filter(b => b > 0.01).reduce((s, b) => s + b, 0);
-        const supplierDue = Object.values(state.supplierBalances)
-          .filter(b => b > 0.01).reduce((s, b) => s + b, 0);
+        let debitTotal = 0, creditTotal = 0;
+        state.customers.forEach(c => {
+          const sum = getCustomerSummary(c);
+          if (sum.balance > 0.01) debitTotal += sum.balance;
+          else if (sum.balance < -0.01) creditTotal += Math.abs(sum.balance);
+        });
+        state.suppliers.forEach(s => {
+          const sum = getSupplierSummary(s);
+          if (sum.balance < -0.01) debitTotal += Math.abs(sum.balance);
+          else if (sum.balance > 0.01) creditTotal += sum.balance;
+        });
 
         const purchaseValue = receipts.reduce((s, r) => s + amount(r.total_amount), 0);
         const purchasePaid = receipts.reduce((s, r) => s + amount(r.paid_amount), 0);
@@ -1135,8 +1451,8 @@
           { label: 'المشتريات المستلمة', value: money(purchaseValue), note: `مدفوع: ${money(purchasePaid)}`, icon: 'package-check', color: '#d97706' },
           { label: 'المصاريف المسجلة', value: money(expenseValue), note: `${expenses.length} مصروف`, icon: 'receipt-text', color: '#dc2626' },
           { label: 'المرتبات', value: money(salaryExpenses), note: 'من المصاريف', icon: 'users', color: '#0891b2' },
-          { label: 'ذمم العملاء (لك)', value: money(customerDue), note: 'من RPC', icon: 'arrow-down-circle', color: '#10b981', valueClass: 'accent' },
-          { label: 'ذمم الموردين (عليك)', value: money(supplierDue), note: 'من RPC', icon: 'arrow-up-circle', color: '#be123c', valueClass: 'danger' }
+          { label: 'ذمم مدينة (لنا)', value: money(debitTotal), note: 'لك عند الآخرين', icon: 'arrow-down-circle', color: '#10b981', valueClass: 'accent' },
+          { label: 'ذمم دائنة (علينا)', value: money(creditTotal), note: 'عليك للآخرين', icon: 'arrow-up-circle', color: '#be123c', valueClass: 'danger' }
         ];
 
         document.getElementById('metricsGrid').innerHTML = metrics.map(m => `
@@ -1163,7 +1479,9 @@
           ...invoices.map(r => ({
             kind: 'بيع', color: '#2563eb',
             number: r.invoice_number,
-            party: r.customer_id ? (state.customers.find(c => c.id === r.customer_id)?.name || '—') : 'عميل نقدي',
+            party: r.customer_id
+              ? (state.customers.find(c => c.id === r.customer_id)?.name || '—')
+              : (r.supplier_id ? (state.suppliers.find(s => s.id === r.supplier_id)?.name || '—') : 'عميل نقدي'),
             date: r.invoice_date, total: amount(r.grand_total), paid: amount(r.paid_amount),
             href: `invoices.html?id=${r.id}`
           })),
@@ -1197,115 +1515,9 @@
         `).join('') : '<tr><td colspan="7" class="empty">لا توجد حركات</td></tr>';
       }
 
-      function renderReceivables() {
-        const customersWithDue = state.customers
-          .map(c => {
-            const cid = c.id;
-            const custInvoices = state.invoices.filter(i =>
-              String(i.customer_id) === String(cid) && i.status !== 'cancelled' && (i.invoice_type || 'sale') === 'sale'
-            );
-            const custReturns = state.invoices.filter(i =>
-              String(i.customer_id) === String(cid) && i.status !== 'cancelled' && i.invoice_type === 'return'
-            );
-            const invoiceTotal = custInvoices.reduce((s, i) => s + amount(i.grand_total), 0);
-            const returnsTotal = custReturns.reduce((s, i) => s + amount(i.grand_total), 0);
-            const invoicePaid = custInvoices.reduce((s, i) => s + amount(i.paid_amount), 0);
-            const extraPayments = state.payments.filter(p =>
-              String(p.customer_id) === String(cid) && p.direction === 'in'
-            ).reduce((s, p) => s + amount(p.amount), 0);
-            const totalPaid = invoicePaid + extraPayments;
-
-            const balance = state.customerBalances[cid] !== undefined
-              ? state.customerBalances[cid]
-              : (invoiceTotal - returnsTotal - totalPaid);
-
-            const lastInvoice = custInvoices.sort((a, b) =>
-              String(b.invoice_date || '').localeCompare(String(a.invoice_date || ''))
-            )[0];
-
-            return { id: cid, name: c.name, phone: c.phone, balance, invoiceTotal: invoiceTotal - returnsTotal, totalPaid, lastInvoice: lastInvoice?.invoice_date };
-          })
-          .filter(c => c.balance > 0.01)
-          .sort((a, b) => b.balance - a.balance);
-
-        const total = customersWithDue.reduce((s, c) => s + c.balance, 0);
-        document.getElementById('receivablesTotal').textContent = money(total);
-
-        document.getElementById('receivablesRows').innerHTML = customersWithDue.length
-          ? customersWithDue.map(c => `
-              <tr>
-                <td><strong>${esc(c.name)}</strong></td>
-                <td>${esc(c.phone || '—')}</td>
-                <td>${money(c.invoiceTotal)}</td>
-                <td style="color:var(--success);">${money(c.totalPaid)}</td>
-                <td><strong style="color:var(--danger);">${money(c.balance)}</strong></td>
-                <td>${c.lastInvoice ? Refad.format.date(c.lastInvoice) : '—'}</td>
-                <td>
-                  <button class="pay-btn" data-collect-from="${c.id}" data-due="${c.balance}">تحصيل</button>
-                  <button class="action-btn" data-statement="customer" data-id="${c.id}"><i data-lucide="file-text"></i></button>
-                </td>
-              </tr>
-            `).join('')
-          : '<tr><td colspan="7" class="empty"><i data-lucide="check-circle"></i><p>لا توجد ذمم مدينة</p></td></tr>';
-
-        if (window.lucide) lucide.createIcons();
-      }
-
-      // ✅ محسّن: يستخدم getReceiptPaidAmount
-      function renderPayables() {
-        const suppliersWithDue = state.suppliers
-          .map(s => {
-            const sid = s.id;
-            const supReceipts = state.receipts.filter(r =>
-              String(r.supplier_id) === String(sid) && r.status !== 'cancelled'
-            );
-            const supReturns = state.invoices.filter(i =>
-              String(i.supplier_id) === String(sid) && i.status !== 'cancelled' && i.invoice_type === 'return'
-            );
-            const receiptsTotal = supReceipts.reduce((sum, r) => sum + amount(r.total_amount), 0);
-            const returnsTotal = supReturns.reduce((sum, i) => sum + amount(i.grand_total), 0);
-            
-            // ✅ احسب المدفوع من payments مباشرة
-            const totalPaid = state.payments
-              .filter(p => String(p.supplier_id) === String(sid) && p.direction === 'out')
-              .reduce((sum, p) => sum + amount(p.amount), 0);
-
-            const balance = state.supplierBalances[sid] !== undefined
-              ? state.supplierBalances[sid]
-              : (receiptsTotal - returnsTotal - totalPaid);
-
-            const lastReceipt = supReceipts.sort((a, b) =>
-              String(b.receipt_date || '').localeCompare(String(a.receipt_date || ''))
-            )[0];
-
-            return { id: sid, name: s.name, phone: s.phone, balance, receiptsTotal: receiptsTotal - returnsTotal, totalPaid, lastReceipt: lastReceipt?.receipt_date };
-          })
-          .filter(s => s.balance > 0.01)
-          .sort((a, b) => b.balance - a.balance);
-
-        const total = suppliersWithDue.reduce((s, c) => s + c.balance, 0);
-        document.getElementById('payablesTotal').textContent = money(total);
-
-        document.getElementById('payablesRows').innerHTML = suppliersWithDue.length
-          ? suppliersWithDue.map(s => `
-              <tr>
-                <td><strong>${esc(s.name)}</strong></td>
-                <td>${esc(s.phone || '—')}</td>
-                <td>${money(s.receiptsTotal)}</td>
-                <td style="color:var(--success);">${money(s.totalPaid)}</td>
-                <td><strong style="color:var(--danger);">${money(s.balance)}</strong></td>
-                <td>${s.lastReceipt ? Refad.format.date(s.lastReceipt) : '—'}</td>
-                <td>
-                  <button class="pay-btn" data-pay-supplier="${s.id}" data-due="${s.balance}">دفع</button>
-                  <button class="action-btn" data-statement="supplier" data-id="${s.id}"><i data-lucide="file-text"></i></button>
-                </td>
-              </tr>
-            `).join('')
-          : '<tr><td colspan="7" class="empty"><i data-lucide="check-circle"></i><p>لا توجد ذمم دائنة</p></td></tr>';
-
-        if (window.lucide) lucide.createIcons();
-      }
-
+      // ═══════════════════════════════════════════════════════════
+      // 12) Payroll
+      // ═══════════════════════════════════════════════════════════
       function renderPayrollTab() {
         const salaries = state.expenses.filter(e => e.category === 'salary');
         const tbody = document.getElementById('payrollRows');
@@ -1359,6 +1571,9 @@
         if (window.lucide) lucide.createIcons();
       }
 
+      // ═══════════════════════════════════════════════════════════
+      // 13) P&L
+      // ═══════════════════════════════════════════════════════════
       function renderPL() {
         const range = periodRange(document.getElementById('periodSelect').value);
         const invoices = state.invoices.filter(r =>
@@ -1404,6 +1619,9 @@
         `;
       }
 
+      // ═══════════════════════════════════════════════════════════
+      // 14) Account Modal
+      // ═══════════════════════════════════════════════════════════
       function setAccountType(type) {
         state.selectedType = type;
         document.getElementById('accType').value = type;
@@ -1515,6 +1733,9 @@
         }
       }
 
+      // ═══════════════════════════════════════════════════════════
+      // 15) Payment Modal
+      // ═══════════════════════════════════════════════════════════
       function setPaymentDirection(direction, partyType) {
         document.getElementById('paymentDirection').value = direction;
         document.getElementById('paymentPartyType').value = partyType;
@@ -1588,14 +1809,10 @@
         if (window.lucide) lucide.createIcons();
       }
 
-      // ✅ submitPayment — محمي من Double Submit + يحدّث الفواتير
       async function submitPayment(e) {
         e.preventDefault();
 
-        if (state.isSubmittingPayment) {
-          console.warn('[Accounts] Payment already in progress');
-          return;
-        }
+        if (state.isSubmittingPayment) return;
         state.isSubmittingPayment = true;
 
         const btn = document.getElementById('paymentSubmitBtn');
@@ -1664,7 +1881,6 @@
 
           const result = Array.isArray(data) ? data[0] : data || {};
 
-          // ✅ مزامنة الرصيد المخزّن (fallback)
           try {
             if (partyType === 'supplier') {
               const { data: newBal } = await Refad.sb.rpc('get_supplier_balance', { p_supplier_id: partyId });
@@ -1706,6 +1922,9 @@
         }
       }
 
+      // ═══════════════════════════════════════════════════════════
+      // 16) Transfer Modal
+      // ═══════════════════════════════════════════════════════════
       function openTransferModal() {
         if (state.accounts.filter(a => a.is_active !== false).length < 2) {
           Refad.toast.warning('تحتاج على الأقل حسابين');
@@ -1790,6 +2009,9 @@
         }
       }
 
+      // ═══════════════════════════════════════════════════════════
+      // 17) Salary Modal
+      // ═══════════════════════════════════════════════════════════
       function openSalaryModal() {
         document.getElementById('salaryForm').reset();
         document.getElementById('salaryDate').value = today();
@@ -1875,6 +2097,9 @@
         }
       }
 
+      // ═══════════════════════════════════════════════════════════
+      // 18) Statement Modal
+      // ═══════════════════════════════════════════════════════════
       async function openStatement(type, id) {
         const body = document.getElementById('statementModalBody');
         body.innerHTML = '<div class="empty"><i data-lucide="loader" class="spin"></i><p>جارٍ التحميل...</p></div>';
@@ -2067,6 +2292,9 @@
         w.document.close();
       }
 
+      // ═══════════════════════════════════════════════════════════
+      // 19) Export
+      // ═══════════════════════════════════════════════════════════
       function exportSummary() {
         if (typeof XLSX === 'undefined') { Refad.toast.error('Excel غير محمّل'); return; }
 
@@ -2078,30 +2306,45 @@
           'الرصيد الحالي': amount(a.current_balance)
         }));
 
-        const receivablesSheet = state.customers
-          .filter(c => (state.customerBalances[c.id] !== undefined ? state.customerBalances[c.id] : amount(c.balance)) > 0.01)
-          .map(c => ({
-            'العميل': c.name,
-            'الهاتف': c.phone || '',
-            'الرصيد': state.customerBalances[c.id] !== undefined ? state.customerBalances[c.id] : amount(c.balance)
-          }));
+        const debitSheet = [];
+        state.customers.forEach(c => {
+          const s = getCustomerSummary(c);
+          if (s.balance > 0.01) {
+            debitSheet.push({ 'الطرف': s.name, 'النوع': 'عميل', 'الهاتف': s.phone || '', 'الرصيد': s.balance });
+          }
+        });
+        state.suppliers.forEach(s => {
+          const sum = getSupplierSummary(s);
+          if (sum.balance < -0.01) {
+            debitSheet.push({ 'الطرف': sum.name, 'النوع': 'مورد', 'الهاتف': sum.phone || '', 'الرصيد': Math.abs(sum.balance) });
+          }
+        });
 
-        const payablesSheet = state.suppliers
-          .filter(s => (state.supplierBalances[s.id] !== undefined ? state.supplierBalances[s.id] : amount(s.balance)) > 0.01)
-          .map(s => ({
-            'المورد': s.name,
-            'الهاتف': s.phone || '',
-            'الرصيد': state.supplierBalances[s.id] !== undefined ? state.supplierBalances[s.id] : amount(s.balance)
-          }));
+        const creditSheet = [];
+        state.suppliers.forEach(s => {
+          const sum = getSupplierSummary(s);
+          if (sum.balance > 0.01) {
+            creditSheet.push({ 'الطرف': sum.name, 'النوع': 'مورد', 'الهاتف': sum.phone || '', 'الرصيد': sum.balance });
+          }
+        });
+        state.customers.forEach(c => {
+          const s = getCustomerSummary(c);
+          if (s.balance < -0.01) {
+            creditSheet.push({ 'الطرف': s.name, 'النوع': 'عميل', 'الهاتف': s.phone || '', 'الرصيد': Math.abs(s.balance) });
+          }
+        });
 
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(accountsSheet), 'الحسابات');
-        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(receivablesSheet), 'ذمم العملاء');
-        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(payablesSheet), 'ذمم الموردين');
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(debitSheet), 'ذمم مدينة');
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(creditSheet), 'ذمم دائنة');
         XLSX.writeFile(wb, `accounts-${today()}.xlsx`);
         Refad.toast.success('تم التصدير');
       }
 
+      // ═══════════════════════════════════════════════════════════
+      // 20) Tabs Setup
+      // ═══════════════════════════════════════════════════════════
       function setupTabs() {
         document.querySelectorAll('.tab').forEach(tab => {
           tab.addEventListener('click', () => {
@@ -2109,19 +2352,25 @@
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
             tab.classList.add('active');
-            document.querySelector(`.tab-panel[data-panel="${name}"]`).classList.add('active');
+            const panel = document.querySelector(`.tab-panel[data-panel="${name}"]`);
+            if (panel) panel.classList.add('active');
 
             if (name === 'transactions') renderTransactionsTable();
             else if (name === 'journal') renderJournalTab();
             else if (name === 'overview') { renderMetrics(); renderRecent(); }
-            else if (name === 'receivables') renderReceivables();
-            else if (name === 'payables') renderPayables();
+            else if (name === 'debit') renderDebitAccounts();
+            else if (name === 'credit') renderCreditAccounts();
             else if (name === 'payroll') renderPayrollTab();
             else if (name === 'pl') renderPL();
+
+            if (window.lucide) lucide.createIcons();
           });
         });
       }
 
+      // ═══════════════════════════════════════════════════════════
+      // 21) Modals Setup
+      // ═══════════════════════════════════════════════════════════
       function setupModals() {
         document.querySelectorAll('[data-close]').forEach(b => {
           b.addEventListener('click', () => {
@@ -2165,6 +2414,9 @@
         });
       }
 
+      // ═══════════════════════════════════════════════════════════
+      // 22) Render All
+      // ═══════════════════════════════════════════════════════════
       function renderAll() {
         renderAccountsMetrics();
         renderAccountsGrid();
@@ -2172,13 +2424,16 @@
         renderJournalTab();
         renderMetrics();
         renderRecent();
-        renderReceivables();
-        renderPayables();
+        renderDebitAccounts();
+        renderCreditAccounts();
         renderPayrollTab();
         renderPL();
         if (window.lucide) lucide.createIcons();
       }
 
+      // ═══════════════════════════════════════════════════════════
+      // 23) Bind Events
+      // ═══════════════════════════════════════════════════════════
       function bindEvents() {
         document.getElementById('periodSelect').addEventListener('change', renderAll);
 
@@ -2209,12 +2464,16 @@
         document.getElementById('addSalaryBtnTop').addEventListener('click', openSalaryModal);
         document.getElementById('addSalaryBtn').addEventListener('click', openSalaryModal);
 
-        document.getElementById('receivablesRows').addEventListener('click', e => {
-          const collectBtn = e.target.closest('[data-collect-from]');
+        // ذمم مدينة — زرار التحصيل
+        document.getElementById('debitRows').addEventListener('click', e => {
+          const collectBtn = e.target.closest('.pay-btn');
           if (collectBtn) {
+            const partyType = collectBtn.dataset.type;
+            const direction = collectBtn.dataset.action;
             openPaymentModal({
-              direction: 'in', partyType: 'customer',
-              partyId: parseInt(collectBtn.dataset.collectFrom, 10),
+              direction,
+              partyType,
+              partyId: parseInt(collectBtn.dataset.id, 10),
               amount: Number(collectBtn.dataset.due)
             });
             return;
@@ -2223,12 +2482,16 @@
           if (statementBtn) openStatement(statementBtn.dataset.statement, parseInt(statementBtn.dataset.id, 10));
         });
 
-        document.getElementById('payablesRows').addEventListener('click', e => {
-          const payBtn = e.target.closest('[data-pay-supplier]');
+        // ذمم دائنة — زرار الدفع
+        document.getElementById('creditRows').addEventListener('click', e => {
+          const payBtn = e.target.closest('.pay-btn');
           if (payBtn) {
+            const partyType = payBtn.dataset.type;
+            const direction = payBtn.dataset.action;
             openPaymentModal({
-              direction: 'out', partyType: 'supplier',
-              partyId: parseInt(payBtn.dataset.paySupplier, 10),
+              direction,
+              partyType,
+              partyId: parseInt(payBtn.dataset.id, 10),
               amount: Number(payBtn.dataset.due)
             });
             return;
@@ -2244,6 +2507,9 @@
         });
       }
 
+      // ═══════════════════════════════════════════════════════════
+      // 24) Init
+      // ═══════════════════════════════════════════════════════════
       async function init() {
         Refad.buildMenu('accounts.html');
         fillUser();
@@ -2261,7 +2527,7 @@
 
         if (Refad.registerServiceWorker) Refad.registerServiceWorker();
 
-        console.log('%c[Refad] Accounts v8 — Receipts Auto-Update via FIFO', 'color:#14B8A6;font-weight:bold;font-size:14px');
+        console.log('%c[Refad] Accounts v9 — Debit/Credit Unified', 'color:#14B8A6;font-weight:bold;font-size:14px');
       }
 
       if (document.readyState === 'loading') {
