@@ -21,6 +21,7 @@
   <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
 
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -75,23 +76,17 @@
 
     /* ============ Sidebar ============ */
     .sidebar {
-      width: var(--sidebar-w);
-      height: 100vh;
-      background: var(--sidebar-bg);
-      color: var(--sidebar-text);
-      position: fixed;
-      top: 0; right: 0;
-      z-index: 100;
+      width: var(--sidebar-w); height: 100vh;
+      background: var(--sidebar-bg); color: var(--sidebar-text);
+      position: fixed; top: 0; right: 0; z-index: 100;
       display: flex; flex-direction: column;
       transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       box-shadow: -4px 0 20px rgba(0,0,0,0.1);
     }
     .sidebar-header {
-      padding: 20px 22px;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
+      padding: 20px 22px; border-bottom: 1px solid rgba(255,255,255,0.08);
       display: flex; align-items: center; gap: 14px;
-      height: var(--topbar-h);
-      box-sizing: border-box;
+      height: var(--topbar-h); box-sizing: border-box;
     }
     .sidebar-logo {
       width: 40px; height: 40px;
@@ -319,7 +314,6 @@
     }
     .filter-select:focus { border-color: var(--accent); background: var(--card); }
 
-    /* View toggle */
     .view-toggle {
       display: flex;
       gap: 2px;
@@ -355,7 +349,7 @@
       width: 100%;
       border-collapse: collapse;
       font-size: 13px;
-      min-width: 1000px;
+      min-width: 1100px;
     }
     table.data-table thead { background: var(--bg); border-bottom: 1px solid var(--border); }
     table.data-table th {
@@ -444,6 +438,7 @@
     .action-btn:hover { border-color: var(--accent); color: var(--accent); }
     .action-btn.danger:hover { border-color: var(--danger); color: var(--danger); background: rgba(239,68,68,0.06); }
     .action-btn.success:hover { border-color: var(--success); color: var(--success); }
+    .action-btn.share:hover { border-color: var(--purple); color: var(--purple); background: rgba(139,92,246,0.06); }
     .action-btn i { width: 14px; height: 14px; }
 
     /* ============ Cards Grid ============ */
@@ -525,7 +520,7 @@
       font-size: 11px;
     }
 
-    /* ============ Empty / Loader / Skeleton ============ */
+    /* ============ Empty / Loader ============ */
     .empty-state {
       padding: 60px 20px;
       text-align: center;
@@ -604,7 +599,7 @@
       flex-wrap: wrap;
     }
 
-    /* Info grid */
+    /* ============ Info Grid ============ */
     .info-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -620,7 +615,7 @@
     .info-item .label { font-size: 11px; color: var(--text-muted); font-weight: 700; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
     .info-item .value { font-size: 14px; color: var(--text); font-weight: 700; word-break: break-word; }
 
-    /* Items table in modal */
+    /* ============ Items Mini Table ============ */
     .items-mini-table {
       width: 100%;
       border-collapse: collapse;
@@ -646,7 +641,7 @@
     }
     .items-mini-table tbody tr:last-child td { border-bottom: none; }
 
-    /* Totals */
+    /* ============ Totals ============ */
     .totals-box {
       margin-top: 16px;
       padding: 16px;
@@ -673,11 +668,95 @@
     .totals-row.grand .value { color: var(--accent); font-weight: 800; }
     .totals-row.profit .value { color: var(--success); }
 
-    /* Overlay */
+    /* ============ Invoice Footer/Terms Preview ============ */
+    .invoice-footer-preview {
+      margin-top: 16px;
+      padding: 12px;
+      background: var(--bg);
+      border-radius: 10px;
+      border-right: 3px solid var(--accent);
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.7;
+    }
+    .invoice-footer-preview strong {
+      color: var(--text);
+      display: block;
+      margin-bottom: 4px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .invoice-terms-preview {
+      margin-top: 10px;
+      padding: 12px;
+      background: var(--bg);
+      border-radius: 10px;
+      border-right: 3px solid var(--gold);
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.7;
+    }
+    .invoice-terms-preview strong {
+      color: var(--text);
+      display: block;
+      margin-bottom: 4px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    /* ============ Share Modal ============ */
+    .share-modal-body { padding: 24px; }
+    .share-qr-wrap {
+      text-align: center;
+      padding: 20px;
+      background: var(--bg);
+      border-radius: 12px;
+      margin-bottom: 16px;
+    }
+    .share-qr-wrap #shareQrCode {
+      display: inline-block;
+      padding: 12px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    .share-qr-wrap #shareQrCode img {
+      display: block;
+      max-width: 220px;
+      width: 100%;
+      height: auto;
+    }
+    .share-link-box {
+      display: flex;
+      gap: 8px;
+      padding: 10px;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      margin-bottom: 12px;
+    }
+    .share-link-box input {
+      flex: 1;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      background: transparent;
+      border: none;
+      color: var(--text);
+      outline: none;
+      min-width: 0;
+    }
+    .share-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .share-actions .btn { flex: 1; justify-content: center; }
+
+    /* ============ Overlay ============ */
     .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; opacity: 0; transition: opacity 0.3s; }
     .overlay.show { display: block; opacity: 1; }
 
-    /* ✨ Quick Search */
+    /* ============ Quick Search ============ */
     .quick-search-overlay {
       position: fixed; inset: 0;
       z-index: 600;
@@ -792,8 +871,7 @@
       .quick-search-overlay { padding: 20px 10px; }
     }
   </style>
-</head>
-<body>
+</head><body>
 
   <!-- Sidebar -->
   <aside class="sidebar" id="sidebar">
@@ -845,6 +923,7 @@
 
     <main class="content">
 
+      <!-- Page Head -->
       <div class="page-head">
         <div>
           <h1>الفواتير</h1>
@@ -962,7 +1041,7 @@
                 <th>المدفوع</th>
                 <th>الربح</th>
                 <th>الحالة</th>
-                <th style="width:120px;">إجراءات</th>
+                <th style="width:160px;">إجراءات</th>
               </tr>
             </thead>
             <tbody id="tableBody">
@@ -978,7 +1057,7 @@
     </main>
   </div>
 
-  <!-- ✨ Quick Search Overlay -->
+  <!-- Quick Search Overlay -->
   <div class="quick-search-overlay" id="quickSearchOverlay">
     <div class="quick-search-box">
       <div class="quick-search-input-wrap">
@@ -996,7 +1075,7 @@
     </div>
   </div>
 
-  <!-- ========== Modal: Invoice Details ========== -->
+  <!-- Modal: Invoice Details -->
   <div class="modal-backdrop" id="invoiceModal">
     <div class="modal modal-lg">
       <div class="modal-header">
@@ -1012,6 +1091,9 @@
         <a class="btn btn-outline" id="invoiceReturnsBtn" href="#" style="display:none;">
           <i data-lucide="undo-2"></i> مرتجع
         </a>
+        <button type="button" class="btn btn-outline" id="shareInvoiceBtn">
+          <i data-lucide="share-2"></i> مشاركة
+        </button>
         <button type="button" class="btn btn-success" id="reprintBtn">
           <i data-lucide="printer"></i> طباعة
         </button>
@@ -1019,7 +1101,7 @@
     </div>
   </div>
 
-  <!-- ========== Modal: Add Note ========== -->
+  <!-- Modal: Add Note -->
   <div class="modal-backdrop" id="noteModal">
     <div class="modal">
       <div class="modal-header">
@@ -1060,1494 +1142,1769 @@
     </div>
   </div>
 
-  <!-- ============================================================
-       SCRIPTS — الترتيب مهم جداً
-       ============================================================ -->
+  <!-- ============================================================ -->
+  <!-- Modal: Share Invoice — جديد -->
+  <!-- ============================================================ -->
+  <div class="modal-backdrop" id="shareModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3><i data-lucide="share-2"></i> مشاركة الفاتورة مع العميل</h3>
+        <button class="modal-close" data-close><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body share-modal-body">
+        <div class="share-qr-wrap">
+          <div id="shareQrCode"></div>
+          <p style="margin-top:12px;font-size:12px;color:var(--text-muted);">
+            العميل يمسح الكود لفتح الفاتورة على موبايله
+          </p>
+        </div>
+
+        <div class="share-link-box">
+          <input type="text" id="shareLinkInput" readonly>
+        </div>
+
+        <div class="share-actions">
+          <button class="btn btn-outline btn-sm" id="copyLinkBtn">
+            <i data-lucide="copy"></i> نسخ
+          </button>
+          <button class="btn btn-outline btn-sm" id="whatsappShareBtn">
+            <i data-lucide="message-circle"></i> واتساب
+          </button>
+          <button class="btn btn-outline btn-sm" id="openShareLinkBtn">
+            <i data-lucide="external-link"></i> فتح
+          </button>
+        </div>
+
+        <div style="margin-top:16px;padding:12px;background:rgba(59,130,246,0.06);border-right:3px solid var(--info);border-radius:8px;font-size:11px;color:var(--text-muted);line-height:1.7;">
+          <strong style="color:var(--info);display:block;margin-bottom:4px;">💡 ملاحظة</strong>
+          الرابط صالح للعميل بدون تسجيل دخول. يقدر يشوف الفاتورة كاملة ويطبعها.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" data-close>إغلاق</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
   <script src="refad-core.js"></script>
+  <script src="refad-settings.js"></script>
   <script src="refad-auth.js"></script>
   <script src="refad-theme-sync.js"></script>
-  <script src="refad-settings.js"></script>
   <script src="refad-print.js"></script>
 
-  <script>
-    (function () {
-      'use strict';
+  <!-- ⏭️ الجزء 3 (JavaScript) هيتحط هنا -->
+<script>
+  (function () {
+    'use strict';
 
-      // ============================================================
-      // 0) Safe Settings Wrapper
-      // ============================================================
-      const SafeSettings = {
-        locale: {
-          formatMoney: function (v) {
-            try {
-              if (window.RefadSettings?.locale?.formatMoney) {
-                return RefadSettings.locale.formatMoney(v);
-              }
-            } catch (e) {}
-            return Refad.format.money(v);
-          }
-        },
-        identity: {
-          getSystemName: function () {
-            try {
-              if (window.RefadSettings?.identity?.getSystemName) {
-                return RefadSettings.identity.getSystemName();
-              }
-            } catch (e) {}
-            return 'رفاد';
-          },
-          getTagline: function () {
-            try {
-              if (window.RefadSettings?.identity?.getTagline) {
-                return RefadSettings.identity.getTagline();
-              }
-            } catch (e) {}
-            return 'نظام إدارة الأدوية';
-          },
-          getLogoUrl: function () {
-            try {
-              if (window.RefadSettings?.identity?.getLogoUrl) {
-                return RefadSettings.identity.getLogoUrl();
-              }
-            } catch (e) {}
-            return null;
-          }
-        },
-        invoice: {
-          getPrefix: function () {
-            try {
-              if (window.RefadSettings?.invoice?.getPrefix) {
-                return RefadSettings.invoice.getPrefix();
-              }
-            } catch (e) {}
-            return 'INV';
-          }
+    // ============================================================
+    // 0) Safe Settings Wrapper — مع دعم كامل لإعدادات الفواتير
+    // ============================================================
+    const SafeSettings = {
+      locale: {
+        formatMoney: function (v) {
+          try {
+            if (window.RefadSettings?.locale?.formatMoney) {
+              return RefadSettings.locale.formatMoney(v);
+            }
+          } catch (e) {}
+          return Refad.format.money(v);
         }
-      };
+      },
+      identity: {
+        getSystemName: function () {
+          try {
+            if (window.RefadSettings?.identity?.getSystemName) {
+              return RefadSettings.identity.getSystemName();
+            }
+          } catch (e) {}
+          return 'رفاد';
+        },
+        getTagline: function () {
+          try {
+            if (window.RefadSettings?.identity?.getTagline) {
+              return RefadSettings.identity.getTagline();
+            }
+          } catch (e) {}
+          return 'نظام إدارة الأدوية';
+        },
+        getLogoUrl: function () {
+          try {
+            if (window.RefadSettings?.identity?.getLogoUrl) {
+              return RefadSettings.identity.getLogoUrl();
+            }
+          } catch (e) {}
+          return null;
+        }
+      },
+      invoice: {
+        _cache: null,
 
-      // ============================================================
-      // 1) Guard
-      // ============================================================
-      const session = Refad.Auth.guardPage('sales.view');
-      if (!session) return;
-
-      const canDelete = Refad.Session.has('sales.create') || Refad.Session.has('company.owner');
-      const canCreateNote = Refad.Session.has('company.owner');
-
-      // ============================================================
-      // 2) UI Helpers
-      // ============================================================
-      function esc(s) { return Refad.escapeHtml(s); }
-      function fmtMoney(v) { return SafeSettings.locale.formatMoney(v); }
-      function fmtNumber(v, dec) {
-        if (typeof Refad.format?.number === 'function') return Refad.format.number(v, dec);
-        return String(v || 0);
-      }
-      const toNum = v => Number(v) || 0;
-      const today = () => Refad.date.today();
-
-      function fillUser() {
-        const av = document.getElementById('userAvatar');
-        const initial = (session.full_name || '؟').trim().charAt(0);
-        if (session.avatar_url) av.innerHTML = `<img src="${esc(session.avatar_url)}" alt="">`;
-        else av.textContent = initial;
-        document.getElementById('userName').textContent = session.full_name;
-        document.getElementById('userRole').textContent = Refad.Session.has('company.owner') ? 'صاحب الشركة' : 'موظف';
-      }
-
-      function applyIdentity() {
-        const name = SafeSettings.identity.getSystemName();
-        const tagline = SafeSettings.identity.getTagline();
-        const logoUrl = SafeSettings.identity.getLogoUrl();
-
-        const brandName = document.getElementById('sidebarBrandName');
-        const brandDesc = document.getElementById('sidebarBrandDesc');
-        const logoImg = document.getElementById('sidebarLogoImg');
-
-        if (brandName) brandName.textContent = name;
-        if (brandDesc) brandDesc.textContent = tagline;
-        if (logoImg && logoUrl) {
-          logoImg.src = logoUrl;
-          logoImg.onerror = function () {
-            this.style.display = 'none';
-            const parent = this.parentElement;
-            if (parent) parent.innerHTML = '<span class="fallback">' + (name.charAt(0) || 'R') + '</span>';
+        _read: function () {
+          const get = function (key, def) {
+            try {
+              if (window.RefadSettings && typeof RefadSettings.get === 'function') {
+                const val = RefadSettings.get('invoice', key, def);
+                if (val !== undefined && val !== null && val !== '') return val;
+              }
+            } catch (e) {}
+            return def;
           };
+
+          const boolVal = function (key, def) {
+            const v = get(key, def ? 'true' : 'false');
+            return String(v).toLowerCase() === 'true';
+          };
+
+          const numVal = function (key, def) {
+            const v = parseFloat(get(key, String(def)));
+            return isNaN(v) ? def : v;
+          };
+
+          return {
+            prefix: get('invoice_prefix', 'INV'),
+            purchasePrefix: get('purchase_prefix', 'PUR'),
+            nextNumber: parseInt(get('next_invoice_number', '1'), 10) || 1,
+            nextPurchaseNumber: parseInt(get('next_purchase_number', '1'), 10) || 1,
+            taxRate: numVal('default_tax_rate', 0),
+            defaultDiscount: numVal('default_discount', 0),
+            footer: get('invoice_footer', 'شكراً لتعاملكم معنا'),
+            terms: get('invoice_terms', ''),
+            showLogo: boolVal('show_logo_on_invoice', true),
+            showQr: boolVal('show_qr_code', false)
+          };
+        },
+
+        get: function () {
+          if (!SafeSettings.invoice._cache) {
+            SafeSettings.invoice._cache = SafeSettings.invoice._read();
+          }
+          return SafeSettings.invoice._cache;
+        },
+
+        reload: function () {
+          SafeSettings.invoice._cache = null;
+          return SafeSettings.invoice.get();
+        },
+
+        getPrefix: function () {
+          return SafeSettings.invoice.get().prefix;
         }
       }
+    };
 
-      function setupTheme() {
-        const btn = document.getElementById('themeToggle');
-        const icon = document.getElementById('themeIcon');
-        const refresh = () => {
-          const isDark = Refad.theme.get() === 'dark';
-          icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
-          if (window.lucide) lucide.createIcons();
+    // ============================================================
+    // 1) Guard
+    // ============================================================
+    const session = Refad.Auth.guardPage('sales.view');
+    if (!session) return;
+
+    const canDelete = Refad.Session.has('sales.create') || Refad.Session.has('company.owner');
+    const canCreateNote = Refad.Session.has('company.owner');
+
+    // ============================================================
+    // 2) Helpers
+    // ============================================================
+    function esc(s) { return Refad.escapeHtml(s); }
+    function fmtMoney(v) { return SafeSettings.locale.formatMoney(v); }
+    function fmtNumber(v, dec) {
+      if (typeof Refad.format?.number === 'function') return Refad.format.number(v, dec);
+      return String(v || 0);
+    }
+    const toNum = v => Number(v) || 0;
+    const today = () => Refad.date.today();
+
+    // ✨ توليد Share Token
+    function generateShareToken() {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+      let token = '';
+      const arr = new Uint8Array(32);
+      if (window.crypto && window.crypto.getRandomValues) {
+        window.crypto.getRandomValues(arr);
+        for (let i = 0; i < 32; i++) token += chars.charAt(arr[i] % chars.length);
+      } else {
+        for (let i = 0; i < 32; i++) token += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return token;
+    }
+
+    // ✨ توليد QR Code كـ Data URL
+    function generateQrDataUrl(text, size) {
+      size = size || 200;
+      try {
+        if (typeof qrcode === 'undefined') return null;
+        const qr = qrcode(0, 'M');
+        qr.addData(text);
+        qr.make();
+        return qr.createDataURL(size / 25, 0);
+      } catch (e) {
+        console.warn('[QR] generation failed:', e.message);
+        return null;
+      }
+    }
+
+    // ✨ QR content: رقم الفاتورة + الإجمالي + الضريبة + التاريخ
+    function buildQrContent(invoice, company) {
+      const lines = [
+        'رفاد | فاتورة: ' + (invoice.invoice_number || ''),
+        'التاريخ: ' + (invoice.invoice_date || invoice.created_at || ''),
+        'الإجمالي: ' + toNum(invoice.grand_total).toFixed(2),
+        'الضريبة: ' + toNum(invoice.tax_total).toFixed(2),
+        'الشركة: ' + (company && company.name || '')
+      ];
+      return lines.join('\n');
+    }
+
+    function fillUser() {
+      const av = document.getElementById('userAvatar');
+      const initial = (session.full_name || '؟').trim().charAt(0);
+      if (session.avatar_url) av.innerHTML = '<img src="' + esc(session.avatar_url) + '" alt="">';
+      else av.textContent = initial;
+      document.getElementById('userName').textContent = session.full_name;
+      document.getElementById('userRole').textContent = Refad.Session.has('company.owner') ? 'صاحب الشركة' : 'موظف';
+    }
+
+    function applyIdentity() {
+      const name = SafeSettings.identity.getSystemName();
+      const tagline = SafeSettings.identity.getTagline();
+      const logoUrl = SafeSettings.identity.getLogoUrl();
+
+      const brandName = document.getElementById('sidebarBrandName');
+      const brandDesc = document.getElementById('sidebarBrandDesc');
+      const logoImg = document.getElementById('sidebarLogoImg');
+
+      if (brandName) brandName.textContent = name;
+      if (brandDesc) brandDesc.textContent = tagline;
+      if (logoImg && logoUrl) {
+        logoImg.src = logoUrl;
+        logoImg.onerror = function () {
+          this.style.display = 'none';
+          const parent = this.parentElement;
+          if (parent) parent.innerHTML = '<span class="fallback">' + (name.charAt(0) || 'R') + '</span>';
         };
-        refresh();
-        btn.addEventListener('click', () => { Refad.theme.toggle(); refresh(); });
       }
+    }
 
-      function setupSidebarMobile() {
-        const sb = document.getElementById('sidebar');
-        const ov = document.getElementById('overlay');
-        document.getElementById('menuToggle').addEventListener('click', () => {
-          sb.classList.add('open'); ov.classList.add('show');
-        });
-        ov.addEventListener('click', () => {
-          sb.classList.remove('open'); ov.classList.remove('show');
-        });
-      }
+    function setupTheme() {
+      const btn = document.getElementById('themeToggle');
+      const icon = document.getElementById('themeIcon');
+      const refresh = () => {
+        const isDark = Refad.theme.get() === 'dark';
+        icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+        if (window.lucide) lucide.createIcons();
+      };
+      refresh();
+      btn.addEventListener('click', () => { Refad.theme.toggle(); refresh(); });
+    }
 
-      function setupUserMenu() {
-        const m = document.getElementById('userMenu');
-        const d = document.getElementById('userDropdown');
-        m.addEventListener('click', e => { e.stopPropagation(); d.classList.toggle('show'); });
-        document.addEventListener('click', () => d.classList.remove('show'));
-        d.addEventListener('click', e => e.stopPropagation());
-        document.getElementById('logoutBtn').addEventListener('click', async () => {
-          if (await Refad.alert.confirm('تسجيل الخروج', 'هل تريد الخروج؟', 'خروج')) {
-            await Refad.Auth.logout();
-          }
-        });
-      }
+    function setupSidebarMobile() {
+      const sb = document.getElementById('sidebar');
+      const ov = document.getElementById('overlay');
+      document.getElementById('menuToggle').addEventListener('click', () => {
+        sb.classList.add('open'); ov.classList.add('show');
+      });
+      ov.addEventListener('click', () => {
+        sb.classList.remove('open'); ov.classList.remove('show');
+      });
+    }
 
-      function setupNotifBtn() {
-        document.getElementById('notifBtn').addEventListener('click', () => {
-          window.location.href = 'notifications.html';
-        });
-      }
+    function setupUserMenu() {
+      const m = document.getElementById('userMenu');
+      const d = document.getElementById('userDropdown');
+      m.addEventListener('click', e => { e.stopPropagation(); d.classList.toggle('show'); });
+      document.addEventListener('click', () => d.classList.remove('show'));
+      d.addEventListener('click', e => e.stopPropagation());
+      document.getElementById('logoutBtn').addEventListener('click', async () => {
+        if (await Refad.alert.confirm('تسجيل الخروج', 'هل تريد الخروج؟', 'خروج')) {
+          await Refad.Auth.logout();
+        }
+      });
+    }
 
-      function setupRealtimeTheme() {
-        window.addEventListener('refad:theme-changed', () => {
-          applyIdentity();
-        });
-      }
+    function setupNotifBtn() {
+      document.getElementById('notifBtn').addEventListener('click', () => {
+        window.location.href = 'notifications.html';
+      });
+    }
 
-      // ✨ Copy to clipboard
-      async function copyText(text, btn) {
-        try {
-          await navigator.clipboard.writeText(text);
-          if (btn) {
-            btn.classList.add('copied');
-            const icon = btn.querySelector('i');
-            if (icon) icon.setAttribute('data-lucide', 'check');
+    function setupRealtimeTheme() {
+      window.addEventListener('refad:theme-changed', () => {
+        applyIdentity();
+        SafeSettings.invoice.reload();
+      });
+    }
+
+    async function copyText(text, btn) {
+      try {
+        await navigator.clipboard.writeText(text);
+        if (btn) {
+          btn.classList.add('copied');
+          const icon = btn.querySelector('i');
+          if (icon) icon.setAttribute('data-lucide', 'check');
+          if (window.lucide) lucide.createIcons();
+          setTimeout(() => {
+            btn.classList.remove('copied');
+            if (icon) icon.setAttribute('data-lucide', 'copy');
             if (window.lucide) lucide.createIcons();
-            setTimeout(() => {
-              btn.classList.remove('copied');
-              if (icon) icon.setAttribute('data-lucide', 'copy');
-              if (window.lucide) lucide.createIcons();
-            }, 1200);
-          }
-          Refad.toast.success('تم النسخ');
-        } catch (e) {
-          Refad.toast.error('فشل النسخ');
+          }, 1200);
         }
+        Refad.toast.success('تم النسخ');
+      } catch (e) {
+        Refad.toast.error('فشل النسخ');
       }
+    }
 
-      // ============================================================
-      // 3) State
-      // ============================================================
-      const state = {
-        all: [],
-        filtered: [],
-        customers: [],
-        viewMode: 'table',
-        filters: { search: '', status: '', customer: '', period: 'today' },
-        currentInvoice: null,
-        company: null,
-        quickSearchIndex: -1,
-        quickSearchResults: []
-      };
+    // ============================================================
+    // 3) State
+    // ============================================================
+    const state = {
+      all: [],
+      filtered: [],
+      customers: [],
+      viewMode: 'table',
+      filters: { search: '', status: '', customer: '', period: 'today' },
+      currentInvoice: null,
+      company: null,
+      quickSearchIndex: -1,
+      quickSearchResults: [],
+      invoiceConfig: null,
+      currentShareInvoice: null
+    };
 
-      // ============================================================
-      // 4) Load Customers Filter
-      // ============================================================
-      async function loadCustomersFilter() {
-        try {
-          const rows = await Refad.db.select('customers', {
-            columns: 'id, name',
-            eq: { company_id: session.company_id, is_active: true },
-            order: { column: 'name', ascending: true }
-          });
-          state.customers = rows || [];
-          const sel = document.getElementById('filterCustomer');
-          sel.innerHTML = '<option value="">كل العملاء</option>' +
-            state.customers.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
-        } catch (e) {
-          console.warn('Customers filter failed:', e.message);
-        }
-      }
-
-      // ============================================================
-      // 5) Load Company
-      // ============================================================
-      async function loadCompany() {
-        try {
-          return await Refad.db.selectOne('companies', {
-            columns: 'id, name, logo_url, phone, email, address, tax_number, notes',
-            eq: { id: session.company_id }
-          });
-        } catch (err) {
-          console.error('[Company] load failed:', err);
-          return null;
-        }
-      }
-
-      // ============================================================
-      // 6) Load Invoices
-      // ============================================================
-      async function loadInvoices(silent) {
-        const tbody = document.getElementById('tableBody');
-        if (!silent) renderSkeleton();
-
-        try {
-          const [rows, suppliers] = await Promise.all([
-            Refad.db.select('sales_invoices', {
-              columns: `id, invoice_number, invoice_type, payment_type, supplier_id, subtotal, discount_total, grand_total,
-                        total_profit, paid_amount, status, invoice_date, created_at, order_id, notes, customer_id,
-                        sales_invoice_items(id, quantity)`,
-              eq: { company_id: session.company_id },
-              order: { column: 'created_at', ascending: false },
-              limit: 1000
-            }),
-            Refad.db.select('suppliers', {
-              columns: 'id, name, phone',
-              eq: { company_id: session.company_id }
-            }).catch(() => [])
-          ]);
-
-          const suppliersById = new Map(suppliers.map(s => [String(s.id), s]));
-          const customersById = new Map(state.customers.map(c => [String(c.id), c]));
-
-          state.all = rows.map(inv => ({
-            ...inv,
-            customers: customersById.get(String(inv.customer_id)) || null,
-            suppliers: suppliersById.get(String(inv.supplier_id)) || null
-          }));
-
-          renderStats();
-          applyFilters();
-        } catch (e) {
-          console.error('[Invoices] load failed:', e);
-          tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state" style="color:var(--danger);"><i data-lucide="alert-circle"></i><h3>فشل التحميل</h3><p>${esc(e.message)}</p></div></td></tr>`;
-          if (window.lucide) lucide.createIcons();
-        }
-      }
-
-      function renderSkeleton() {
-        const tbody = document.getElementById('tableBody');
-        tbody.innerHTML = Array(6).fill(0).map(() => `
-          <tr class="skeleton-row">
-            <td><div class="skeleton-bar" style="width:90px"></div></td>
-            <td><div class="skeleton-bar" style="width:60%"></div></td>
-            <td><div class="skeleton-bar" style="width:80px"></div></td>
-            <td><div class="skeleton-bar" style="width:40px"></div></td>
-            <td><div class="skeleton-bar" style="width:80px"></div></td>
-            <td><div class="skeleton-bar" style="width:80px"></div></td>
-            <td><div class="skeleton-bar" style="width:80px"></div></td>
-            <td><div class="skeleton-bar" style="width:70px"></div></td>
-            <td><div class="skeleton-bar" style="width:80px"></div></td>
-          </tr>
-        `).join('');
-      }
-
-      // ============================================================
-      // 7) Render Stats
-      // ============================================================
-      function renderStats() {
-        const range = getPeriodRange(state.filters.period);
-        const list = state.all.filter(inv => {
-          if (range.from && inv.invoice_date < range.from) return false;
-          if (range.to && inv.invoice_date > range.to) return false;
-          return true;
+    // ============================================================
+    // 4) Load Customers Filter
+    // ============================================================
+    async function loadCustomersFilter() {
+      try {
+        const rows = await Refad.db.select('customers', {
+          columns: 'id, name',
+          eq: { company_id: session.company_id, is_active: true },
+          order: { column: 'name', ascending: true }
         });
-
-        const active = list.filter(r => r.status !== 'cancelled');
-        const total = list.length;
-        const paid = active.filter(r => r.status === 'paid').length;
-        const unpaid = active.filter(r => r.status === 'unpaid' || r.status === 'partial').length;
-        const revenue = active.reduce((s, r) => s + toNum(r.grand_total), 0);
-        const profit = active.reduce((s, r) => s + toNum(r.total_profit), 0);
-        const due = active.reduce((s, r) => s + Math.max(0, toNum(r.grand_total) - toNum(r.paid_amount)), 0);
-
-        document.getElementById('statTotal').textContent = fmtNumber(total);
-        document.getElementById('statTotalSub').textContent = `${active.length} نشطة`;
-
-        document.getElementById('statPaid').textContent = fmtNumber(paid);
-        document.getElementById('statPaidSub').textContent = total > 0 ? Math.round((paid / total) * 100) + '%' : '—';
-
-        document.getElementById('statUnpaid').textContent = fmtNumber(unpaid);
-        document.getElementById('statUnpaidSub').textContent = total > 0 ? Math.round((unpaid / total) * 100) + '%' : '—';
-
-        document.getElementById('statRevenue').textContent = fmtMoney(revenue);
-        document.getElementById('statProfit').textContent = fmtMoney(profit);
-        document.getElementById('statDue').textContent = fmtMoney(due);
+        state.customers = rows || [];
+        const sel = document.getElementById('filterCustomer');
+        sel.innerHTML = '<option value="">كل العملاء</option>' +
+          state.customers.map(c => '<option value="' + c.id + '">' + esc(c.name) + '</option>').join('');
+      } catch (e) {
+        console.warn('Customers filter failed:', e.message);
       }
+    }
 
-      function getPeriodRange(period) {
-        const now = today();
-        if (period === 'today') return { from: now, to: now };
-        if (period === 'week') return { from: Refad.date.addDays(now, -6), to: now };
-        if (period === 'year') return { from: `${now.slice(0, 4)}-01-01`, to: now };
-        if (period === 'month') return { from: `${now.slice(0, 7)}-01`, to: now };
-        return { from: null, to: null };
-      }
-
-      // ============================================================
-      // 8) Apply Filters
-      // ============================================================
-      function applyFilters() {
-        const range = getPeriodRange(state.filters.period);
-        let list = state.all.slice();
-
-        if (state.filters.status) {
-          list = list.filter(r => r.status === state.filters.status);
-        }
-
-        if (state.filters.customer) {
-          list = list.filter(r => String(r.customer_id) === state.filters.customer);
-        }
-
-        if (range.from) {
-          list = list.filter(r => r.invoice_date >= range.from && r.invoice_date <= range.to);
-        }
-
-        if (state.filters.search) {
-          const q = state.filters.search.toLowerCase();
-          list = list.filter(r =>
-            (r.invoice_number || '').toLowerCase().includes(q) ||
-            (r.customers?.name || r.suppliers?.name || '').toLowerCase().includes(q) ||
-            (r.customers?.phone || r.suppliers?.phone || '').toLowerCase().includes(q)
-          );
-        }
-
-        state.filtered = list;
-
-        if (state.viewMode === 'table') renderTable();
-        else renderCards();
-      }
-
-      // ============================================================
-      // 9) Render Table
-      // ============================================================
-      function renderTable() {
-        const tbody = document.getElementById('tableBody');
-        const list = state.filtered;
-
-        if (!list.length) {
-          tbody.innerHTML = `
-            <tr><td colspan="9">
-              <div class="empty-state">
-                <i data-lucide="receipt"></i>
-                <h3>${state.all.length ? 'لا توجد نتائج مطابقة' : 'لا توجد فواتير بعد'}</h3>
-                <p>${state.all.length ? 'جرّب تعديل الفلاتر أو الفترة' : 'ابدأ بإنشاء فاتورة جديدة من POS'}</p>
-              </div>
-            </td></tr>`;
-          if (window.lucide) lucide.createIcons();
-          return;
-        }
-
-        const STATUS = {
-          paid: { label: 'مدفوعة', cls: 'paid' },
-          partial: { label: 'جزئي', cls: 'partial' },
-          unpaid: { label: 'آجلة', cls: 'unpaid' },
-          cancelled: { label: 'ملغية', cls: 'cancelled' }
-        };
-
-        tbody.innerHTML = list.map(r => {
-          const st = STATUS[r.status] || { label: r.status, cls: 'unpaid' };
-          const itemCount = r.sales_invoice_items?.length || 0;
-          const party = r.customers?.name || r.suppliers?.name || 'عميل نقدي';
-          const initial = esc((party || '؟').charAt(0));
-          const paid = toNum(r.paid_amount);
-          const grand = toNum(r.grand_total);
-          const due = grand - paid;
-          const invNumEsc = esc(r.invoice_number || '—');
-
-          return `
-            <tr data-id="${r.id}">
-              <td>
-                <span class="invoice-number">
-                  <button class="copy-btn" data-copy="${invNumEsc}" title="نسخ رقم الفاتورة"><i data-lucide="copy"></i></button>
-                  ${invNumEsc}
-                </span>
-              </td>
-              <td>
-                <div class="party-cell">
-                  <div class="party-avatar">${initial}</div>
-                  <div class="party-info">
-                    <div class="name">${esc(party)}</div>
-                    ${r.customers?.phone ? `<div class="sub">${esc(r.customers.phone)}</div>` : ''}
-                  </div>
-                </div>
-              </td>
-              <td>${Refad.format.date(r.invoice_date || r.created_at)}</td>
-              <td style="text-align:center;font-weight:700;">${fmtNumber(itemCount)}</td>
-              <td class="money accent">${fmtMoney(grand)}</td>
-              <td class="money ${paid >= grand ? 'success' : 'gold'}">${fmtMoney(paid)}</td>
-              <td class="money purple">${fmtMoney(r.total_profit)}</td>
-              <td><span class="status-pill ${st.cls}">${st.label}</span></td>
-              <td>
-                <button class="action-btn" data-action="view" data-id="${r.id}" title="عرض">
-                  <i data-lucide="eye"></i>
-                </button>
-                <button class="action-btn success" data-action="print" data-id="${r.id}" title="طباعة">
-                  <i data-lucide="printer"></i>
-                </button>
-                ${canDelete ? `
-                  <button class="action-btn danger" data-action="delete" data-id="${r.id}" title="حذف">
-                    <i data-lucide="trash-2"></i>
-                  </button>
-                ` : ''}
-              </td>
-            </tr>
-          `;
-        }).join('');
-
-        if (window.lucide) lucide.createIcons();
-
-        tbody.querySelectorAll('tr[data-id]').forEach(tr => {
-          tr.addEventListener('click', (e) => {
-            if (e.target.closest('[data-action]') || e.target.closest('a') || e.target.closest('[data-copy]')) return;
-            viewInvoice(parseInt(tr.dataset.id, 10));
-          });
+    // ============================================================
+    // 5) Load Company
+    // ============================================================
+    async function loadCompany() {
+      try {
+        return await Refad.db.selectOne('companies', {
+          columns: 'id, name, logo_url, phone, email, address, tax_number, notes',
+          eq: { id: session.company_id }
         });
-
-        tbody.querySelectorAll('[data-copy]').forEach(btn => {
-          btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            copyText(btn.dataset.copy, btn);
-          });
-        });
-
-        tbody.querySelectorAll('[data-action]').forEach(btn => {
-          btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const id = parseInt(btn.dataset.id, 10);
-            if (btn.dataset.action === 'view') viewInvoice(id);
-            else if (btn.dataset.action === 'print') {
-              const win = window.open('', '_blank');
-              if (!win) { Refad.toast.warning('اسمح بالنوافذ المنبثقة'); return; }
-              win.document.write('<!DOCTYPE html><html dir="rtl"><meta charset="UTF-8"><body style="font-family:Cairo,sans-serif;text-align:center;padding:40px;">⏳ جارٍ تجهيز الفاتورة...</body></html>');
-              printInvoice(id, win);
-            } else if (btn.dataset.action === 'delete') {
-              const inv = state.all.find(x => x.id === id);
-              if (inv) deleteInvoice(id, inv);
-            }
-          });
-        });
+      } catch (err) {
+        console.error('[Company] load failed:', err);
+        return null;
       }
+    }
 
-      // ============================================================
-      // 10) Render Cards
-      // ============================================================
-      function renderCards() {
-        const grid = document.getElementById('cardsView');
-        const list = state.filtered;
+    // ============================================================
+    // 6) Load Invoices
+    // ============================================================
+    async function loadInvoices(silent) {
+      const tbody = document.getElementById('tableBody');
+      if (!silent) renderSkeleton();
 
-        if (!list.length) {
-          grid.innerHTML = `
-            <div class="empty-state" style="grid-column:1/-1;">
-              <i data-lucide="receipt"></i>
-              <h3>${state.all.length ? 'لا توجد نتائج مطابقة' : 'لا توجد فواتير بعد'}</h3>
-              <p>${state.all.length ? 'جرّب تعديل الفلاتر أو الفترة' : 'ابدأ بإنشاء فاتورة جديدة من POS'}</p>
-            </div>`;
-          if (window.lucide) lucide.createIcons();
-          return;
-        }
-
-        const STATUS = {
-          paid: { label: 'مدفوعة', cls: 'paid' },
-          partial: { label: 'جزئي', cls: 'partial' },
-          unpaid: { label: 'آجلة', cls: 'unpaid' },
-          cancelled: { label: 'ملغية', cls: 'cancelled' }
-        };
-
-        grid.innerHTML = list.map(r => {
-          const st = STATUS[r.status] || { label: r.status, cls: 'unpaid' };
-          const party = r.customers?.name || r.suppliers?.name || 'عميل نقدي';
-          const initial = esc((party || '؟').charAt(0));
-          const itemCount = r.sales_invoice_items?.length || 0;
-          const paid = toNum(r.paid_amount);
-          const grand = toNum(r.grand_total);
-          const due = grand - paid;
-
-          return `
-            <div class="invoice-card ${r.status}" data-id="${r.id}">
-              <div class="ic-header">
-                <div class="ic-num">${esc(r.invoice_number)}</div>
-                <span class="status-pill ${st.cls}">${st.label}</span>
-              </div>
-
-              <div class="party-cell" style="margin-bottom:10px;padding-right:8px;">
-                <div class="party-avatar">${initial}</div>
-                <div class="party-info">
-                  <div class="name">${esc(party)}</div>
-                  <div class="sub">${Refad.format.date(r.invoice_date || r.created_at)}</div>
-                </div>
-              </div>
-
-              <div class="ic-amount-wrap">
-                <div class="ic-amount-label">الإجمالي</div>
-                <div class="ic-amount">${fmtMoney(grand)}</div>
-              </div>
-
-              <div class="ic-info">
-                <div class="ic-info-item">
-                  <div class="lbl">الأصناف</div>
-                  <div class="val">${fmtNumber(itemCount)}</div>
-                </div>
-                <div class="ic-info-item">
-                  <div class="lbl">المدفوع</div>
-                  <div class="val" style="color:var(--success);">${fmtMoney(paid)}</div>
-                </div>
-                <div class="ic-info-item">
-                  <div class="lbl">المتبقي</div>
-                  <div class="val" style="color:${due > 0.01 ? 'var(--danger)' : 'var(--success)'};">${fmtMoney(due)}</div>
-                </div>
-                <div class="ic-info-item">
-                  <div class="lbl">الربح</div>
-                  <div class="val" style="color:var(--purple);">${fmtMoney(r.total_profit)}</div>
-                </div>
-              </div>
-
-              <div class="ic-actions">
-                <button class="btn btn-outline" data-action="view" data-id="${r.id}" onclick="event.stopPropagation();">
-                  <i data-lucide="eye"></i> تفاصيل
-                </button>
-                <button class="btn btn-success" data-action="print" data-id="${r.id}" onclick="event.stopPropagation();">
-                  <i data-lucide="printer"></i> طباعة
-                </button>
-              </div>
-            </div>
-          `;
-        }).join('');
-
-        if (window.lucide) lucide.createIcons();
-
-        grid.querySelectorAll('.invoice-card').forEach(card => {
-          card.addEventListener('click', (e) => {
-            if (e.target.closest('[data-action]')) return;
-            viewInvoice(parseInt(card.dataset.id, 10));
-          });
-        });
-
-        grid.querySelectorAll('[data-action]').forEach(btn => {
-          btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const id = parseInt(btn.dataset.id, 10);
-            if (btn.dataset.action === 'view') viewInvoice(id);
-            else if (btn.dataset.action === 'print') {
-              const win = window.open('', '_blank');
-              if (!win) { Refad.toast.warning('اسمح بالنوافذ المنبثقة'); return; }
-              win.document.write('<!DOCTYPE html><html dir="rtl"><meta charset="UTF-8"><body style="font-family:Cairo,sans-serif;text-align:center;padding:40px;">⏳ جارٍ تجهيز الفاتورة...</body></html>');
-              printInvoice(id, win);
-            }
-          });
-        });
-      }
-
-      // ============================================================
-      // 11) View Invoice Details
-      // ============================================================
-      async function viewInvoice(id) {
-        try {
-          const payload = await buildInvoicePayload(id);
-          if (!payload) return;
-
-          state.currentInvoice = payload;
-
-          const returnsBtn = document.getElementById('invoiceReturnsBtn');
-          if (returnsBtn) {
-            returnsBtn.href = `returns.html?type=sales&invoice_id=${id}`;
-            returnsBtn.style.display = 'inline-flex';
-          }
-
-          const noteBtn = document.getElementById('noteBtn');
-          if (noteBtn) {
-            noteBtn.style.display = canCreateNote ? 'inline-flex' : 'none';
-          }
-
-          renderModal();
-          document.getElementById('invoiceModal').classList.add('show');
-          if (window.lucide) lucide.createIcons();
-        } catch (e) {
-          console.error('View invoice failed:', e);
-          Refad.toast.error('تعذّر التحميل: ' + e.message);
-        }
-      }
-
-      async function buildInvoicePayload(id) {
-        const inv = await Refad.db.selectOne('sales_invoices', { eq: { id } });
-        if (!inv || String(inv.company_id) !== String(session.company_id)) {
-          Refad.toast.error('الفاتورة غير موجودة');
-          return null;
-        }
-
-        const items = await Refad.db.select('sales_invoice_items', {
-          columns: `id, quantity, unit_price, sale_discount, cost_price, profit, total,
-                    products(id, name, name_en, form, unit),
-                    batches(batch_number, expiry_date)`,
-          eq: { invoice_id: id },
-          order: { column: 'id', ascending: true }
-        });
-
-        const returns = await Refad.db.select('inventory_returns', {
-          columns: 'id, return_number, return_date, total_amount, reason',
-          eq: { company_id: session.company_id, return_type: 'sales', reference_invoice_id: id },
-          order: { column: 'id', ascending: false }
-        }).catch(() => []);
-
-        const notes = await Refad.db.select('credit_notes', {
-          columns: 'id, note_number, note_type, note_date, amount, tax_amount, reason, status',
-          eq: { company_id: session.company_id, reference_invoice_id: id },
-          order: { column: 'id', ascending: false }
-        }).catch(() => []);
-
-        let customer = null;
-        if (inv.customer_id) {
-          customer = await Refad.db.selectOne('customers', {
-            columns: 'id, name, phone, address, balance, credit_limit',
-            eq: { id: inv.customer_id }
-          }).catch(() => null);
-        }
-
-        return { invoice: inv, items, customer, returns, notes };
-      }
-
-      // ============================================================
-      // 12) Render Modal
-      // ============================================================
-      function renderModal() {
-        const { invoice, items, customer, returns = [], notes = [] } = state.currentInvoice;
-        document.getElementById('modalTitle').textContent = `فاتورة ${invoice.invoice_number}`;
-
-        const STATUS = {
-          paid: { label: 'مدفوعة', cls: 'paid' },
-          partial: { label: 'جزئي', cls: 'partial' },
-          unpaid: { label: 'آجلة', cls: 'unpaid' },
-          cancelled: { label: 'ملغية', cls: 'cancelled' }
-        };
-        const st = STATUS[invoice.status] || { label: invoice.status, cls: 'unpaid' };
-
-        const balance = toNum(customer?.balance);
-        const creditLimit = toNum(customer?.credit_limit);
-        const paid = toNum(invoice.paid_amount);
-        const grand = toNum(invoice.grand_total);
-        const due = grand - paid;
-
-        const body = document.getElementById('modalBody');
-        body.innerHTML = `
-          <div class="info-grid">
-            <div class="info-item">
-              <div class="label">رقم الفاتورة</div>
-              <div class="value">${esc(invoice.invoice_number)}</div>
-            </div>
-            <div class="info-item">
-              <div class="label">التاريخ</div>
-              <div class="value">${Refad.format.date(invoice.invoice_date || invoice.created_at)}</div>
-            </div>
-            <div class="info-item">
-              <div class="label">العميل</div>
-              <div class="value">${esc(customer?.name || 'نقدي')}</div>
-            </div>
-            <div class="info-item">
-              <div class="label">الهاتف</div>
-              <div class="value">${esc(customer?.phone || '—')}</div>
-            </div>
-            <div class="info-item">
-              <div class="label">الحالة</div>
-              <div class="value"><span class="status-pill ${st.cls}">${st.label}</span></div>
-            </div>
-            <div class="info-item">
-              <div class="label">طريقة الدفع</div>
-              <div class="value">${invoice.payment_type === 'cash' ? 'نقدي' : 'آجل'}</div>
-            </div>
-          </div>
-
-          ${customer && creditLimit > 0 ? `
-            <div style="background:linear-gradient(135deg,rgba(139,92,246,0.06),rgba(20,184,166,0.04));border:1.5px solid rgba(139,92,246,0.2);border-radius:12px;padding:12px 14px;margin-bottom:16px;">
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px;">
-                <span style="font-size:12px;font-weight:800;color:var(--purple);display:flex;align-items:center;gap:6px;">
-                  <i data-lucide="wallet" style="width:14px;height:14px;"></i>
-                  حد الائتمان
-                </span>
-                <span style="font-size:14px;font-weight:800;color:${balance > creditLimit ? 'var(--danger)' : 'var(--success)'};">
-                  ${fmtMoney(balance)} / ${fmtMoney(creditLimit)}
-                </span>
-              </div>
-              <div style="height:6px;background:rgba(148,163,184,0.2);border-radius:3px;overflow:hidden;">
-                <div style="height:100%;width:${Math.min(100, (balance / creditLimit) * 100)}%;background:linear-gradient(90deg,${balance > creditLimit ? 'var(--danger)' : balance / creditLimit > 0.8 ? 'var(--gold)' : 'var(--success)'},${balance > creditLimit ? '#b91c1c' : balance / creditLimit > 0.8 ? '#d97706' : '#047857'});border-radius:3px;"></div>
-              </div>
-            </div>
-          ` : ''}
-
-          <h3 style="font-size:14px;font-weight:700;margin-bottom:8px;color:var(--text);display:flex;align-items:center;gap:6px;">
-            <i data-lucide="package" style="width:16px;height:16px;color:var(--accent);"></i>
-            الأصناف (${items.length})
-          </h3>
-
-          <table class="items-mini-table">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>الصنف</th>
-                <th>التشغيلة</th>
-                <th>الكمية</th>
-                <th>السعر</th>
-                <th>خصم%</th>
-                <th>الإجمالي</th>
-                <th>الربح</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${items.map((it, i) => `
-                <tr>
-                  <td>${i + 1}</td>
-                  <td>
-                    <div style="font-weight:700;">${esc(it.products?.name || '—')}</div>
-                    <div style="font-size:10px;color:var(--text-muted);">
-                      ${esc([it.products?.form, it.products?.unit].filter(Boolean).join(' • ') || '')}
-                    </div>
-                  </td>
-                  <td style="font-family:monospace;font-size:12px;">${esc(it.batches?.batch_number || '—')}</td>
-                  <td style="text-align:center;font-weight:700;">${fmtNumber(it.quantity)}</td>
-                  <td>${fmtNumber(it.unit_price, 2)}</td>
-                  <td style="text-align:center;color:var(--info);">${fmtNumber(it.sale_discount || 0, 1)}%</td>
-                  <td style="font-weight:700;color:var(--accent);">${fmtNumber(it.total, 2)}</td>
-                  <td style="font-weight:700;color:var(--success);">${fmtNumber(it.profit, 2)}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-
-          <div class="totals-box">
-            <div class="totals-row">
-              <span class="label">المجموع قبل الخصم</span>
-              <span class="value">${fmtMoney(invoice.subtotal || 0)}</span>
-            </div>
-            <div class="totals-row">
-              <span class="label">إجمالي الخصم</span>
-              <span class="value" style="color:var(--gold);">${fmtMoney(invoice.discount_total || 0)}</span>
-            </div>
-            <div class="totals-row grand">
-              <span class="label">الإجمالي</span>
-              <span class="value">${fmtMoney(grand)}</span>
-            </div>
-            <div class="totals-row">
-              <span class="label">المدفوع</span>
-              <span class="value" style="color:var(--success);">${fmtMoney(paid)}</span>
-            </div>
-            <div class="totals-row">
-              <span class="label">المتبقي</span>
-              <span class="value" style="color:${due > 0.01 ? 'var(--danger)' : 'var(--success)'};">${fmtMoney(due)}</span>
-            </div>
-            <div class="totals-row profit">
-              <span class="label">إجمالي الربح</span>
-              <span class="value">${fmtMoney(invoice.total_profit || 0)}</span>
-            </div>
-          </div>
-
-          ${returns.length ? `
-            <h3 style="font-size:14px;font-weight:700;margin-top:20px;margin-bottom:8px;color:var(--text);display:flex;align-items:center;gap:6px;">
-              <i data-lucide="undo-2" style="width:16px;height:16px;color:var(--gold);"></i>
-              المرتجعات (${returns.length})
-            </h3>
-            <table class="items-mini-table">
-              <thead><tr><th>رقم المرتجع</th><th>التاريخ</th><th>السبب</th><th>الإجمالي</th></tr></thead>
-              <tbody>
-                ${returns.map(r => `
-                  <tr>
-                    <td>${esc(r.return_number || '—')}</td>
-                    <td>${Refad.format.date(r.return_date)}</td>
-                    <td>${esc(r.reason || '—')}</td>
-                    <td style="color:var(--gold);font-weight:700;">${fmtMoney(r.total_amount || 0)}</td>
-                  </tr>
-                `).join('')}
-              </tbody>
-            </table>
-          ` : ''}
-
-          ${notes.length ? `
-            <h3 style="font-size:14px;font-weight:700;margin-top:20px;margin-bottom:8px;color:var(--text);display:flex;align-items:center;gap:6px;">
-              <i data-lucide="file-text" style="width:16px;height:16px;color:var(--purple);"></i>
-              الإشعارات (${notes.length})
-            </h3>
-            <table class="items-mini-table">
-              <thead><tr><th>الرقم</th><th>النوع</th><th>التاريخ</th><th>المبلغ</th></tr></thead>
-              <tbody>
-                ${notes.map(n => {
-                  const total = toNum(n.amount) + toNum(n.tax_amount);
-                  const isCredit = n.note_type === 'credit';
-                  return `
-                    <tr>
-                      <td>${esc(n.note_number)}</td>
-                      <td><span class="status-pill ${isCredit ? 'paid' : 'unpaid'}">${isCredit ? 'دائن' : 'مدين'}</span></td>
-                      <td>${Refad.format.date(n.note_date)}</td>
-                      <td style="color:${isCredit ? 'var(--success)' : 'var(--danger)'};font-weight:700;">
-                        ${isCredit ? '-' : '+'} ${fmtMoney(total)}
-                      </td>
-                    </tr>
-                  `;
-                }).join('')}
-              </tbody>
-            </table>
-          ` : ''}
-        `;
-
-        if (window.lucide) lucide.createIcons();
-      }
-
-      // ============================================================
-      // 13) Print Options Modal
-      // ============================================================
-      function pickPrintOptions() {
-        return new Promise(resolve => {
-          const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-          const defaultSize = isMobile ? '80mm' : 'A4';
-
-          Swal.fire({
-            title: 'خيارات الطباعة',
-            html: `
-              <div style="display:flex;flex-direction:column;gap:14px;text-align:right;font-family:Cairo,sans-serif;">
-                <div>
-                  <label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:6px;">مقاس الورق</label>
-                  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
-                    <button type="button" class="swal-opt" data-size="A4" style="padding:12px 6px;border:2px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;font-family:inherit;">
-                      <div style="font-size:22px;">📄</div>
-                      <div style="font-weight:700;font-size:12px;">A4</div>
-                    </button>
-                    <button type="button" class="swal-opt" data-size="A5" style="padding:12px 6px;border:2px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;font-family:inherit;">
-                      <div style="font-size:22px;">📃</div>
-                      <div style="font-weight:700;font-size:12px;">A5</div>
-                    </button>
-                    <button type="button" class="swal-opt" data-size="80mm" style="padding:12px 6px;border:2px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;font-family:inherit;">
-                      <div style="font-size:22px;">🧾</div>
-                      <div style="font-weight:700;font-size:12px;">80mm</div>
-                    </button>
-                  </div>
-                </div>
-                <div>
-                  <label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:6px;">عدد النسخ</label>
-                  <select id="swalCopies" style="width:100%;padding:10px;border:1px solid #e2e8f0;border-radius:8px;font-family:inherit;font-size:14px;">
-                    <option value="1">نسخة واحدة</option>
-                    <option value="2" selected>نسختين</option>
-                    <option value="3">ثلاث نسخ</option>
-                  </select>
-                </div>
-              </div>
-            `,
-            showCancelButton: true,
-            confirmButtonText: '🖨️ طباعة',
-            cancelButtonText: 'إلغاء',
-            confirmButtonColor: '#14B8A6',
-            didOpen: () => {
-              const popup = Swal.getPopup();
-              const opts = popup.querySelectorAll('.swal-opt');
-              let selected = defaultSize;
-              const highlight = (el) => {
-                opts.forEach(x => { x.style.borderColor = '#e2e8f0'; x.style.background = '#fff'; });
-                if (el) { el.style.borderColor = '#14B8A6'; el.style.background = 'rgba(20,184,166,0.08)'; }
-              };
-              opts.forEach(o => {
-                if (o.dataset.size === selected) highlight(o);
-                o.addEventListener('click', () => { selected = o.dataset.size; highlight(o); });
-              });
-              popup._selectedSize = () => selected;
-            },
-            preConfirm: () => {
-              const popup = Swal.getPopup();
-              return {
-                pageSize: popup._selectedSize ? popup._selectedSize() : defaultSize,
-                copies: parseInt(popup.querySelector('#swalCopies').value, 10) || 1
-              };
-            }
-          }).then(result => {
-            resolve(result.isConfirmed ? result.value : null);
-          });
-        });
-      }
-
-      // ============================================================
-      // 14) Print Invoice (with fallback)
-      // ============================================================
-      async function printInvoice(id, windowRef) {
-        try {
-          let payload = state.currentInvoice;
-          if (!payload || String(payload.invoice?.id) !== String(id)) {
-            payload = await buildInvoicePayload(id);
-            if (!payload) { if (windowRef) windowRef.close(); return; }
-            state.currentInvoice = payload;
-          }
-
-          if (!state.company?.id) {
-            state.company = await loadCompany();
-            if (!state.company?.id) {
-              Refad.toast.error('تعذّر تحميل بيانات الشركة');
-              if (windowRef) windowRef.close();
-              return;
-            }
-          }
-
-          const choice = await pickPrintOptions();
-          if (!choice) { if (windowRef) windowRef.close(); return; }
-
-          // ✨ Check if Refad.Print available
-          if (!window.Refad?.Print?.invoice) {
-            console.warn('[Print] Refad.Print not available — using fallback');
-            fallbackPrint(payload, choice, windowRef);
-            return;
-          }
-
-          Refad.Print.invoice(
-            {
-              number: payload.invoice.invoice_number,
-              customer: payload.customer,
-              items: payload.items.map(it => ({
-                name: it.products?.name,
-                unit: it.products?.unit,
-                quantity: it.quantity,
-                price: it.unit_price,
-                discount: it.sale_discount,
-                total: it.total
-              })),
-              subtotal: payload.invoice.subtotal,
-              discount_total: payload.invoice.discount_total,
-              total: payload.invoice.grand_total,
-              paid_amount: payload.invoice.paid_amount,
-              payment_type: payload.invoice.payment_type,
-              invoice_type: payload.invoice.invoice_type,
-              notes: payload.invoice.notes
-            },
-            {
-              pageSize: choice.pageSize,
-              copies: choice.copies,
-              orientation: 'portrait',
-              company: state.company,
-              windowRef: windowRef
-            }
-          );
-        } catch (err) {
-          console.error('[Print] failed:', err);
-          Refad.toast.error('فشل الطباعة: ' + err.message);
-          if (windowRef) windowRef.close();
-        }
-      }
-
-      // ✨ Fallback print (simple HTML)
-      function fallbackPrint(payload, choice, windowRef) {
-        try {
-          const { invoice, customer, items } = payload;
-          const company = state.company || {};
-          const w = windowRef || window.open('', '_blank');
-          if (!w) { Refad.toast.warning('اسمح بالنوافذ المنبثقة'); return; }
-
-          const pageSizes = { 'A4': '210mm 297mm', 'A5': '148mm 210mm', '80mm': '80mm 297mm' };
-          const pageCss = choice.pageSize === '80mm' ? '@page { size: 80mm auto; margin: 3mm; }' : `@page { size: ${pageSizes[choice.pageSize] || '210mm 297mm'}; margin: 10mm; }`;
-          const isSmall = choice.pageSize === '80mm';
-
-          const itemsHtml = items.map(it => `
-            <tr>
-              <td>${esc(it.products?.name || '')}</td>
-              <td style="text-align:center;">${it.quantity}</td>
-              <td style="text-align:center;">${Number(it.unit_price).toFixed(2)}</td>
-              <td style="text-align:center;">${Number(it.sale_discount || 0).toFixed(1)}%</td>
-              <td style="text-align:right;">${Number(it.total).toFixed(2)}</td>
-            </tr>
-          `).join('');
-
-          const copiesHtml = Array(choice.copies || 1).fill(0).map(() => `
-            <div class="print-page">
-              <div class="print-header">
-                <h1>${esc(company.name || 'الشركة')}</h1>
-                ${company.phone ? `<p>${esc(company.phone)}</p>` : ''}
-                ${company.address ? `<p>${esc(company.address)}</p>` : ''}
-              </div>
-              <h2 style="text-align:center;color:#0B2C4D;font-size:${isSmall ? '14px' : '20px'};">فاتورة بيع</h2>
-              <div style="display:flex;justify-content:space-between;margin-bottom:10px;font-size:${isSmall ? '10px' : '12px'};">
-                <div><b>رقم:</b> ${esc(invoice.invoice_number)}</div>
-                <div><b>التاريخ:</b> ${Refad.format.date(invoice.invoice_date || invoice.created_at)}</div>
-              </div>
-              ${customer ? `<div style="margin-bottom:10px;font-size:${isSmall ? '10px' : '12px'};"><b>العميل:</b> ${esc(customer.name)} ${customer.phone ? '- ' + esc(customer.phone) : ''}</div>` : ''}
-              <table style="width:100%;border-collapse:collapse;font-size:${isSmall ? '10px' : '12px'};margin-bottom:10px;">
-                <thead>
-                  <tr style="background:#0B2C4D;color:white;">
-                    <th style="padding:5px;text-align:right;">الصنف</th>
-                    <th style="padding:5px;">الكمية</th>
-                    <th style="padding:5px;">السعر</th>
-                    <th style="padding:5px;">خصم</th>
-                    <th style="padding:5px;text-align:right;">الإجمالي</th>
-                  </tr>
-                </thead>
-                <tbody>${itemsHtml}</tbody>
-              </table>
-              <div style="border-top:2px solid #0B2C4D;padding-top:8px;font-size:${isSmall ? '11px' : '13px'};">
-                <div style="display:flex;justify-content:space-between;padding:3px 0;"><span>المجموع:</span><b>${Number(invoice.subtotal || 0).toFixed(2)}</b></div>
-                <div style="display:flex;justify-content:space-between;padding:3px 0;"><span>الخصم:</span><b>${Number(invoice.discount_total || 0).toFixed(2)}</b></div>
-                <div style="display:flex;justify-content:space-between;padding:6px 0;border-top:1px solid #ccc;font-size:${isSmall ? '13px' : '16px'};color:#14B8A6;"><span><b>الإجمالي:</b></span><b>${Number(invoice.grand_total || 0).toFixed(2)}</b></div>
-                <div style="display:flex;justify-content:space-between;padding:3px 0;"><span>المدفوع:</span><b>${Number(invoice.paid_amount || 0).toFixed(2)}</b></div>
-                <div style="display:flex;justify-content:space-between;padding:3px 0;color:#ef4444;"><span>المتبقي:</span><b>${(Number(invoice.grand_total || 0) - Number(invoice.paid_amount || 0)).toFixed(2)}</b></div>
-              </div>
-              <div style="text-align:center;margin-top:15px;font-size:10px;color:#999;border-top:1px dashed #ccc;padding-top:8px;">شكراً لتعاملكم معنا</div>
-            </div>
-          `).join('');
-
-          w.document.write(`<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8"><title>طباعة ${esc(invoice.invoice_number)}</title>
-            <style>
-              ${pageCss}
-              * { margin: 0; padding: 0; box-sizing: border-box; }
-              body { font-family: 'Cairo', Arial, sans-serif; color: #0f172a; }
-              .print-page { padding: ${isSmall ? '5px' : '15px'}; page-break-after: always; }
-              .print-page:last-child { page-break-after: auto; }
-              .print-header { text-align: center; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid #0B2C4D; }
-              .print-header h1 { color: #0B2C4D; font-size: ${isSmall ? '14px' : '22px'}; margin-bottom: 4px; }
-              .print-header p { color: #64748b; font-size: ${isSmall ? '9px' : '11px'}; }
-              th, td { padding: 5px; }
-              tbody tr:nth-child(even) { background: #f8fafc; }
-              @media print { body { padding: 0; } }
-            </style>
-          </head><body>${copiesHtml}
-          <script>window.onload=()=>setTimeout(()=>window.print(),300);<\/script>
-          </body></html>`);
-          w.document.close();
-        } catch (err) {
-          console.error('[Fallback Print] failed:', err);
-          Refad.toast.error('فشل الطباعة');
-        }
-      }
-
-      // ============================================================
-      // 15) Delete Invoice
-      // ============================================================
-      async function deleteInvoice(id, invoice) {
-        const ok = await Refad.alert.confirm(
-          'حذف الفاتورة',
-          `سيتم حذف "${invoice.invoice_number}" وإرجاع الكميات للمخزون. متابعة؟`,
-          'حذف'
-        );
-        if (!ok) return;
-
-        try {
-          const items = await Refad.db.select('sales_invoice_items', {
-            columns: 'id, product_id, batch_id, quantity',
-            eq: { invoice_id: id }
-          });
-
-          // Revert customer balance
-          if (invoice.customer_id) {
-            const cust = await Refad.db.selectOne('customers', {
-              columns: 'id, balance',
-              eq: { id: invoice.customer_id }
-            });
-            if (cust) {
-              await Refad.db.update('customers', cust.id, {
-                balance: (toNum(cust.balance) || 0) - toNum(invoice.paid_amount)
-              });
-            }
-          }
-
-          // Revert inventory
-          for (const it of items) {
-            if (it.batch_id) {
-              const batch = await Refad.db.selectOne('batches', { eq: { id: it.batch_id } });
-              if (batch) {
-                await Refad.db.update('batches', it.batch_id, {
-                  quantity_left: (toNum(batch.quantity_left) || 0) + toNum(it.quantity)
-                });
-              }
-            }
-
-            await Refad.db.insert('inventory_movements', {
-              company_id: session.company_id,
-              product_id: it.product_id,
-              batch_id: it.batch_id,
-              movement_type: 'return',
-              reference_type: 'invoice_delete',
-              reference_id: id,
-              quantity: it.quantity,
-              notes: `إلغاء فاتورة ${invoice.invoice_number}`,
-              user_id: session.user_id
-            });
-          }
-
-          await Refad.db.removeWhere('sales_invoice_items', { invoice_id: id });
-          await Refad.db.remove('sales_invoices', id);
-
-          await Refad.logActivity('delete_invoice', 'sales', `حذف فاتورة ${invoice.invoice_number}`, id);
-
-          Refad.toast.success('تم الحذف وإرجاع المخزون');
-          await loadInvoices(true);
-        } catch (err) {
-          console.error('[Delete] failed:', err);
-          Refad.toast.error('فشل الحذف: ' + err.message);
-        }
-      }
-
-      // ============================================================
-      // 16) Add Note
-      // ============================================================
-      function openNoteModal() {
-        if (!state.currentInvoice) return;
-        const inv = state.currentInvoice.invoice;
-        if (!inv.customer_id) {
-          Refad.toast.warning('لا يمكن إضافة إشعار لعميل نقدي');
-          return;
-        }
-        document.getElementById('noteForm').reset();
-        document.getElementById('noteType').value = 'credit';
-        document.getElementById('noteModal').classList.add('show');
-        if (window.lucide) lucide.createIcons();
-      }
-
-      async function submitNote(e) {
-        e.preventDefault();
-        const btn = document.getElementById('noteSaveBtn');
-        btn.disabled = true;
-
-        try {
-          const inv = state.currentInvoice.invoice;
-          const noteType = document.getElementById('noteType').value;
-          const amountVal = Refad.toNum(document.getElementById('noteAmount').value);
-          const reason = document.getElementById('noteReason').value.trim();
-          const notes = document.getElementById('noteNotes').value.trim() || null;
-
-          if (amountVal <= 0) { Refad.toast.warning('أدخل مبلغاً صحيحاً'); btn.disabled = false; return; }
-          if (!reason) { Refad.toast.warning('السبب مطلوب'); btn.disabled = false; return; }
-
-          const prefix = noteType === 'credit' ? 'CN' : 'DN';
-          const year = new Date().getFullYear();
-          const count = await Refad.db.count('credit_notes', {
+      try {
+        const [rows, suppliers] = await Promise.all([
+          Refad.db.select('sales_invoices', {
+            columns: 'id, invoice_number, invoice_type, payment_type, supplier_id, subtotal, discount_total, tax_total, grand_total, total_profit, paid_amount, status, invoice_date, created_at, order_id, notes, customer_id, share_token, sales_invoice_items(id, quantity)',
+            eq: { company_id: session.company_id },
+            order: { column: 'created_at', ascending: false },
+            limit: 1000
+          }),
+          Refad.db.select('suppliers', {
+            columns: 'id, name, phone',
             eq: { company_id: session.company_id }
-          });
-          const noteNumber = `${prefix}-${year}-${String(count + 1).padStart(5, '0')}`;
+          }).catch(() => [])
+        ]);
 
-          const payload = {
-            company_id: session.company_id,
-            note_number: noteNumber,
-            note_type: noteType,
-            party_type: 'customer',
-            customer_id: inv.customer_id,
-            reference_invoice_id: inv.id,
-            amount: amountVal,
-            tax_amount: 0,
-            reason,
-            notes,
-            note_date: today(),
-            status: 'active',
-            created_by: session.user_id
-          };
+        const suppliersById = new Map(suppliers.map(s => [String(s.id), s]));
+        const customersById = new Map(state.customers.map(c => [String(c.id), c]));
 
-          const created = await Refad.db.insert('credit_notes', payload);
-
-          await Refad.logActivity('create_credit_note', 'invoices',
-            `إشعار ${noteType === 'credit' ? 'دائن' : 'مدين'} ${noteNumber} على فاتورة ${inv.invoice_number}`,
-            created?.id);
-
-          Refad.toast.success(`تم إضافة الإشعار ${noteNumber}`);
-          document.getElementById('noteModal').classList.remove('show');
-          await viewInvoice(inv.id);
-        } catch (err) {
-          console.error('[Note] failed:', err);
-          Refad.toast.error('فشل: ' + err.message);
-        } finally {
-          btn.disabled = false;
-        }
-      }
-
-      // ============================================================
-      // 17) Export (Invoices + Items in 2 sheets)
-      // ============================================================
-      function exportExcel() {
-        const list = state.filtered.length ? state.filtered : state.all;
-        if (!list.length) { Refad.toast.warning('لا توجد بيانات'); return; }
-
-        if (typeof XLSX === 'undefined') {
-          Refad.toast.error('مكتبة Excel لم تُحمّل بعد');
-          return;
-        }
-
-        // Sheet 1: Invoices
-        const invoiceData = list.map(r => ({
-          'رقم الفاتورة': r.invoice_number,
-          'العميل': r.customers?.name || r.suppliers?.name || 'نقدي',
-          'الهاتف': r.customers?.phone || r.suppliers?.phone || '',
-          'التاريخ': r.invoice_date || r.created_at,
-          'الأصناف': r.sales_invoice_items?.length || 0,
-          'الإجمالي': toNum(r.grand_total),
-          'المدفوع': toNum(r.paid_amount),
-          'المتبقي': Math.max(0, toNum(r.grand_total) - toNum(r.paid_amount)),
-          'الربح': toNum(r.total_profit),
-          'الحالة': r.status
+        state.all = rows.map(inv => Object.assign({}, inv, {
+          customers: customersById.get(String(inv.customer_id)) || null,
+          suppliers: suppliersById.get(String(inv.supplier_id)) || null
         }));
 
-        const ws = XLSX.utils.json_to_sheet(invoiceData);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'الفواتير');
-        XLSX.writeFile(wb, `invoices-${today()}.xlsx`);
-        Refad.toast.success('تم التصدير');
-      }
-
-      // ============================================================
-      // 18) View Toggle
-      // ============================================================
-      function setupViewToggle() {
-        document.querySelectorAll('.view-btn').forEach(btn => {
-          btn.addEventListener('click', () => {
-            document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            state.viewMode = btn.dataset.view;
-
-            if (state.viewMode === 'table') {
-              document.getElementById('tableView').style.display = 'block';
-              document.getElementById('cardsView').style.display = 'none';
-              renderTable();
-            } else {
-              document.getElementById('tableView').style.display = 'none';
-              document.getElementById('cardsView').style.display = 'grid';
-              renderCards();
-            }
-          });
-        });
-      }
-
-      // ============================================================
-      // 19) Quick Search
-      // ============================================================
-      function openQuickSearch() {
-        const overlay = document.getElementById('quickSearchOverlay');
-        overlay.classList.add('show');
-        const input = document.getElementById('quickSearchInput');
-        input.value = '';
-        input.focus();
-        state.quickSearchIndex = -1;
-        state.quickSearchResults = [];
-        renderQuickSearchResults('');
-      }
-
-      function closeQuickSearch() {
-        document.getElementById('quickSearchOverlay').classList.remove('show');
-      }
-
-      function renderQuickSearchResults(query) {
-        const container = document.getElementById('quickSearchResults');
-        const q = (query || '').toLowerCase().trim();
-
-        if (!q) {
-          container.innerHTML = '<div class="quick-search-empty">اكتب للبحث السريع...</div>';
-          state.quickSearchResults = [];
-          return;
-        }
-
-        const results = state.all.filter(inv =>
-          (inv.invoice_number || '').toLowerCase().includes(q) ||
-          (inv.customers?.name || '').toLowerCase().includes(q) ||
-          (inv.suppliers?.name || '').toLowerCase().includes(q) ||
-          (inv.customers?.phone || '').toLowerCase().includes(q)
-        ).slice(0, 10).map(inv => {
-          const party = inv.customers?.name || inv.suppliers?.name || 'نقدي';
-          return {
-            type: 'invoice',
-            id: inv.id,
-            name: inv.invoice_number,
-            sub: `${party} • ${fmtMoney(inv.grand_total)} • ${Refad.format.date(inv.invoice_date || inv.created_at)}`,
-            initial: (inv.invoice_number || '?').charAt(0)
-          };
-        });
-
-        state.quickSearchResults = results;
-        state.quickSearchIndex = results.length ? 0 : -1;
-
-        if (!results.length) {
-          container.innerHTML = '<div class="quick-search-empty">لا توجد نتائج</div>';
-          return;
-        }
-
-        container.innerHTML = results.map((r, i) => `
-          <div class="quick-search-item ${i === 0 ? 'selected' : ''}" data-idx="${i}">
-            <div class="qs-icon">${esc(r.initial)}</div>
-            <div class="qs-body">
-              <div class="qs-name">${esc(r.name)}</div>
-              <div class="qs-sub">${esc(r.sub)}</div>
-            </div>
-            <i data-lucide="arrow-left" style="width:16px;height:16px;color:var(--text-muted);"></i>
-          </div>
-        `).join('');
-
+        renderStats();
+        applyFilters();
+      } catch (e) {
+        console.error('[Invoices] load failed:', e);
+        tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state" style="color:var(--danger);"><i data-lucide="alert-circle"></i><h3>فشل التحميل</h3><p>' + esc(e.message) + '</p></div></td></tr>';
         if (window.lucide) lucide.createIcons();
+      }
+    }
 
-        container.querySelectorAll('.quick-search-item').forEach(el => {
-          el.addEventListener('click', () => {
-            const idx = Number(el.dataset.idx);
-            navigateQuickSearch(idx);
-          });
-        });
+    function renderSkeleton() {
+      const tbody = document.getElementById('tableBody');
+      tbody.innerHTML = Array(6).fill(0).map(() =>
+        '<tr class="skeleton-row">' +
+          '<td><div class="skeleton-bar" style="width:90px"></div></td>' +
+          '<td><div class="skeleton-bar" style="width:60%"></div></td>' +
+          '<td><div class="skeleton-bar" style="width:80px"></div></td>' +
+          '<td><div class="skeleton-bar" style="width:40px"></div></td>' +
+          '<td><div class="skeleton-bar" style="width:80px"></div></td>' +
+          '<td><div class="skeleton-bar" style="width:80px"></div></td>' +
+          '<td><div class="skeleton-bar" style="width:80px"></div></td>' +
+          '<td><div class="skeleton-bar" style="width:70px"></div></td>' +
+          '<td><div class="skeleton-bar" style="width:80px"></div></td>' +
+        '</tr>'
+      ).join('');
+    }
+
+    // ============================================================
+    // 7) Render Stats
+    // ============================================================
+    function renderStats() {
+      const range = getPeriodRange(state.filters.period);
+      const list = state.all.filter(inv => {
+        if (range.from && inv.invoice_date < range.from) return false;
+        if (range.to && inv.invoice_date > range.to) return false;
+        return true;
+      });
+
+      const active = list.filter(r => r.status !== 'cancelled');
+      const total = list.length;
+      const paid = active.filter(r => r.status === 'paid').length;
+      const unpaid = active.filter(r => r.status === 'unpaid' || r.status === 'partial').length;
+      const revenue = active.reduce((s, r) => s + toNum(r.grand_total), 0);
+      const profit = active.reduce((s, r) => s + toNum(r.total_profit), 0);
+      const due = active.reduce((s, r) => s + Math.max(0, toNum(r.grand_total) - toNum(r.paid_amount)), 0);
+
+      document.getElementById('statTotal').textContent = fmtNumber(total);
+      document.getElementById('statTotalSub').textContent = active.length + ' نشطة';
+      document.getElementById('statPaid').textContent = fmtNumber(paid);
+      document.getElementById('statPaidSub').textContent = total > 0 ? Math.round((paid / total) * 100) + '%' : '—';
+      document.getElementById('statUnpaid').textContent = fmtNumber(unpaid);
+      document.getElementById('statUnpaidSub').textContent = total > 0 ? Math.round((unpaid / total) * 100) + '%' : '—';
+      document.getElementById('statRevenue').textContent = fmtMoney(revenue);
+      document.getElementById('statProfit').textContent = fmtMoney(profit);
+      document.getElementById('statDue').textContent = fmtMoney(due);
+    }
+
+    function getPeriodRange(period) {
+      const now = today();
+      if (period === 'today') return { from: now, to: now };
+      if (period === 'week') return { from: Refad.date.addDays(now, -6), to: now };
+      if (period === 'year') return { from: now.slice(0, 4) + '-01-01', to: now };
+      if (period === 'month') return { from: now.slice(0, 7) + '-01', to: now };
+      return { from: null, to: null };
+    }
+
+    // ============================================================
+    // 8) Apply Filters
+    // ============================================================
+    function applyFilters() {
+      const range = getPeriodRange(state.filters.period);
+      let list = state.all.slice();
+
+      if (state.filters.status) list = list.filter(r => r.status === state.filters.status);
+      if (state.filters.customer) list = list.filter(r => String(r.customer_id) === state.filters.customer);
+
+      if (range.from) {
+        list = list.filter(r => r.invoice_date >= range.from && r.invoice_date <= range.to);
       }
 
-      function navigateQuickSearch(idx) {
-        const r = state.quickSearchResults[idx];
-        if (!r) return;
-        closeQuickSearch();
-        viewInvoice(r.id);
+      if (state.filters.search) {
+        const q = state.filters.search.toLowerCase();
+        list = list.filter(r =>
+          (r.invoice_number || '').toLowerCase().includes(q) ||
+          ((r.customers && r.customers.name) || (r.suppliers && r.suppliers.name) || '').toLowerCase().includes(q) ||
+          ((r.customers && r.customers.phone) || (r.suppliers && r.suppliers.phone) || '').toLowerCase().includes(q)
+        );
       }
 
-      function updateQuickSearchSelection() {
-        const container = document.getElementById('quickSearchResults');
-        container.querySelectorAll('.quick-search-item').forEach((el, i) => {
-          el.classList.toggle('selected', i === state.quickSearchIndex);
-        });
-        const selected = container.querySelector('.quick-search-item.selected');
-        if (selected) selected.scrollIntoView({ block: 'nearest' });
+      state.filtered = list;
+
+      if (state.viewMode === 'table') renderTable();
+      else renderCards();
+    }
+
+    // ============================================================
+    // 9) Render Table (مع زر مشاركة جديد)
+    // ============================================================
+    function renderTable() {
+      const tbody = document.getElementById('tableBody');
+      const list = state.filtered;
+
+      if (!list.length) {
+        tbody.innerHTML =
+          '<tr><td colspan="9">' +
+            '<div class="empty-state">' +
+              '<i data-lucide="receipt"></i>' +
+              '<h3>' + (state.all.length ? 'لا توجد نتائج مطابقة' : 'لا توجد فواتير بعد') + '</h3>' +
+              '<p>' + (state.all.length ? 'جرّب تعديل الفلاتر أو الفترة' : 'ابدأ بإنشاء فاتورة جديدة من POS') + '</p>' +
+            '</div>' +
+          '</td></tr>';
+        if (window.lucide) lucide.createIcons();
+        return;
       }
 
-      function setupQuickSearch() {
-        const overlay = document.getElementById('quickSearchOverlay');
-        const input = document.getElementById('quickSearchInput');
+      const STATUS = {
+        paid: { label: 'مدفوعة', cls: 'paid' },
+        partial: { label: 'جزئي', cls: 'partial' },
+        unpaid: { label: 'آجلة', cls: 'unpaid' },
+        cancelled: { label: 'ملغية', cls: 'cancelled' }
+      };
 
-        overlay.addEventListener('click', e => {
-          if (e.target === overlay) closeQuickSearch();
+      tbody.innerHTML = list.map(r => {
+        const st = STATUS[r.status] || { label: r.status, cls: 'unpaid' };
+        const itemCount = (r.sales_invoice_items && r.sales_invoice_items.length) || 0;
+        const party = (r.customers && r.customers.name) || (r.suppliers && r.suppliers.name) || 'عميل نقدي';
+        const initial = esc((party || '؟').charAt(0));
+        const paid = toNum(r.paid_amount);
+        const grand = toNum(r.grand_total);
+        const invNumEsc = esc(r.invoice_number || '—');
+
+        return '<tr data-id="' + r.id + '">' +
+          '<td>' +
+            '<span class="invoice-number">' +
+              '<button class="copy-btn" data-copy="' + invNumEsc + '" title="نسخ رقم الفاتورة"><i data-lucide="copy"></i></button>' +
+              invNumEsc +
+            '</span>' +
+          '</td>' +
+          '<td>' +
+            '<div class="party-cell">' +
+              '<div class="party-avatar">' + initial + '</div>' +
+              '<div class="party-info">' +
+                '<div class="name">' + esc(party) + '</div>' +
+                (r.customers && r.customers.phone ? '<div class="sub">' + esc(r.customers.phone) + '</div>' : '') +
+              '</div>' +
+            '</div>' +
+          '</td>' +
+          '<td>' + Refad.format.date(r.invoice_date || r.created_at) + '</td>' +
+          '<td style="text-align:center;font-weight:700;">' + fmtNumber(itemCount) + '</td>' +
+          '<td class="money accent">' + fmtMoney(grand) + '</td>' +
+          '<td class="money ' + (paid >= grand ? 'success' : 'gold') + '">' + fmtMoney(paid) + '</td>' +
+          '<td class="money purple">' + fmtMoney(r.total_profit) + '</td>' +
+          '<td><span class="status-pill ' + st.cls + '">' + st.label + '</span></td>' +
+          '<td>' +
+            '<button class="action-btn" data-action="view" data-id="' + r.id + '" title="عرض">' +
+              '<i data-lucide="eye"></i>' +
+            '</button>' +
+            '<button class="action-btn success" data-action="print" data-id="' + r.id + '" title="طباعة">' +
+              '<i data-lucide="printer"></i>' +
+            '</button>' +
+            '<button class="action-btn share" data-action="share" data-id="' + r.id + '" title="مشاركة">' +
+              '<i data-lucide="share-2"></i>' +
+            '</button>' +
+            (canDelete
+              ? '<button class="action-btn danger" data-action="delete" data-id="' + r.id + '" title="حذف">' +
+                  '<i data-lucide="trash-2"></i>' +
+                '</button>'
+              : '') +
+          '</td>' +
+        '</tr>';
+      }).join('');
+
+      if (window.lucide) lucide.createIcons();
+
+      tbody.querySelectorAll('tr[data-id]').forEach(tr => {
+        tr.addEventListener('click', (e) => {
+          if (e.target.closest('[data-action]') || e.target.closest('a') || e.target.closest('[data-copy]')) return;
+          viewInvoice(parseInt(tr.dataset.id, 10));
         });
+      });
 
-        input.addEventListener('input', e => renderQuickSearchResults(e.target.value));
+      tbody.querySelectorAll('[data-copy]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          copyText(btn.dataset.copy, btn);
+        });
+      });
 
-        input.addEventListener('keydown', e => {
-          if (e.key === 'Escape') {
-            e.preventDefault();
-            closeQuickSearch();
-          } else if (e.key === 'ArrowDown') {
-            e.preventDefault();
-            if (state.quickSearchResults.length) {
-              state.quickSearchIndex = Math.min(state.quickSearchIndex + 1, state.quickSearchResults.length - 1);
-              updateQuickSearchSelection();
-            }
-          } else if (e.key === 'ArrowUp') {
-            e.preventDefault();
-            if (state.quickSearchResults.length) {
-              state.quickSearchIndex = Math.max(state.quickSearchIndex - 1, 0);
-              updateQuickSearchSelection();
-            }
-          } else if (e.key === 'Enter') {
-            e.preventDefault();
-            if (state.quickSearchIndex >= 0) navigateQuickSearch(state.quickSearchIndex);
-            else if (state.quickSearchResults.length) navigateQuickSearch(0);
+      tbody.querySelectorAll('[data-action]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const id = parseInt(btn.dataset.id, 10);
+          if (btn.dataset.action === 'view') viewInvoice(id);
+          else if (btn.dataset.action === 'print') {
+            const win = window.open('', '_blank');
+            if (!win) { Refad.toast.warning('اسمح بالنوافذ المنبثقة'); return; }
+            win.document.write('<!DOCTYPE html><html dir="rtl"><meta charset="UTF-8"><body style="font-family:Cairo,sans-serif;text-align:center;padding:40px;">⏳ جارٍ تجهيز الفاتورة...</body></html>');
+            printInvoice(id, win);
+          } else if (btn.dataset.action === 'share') {
+            shareInvoice(id);
+          } else if (btn.dataset.action === 'delete') {
+            const inv = state.all.find(x => x.id === id);
+            if (inv) deleteInvoice(id, inv);
           }
         });
+      });
+    }
+
+    // ============================================================
+    // 10) Render Cards (مع زر مشاركة)
+    // ============================================================
+    function renderCards() {
+      const grid = document.getElementById('cardsView');
+      const list = state.filtered;
+
+      if (!list.length) {
+        grid.innerHTML =
+          '<div class="empty-state" style="grid-column:1/-1;">' +
+            '<i data-lucide="receipt"></i>' +
+            '<h3>' + (state.all.length ? 'لا توجد نتائج مطابقة' : 'لا توجد فواتير بعد') + '</h3>' +
+            '<p>' + (state.all.length ? 'جرّب تعديل الفلاتر أو الفترة' : 'ابدأ بإنشاء فاتورة جديدة من POS') + '</p>' +
+          '</div>';
+        if (window.lucide) lucide.createIcons();
+        return;
       }
 
-      // ============================================================
-      // 20) Bind Events
-      // ============================================================
-      function bindEvents() {
-        document.getElementById('searchInput').addEventListener('input', Refad.debounce(e => {
-          state.filters.search = e.target.value.trim();
-          applyFilters();
-        }, 200));
+      const STATUS = {
+        paid: { label: 'مدفوعة', cls: 'paid' },
+        partial: { label: 'جزئي', cls: 'partial' },
+        unpaid: { label: 'آجلة', cls: 'unpaid' },
+        cancelled: { label: 'ملغية', cls: 'cancelled' }
+      };
 
-        document.getElementById('filterStatus').addEventListener('change', e => {
-          state.filters.status = e.target.value;
-          applyFilters();
+      grid.innerHTML = list.map(r => {
+        const st = STATUS[r.status] || { label: r.status, cls: 'unpaid' };
+        const party = (r.customers && r.customers.name) || (r.suppliers && r.suppliers.name) || 'عميل نقدي';
+        const initial = esc((party || '؟').charAt(0));
+        const itemCount = (r.sales_invoice_items && r.sales_invoice_items.length) || 0;
+        const paid = toNum(r.paid_amount);
+        const grand = toNum(r.grand_total);
+        const due = grand - paid;
+
+        return '<div class="invoice-card ' + r.status + '" data-id="' + r.id + '">' +
+          '<div class="ic-header">' +
+            '<div class="ic-num">' + esc(r.invoice_number) + '</div>' +
+            '<span class="status-pill ' + st.cls + '">' + st.label + '</span>' +
+          '</div>' +
+          '<div class="party-cell" style="margin-bottom:10px;padding-right:8px;">' +
+            '<div class="party-avatar">' + initial + '</div>' +
+            '<div class="party-info">' +
+              '<div class="name">' + esc(party) + '</div>' +
+              '<div class="sub">' + Refad.format.date(r.invoice_date || r.created_at) + '</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="ic-amount-wrap">' +
+            '<div class="ic-amount-label">الإجمالي</div>' +
+            '<div class="ic-amount">' + fmtMoney(grand) + '</div>' +
+          '</div>' +
+          '<div class="ic-info">' +
+            '<div class="ic-info-item">' +
+              '<div class="lbl">الأصناف</div>' +
+              '<div class="val">' + fmtNumber(itemCount) + '</div>' +
+            '</div>' +
+            '<div class="ic-info-item">' +
+              '<div class="lbl">المدفوع</div>' +
+              '<div class="val" style="color:var(--success);">' + fmtMoney(paid) + '</div>' +
+            '</div>' +
+            '<div class="ic-info-item">' +
+              '<div class="lbl">المتبقي</div>' +
+              '<div class="val" style="color:' + (due > 0.01 ? 'var(--danger)' : 'var(--success)') + ';">' + fmtMoney(due) + '</div>' +
+            '</div>' +
+            '<div class="ic-info-item">' +
+              '<div class="lbl">الربح</div>' +
+              '<div class="val" style="color:var(--purple);">' + fmtMoney(r.total_profit) + '</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="ic-actions">' +
+            '<button class="btn btn-outline" data-action="view" data-id="' + r.id + '" onclick="event.stopPropagation();">' +
+              '<i data-lucide="eye"></i> تفاصيل' +
+            '</button>' +
+            '<button class="btn btn-outline" data-action="share" data-id="' + r.id + '" onclick="event.stopPropagation();">' +
+              '<i data-lucide="share-2"></i> مشاركة' +
+            '</button>' +
+            '<button class="btn btn-success" data-action="print" data-id="' + r.id + '" onclick="event.stopPropagation();">' +
+              '<i data-lucide="printer"></i> طباعة' +
+            '</button>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+
+      if (window.lucide) lucide.createIcons();
+
+      grid.querySelectorAll('.invoice-card').forEach(card => {
+        card.addEventListener('click', (e) => {
+          if (e.target.closest('[data-action]')) return;
+          viewInvoice(parseInt(card.dataset.id, 10));
         });
+      });
 
-        document.getElementById('filterCustomer').addEventListener('change', e => {
-          state.filters.customer = e.target.value;
-          applyFilters();
+      grid.querySelectorAll('[data-action]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const id = parseInt(btn.dataset.id, 10);
+          if (btn.dataset.action === 'view') viewInvoice(id);
+          else if (btn.dataset.action === 'print') {
+            const win = window.open('', '_blank');
+            if (!win) { Refad.toast.warning('اسمح بالنوافذ المنبثقة'); return; }
+            win.document.write('<!DOCTYPE html><html dir="rtl"><meta charset="UTF-8"><body style="font-family:Cairo,sans-serif;text-align:center;padding:40px;">⏳ جارٍ تجهيز الفاتورة...</body></html>');
+            printInvoice(id, win);
+          } else if (btn.dataset.action === 'share') {
+            shareInvoice(id);
+          }
         });
+      });
+    }
 
-        document.getElementById('filterPeriod').addEventListener('change', e => {
-          state.filters.period = e.target.value;
-          renderStats();
-          applyFilters();
+    // ============================================================
+    // 11) Share Invoice (جديد)
+    // ============================================================
+    async function shareInvoice(id) {
+      try {
+        const inv = state.all.find(x => String(x.id) === String(id));
+        if (!inv) {
+          Refad.toast.error('الفاتورة غير موجودة');
+          return;
+        }
+
+        let token = inv.share_token;
+        if (!token) {
+          token = generateShareToken();
+          try {
+            await Refad.db.update('sales_invoices', inv.id, { share_token: token });
+            inv.share_token = token;
+          } catch (e) {
+            console.error('Save token failed:', e);
+            Refad.toast.error('فشل توليد الرابط');
+            return;
+          }
+        }
+
+        state.currentShareInvoice = { id: inv.id, number: inv.invoice_number, token: token };
+
+        const basePath = location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1);
+        const url = location.origin + basePath + 'shared-invoice.html?token=' + token;
+
+        document.getElementById('shareLinkInput').value = url;
+
+        // توليد QR
+        const qrContainer = document.getElementById('shareQrCode');
+        qrContainer.innerHTML = '';
+        try {
+          if (typeof qrcode !== 'undefined') {
+            const qr = qrcode(0, 'M');
+            qr.addData(url);
+            qr.make();
+            qrContainer.innerHTML = qr.createImgTag(6, 8);
+          } else {
+            qrContainer.innerHTML = '<p style="color:var(--text-muted);font-size:12px;">QR غير متوفر</p>';
+          }
+        } catch (e) {
+          console.error('QR generation failed:', e);
+          qrContainer.innerHTML = '<p style="color:var(--text-muted);font-size:12px;">QR غير متوفر</p>';
+        }
+
+        document.getElementById('shareModal').classList.add('show');
+        if (window.lucide) lucide.createIcons();
+      } catch (e) {
+        console.error('Share failed:', e);
+        Refad.toast.error('تعذّر فتح المشاركة');
+      }
+    }
+
+    function setupShareModal() {
+      document.querySelectorAll('#shareModal [data-close]').forEach(b => {
+        b.addEventListener('click', () => {
+          document.getElementById('shareModal').classList.remove('show');
         });
+      });
 
-        document.getElementById('refreshBtn').addEventListener('click', async () => {
-          Refad.toast.info('جارٍ التحديث...');
-          await loadCustomersFilter();
-          await loadInvoices(true);
-          Refad.toast.success('تم التحديث');
-        });
+      document.getElementById('shareModal').addEventListener('click', (e) => {
+        if (e.target.id === 'shareModal') {
+          e.target.classList.remove('show');
+        }
+      });
 
-        document.getElementById('exportBtn').addEventListener('click', exportExcel);
+      document.getElementById('copyLinkBtn').addEventListener('click', async () => {
+        const input = document.getElementById('shareLinkInput');
+        try {
+          await navigator.clipboard.writeText(input.value);
+          Refad.toast.success('تم نسخ الرابط');
+        } catch (e) {
+          input.select();
+          document.execCommand('copy');
+          Refad.toast.success('تم نسخ الرابط');
+        }
+      });
 
-        document.getElementById('reprintBtn').addEventListener('click', () => {
-          const inv = state.currentInvoice?.invoice;
-          if (!inv) { Refad.toast.warning('لا توجد فاتورة'); return; }
-          printInvoice(inv.id);
-        });
+      document.getElementById('whatsappShareBtn').addEventListener('click', () => {
+        const url = document.getElementById('shareLinkInput').value;
+        const text = 'فاتورة ' + (state.currentShareInvoice ? state.currentShareInvoice.number : '') + '\n' + url;
+        window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
+      });
+
+      document.getElementById('openShareLinkBtn').addEventListener('click', () => {
+        window.open(document.getElementById('shareLinkInput').value, '_blank');
+      });
+    }
+
+    // ============================================================
+    // 12) View Invoice Details
+    // ============================================================
+    async function viewInvoice(id) {
+      try {
+        const payload = await buildInvoicePayload(id);
+        if (!payload) return;
+
+        state.currentInvoice = payload;
+
+        const returnsBtn = document.getElementById('invoiceReturnsBtn');
+        if (returnsBtn) {
+          returnsBtn.href = 'returns.html?type=sales&invoice_id=' + id;
+          returnsBtn.style.display = 'inline-flex';
+        }
 
         const noteBtn = document.getElementById('noteBtn');
-        if (noteBtn) noteBtn.addEventListener('click', openNoteModal);
-
-        document.getElementById('noteForm').addEventListener('submit', submitNote);
-
-        // Modal close
-        document.querySelectorAll('[data-close]').forEach(b => {
-          b.addEventListener('click', () => {
-            document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.remove('show'));
-          });
-        });
-
-        document.querySelectorAll('.modal-backdrop').forEach(m => {
-          m.addEventListener('click', e => {
-            if (e.target === m) m.classList.remove('show');
-          });
-        });
-
-        document.addEventListener('keydown', e => {
-          if (e.key === 'Escape') {
-            const qsOpen = document.getElementById('quickSearchOverlay').classList.contains('show');
-            if (qsOpen) {
-              closeQuickSearch();
-              return;
-            }
-            document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.remove('show'));
-          }
-          if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-            e.preventDefault();
-            openQuickSearch();
-          }
-        });
-
-        setupQuickSearch();
-      }
-
-      // ============================================================
-      // 21) Init
-      // ============================================================
-      async function init() {
-        Refad.buildMenu('invoices.html');
-        fillUser();
-        applyIdentity();
-        setupTheme();
-        setupSidebarMobile();
-        setupUserMenu();
-        setupNotifBtn();
-        setupRealtimeTheme();
-        setupViewToggle();
-        bindEvents();
-
-        state.company = await loadCompany();
-        await loadCustomersFilter();
-        await loadInvoices();
-
-        // فتح فاتورة تلقائياً لو فيه ?id=
-        const urlId = parseInt(Refad.getParam('id'), 10);
-        if (urlId) {
-          setTimeout(() => viewInvoice(urlId), 400);
+        if (noteBtn) {
+          noteBtn.style.display = canCreateNote ? 'inline-flex' : 'none';
         }
 
-        if (Refad.registerServiceWorker) Refad.registerServiceWorker();
+        renderModal();
+        document.getElementById('invoiceModal').classList.add('show');
+        if (window.lucide) lucide.createIcons();
+      } catch (e) {
+        console.error('View invoice failed:', e);
+        Refad.toast.error('تعذّر التحميل: ' + e.message);
+      }
+    }
 
-        console.log('%c[Refad] Invoices v3 ready (Theme Sync + Settings + Quick Search)', 'color:#14B8A6;font-weight:bold;font-size:14px');
+    async function buildInvoicePayload(id) {
+      const inv = await Refad.db.selectOne('sales_invoices', { eq: { id } });
+      if (!inv || String(inv.company_id) !== String(session.company_id)) {
+        Refad.toast.error('الفاتورة غير موجودة');
+        return null;
       }
 
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
-      } else {
-        init();
+      const items = await Refad.db.select('sales_invoice_items', {
+        columns: 'id, quantity, unit_price, sale_discount, cost_price, profit, total, products(id, name, name_en, form, unit), batches(batch_number, expiry_date)',
+        eq: { invoice_id: id },
+        order: { column: 'id', ascending: true }
+      });
+
+      const returns = await Refad.db.select('inventory_returns', {
+        columns: 'id, return_number, return_date, total_amount, reason',
+        eq: { company_id: session.company_id, return_type: 'sales', reference_invoice_id: id },
+        order: { column: 'id', ascending: false }
+      }).catch(() => []);
+
+      const notes = await Refad.db.select('credit_notes', {
+        columns: 'id, note_number, note_type, note_date, amount, tax_amount, reason, status',
+        eq: { company_id: session.company_id, reference_invoice_id: id },
+        order: { column: 'id', ascending: false }
+      }).catch(() => []);
+
+      let customer = null;
+      if (inv.customer_id) {
+        customer = await Refad.db.selectOne('customers', {
+          columns: 'id, name, phone, address, balance, credit_limit',
+          eq: { id: inv.customer_id }
+        }).catch(() => null);
       }
 
-    })();
-  </script>
+      return { invoice: inv, items, customer, returns, notes };
+    }
+
+    // ============================================================
+    // 13) Render Modal (مع الضريبة + التذييل + الشروط)
+    // ============================================================
+    function renderModal() {
+      const payload = state.currentInvoice;
+      const invoice = payload.invoice;
+      const items = payload.items;
+      const customer = payload.customer;
+      const returns = payload.returns || [];
+      const notes = payload.notes || [];
+
+      document.getElementById('modalTitle').textContent = 'فاتورة ' + invoice.invoice_number;
+
+      const STATUS = {
+        paid: { label: 'مدفوعة', cls: 'paid' },
+        partial: { label: 'جزئي', cls: 'partial' },
+        unpaid: { label: 'آجلة', cls: 'unpaid' },
+        cancelled: { label: 'ملغية', cls: 'cancelled' }
+      };
+      const st = STATUS[invoice.status] || { label: invoice.status, cls: 'unpaid' };
+
+      const balance = toNum(customer && customer.balance);
+      const creditLimit = toNum(customer && customer.credit_limit);
+      const paid = toNum(invoice.paid_amount);
+      const grand = toNum(invoice.grand_total);
+      const taxTotal = toNum(invoice.tax_total);
+      const due = grand - paid;
+
+      const cfg = SafeSettings.invoice.get();
+
+      const body = document.getElementById('modalBody');
+      body.innerHTML =
+        '<div class="info-grid">' +
+          '<div class="info-item"><div class="label">رقم الفاتورة</div><div class="value">' + esc(invoice.invoice_number) + '</div></div>' +
+          '<div class="info-item"><div class="label">التاريخ</div><div class="value">' + Refad.format.date(invoice.invoice_date || invoice.created_at) + '</div></div>' +
+          '<div class="info-item"><div class="label">العميل</div><div class="value">' + esc((customer && customer.name) || 'نقدي') + '</div></div>' +
+          '<div class="info-item"><div class="label">الهاتف</div><div class="value">' + esc((customer && customer.phone) || '—') + '</div></div>' +
+          '<div class="info-item"><div class="label">الحالة</div><div class="value"><span class="status-pill ' + st.cls + '">' + st.label + '</span></div></div>' +
+          '<div class="info-item"><div class="label">طريقة الدفع</div><div class="value">' + (invoice.payment_type === 'cash' ? 'نقدي' : 'آجل') + '</div></div>' +
+        '</div>' +
+
+        (customer && creditLimit > 0
+          ? '<div style="background:linear-gradient(135deg,rgba(139,92,246,0.06),rgba(20,184,166,0.04));border:1.5px solid rgba(139,92,246,0.2);border-radius:12px;padding:12px 14px;margin-bottom:16px;">' +
+              '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px;">' +
+                '<span style="font-size:12px;font-weight:800;color:var(--purple);display:flex;align-items:center;gap:6px;">' +
+                  '<i data-lucide="wallet" style="width:14px;height:14px;"></i> حد الائتمان' +
+                '</span>' +
+                '<span style="font-size:14px;font-weight:800;color:' + (balance > creditLimit ? 'var(--danger)' : 'var(--success)') + ';">' +
+                  fmtMoney(balance) + ' / ' + fmtMoney(creditLimit) +
+                '</span>' +
+              '</div>' +
+              '<div style="height:6px;background:rgba(148,163,184,0.2);border-radius:3px;overflow:hidden;">' +
+                '<div style="height:100%;width:' + Math.min(100, (balance / creditLimit) * 100) + '%;background:linear-gradient(90deg,' + (balance > creditLimit ? 'var(--danger)' : balance / creditLimit > 0.8 ? 'var(--gold)' : 'var(--success)') + ',' + (balance > creditLimit ? '#b91c1c' : balance / creditLimit > 0.8 ? '#d97706' : '#047857') + ');border-radius:3px;"></div>' +
+              '</div>' +
+            '</div>'
+          : '') +
+
+        '<h3 style="font-size:14px;font-weight:700;margin-bottom:8px;color:var(--text);display:flex;align-items:center;gap:6px;">' +
+          '<i data-lucide="package" style="width:16px;height:16px;color:var(--accent);"></i>' +
+          'الأصناف (' + items.length + ')' +
+        '</h3>' +
+
+        '<table class="items-mini-table">' +
+          '<thead><tr>' +
+            '<th>#</th><th>الصنف</th><th>التشغيلة</th><th>الكمية</th><th>السعر</th><th>خصم%</th><th>الإجمالي</th><th>الربح</th>' +
+          '</tr></thead>' +
+          '<tbody>' +
+            items.map((it, i) =>
+              '<tr>' +
+                '<td>' + (i + 1) + '</td>' +
+                '<td>' +
+                  '<div style="font-weight:700;">' + esc((it.products && it.products.name) || '—') + '</div>' +
+                  '<div style="font-size:10px;color:var(--text-muted);">' +
+                    esc([it.products && it.products.form, it.products && it.products.unit].filter(Boolean).join(' • ') || '') +
+                  '</div>' +
+                '</td>' +
+                '<td style="font-family:monospace;font-size:12px;">' + esc((it.batches && it.batches.batch_number) || '—') + '</td>' +
+                '<td style="text-align:center;font-weight:700;">' + fmtNumber(it.quantity) + '</td>' +
+                '<td>' + fmtNumber(it.unit_price, 2) + '</td>' +
+                '<td style="text-align:center;color:var(--info);">' + fmtNumber(it.sale_discount || 0, 1) + '%</td>' +
+                '<td style="font-weight:700;color:var(--accent);">' + fmtNumber(it.total, 2) + '</td>' +
+                '<td style="font-weight:700;color:var(--success);">' + fmtNumber(it.profit, 2) + '</td>' +
+              '</tr>'
+            ).join('') +
+          '</tbody>' +
+        '</table>' +
+
+        '<div class="totals-box">' +
+          '<div class="totals-row"><span class="label">المجموع قبل الخصم</span><span class="value">' + fmtMoney(invoice.subtotal || 0) + '</span></div>' +
+          '<div class="totals-row"><span class="label">إجمالي الخصم</span><span class="value" style="color:var(--gold);">' + fmtMoney(invoice.discount_total || 0) + '</span></div>' +
+          (taxTotal > 0
+            ? '<div class="totals-row"><span class="label">الضريبة (' + Refad.format.number(cfg.taxRate, 1) + '%)</span><span class="value" style="color:var(--info);">' + fmtMoney(taxTotal) + '</span></div>'
+            : '') +
+          '<div class="totals-row grand"><span class="label">الإجمالي</span><span class="value">' + fmtMoney(grand) + '</span></div>' +
+          '<div class="totals-row"><span class="label">المدفوع</span><span class="value" style="color:var(--success);">' + fmtMoney(paid) + '</span></div>' +
+          '<div class="totals-row"><span class="label">المتبقي</span><span class="value" style="color:' + (due > 0.01 ? 'var(--danger)' : 'var(--success)') + ';">' + fmtMoney(due) + '</span></div>' +
+          '<div class="totals-row profit"><span class="label">إجمالي الربح</span><span class="value">' + fmtMoney(invoice.total_profit || 0) + '</span></div>' +
+        '</div>' +
+
+        (cfg.footer
+          ? '<div class="invoice-footer-preview">' +
+              '<strong>تذييل الفاتورة:</strong>' +
+              esc(cfg.footer) +
+            '</div>'
+          : '') +
+
+        (cfg.terms
+          ? '<div class="invoice-terms-preview">' +
+              '<strong>الشروط والأحكام:</strong>' +
+              esc(cfg.terms) +
+            '</div>'
+          : '') +
+
+        (returns.length
+          ? '<h3 style="font-size:14px;font-weight:700;margin-top:20px;margin-bottom:8px;color:var(--text);display:flex;align-items:center;gap:6px;">' +
+              '<i data-lucide="undo-2" style="width:16px;height:16px;color:var(--gold);"></i>' +
+              'المرتجعات (' + returns.length + ')' +
+            '</h3>' +
+            '<table class="items-mini-table">' +
+              '<thead><tr><th>رقم المرتجع</th><th>التاريخ</th><th>السبب</th><th>الإجمالي</th></tr></thead>' +
+              '<tbody>' +
+                returns.map(r =>
+                  '<tr>' +
+                    '<td>' + esc(r.return_number || '—') + '</td>' +
+                    '<td>' + Refad.format.date(r.return_date) + '</td>' +
+                    '<td>' + esc(r.reason || '—') + '</td>' +
+                    '<td style="color:var(--gold);font-weight:700;">' + fmtMoney(r.total_amount || 0) + '</td>' +
+                  '</tr>'
+                ).join('') +
+              '</tbody>' +
+            '</table>'
+          : '') +
+
+        (notes.length
+          ? '<h3 style="font-size:14px;font-weight:700;margin-top:20px;margin-bottom:8px;color:var(--text);display:flex;align-items:center;gap:6px;">' +
+              '<i data-lucide="file-text" style="width:16px;height:16px;color:var(--purple);"></i>' +
+              'الإشعارات (' + notes.length + ')' +
+            '</h3>' +
+            '<table class="items-mini-table">' +
+              '<thead><tr><th>الرقم</th><th>النوع</th><th>التاريخ</th><th>المبلغ</th></tr></thead>' +
+              '<tbody>' +
+                notes.map(n => {
+                  const total = toNum(n.amount) + toNum(n.tax_amount);
+                  const isCredit = n.note_type === 'credit';
+                  return '<tr>' +
+                    '<td>' + esc(n.note_number) + '</td>' +
+                    '<td><span class="status-pill ' + (isCredit ? 'paid' : 'unpaid') + '">' + (isCredit ? 'دائن' : 'مدين') + '</span></td>' +
+                    '<td>' + Refad.format.date(n.note_date) + '</td>' +
+                    '<td style="color:' + (isCredit ? 'var(--success)' : 'var(--danger)') + ';font-weight:700;">' +
+                      (isCredit ? '-' : '+') + ' ' + fmtMoney(total) +
+                    '</td>' +
+                  '</tr>';
+                }).join('') +
+              '</tbody>' +
+            '</table>'
+          : '');
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    // ============================================================
+    // 14) Print Options Modal
+    // ============================================================
+    function pickPrintOptions() {
+      return new Promise(resolve => {
+        const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+        const defaultSize = isMobile ? '80mm' : 'A4';
+
+        Swal.fire({
+          title: 'خيارات الطباعة',
+          html:
+            '<div style="display:flex;flex-direction:column;gap:14px;text-align:right;font-family:Cairo,sans-serif;">' +
+              '<div>' +
+                '<label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:6px;">مقاس الورق</label>' +
+                '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">' +
+                  '<button type="button" class="swal-opt" data-size="A4" style="padding:12px 6px;border:2px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;font-family:inherit;">' +
+                    '<div style="font-size:22px;">📄</div>' +
+                    '<div style="font-weight:700;font-size:12px;">A4</div>' +
+                  '</button>' +
+                  '<button type="button" class="swal-opt" data-size="A5" style="padding:12px 6px;border:2px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;font-family:inherit;">' +
+                    '<div style="font-size:22px;">📃</div>' +
+                    '<div style="font-weight:700;font-size:12px;">A5</div>' +
+                  '</button>' +
+                  '<button type="button" class="swal-opt" data-size="80mm" style="padding:12px 6px;border:2px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;font-family:inherit;">' +
+                    '<div style="font-size:22px;">🧾</div>' +
+                    '<div style="font-weight:700;font-size:12px;">80mm</div>' +
+                  '</button>' +
+                '</div>' +
+              '</div>' +
+              '<div>' +
+                '<label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:6px;">عدد النسخ</label>' +
+                '<select id="swalCopies" style="width:100%;padding:10px;border:1px solid #e2e8f0;border-radius:8px;font-family:inherit;font-size:14px;">' +
+                  '<option value="1">نسخة واحدة</option>' +
+                  '<option value="2" selected>نسختين</option>' +
+                  '<option value="3">ثلاث نسخ</option>' +
+                '</select>' +
+              '</div>' +
+            '</div>',
+          showCancelButton: true,
+          confirmButtonText: '🖨️ طباعة',
+          cancelButtonText: 'إلغاء',
+          confirmButtonColor: '#14B8A6',
+          didOpen: () => {
+            const popup = Swal.getPopup();
+            const opts = popup.querySelectorAll('.swal-opt');
+            let selected = defaultSize;
+            const highlight = (el) => {
+              opts.forEach(x => { x.style.borderColor = '#e2e8f0'; x.style.background = '#fff'; });
+              if (el) { el.style.borderColor = '#14B8A6'; el.style.background = 'rgba(20,184,166,0.08)'; }
+            };
+            opts.forEach(o => {
+              if (o.dataset.size === selected) highlight(o);
+              o.addEventListener('click', () => { selected = o.dataset.size; highlight(o); });
+            });
+            popup._selectedSize = () => selected;
+          },
+          preConfirm: () => {
+            const popup = Swal.getPopup();
+            return {
+              pageSize: popup._selectedSize ? popup._selectedSize() : defaultSize,
+              copies: parseInt(popup.querySelector('#swalCopies').value, 10) || 1
+            };
+          }
+        }).then(result => {
+          resolve(result.isConfirmed ? result.value : null);
+        });
+      });
+    }
+
+    // ============================================================
+    // 15) Print Invoice (Refad.Print + fallback)
+    // ============================================================
+    async function printInvoice(id, windowRef) {
+      try {
+        let payload = state.currentInvoice;
+        if (!payload || String(payload.invoice && payload.invoice.id) !== String(id)) {
+          payload = await buildInvoicePayload(id);
+          if (!payload) { if (windowRef) windowRef.close(); return; }
+          state.currentInvoice = payload;
+        }
+
+        if (!state.company || !state.company.id) {
+          state.company = await loadCompany();
+          if (!state.company || !state.company.id) {
+            Refad.toast.error('تعذّر تحميل بيانات الشركة');
+            if (windowRef) windowRef.close();
+            return;
+          }
+        }
+
+        const choice = await pickPrintOptions();
+        if (!choice) { if (windowRef) windowRef.close(); return; }
+
+        const cfg = SafeSettings.invoice.get();
+
+        let qrDataUrl = null;
+        if (cfg.showQr) {
+          const qrText = buildQrContent(payload.invoice, state.company);
+          qrDataUrl = generateQrDataUrl(qrText, 200);
+        }
+
+        const logoUrl = cfg.showLogo
+          ? (state.company.logo_url || SafeSettings.identity.getLogoUrl())
+          : null;
+
+        if (!window.Refad || !window.Refad.Print || !window.Refad.Print.invoice) {
+          console.warn('[Print] Refad.Print not available — using fallback');
+          fallbackPrint(payload, choice, windowRef, { qrDataUrl, logoUrl, cfg });
+          return;
+        }
+
+        Refad.Print.invoice(
+          {
+            number: payload.invoice.invoice_number,
+            customer: payload.customer,
+            items: payload.items.map(it => ({
+              name: (it.products && it.products.name),
+              unit: (it.products && it.products.unit),
+              quantity: it.quantity,
+              price: it.unit_price,
+              discount: it.sale_discount,
+              total: it.total
+            })),
+            subtotal: payload.invoice.subtotal,
+            discount_total: payload.invoice.discount_total,
+            tax_total: payload.invoice.tax_total,
+            tax_rate: cfg.taxRate,
+            total: payload.invoice.grand_total,
+            paid_amount: payload.invoice.paid_amount,
+            payment_type: payload.invoice.payment_type,
+            invoice_type: payload.invoice.invoice_type,
+            notes: payload.invoice.notes,
+            footer: cfg.footer,
+            terms: cfg.terms,
+            qrDataUrl: qrDataUrl,
+            logoUrl: logoUrl
+          },
+          {
+            pageSize: choice.pageSize,
+            copies: choice.copies,
+            orientation: 'portrait',
+            company: state.company,
+            windowRef: windowRef
+          }
+        );
+      } catch (err) {
+        console.error('[Print] failed:', err);
+        Refad.toast.error('فشل الطباعة: ' + err.message);
+        if (windowRef) windowRef.close();
+      }
+    }
+
+    // ============================================================
+    // 16) Fallback Print
+    // ============================================================
+    function fallbackPrint(payload, choice, windowRef, extras) {
+      try {
+        const invoice = payload.invoice;
+        const customer = payload.customer;
+        const items = payload.items;
+        const company = state.company || {};
+        const cfg = (extras && extras.cfg) || SafeSettings.invoice.get();
+        const qrDataUrl = extras && extras.qrDataUrl;
+        const logoUrl = extras && extras.logoUrl;
+
+        const w = windowRef || window.open('', '_blank');
+        if (!w) { Refad.toast.warning('اسمح بالنوافذ المنبثقة'); return; }
+
+        const pageSizes = { 'A4': '210mm 297mm', 'A5': '148mm 210mm', '80mm': '80mm auto' };
+        const isSmall = choice.pageSize === '80mm';
+        const pageCss = isSmall
+          ? '@page { size: 80mm auto; margin: 3mm; }'
+          : '@page { size: ' + (pageSizes[choice.pageSize] || '210mm 297mm') + '; margin: 10mm; }';
+
+        const taxTotal = toNum(invoice.tax_total);
+        const grand = toNum(invoice.grand_total);
+        const paid = toNum(invoice.paid_amount);
+
+        const itemsHtml = items.map(it =>
+          '<tr>' +
+            '<td>' + esc((it.products && it.products.name) || '') + '</td>' +
+            '<td style="text-align:center;">' + it.quantity + '</td>' +
+            '<td style="text-align:center;">' + Number(it.unit_price).toFixed(2) + '</td>' +
+            '<td style="text-align:center;">' + Number(it.sale_discount || 0).toFixed(1) + '%</td>' +
+            '<td style="text-align:right;">' + Number(it.total).toFixed(2) + '</td>' +
+          '</tr>'
+        ).join('');
+
+        const logoHtml = logoUrl
+          ? '<img src="' + esc(logoUrl) + '" alt="logo" style="max-height:' + (isSmall ? '40px' : '70px') + ';max-width:100%;margin-bottom:6px;">'
+          : '';
+
+        const qrHtml = qrDataUrl
+          ? '<div style="text-align:center;margin:12px 0;">' +
+              '<img src="' + qrDataUrl + '" alt="QR" style="width:' + (isSmall ? '80px' : '110px') + ';height:auto;">' +
+            '</div>'
+          : '';
+
+        const taxHtml = taxTotal > 0
+          ? '<div style="display:flex;justify-content:space-between;padding:3px 0;">' +
+              '<span>الضريبة (' + Refad.format.number(cfg.taxRate, 1) + '%):</span>' +
+              '<b>' + taxTotal.toFixed(2) + '</b>' +
+            '</div>'
+          : '';
+
+        const footerHtml = cfg.footer
+          ? '<div style="text-align:center;margin-top:14px;font-size:' + (isSmall ? '9px' : '11px') + ';color:#64748b;border-top:1px dashed #ccc;padding-top:8px;line-height:1.6;">' +
+              esc(cfg.footer) +
+            '</div>'
+          : '';
+
+        const termsHtml = cfg.terms
+          ? '<div style="margin-top:10px;padding-top:8px;border-top:1px dashed #ccc;font-size:' + (isSmall ? '8px' : '10px') + ';color:#94a3b8;line-height:1.6;white-space:pre-wrap;">' +
+              '<b style="color:#64748b;display:block;margin-bottom:3px;">الشروط والأحكام:</b>' +
+              esc(cfg.terms) +
+            '</div>'
+          : '';
+
+        const singlePage =
+          '<div class="print-page">' +
+            '<div class="print-header">' +
+              logoHtml +
+              '<h1>' + esc(company.name || 'الشركة') + '</h1>' +
+              (company.phone ? '<p>' + esc(company.phone) + '</p>' : '') +
+              (company.address ? '<p>' + esc(company.address) + '</p>' : '') +
+              (company.tax_number ? '<p>الرقم الضريبي: ' + esc(company.tax_number) + '</p>' : '') +
+            '</div>' +
+            '<h2 style="text-align:center;color:#0B2C4D;font-size:' + (isSmall ? '14px' : '20px') + ';margin:8px 0;">فاتورة بيع</h2>' +
+            '<div style="display:flex;justify-content:space-between;margin-bottom:10px;font-size:' + (isSmall ? '10px' : '12px') + ';">' +
+              '<div><b>رقم:</b> ' + esc(invoice.invoice_number) + '</div>' +
+              '<div><b>التاريخ:</b> ' + Refad.format.date(invoice.invoice_date || invoice.created_at) + '</div>' +
+            '</div>' +
+            (customer
+              ? '<div style="margin-bottom:10px;font-size:' + (isSmall ? '10px' : '12px') + ';"><b>العميل:</b> ' + esc(customer.name) + (customer.phone ? ' - ' + esc(customer.phone) : '') + '</div>'
+              : '') +
+            '<table style="width:100%;border-collapse:collapse;font-size:' + (isSmall ? '10px' : '12px') + ';margin-bottom:10px;">' +
+              '<thead>' +
+                '<tr style="background:#0B2C4D;color:white;">' +
+                  '<th style="padding:5px;text-align:right;">الصنف</th>' +
+                  '<th style="padding:5px;">الكمية</th>' +
+                  '<th style="padding:5px;">السعر</th>' +
+                  '<th style="padding:5px;">خصم</th>' +
+                  '<th style="padding:5px;text-align:right;">الإجمالي</th>' +
+                '</tr>' +
+              '</thead>' +
+              '<tbody>' + itemsHtml + '</tbody>' +
+            '</table>' +
+            '<div style="border-top:2px solid #0B2C4D;padding-top:8px;font-size:' + (isSmall ? '11px' : '13px') + ';">' +
+              '<div style="display:flex;justify-content:space-between;padding:3px 0;"><span>المجموع:</span><b>' + Number(invoice.subtotal || 0).toFixed(2) + '</b></div>' +
+              '<div style="display:flex;justify-content:space-between;padding:3px 0;"><span>الخصم:</span><b>' + Number(invoice.discount_total || 0).toFixed(2) + '</b></div>' +
+              taxHtml +
+              '<div style="display:flex;justify-content:space-between;padding:6px 0;border-top:1px solid #ccc;font-size:' + (isSmall ? '13px' : '16px') + ';color:#14B8A6;"><span><b>الإجمالي:</b></span><b>' + grand.toFixed(2) + '</b></div>' +
+              '<div style="display:flex;justify-content:space-between;padding:3px 0;"><span>المدفوع:</span><b>' + paid.toFixed(2) + '</b></div>' +
+              '<div style="display:flex;justify-content:space-between;padding:3px 0;color:#ef4444;"><span>المتبقي:</span><b>' + (grand - paid).toFixed(2) + '</b></div>' +
+            '</div>' +
+            qrHtml +
+            footerHtml +
+            termsHtml +
+          '</div>';
+
+        const copiesHtml = Array(choice.copies || 1).fill(0).map(() => singlePage).join('');
+
+        w.document.write(
+          '<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">' +
+          '<title>طباعة ' + esc(invoice.invoice_number) + '</title>' +
+          '<style>' +
+            pageCss +
+            '* { margin: 0; padding: 0; box-sizing: border-box; }' +
+            'body { font-family: Cairo, Arial, sans-serif; color: #0f172a; }' +
+            '.print-page { padding: ' + (isSmall ? '5px' : '15px') + '; page-break-after: always; }' +
+            '.print-page:last-child { page-break-after: auto; }' +
+            '.print-header { text-align: center; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid #0B2C4D; }' +
+            '.print-header h1 { color: #0B2C4D; font-size: ' + (isSmall ? '14px' : '22px') + '; margin-bottom: 4px; }' +
+            '.print-header p { color: #64748b; font-size: ' + (isSmall ? '9px' : '11px') + '; }' +
+            'th, td { padding: 5px; }' +
+            'tbody tr:nth-child(even) { background: #f8fafc; }' +
+            '@media print { body { padding: 0; } }' +
+          '</style>' +
+          '</head><body>' + copiesHtml +
+          '<script>window.onload=function(){setTimeout(function(){window.print();},300);};<\/script>' +
+          '</body></html>'
+        );
+        w.document.close();
+      } catch (err) {
+        console.error('[Fallback Print] failed:', err);
+        Refad.toast.error('فشل الطباعة');
+      }
+    }
+
+    // ============================================================
+    // 17) Delete Invoice
+    // ============================================================
+    async function deleteInvoice(id, invoice) {
+      const ok = await Refad.alert.confirm(
+        'حذف الفاتورة',
+        'سيتم حذف "' + invoice.invoice_number + '" وإرجاع الكميات للمخزون. متابعة؟',
+        'حذف'
+      );
+      if (!ok) return;
+
+      try {
+        const items = await Refad.db.select('sales_invoice_items', {
+          columns: 'id, product_id, batch_id, quantity',
+          eq: { invoice_id: id }
+        });
+
+        if (invoice.customer_id) {
+          const cust = await Refad.db.selectOne('customers', {
+            columns: 'id, balance',
+            eq: { id: invoice.customer_id }
+          });
+          if (cust) {
+            await Refad.db.update('customers', cust.id, {
+              balance: (toNum(cust.balance) || 0) - toNum(invoice.paid_amount)
+            });
+          }
+        }
+
+        for (const it of items) {
+          if (it.batch_id) {
+            const batch = await Refad.db.selectOne('batches', { eq: { id: it.batch_id } });
+            if (batch) {
+              await Refad.db.update('batches', it.batch_id, {
+                quantity_left: (toNum(batch.quantity_left) || 0) + toNum(it.quantity)
+              });
+            }
+          }
+
+          await Refad.db.insert('inventory_movements', {
+            company_id: session.company_id,
+            product_id: it.product_id,
+            batch_id: it.batch_id,
+            movement_type: 'return',
+            reference_type: 'invoice_delete',
+            reference_id: id,
+            quantity: it.quantity,
+            notes: 'إلغاء فاتورة ' + invoice.invoice_number,
+            user_id: session.user_id
+          });
+        }
+
+        await Refad.db.removeWhere('sales_invoice_items', { invoice_id: id });
+        await Refad.db.remove('sales_invoices', id);
+
+        await Refad.logActivity('delete_invoice', 'sales', 'حذف فاتورة ' + invoice.invoice_number, id);
+
+        Refad.toast.success('تم الحذف وإرجاع المخزون');
+        await loadInvoices(true);
+      } catch (err) {
+        console.error('[Delete] failed:', err);
+        Refad.toast.error('فشل الحذف: ' + err.message);
+      }
+    }
+
+    // ============================================================
+    // 18) Add Note
+    // ============================================================
+    function openNoteModal() {
+      if (!state.currentInvoice) return;
+      const inv = state.currentInvoice.invoice;
+      if (!inv.customer_id) {
+        Refad.toast.warning('لا يمكن إضافة إشعار لعميل نقدي');
+        return;
+      }
+      document.getElementById('noteForm').reset();
+      document.getElementById('noteType').value = 'credit';
+      document.getElementById('noteModal').classList.add('show');
+      if (window.lucide) lucide.createIcons();
+    }
+
+    async function submitNote(e) {
+      e.preventDefault();
+      const btn = document.getElementById('noteSaveBtn');
+      btn.disabled = true;
+
+      try {
+        const inv = state.currentInvoice.invoice;
+        const noteType = document.getElementById('noteType').value;
+        const amountVal = Refad.toNum(document.getElementById('noteAmount').value);
+        const reason = document.getElementById('noteReason').value.trim();
+        const notes = document.getElementById('noteNotes').value.trim() || null;
+
+        if (amountVal <= 0) { Refad.toast.warning('أدخل مبلغاً صحيحاً'); btn.disabled = false; return; }
+        if (!reason) { Refad.toast.warning('السبب مطلوب'); btn.disabled = false; return; }
+
+        const prefix = noteType === 'credit' ? 'CN' : 'DN';
+        const year = new Date().getFullYear();
+        const count = await Refad.db.count('credit_notes', {
+          eq: { company_id: session.company_id }
+        });
+        const noteNumber = prefix + '-' + year + '-' + String(count + 1).padStart(5, '0');
+
+        const payload = {
+          company_id: session.company_id,
+          note_number: noteNumber,
+          note_type: noteType,
+          party_type: 'customer',
+          customer_id: inv.customer_id,
+          reference_invoice_id: inv.id,
+          amount: amountVal,
+          tax_amount: 0,
+          reason: reason,
+          notes: notes,
+          note_date: today(),
+          status: 'active',
+          created_by: session.user_id
+        };
+
+        const created = await Refad.db.insert('credit_notes', payload);
+
+        await Refad.logActivity('create_credit_note', 'invoices',
+          'إشعار ' + (noteType === 'credit' ? 'دائن' : 'مدين') + ' ' + noteNumber + ' على فاتورة ' + inv.invoice_number,
+          created && created.id);
+
+        Refad.toast.success('تم إضافة الإشعار ' + noteNumber);
+        document.getElementById('noteModal').classList.remove('show');
+        await viewInvoice(inv.id);
+      } catch (err) {
+        console.error('[Note] failed:', err);
+        Refad.toast.error('فشل: ' + err.message);
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    // ============================================================
+    // 19) Export Excel
+    // ============================================================
+    function exportExcel() {
+      const list = state.filtered.length ? state.filtered : state.all;
+      if (!list.length) { Refad.toast.warning('لا توجد بيانات'); return; }
+
+      if (typeof XLSX === 'undefined') {
+        Refad.toast.error('مكتبة Excel لم تُحمّل بعد');
+        return;
+      }
+
+      const invoiceData = list.map(r => ({
+        'رقم الفاتورة': r.invoice_number,
+        'العميل': (r.customers && r.customers.name) || (r.suppliers && r.suppliers.name) || 'نقدي',
+        'الهاتف': (r.customers && r.customers.phone) || (r.suppliers && r.suppliers.phone) || '',
+        'التاريخ': r.invoice_date || r.created_at,
+        'الأصناف': (r.sales_invoice_items && r.sales_invoice_items.length) || 0,
+        'الإجمالي': toNum(r.grand_total),
+        'الضريبة': toNum(r.tax_total),
+        'المدفوع': toNum(r.paid_amount),
+        'المتبقي': Math.max(0, toNum(r.grand_total) - toNum(r.paid_amount)),
+        'الربح': toNum(r.total_profit),
+        'الحالة': r.status
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(invoiceData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'الفواتير');
+      XLSX.writeFile(wb, 'invoices-' + today() + '.xlsx');
+      Refad.toast.success('تم التصدير');
+    }
+
+    // ============================================================
+    // 20) View Toggle
+    // ============================================================
+    function setupViewToggle() {
+      document.querySelectorAll('.view-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          state.viewMode = btn.dataset.view;
+
+          if (state.viewMode === 'table') {
+            document.getElementById('tableView').style.display = 'block';
+            document.getElementById('cardsView').style.display = 'none';
+            renderTable();
+          } else {
+            document.getElementById('tableView').style.display = 'none';
+            document.getElementById('cardsView').style.display = 'grid';
+            renderCards();
+          }
+        });
+      });
+    }
+
+    // ============================================================
+    // 21) Quick Search
+    // ============================================================
+    function openQuickSearch() {
+      const overlay = document.getElementById('quickSearchOverlay');
+      overlay.classList.add('show');
+      const input = document.getElementById('quickSearchInput');
+      input.value = '';
+      input.focus();
+      state.quickSearchIndex = -1;
+      state.quickSearchResults = [];
+      renderQuickSearchResults('');
+    }
+
+    function closeQuickSearch() {
+      document.getElementById('quickSearchOverlay').classList.remove('show');
+    }
+
+    function renderQuickSearchResults(query) {
+      const container = document.getElementById('quickSearchResults');
+      const q = (query || '').toLowerCase().trim();
+
+      if (!q) {
+        container.innerHTML = '<div class="quick-search-empty">اكتب للبحث السريع...</div>';
+        state.quickSearchResults = [];
+        return;
+      }
+
+      const results = state.all.filter(inv =>
+        (inv.invoice_number || '').toLowerCase().includes(q) ||
+        ((inv.customers && inv.customers.name) || '').toLowerCase().includes(q) ||
+        ((inv.suppliers && inv.suppliers.name) || '').toLowerCase().includes(q) ||
+        ((inv.customers && inv.customers.phone) || '').toLowerCase().includes(q)
+      ).slice(0, 10).map(inv => {
+        const party = (inv.customers && inv.customers.name) || (inv.suppliers && inv.suppliers.name) || 'نقدي';
+        return {
+          type: 'invoice',
+          id: inv.id,
+          name: inv.invoice_number,
+          sub: party + ' • ' + fmtMoney(inv.grand_total) + ' • ' + Refad.format.date(inv.invoice_date || inv.created_at),
+          initial: (inv.invoice_number || '?').charAt(0)
+        };
+      });
+
+      state.quickSearchResults = results;
+      state.quickSearchIndex = results.length ? 0 : -1;
+
+      if (!results.length) {
+        container.innerHTML = '<div class="quick-search-empty">لا توجد نتائج</div>';
+        return;
+      }
+
+      container.innerHTML = results.map((r, i) =>
+        '<div class="quick-search-item ' + (i === 0 ? 'selected' : '') + '" data-idx="' + i + '">' +
+          '<div class="qs-icon">' + esc(r.initial) + '</div>' +
+          '<div class="qs-body">' +
+            '<div class="qs-name">' + esc(r.name) + '</div>' +
+            '<div class="qs-sub">' + esc(r.sub) + '</div>' +
+          '</div>' +
+          '<i data-lucide="arrow-left" style="width:16px;height:16px;color:var(--text-muted);"></i>' +
+        '</div>'
+      ).join('');
+
+      if (window.lucide) lucide.createIcons();
+
+      container.querySelectorAll('.quick-search-item').forEach(el => {
+        el.addEventListener('click', () => {
+          const idx = Number(el.dataset.idx);
+          navigateQuickSearch(idx);
+        });
+      });
+    }
+
+    function navigateQuickSearch(idx) {
+      const r = state.quickSearchResults[idx];
+      if (!r) return;
+      closeQuickSearch();
+      viewInvoice(r.id);
+    }
+
+    function updateQuickSearchSelection() {
+      const container = document.getElementById('quickSearchResults');
+      container.querySelectorAll('.quick-search-item').forEach((el, i) => {
+        el.classList.toggle('selected', i === state.quickSearchIndex);
+      });
+      const selected = container.querySelector('.quick-search-item.selected');
+      if (selected) selected.scrollIntoView({ block: 'nearest' });
+    }
+
+    function setupQuickSearch() {
+      const overlay = document.getElementById('quickSearchOverlay');
+      const input = document.getElementById('quickSearchInput');
+
+      overlay.addEventListener('click', e => {
+        if (e.target === overlay) closeQuickSearch();
+      });
+
+      input.addEventListener('input', e => renderQuickSearchResults(e.target.value));
+
+      input.addEventListener('keydown', e => {
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          closeQuickSearch();
+        } else if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          if (state.quickSearchResults.length) {
+            state.quickSearchIndex = Math.min(state.quickSearchIndex + 1, state.quickSearchResults.length - 1);
+            updateQuickSearchSelection();
+          }
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          if (state.quickSearchResults.length) {
+            state.quickSearchIndex = Math.max(state.quickSearchIndex - 1, 0);
+            updateQuickSearchSelection();
+          }
+        } else if (e.key === 'Enter') {
+          e.preventDefault();
+          if (state.quickSearchIndex >= 0) navigateQuickSearch(state.quickSearchIndex);
+          else if (state.quickSearchResults.length) navigateQuickSearch(0);
+        }
+      });
+    }
+
+    // ============================================================
+    // 22) Bind Events
+    // ============================================================
+    function bindEvents() {
+      document.getElementById('searchInput').addEventListener('input', Refad.debounce(e => {
+        state.filters.search = e.target.value.trim();
+        applyFilters();
+      }, 200));
+
+      document.getElementById('filterStatus').addEventListener('change', e => {
+        state.filters.status = e.target.value;
+        applyFilters();
+      });
+
+      document.getElementById('filterCustomer').addEventListener('change', e => {
+        state.filters.customer = e.target.value;
+        applyFilters();
+      });
+
+      document.getElementById('filterPeriod').addEventListener('change', e => {
+        state.filters.period = e.target.value;
+        renderStats();
+        applyFilters();
+      });
+
+      document.getElementById('refreshBtn').addEventListener('click', async () => {
+        Refad.toast.info('جارٍ التحديث...');
+        SafeSettings.invoice.reload();
+        await loadCustomersFilter();
+        await loadInvoices(true);
+        Refad.toast.success('تم التحديث');
+      });
+
+      document.getElementById('exportBtn').addEventListener('click', exportExcel);
+
+      document.getElementById('reprintBtn').addEventListener('click', () => {
+        const inv = state.currentInvoice && state.currentInvoice.invoice;
+        if (!inv) { Refad.toast.warning('لا توجد فاتورة'); return; }
+        printInvoice(inv.id);
+      });
+
+      // ✨ زر مشاركة في Modal
+      document.getElementById('shareInvoiceBtn').addEventListener('click', () => {
+        const inv = state.currentInvoice && state.currentInvoice.invoice;
+        if (!inv) { Refad.toast.warning('لا توجد فاتورة'); return; }
+        shareInvoice(inv.id);
+      });
+
+      const noteBtn = document.getElementById('noteBtn');
+      if (noteBtn) noteBtn.addEventListener('click', openNoteModal);
+
+      document.getElementById('noteForm').addEventListener('submit', submitNote);
+
+      document.querySelectorAll('[data-close]').forEach(b => {
+        b.addEventListener('click', () => {
+          document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.remove('show'));
+        });
+      });
+
+      document.querySelectorAll('.modal-backdrop').forEach(m => {
+        m.addEventListener('click', e => {
+          if (e.target === m) m.classList.remove('show');
+        });
+      });
+
+      document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') {
+          const qsOpen = document.getElementById('quickSearchOverlay').classList.contains('show');
+          if (qsOpen) {
+            closeQuickSearch();
+            return;
+          }
+          document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.remove('show'));
+        }
+        if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+          e.preventDefault();
+          openQuickSearch();
+        }
+      });
+
+      setupQuickSearch();
+      setupShareModal();
+    }
+
+    // ============================================================
+    // 23) Init
+    // ============================================================
+    async function init() {
+      Refad.buildMenu('invoices.html');
+      fillUser();
+      applyIdentity();
+      setupTheme();
+      setupSidebarMobile();
+      setupUserMenu();
+      setupNotifBtn();
+      setupRealtimeTheme();
+      setupViewToggle();
+      bindEvents();
+
+      try {
+        if (window.RefadSettings && typeof RefadSettings.ensure === 'function') {
+          await RefadSettings.ensure('invoice');
+        }
+      } catch (e) {
+        console.warn('Settings load failed:', e.message);
+      }
+
+      state.company = await loadCompany();
+      state.invoiceConfig = SafeSettings.invoice.reload();
+
+      console.log('[Settings] Loaded invoice config:', state.invoiceConfig);
+
+      await loadCustomersFilter();
+      await loadInvoices();
+
+      const urlId = parseInt(Refad.getParam('id'), 10);
+      if (urlId) {
+        setTimeout(() => viewInvoice(urlId), 400);
+      }
+
+      if (Refad.registerServiceWorker) Refad.registerServiceWorker();
+
+      console.log('%c[Refad] Invoices v5 ready — Share + QR + Full Settings', 'color:#14B8A6;font-weight:bold;font-size:14px');
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+
+  })();
+</script>
 
 </body>
 </html>

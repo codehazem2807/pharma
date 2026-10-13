@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0B2C4D">
+  <meta name="robots" content="noindex, nofollow">
+  <title>فاتورة - رفاد</title>
+
+  <link rel="icon" type="image/png" href="logo.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --primary: #0B2C4D;
+      --primary-light: #1e4a73;
+      --accent: #14B8A6;
+      --accent-dark: #0d9488;
+      --gold: #F59E0B;
+      --bg: #F1F5F9;
+      --card: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --danger: #ef4444;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --info: #3b82f6;
+      --purple: #8b5cf6;
+      --shadow: 0 4px 20px rgba(11, 44, 77, 0.08);
+      --shadow-lg: 0 10px 40px rgba(11, 44, 77, 0.12);
+      --radius: 14px;
+      --radius-sm: 10px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0a1628;
+        --card: #0f2137;
+        --text: #f1f5f9;
+        --text-muted: #94a3b8;
+        --border: #1e3a5f;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    html, body {
+      min-height: 100%;
+      font-family: 'Cairo', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body { padding: 20px 16px 60px; }
+
+    /* ============ Container ============ */
+    .container {
+      max-width: 780px;
+      margin: 0 auto;
+    }
+
+    /* ============ Header ============ */
+    .invoice-header {
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      color: white;
+      border-radius: var(--radius);
+      padding: 24px 22px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow-lg);
+      position: relative;
+      overflow: hidden;
+    }
+    .invoice-header::before {
+      content: '';
+      position: absolute;
+      top: -50%; left: -30%;
+      width: 60%; height: 200%;
+      background: radial-gradient(circle, rgba(20,184,166,0.25), transparent 70%);
+      pointer-events: none;
+    }
+    .invoice-header::after {
+      content: '';
+      position: absolute;
+      bottom: -50%; right: -30%;
+      width: 60%; height: 200%;
+      background: radial-gradient(circle, rgba(245,158,11,0.15), transparent 70%);
+      pointer-events: none;
+    }
+    .invoice-header > * { position: relative; z-index: 1; }
+
+    .company-brand {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .company-logo {
+      width: 64px;
+      height: 64px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.15);
+      backdrop-filter: blur(10px);
+      border: 2px solid rgba(255,255,255,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    }
+    .company-logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: white;
+      padding: 6px;
+    }
+    .company-logo .fallback {
+      color: white;
+      font-weight: 800;
+      font-size: 26px;
+    }
+    .company-info { flex: 1; min-width: 0; }
+    .company-info h1 {
+      font-size: 22px;
+      font-weight: 800;
+      margin-bottom: 4px;
+      line-height: 1.2;
+    }
+    .company-info p {
+      font-size: 12px;
+      opacity: 0.9;
+      margin-top: 2px;
+      line-height: 1.6;
+    }
+    .company-info p i {
+      width: 12px;
+      height: 12px;
+      display: inline-block;
+      vertical-align: middle;
+      margin-left: 4px;
+    }
+
+    .header-meta {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid rgba(255,255,255,0.15);
+    }
+    .header-meta-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(10px);
+      padding: 8px 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.15);
+      min-width: 0;
+    }
+    .header-meta-item .lbl {
+      font-size: 10px;
+      opacity: 0.8;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .header-meta-item .val {
+      font-size: 14px;
+      font-weight: 800;
+      font-family: 'Courier New', monospace;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .header-meta-item .val.not-mono {
+      font-family: 'Cairo', sans-serif;
+    }
+
+    /* ============ Status Banner ============ */
+    .status-banner {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 16px 20px;
+      border-radius: var(--radius);
+      margin-bottom: 16px;
+      box-shadow: var(--shadow);
+      animation: slideIn 0.4s ease-out;
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .status-banner.paid {
+      background: linear-gradient(135deg, rgba(16,185,129,0.12), rgba(16,185,129,0.04));
+      border: 1.5px solid rgba(16,185,129,0.3);
+      color: var(--success);
+    }
+    .status-banner.partial {
+      background: linear-gradient(135deg, rgba(245,158,11,0.12), rgba(245,158,11,0.04));
+      border: 1.5px solid rgba(245,158,11,0.3);
+      color: var(--gold);
+    }
+    .status-banner.unpaid {
+      background: linear-gradient(135deg, rgba(59,130,246,0.12), rgba(59,130,246,0.04));
+      border: 1.5px solid rgba(59,130,246,0.3);
+      color: var(--info);
+    }
+    .status-banner.overdue {
+      background: linear-gradient(135deg, rgba(239,68,68,0.12), rgba(239,68,68,0.04));
+      border: 1.5px solid rgba(239,68,68,0.3);
+      color: var(--danger);
+    }
+    .status-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      background: rgba(255,255,255,0.5);
+    }
+    .status-icon i {
+      width: 24px;
+      height: 24px;
+    }
+    .status-body { flex: 1; min-width: 0; }
+    .status-body .title {
+      font-size: 15px;
+      font-weight: 800;
+      margin-bottom: 3px;
+    }
+    .status-body .subtitle {
+      font-size: 12px;
+      opacity: 0.85;
+      font-weight: 500;
+      line-height: 1.5;
+    }
+
+    /* ============ Card ============ */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      margin-bottom: 16px;
+      overflow: hidden;
+    }
+    .card-header {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      background: linear-gradient(135deg, rgba(20,184,166,0.03), transparent);
+    }
+    .card-header h2 {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card-header h2 i {
+      width: 18px;
+      height: 18px;
+      color: var(--accent);
+    }
+    .card-body { padding: 20px; }
+
+    /* ============ Customer Info Grid ============ */
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+    }
+    .info-item {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+    }
+    .info-item .lbl {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .info-item .lbl i {
+      width: 12px;
+      height: 12px;
+    }
+    .info-item .val {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+      word-break: break-word;
+    }
+    .info-item .val.mono {
+      font-family: 'Courier New', monospace;
+    }
+
+    /* ============ Items Table ============ */
+    .items-table-wrap {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    table.items-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      min-width: 560px;
+    }
+    table.items-table thead {
+      background: var(--bg);
+      border-bottom: 2px solid var(--border);
+    }
+    table.items-table th {
+      padding: 12px 12px;
+      text-align: right;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+    }
+    table.items-table tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+    }
+    table.items-table tbody tr:hover {
+      background: rgba(20,184,166,0.03);
+    }
+    table.items-table tbody tr:last-child {
+      border-bottom: none;
+    }
+    table.items-table td {
+      padding: 12px;
+      color: var(--text);
+      vertical-align: middle;
+    }
+    .product-name {
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--text);
+      margin-bottom: 2px;
+    }
+    .product-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .qty-cell { text-align: center; font-weight: 700; }
+    .money-cell { text-align: right; font-weight: 700; font-family: 'Courier New', monospace; }
+    .bonus-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      background: rgba(139,92,246,0.15);
+      color: var(--purple);
+      border-radius: 10px;
+      font-size: 10px;
+      font-weight: 700;
+      margin-right: 4px;
+    }
+
+    /* ============ Totals ============ */
+    .totals-grid {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px 20px;
+      padding: 20px;
+      background: linear-gradient(135deg, rgba(20,184,166,0.04), transparent);
+      border-top: 2px solid var(--border);
+    }
+    .totals-row {
+      display: contents;
+    }
+    .totals-row .label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-align: right;
+      padding: 6px 0;
+      align-self: center;
+    }
+    .totals-row .value {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+      text-align: left;
+      font-family: 'Courier New', monospace;
+      padding: 6px 0;
+      align-self: center;
+    }
+    .totals-row.grand .label {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--text);
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+      margin-top: 6px;
+    }
+    .totals-row.grand .value {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--accent);
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+      margin-top: 6px;
+    }
+    .totals-row.paid .value {
+      color: var(--success);
+    }
+    .totals-row.remaining .value {
+      color: var(--danger);
+    }
+    .totals-row.tax .value {
+      color: var(--info);
+    }
+    .totals-row.profit .value {
+      color: var(--purple);
+    }
+
+    /* ============ Footer Notes ============ */
+    .footer-note {
+      margin-top: 16px;
+      padding: 14px 18px;
+      background: var(--bg);
+      border-radius: var(--radius-sm);
+      border-right: 3px solid var(--accent);
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.7;
+      white-space: pre-wrap;
+    }
+    .footer-note.terms {
+      border-right-color: var(--gold);
+      margin-top: 10px;
+    }
+    .footer-note strong {
+      color: var(--text);
+      display: block;
+      margin-bottom: 4px;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    /* ============ Actions Bar ============ */
+    .actions-bar {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      flex: 1;
+      min-width: 140px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px 20px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 700;
+      border-radius: var(--radius-sm);
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: white;
+      box-shadow: 0 4px 16px rgba(20,184,166,0.3);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(20,184,166,0.4); }
+    .btn-outline {
+      background: var(--card);
+      color: var(--text);
+      border: 1.5px solid var(--border);
+    }
+    .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+    .btn i { width: 18px; height: 18px; }
+
+    /* ============ Footer ============ */
+    .page-footer {
+      text-align: center;
+      padding: 20px;
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .page-footer strong { color: var(--accent); font-weight: 800; }
+
+    /* ============ Loader ============ */
+    .loader {
+      text-align: center;
+      padding: 80px 20px;
+      color: var(--text-muted);
+    }
+    .loader i {
+      width: 48px;
+      height: 48px;
+      animation: spin 1s linear infinite;
+      color: var(--accent);
+      margin-bottom: 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ============ Error / Empty State ============ */
+    .state-card {
+      max-width: 480px;
+      margin: 80px auto;
+      text-align: center;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 40px 30px;
+      box-shadow: var(--shadow-lg);
+    }
+    .state-icon {
+      width: 80px;
+      height: 80px;
+      border-radius: 20px;
+      margin: 0 auto 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .state-icon.error { background: rgba(239,68,68,0.12); color: var(--danger); }
+    .state-icon.warning { background: rgba(245,158,11,0.12); color: var(--gold); }
+    .state-icon i { width: 40px; height: 40px; }
+    .state-card h2 {
+      font-size: 22px;
+      font-weight: 800;
+      margin-bottom: 10px;
+      color: var(--text);
+    }
+    .state-card p {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.7;
+      margin-bottom: 20px;
+    }
+
+    /* ============ Responsive ============ */
+    @media (max-width: 640px) {
+      body { padding: 12px 10px 40px; }
+      .invoice-header { padding: 18px 16px; }
+      .company-info h1 { font-size: 18px; }
+      .company-logo { width: 52px; height: 52px; border-radius: 14px; }
+      .company-logo .fallback { font-size: 22px; }
+      .header-meta { gap: 8px; }
+      .header-meta-item { padding: 6px 10px; }
+      .header-meta-item .val { font-size: 12px; }
+      .status-banner { padding: 14px 16px; }
+      .status-icon { width: 40px; height: 40px; }
+      .status-icon i { width: 20px; height: 20px; }
+      .status-body .title { font-size: 14px; }
+      .card-body { padding: 16px; }
+      .card-header { padding: 12px 16px; }
+      .totals-grid { padding: 16px; }
+      .totals-row.grand .value { font-size: 18px; }
+      .actions-bar .btn { min-width: 100%; }
+    }
+
+    /* ============ Print ============ */
+    @media print {
+      @page { size: A4; margin: 10mm; }
+      body {
+        padding: 0;
+        background: white;
+        color: #0f172a;
+      }
+      .actions-bar,
+      .page-footer { display: none !important; }
+      .invoice-header {
+        box-shadow: none;
+        background: #0B2C4D;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .card {
+        box-shadow: none;
+        border: 1px solid #e2e8f0;
+        page-break-inside: avoid;
+      }
+      .status-banner {
+        box-shadow: none;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .container { max-width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container" id="mainContainer">
+
+    <!-- Loading State -->
+    <div class="loader" id="loaderState">
+      <i data-lucide="loader-2"></i>
+      <p>جارٍ تحميل الفاتورة...</p>
+    </div>
+
+    <!-- Content (يظهر بعد التحميل) -->
+    <div id="contentArea" style="display:none;"></div>
+
+  </div>
+
+  <footer class="page-footer" id="pageFooter" style="display:none;">
+    صُنع بواسطة <strong>رفاد</strong> — نظام إدارة الأدوية
+  </footer>
+
+  <script src="refad-core.js"></script>
+  <script src="refad-settings.js"></script>
+
+  <!-- ⏭️ الجزء 2 (JavaScript) هيتحط هنا -->
+<script>
+  (function () {
+    'use strict';
+
+    // ============================================================
+    // 1) Helpers
+    // ============================================================
+    function esc(s) {
+      if (s === null || s === undefined) return '';
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    function fmtMoney(v) {
+      const n = Number(v) || 0;
+      try {
+        return n.toLocaleString('ar-EG', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ج.م';
+      } catch (e) {
+        return n.toFixed(2) + ' ج.م';
+      }
+    }
+
+    function fmtNumber(v, dec) {
+      const n = Number(v) || 0;
+      try {
+        return n.toLocaleString('ar-EG', {
+          minimumFractionDigits: dec || 0,
+          maximumFractionDigits: dec != null ? dec : 2
+        });
+      } catch (e) {
+        return n.toFixed(dec != null ? dec : 0);
+      }
+    }
+
+    function fmtDate(v) {
+      if (!v) return '—';
+      try {
+        const d = new Date(v);
+        if (isNaN(d)) return String(v).slice(0, 10);
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return day + '/' + m + '/' + y;
+      } catch (e) {
+        return String(v).slice(0, 10);
+      }
+    }
+
+    function daysBetween(dateStr) {
+      if (!dateStr) return null;
+      const d = new Date(dateStr);
+      if (isNaN(d)) return null;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      d.setHours(0, 0, 0, 0);
+      return Math.ceil((today - d) / (1000 * 60 * 60 * 24));
+    }
+
+    // ============================================================
+    // 2) State
+    // ============================================================
+    const state = {
+      token: null,
+      invoice: null,
+      items: [],
+      company: null,
+      customer: null
+    };
+
+    // ============================================================
+    // 3) Supabase anon client
+    // ============================================================
+    let sb = null;
+    try {
+      if (window.Refad && window.Refad.sb) {
+        sb = window.Refad.sb;
+      } else if (window.supabase && window.supabase.createClient) {
+        // fallback: use env from refad-core if exposed
+        const SUPABASE_URL = window.Refad?.CONFIG?.SUPABASE_URL || window.SUPABASE_URL;
+        const SUPABASE_KEY = window.Refad?.CONFIG?.SUPABASE_ANON_KEY || window.SUPABASE_ANON_KEY;
+        if (SUPABASE_URL && SUPABASE_KEY) {
+          sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        }
+      }
+    } catch (e) {
+      console.error('Supabase init failed:', e);
+    }
+
+    // ============================================================
+    // 4) UI Helpers
+    // ============================================================
+    function showLoader() {
+      document.getElementById('loaderState').style.display = 'block';
+      document.getElementById('contentArea').style.display = 'none';
+      document.getElementById('pageFooter').style.display = 'none';
+    }
+
+    function showError(icon, title, message) {
+      document.getElementById('loaderState').style.display = 'none';
+      const area = document.getElementById('contentArea');
+      area.style.display = 'block';
+      area.innerHTML =
+        '<div class="state-card">' +
+          '<div class="state-icon error"><i data-lucide="' + icon + '"></i></div>' +
+          '<h2>' + esc(title) + '</h2>' +
+          '<p>' + esc(message) + '</p>' +
+        '</div>';
+      document.getElementById('pageFooter').style.display = 'none';
+      if (window.lucide) lucide.createIcons();
+    }
+
+    // ============================================================
+    // 5) Load Invoice by Token
+    // ============================================================
+    async function loadInvoice() {
+      // اقرأ token من URL
+      const params = new URLSearchParams(location.search);
+      const token = params.get('token');
+
+      if (!token || token.length < 20) {
+        showError('shield-alert', 'رابط غير صحيح', 'هذا الرابط غير صحيح أو غير مكتمل. تواصل مع الشركة للحصول على رابط جديد.');
+        return;
+      }
+
+      state.token = token;
+
+      if (!sb) {
+        showError('alert-circle', 'خطأ في الاتصال', 'تعذّر الاتصال بالخدمة. حاول تحديث الصفحة.');
+        return;
+      }
+
+      try {
+        // 1) جلب الفاتورة
+        const invoiceRes = await sb
+          .from('sales_invoices')
+          .select('id, company_id, customer_id, supplier_id, invoice_number, invoice_type, invoice_date, created_at, payment_type, subtotal, discount_total, tax_total, grand_total, paid_amount, total_profit, status, notes, share_token, due_date')
+          .eq('share_token', token)
+          .maybeSingle();
+
+        if (invoiceRes.error) {
+          console.error('Invoice fetch error:', invoiceRes.error);
+          showError('alert-circle', 'خطأ في التحميل', 'تعذّر تحميل الفاتورة. حاول مرة أخرى.');
+          return;
+        }
+
+        const invoice = invoiceRes.data;
+        if (!invoice) {
+          showError('link-off', 'الرابط غير موجود', 'هذا الرابط غير صحيح أو تم إلغاؤه. تواصل مع الشركة.');
+          return;
+        }
+
+        state.invoice = invoice;
+
+        // 2) جلب الأصناف + الشركة + العميل بالتوازي
+        const [itemsRes, companyRes, customerRes] = await Promise.all([
+          sb.from('sales_invoice_items')
+            .select('id, product_id, batch_id, quantity, bonus_qty, unit_price, sale_discount, discount, total, products(id, name, name_en, form, unit), batches(id, batch_number, expiry_date)')
+            .eq('invoice_id', invoice.id)
+            .order('id', { ascending: true }),
+
+          invoice.company_id
+            ? sb.from('companies').select('id, name, logo_url, phone, email, address, tax_number').eq('id', invoice.company_id).maybeSingle()
+            : Promise.resolve({ data: null, error: null }),
+
+          invoice.customer_id
+            ? sb.from('customers').select('id, name, phone, address').eq('id', invoice.customer_id).maybeSingle()
+            : Promise.resolve({ data: null, error: null })
+        ]);
+
+        state.items = itemsRes.data || [];
+        state.company = companyRes.data || null;
+        state.customer = customerRes.data || null;
+
+        // 3) عرض
+        renderInvoice();
+        document.getElementById('loaderState').style.display = 'none';
+        document.getElementById('contentArea').style.display = 'block';
+        document.getElementById('pageFooter').style.display = 'block';
+
+        if (window.lucide) lucide.createIcons();
+      } catch (e) {
+        console.error('Load failed:', e);
+        showError('alert-circle', 'خطأ غير متوقع', e.message || 'حاول تحديث الصفحة.');
+      }
+    }
+
+    // ============================================================
+    // 6) Detect Payment Status
+    // ============================================================
+    function getPaymentStatus(invoice) {
+      const grand = Number(invoice.grand_total) || 0;
+      const paid = Number(invoice.paid_amount) || 0;
+      const remaining = grand - paid;
+      const dbStatus = (invoice.status || '').toLowerCase();
+
+      // overdue check
+      if (invoice.due_date && remaining > 0.01) {
+        const days = daysBetween(invoice.due_date);
+        if (days !== null && days > 0) {
+          return {
+            key: 'overdue',
+            icon: 'alert-triangle',
+            title: '⚠️ فاتورة متأخرة',
+            subtitle: 'الفاتورة متأخرة منذ ' + days + ' يوم — يرجى السداد في أقرب وقت.\nالمتبقي: ' + fmtMoney(remaining)
+          };
+        }
+      }
+
+      if (dbStatus === 'paid' || remaining <= 0.01) {
+        return {
+          key: 'paid',
+          icon: 'check-circle-2',
+          title: '✅ الفاتورة مدفوعة بالكامل',
+          subtitle: 'شكراً لك! تم سداد الفاتورة بالكامل.'
+        };
+      }
+
+      if (paid > 0.01) {
+        return {
+          key: 'partial',
+          icon: 'circle-dollar-sign',
+          title: '⏳ دفع جزئي',
+          subtitle: 'تم دفع ' + fmtMoney(paid) + ' — المتبقي: ' + fmtMoney(remaining)
+        };
+      }
+
+      return {
+        key: 'unpaid',
+        icon: 'clock',
+        title: '📋 الفاتورة آجلة (غير مدفوعة)',
+        subtitle: 'يرجى سداد المبلغ المستحق: ' + fmtMoney(grand) +
+                  (invoice.due_date ? '\nتاريخ الاستحقاق: ' + fmtDate(invoice.due_date) : '')
+      };
+    }
+
+    // ============================================================
+    // 7) Render Invoice
+    // ============================================================
+    function renderInvoice() {
+      const invoice = state.invoice;
+      const items = state.items;
+      const company = state.company;
+      const customer = state.customer;
+
+      const grand = Number(invoice.grand_total) || 0;
+      const paid = Number(invoice.paid_amount) || 0;
+      const remaining = Math.max(0, grand - paid);
+      const subtotal = Number(invoice.subtotal) || 0;
+      const discountTotal = Number(invoice.discount_total) || 0;
+      const taxTotal = Number(invoice.tax_total) || 0;
+
+      const paymentStatus = getPaymentStatus(invoice);
+
+      const companyName = (company && company.name) || 'الشركة';
+      const logoUrl = company && company.logo_url ? company.logo_url : null;
+      const logoInitial = (companyName || 'R').charAt(0);
+
+      const invoiceTypeLabel = invoice.invoice_type === 'return' ? 'مرتجع' : 'فاتورة بيع';
+      const paymentTypeLabel =
+        invoice.payment_type === 'cash' ? 'نقدي' :
+        invoice.payment_type === 'partial' ? 'دفع جزئي' : 'آجل';
+
+      // ============ Items HTML ============
+      const itemsHtml = items.map(function (it, i) {
+        const product = it.products || {};
+        const batch = it.batches || {};
+        const qty = Number(it.quantity) || 0;
+        const bonus = Number(it.bonus_qty) || 0;
+        const unitPrice = Number(it.unit_price) || 0;
+        const disc = Number(it.sale_discount || it.discount) || 0;
+        const lineTotal = Number(it.total) || 0;
+
+        return '<tr>' +
+          '<td>' +
+            '<div class="product-name">' + esc(product.name || 'صنف') + '</div>' +
+            (batch.batch_number ? '<div class="product-sub">تشغيلة: ' + esc(batch.batch_number) + '</div>' : '') +
+          '</td>' +
+          '<td class="qty-cell">' + fmtNumber(qty) +
+            (bonus > 0 ? ' <span class="bonus-badge">+' + fmtNumber(bonus) + '</span>' : '') +
+          '</td>' +
+          '<td class="money-cell">' + fmtMoney(unitPrice) + '</td>' +
+          '<td class="qty-cell">' + (disc > 0 ? fmtNumber(disc, 1) + '%' : '—') + '</td>' +
+          '<td class="money-cell">' + fmtMoney(lineTotal) + '</td>' +
+        '</tr>';
+      }).join('');
+
+      // ============ Totals HTML ============
+      const taxRow = taxTotal > 0
+        ? '<div class="totals-row tax"><div class="label">الضريبة</div><div class="value">' + fmtMoney(taxTotal) + '</div></div>'
+        : '';
+
+      const paidRow = paid > 0
+        ? '<div class="totals-row paid"><div class="label">المدفوع</div><div class="value">' + fmtMoney(paid) + '</div></div>'
+        : '';
+
+      const remainingRow = remaining > 0.01
+        ? '<div class="totals-row remaining"><div class="label">المتبقي</div><div class="value">' + fmtMoney(remaining) + '</div></div>'
+        : '';
+
+      // ============ Footer Notes ============
+      const notesHtml = invoice.notes
+        ? '<div class="footer-note"><strong>ملاحظات</strong>' + esc(invoice.notes) + '</div>'
+        : '';
+
+      // ============ Render ============
+      const area = document.getElementById('contentArea');
+      area.innerHTML =
+        // ============ Header ============
+        '<div class="invoice-header">' +
+          '<div class="company-brand">' +
+            '<div class="company-logo">' +
+              (logoUrl
+                ? '<img src="' + esc(logoUrl) + '" alt="logo" onerror="this.style.display=\'none\';this.parentElement.innerHTML=\'<span class=&quot;fallback&quot;>' + esc(logoInitial) + '</span>\';">'
+                : '<span class="fallback">' + esc(logoInitial) + '</span>') +
+            '</div>' +
+            '<div class="company-info">' +
+              '<h1>' + esc(companyName) + '</h1>' +
+              (company && company.phone
+                ? '<p><i data-lucide="phone"></i> ' + esc(company.phone) + '</p>' : '') +
+              (company && company.address
+                ? '<p><i data-lucide="map-pin"></i> ' + esc(company.address) + '</p>' : '') +
+              (company && company.tax_number
+                ? '<p><i data-lucide="file-text"></i> الرقم الضريبي: ' + esc(company.tax_number) + '</p>' : '') +
+            '</div>' +
+          '</div>' +
+          '<div class="header-meta">' +
+            '<div class="header-meta-item">' +
+              '<div class="lbl">رقم الفاتورة</div>' +
+              '<div class="val">' + esc(invoice.invoice_number || '—') + '</div>' +
+            '</div>' +
+            '<div class="header-meta-item">' +
+              '<div class="lbl">التاريخ</div>' +
+              '<div class="val not-mono">' + fmtDate(invoice.invoice_date || invoice.created_at) + '</div>' +
+            '</div>' +
+            '<div class="header-meta-item">' +
+              '<div class="lbl">النوع</div>' +
+              '<div class="val not-mono">' + esc(invoiceTypeLabel) + '</div>' +
+            '</div>' +
+            '<div class="header-meta-item">' +
+              '<div class="lbl">الدفع</div>' +
+              '<div class="val not-mono">' + esc(paymentTypeLabel) + '</div>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+
+        // ============ Status Banner ============
+        '<div class="status-banner ' + paymentStatus.key + '">' +
+          '<div class="status-icon">' +
+            '<i data-lucide="' + paymentStatus.icon + '"></i>' +
+          '</div>' +
+          '<div class="status-body">' +
+            '<div class="title">' + esc(paymentStatus.title) + '</div>' +
+            '<div class="subtitle">' + esc(paymentStatus.subtitle).replace(/\n/g, '<br>') + '</div>' +
+          '</div>' +
+        '</div>' +
+
+        // ============ Customer Info ============
+        (customer
+          ? '<div class="card">' +
+              '<div class="card-header">' +
+                '<h2><i data-lucide="user"></i> بيانات العميل</h2>' +
+              '</div>' +
+              '<div class="card-body">' +
+                '<div class="info-grid">' +
+                  '<div class="info-item">' +
+                    '<div class="lbl"><i data-lucide="user"></i> الاسم</div>' +
+                    '<div class="val">' + esc(customer.name || '—') + '</div>' +
+                  '</div>' +
+                  (customer.phone
+                    ? '<div class="info-item">' +
+                        '<div class="lbl"><i data-lucide="phone"></i> الهاتف</div>' +
+                        '<div class="val mono">' + esc(customer.phone) + '</div>' +
+                      '</div>'
+                    : '') +
+                  (customer.address
+                    ? '<div class="info-item" style="grid-column:1/-1;">' +
+                        '<div class="lbl"><i data-lucide="map-pin"></i> العنوان</div>' +
+                        '<div class="val">' + esc(customer.address) + '</div>' +
+                      '</div>'
+                    : '') +
+                '</div>' +
+              '</div>' +
+            '</div>'
+          : '') +
+
+        // ============ Items ============
+        '<div class="card">' +
+          '<div class="card-header">' +
+            '<h2><i data-lucide="package"></i> الأصناف (' + items.length + ')</h2>' +
+          '</div>' +
+          '<div class="items-table-wrap">' +
+            '<table class="items-table">' +
+              '<thead><tr>' +
+                '<th>الصنف</th>' +
+                '<th style="text-align:center;">الكمية</th>' +
+                '<th style="text-align:right;">السعر</th>' +
+                '<th style="text-align:center;">خصم</th>' +
+                '<th style="text-align:right;">الإجمالي</th>' +
+              '</tr></thead>' +
+              '<tbody>' +
+                (itemsHtml || '<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--text-muted);">لا توجد أصناف</td></tr>') +
+              '</tbody>' +
+            '</table>' +
+          '</div>' +
+
+          // ============ Totals ============
+          '<div class="totals-grid">' +
+            '<div class="totals-row"><div class="label">المجموع</div><div class="value">' + fmtMoney(subtotal) + '</div></div>' +
+            (discountTotal > 0
+              ? '<div class="totals-row"><div class="label">إجمالي الخصم</div><div class="value">' + fmtMoney(discountTotal) + '</div></div>'
+              : '') +
+            taxRow +
+            '<div class="totals-row grand"><div class="label">الإجمالي النهائي</div><div class="value">' + fmtMoney(grand) + '</div></div>' +
+            paidRow +
+            remainingRow +
+          '</div>' +
+        '</div>' +
+
+        // ============ Notes ============
+        notesHtml +
+
+        // ============ Actions ============
+        '<div class="actions-bar">' +
+          '<button type="button" class="btn btn-primary" id="printBtn">' +
+            '<i data-lucide="printer"></i> طباعة / حفظ PDF' +
+          '</button>' +
+          '<button type="button" class="btn btn-outline" id="shareBtn">' +
+            '<i data-lucide="share-2"></i> مشاركة' +
+          '</button>' +
+        '</div>';
+
+      // ============ Bind Actions ============
+      const printBtn = document.getElementById('printBtn');
+      if (printBtn) printBtn.addEventListener('click', function () { window.print(); });
+
+      const shareBtn = document.getElementById('shareBtn');
+      if (shareBtn) {
+        shareBtn.addEventListener('click', async function () {
+          const url = location.href;
+          if (navigator.share) {
+            try {
+              await navigator.share({
+                title: 'فاتورة ' + invoice.invoice_number,
+                text: 'فاتورة من ' + companyName,
+                url: url
+              });
+              return;
+            } catch (e) {}
+          }
+          try {
+            await navigator.clipboard.writeText(url);
+            alert('تم نسخ رابط الفاتورة');
+          } catch (e) {
+            prompt('انسخ الرابط:', url);
+          }
+        });
+      }
+
+      // Update page title
+      document.title = 'فاتورة ' + invoice.invoice_number + ' - ' + companyName;
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    // ============================================================
+    // 8) Init
+    // ============================================================
+    async function init() {
+      // Apply identity if available
+      try {
+        if (window.RefadSettings && RefadSettings.identity) {
+          const sysName = RefadSettings.identity.getSystemName();
+          if (sysName) document.title = 'فاتورة - ' + sysName;
+        }
+      } catch (e) {}
+
+      if (window.lucide) lucide.createIcons();
+
+      await loadInvoice();
+
+      if (window.lucide) lucide.createIcons();
+
+      console.log('%c[Refad] Shared Invoice v1.0 ready', 'color:#14B8A6;font-weight:bold');
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+
+  })();
+</script>
+</body>
+</html>

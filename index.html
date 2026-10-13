@@ -290,19 +290,6 @@
       font-weight: 500;
     }
 
-    /* ============ Skeleton Loading ============ */
-    .skeleton {
-      background: linear-gradient(90deg, var(--border) 25%, var(--bg) 50%, var(--border) 75%);
-      background-size: 200% 100%;
-      animation: shimmer 1.4s infinite;
-      border-radius: 6px;
-    }
-
-    @keyframes shimmer {
-      0% { background-position: 200% 0; }
-      100% { background-position: -200% 0; }
-    }
-
     /* ============ Form ============ */
     .form-group { margin-bottom: 18px; }
 
@@ -600,6 +587,84 @@
 
     .install-helper-content .steps strong { color: var(--accent); }
 
+    /* ============ 2FA Modal ============ */
+    .twofa-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(11, 44, 77, 0.7);
+      backdrop-filter: blur(6px);
+      z-index: 300;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .twofa-modal.show { display: flex; }
+
+    .twofa-content {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 28px;
+      max-width: 420px;
+      width: 100%;
+      text-align: center;
+      box-shadow: var(--shadow-hover);
+    }
+
+    .twofa-icon {
+      width: 70px;
+      height: 70px;
+      margin: 0 auto 16px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .twofa-icon i { width: 34px; height: 34px; color: white; }
+
+    .twofa-content h2 {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+
+    .twofa-content p {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.7;
+      margin-bottom: 20px;
+    }
+
+    .twofa-input-wrap {
+      margin-bottom: 20px;
+    }
+
+    .twofa-input {
+      width: 100%;
+      padding: 14px;
+      font-family: inherit;
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: 8px;
+      text-align: center;
+      background: var(--bg);
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    .twofa-input:focus {
+      border-color: var(--accent);
+      background: var(--card);
+      box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.1);
+    }
+
     /* ============ Responsive ============ */
     @media (max-width: 480px) {
       .login-card { padding: 28px 22px; }
@@ -733,25 +798,64 @@
   </div>
 
   <!-- ============================================================ -->
-  <!-- Scripts — الترتيب مهم -->
+  <!-- 2FA Modal — للمصادقة الثنائية -->
+  <!-- ============================================================ -->
+  <div class="twofa-modal" id="twofaModal">
+    <div class="twofa-content">
+      <div class="twofa-icon">
+        <i data-lucide="shield-check"></i>
+      </div>
+      <h2>🔐 التحقق من الهوية</h2>
+      <p>أدخل رمز التحقق المكوّن من 6 أرقام من تطبيق المصادقة.</p>
+      <div class="twofa-input-wrap">
+        <input
+          type="text"
+          class="twofa-input"
+          id="twofaCode"
+          maxlength="6"
+          inputmode="numeric"
+          pattern="[0-9]*"
+          placeholder="000000"
+          autocomplete="one-time-code">
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn-login" id="twofaCancelBtn" style="background:var(--bg);color:var(--text);flex:1;">
+          إلغاء
+        </button>
+        <button class="btn-login" id="twofaVerifyBtn" style="flex:2;">
+          <span style="display:flex;align-items:center;gap:8px;justify-content:center;">
+            <i data-lucide="check" style="width:18px;height:18px;"></i>
+            تحقق
+          </span>
+        </button>
+      </div>
+      <p style="margin-top:14px;font-size:11px;color:var(--text-muted);">
+        💡 الميزة قيد التطوير — اضغط "تحقق" للمتابعة
+      </p>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- Scripts — الترتيب مهم جداً -->
+  <!-- ⚠️ refad-settings.js يجب أن يكون قبل refad-auth.js -->
   <!-- ============================================================ -->
   <script src="refad-core.js"></script>
+  <script src="refad-settings.js"></script>
   <script src="refad-auth.js"></script>
   <script src="refad-theme-sync.js"></script>
-  <script src="refad-settings.js"></script>
 
   <script>
     (function () {
       'use strict';
 
       // ============================================================
-      // 0) Safe Settings Wrapper + Safe Refad fallback
+      // 0) Safe Settings Wrapper
       // ============================================================
       const SafeSettings = {
         identity: {
           getSystemName: function () {
             try {
-              if (window.RefadSettings?.identity?.getSystemName) {
+              if (window.RefadSettings && RefadSettings.identity) {
                 return RefadSettings.identity.getSystemName();
               }
             } catch (e) {}
@@ -759,7 +863,7 @@
           },
           getTagline: function () {
             try {
-              if (window.RefadSettings?.identity?.getTagline) {
+              if (window.RefadSettings && RefadSettings.identity) {
                 return RefadSettings.identity.getTagline();
               }
             } catch (e) {}
@@ -767,7 +871,7 @@
           },
           getLogoUrl: function () {
             try {
-              if (window.RefadSettings?.identity?.getLogoUrl) {
+              if (window.RefadSettings && RefadSettings.identity) {
                 return RefadSettings.identity.getLogoUrl();
               }
             } catch (e) {}
@@ -777,14 +881,14 @@
       };
 
       // ============================================================
-      // 1) Guard — تأكد من تحميل refad-core.js
+      // 1) Guard
       // ============================================================
       if (typeof Refad === 'undefined') {
         console.error('[Login] refad-core.js not loaded!');
         document.body.innerHTML = '<div style="padding:40px;text-align:center;font-family:Cairo,sans-serif;">' +
           '<h2 style="color:#ef4444;">خطأ في تحميل النظام</h2>' +
-          '<p style="color:#64748b;margin-top:10px;">الرجاء تحديث الصفحة. إذا استمرت المشكلة، تواصل مع الدعم.</p>' +
-          '<button onclick="location.reload()" style="margin-top:20px;padding:10px 20px;background:#14B8A6;color:white;border:none;border-radius:8px;cursor:pointer;font-family:inherit;font-size:14px;font-weight:700;">🔄 تحديث الصفحة</button>' +
+          '<p style="color:#64748b;margin-top:10px;">الرجاء تحديث الصفحة.</p>' +
+          '<button onclick="location.reload()" style="margin-top:20px;padding:10px 20px;background:#14B8A6;color:white;border:none;border-radius:8px;cursor:pointer;font-family:inherit;font-size:14px;font-weight:700;">🔄 تحديث</button>' +
           '</div>';
         return;
       }
@@ -808,6 +912,10 @@
       const networkStatus = document.getElementById('networkStatus');
       const networkText   = document.getElementById('networkText');
       const capsWarning   = document.getElementById('capsWarning');
+      const twofaModal    = document.getElementById('twofaModal');
+      const twofaCode     = document.getElementById('twofaCode');
+      const twofaVerifyBtn = document.getElementById('twofaVerifyBtn');
+      const twofaCancelBtn = document.getElementById('twofaCancelBtn');
 
       // ============================================================
       // 3) Init Lucide
@@ -818,17 +926,17 @@
       // 4) Year & Version
       // ============================================================
       document.getElementById('year').textContent = new Date().getFullYear();
-      document.getElementById('appVersion').textContent = 'v' + (window.Refad?.version || '1.0.0');
+      document.getElementById('appVersion').textContent = 'v' + (window.Refad && window.Refad.version ? window.Refad.version : '1.0.0');
 
       // ============================================================
-      // 5) ✨ Apply Identity — اسم النظام + الشعار
+      // 5) Apply Identity
       // ============================================================
       function applyIdentity() {
         const name = SafeSettings.identity.getSystemName();
         const tagline = SafeSettings.identity.getTagline();
         const logoUrl = SafeSettings.identity.getLogoUrl();
 
-        document.title = `تسجيل الدخول - ${name}`;
+        document.title = 'تسجيل الدخول - ' + name;
 
         const brandName = document.getElementById('brandName');
         const brandTagline = document.getElementById('brandTagline');
@@ -840,10 +948,10 @@
         if (brandTagline) brandTagline.textContent = tagline;
         if (footerBrand) footerBrand.textContent = name;
 
-        // الشعار
         if (logoUrl && brandLogoImg) {
           brandLogoImg.src = logoUrl;
           brandLogoImg.style.display = 'block';
+          if (brandFallback) brandFallback.style.display = 'none';
           brandLogoImg.onerror = function () {
             this.style.display = 'none';
             if (brandFallback) {
@@ -872,7 +980,7 @@
       }
       refreshThemeIcon();
 
-      themeToggle.addEventListener('click', () => {
+      themeToggle.addEventListener('click', function () {
         try {
           Refad.theme.toggle();
           refreshThemeIcon();
@@ -882,9 +990,9 @@
       });
 
       // ============================================================
-      // 7) ✨ Realtime Theme — استماع لتغييرات الثيم
+      // 7) Realtime Theme
       // ============================================================
-      window.addEventListener('refad:theme-changed', () => {
+      window.addEventListener('refad:theme-changed', function () {
         refreshThemeIcon();
         applyIdentity();
       });
@@ -910,7 +1018,7 @@
       updateNetworkStatus();
 
       // ============================================================
-      // 9) ✨ Caps Lock Warning
+      // 9) Caps Lock Warning
       // ============================================================
       function checkCapsLock(e) {
         if (!e.getModifierState) return;
@@ -920,7 +1028,7 @@
 
       passwordInput.addEventListener('keydown', checkCapsLock);
       passwordInput.addEventListener('keyup', checkCapsLock);
-      passwordInput.addEventListener('blur', () => capsWarning.classList.remove('show'));
+      passwordInput.addEventListener('blur', function () { capsWarning.classList.remove('show'); });
 
       // ============================================================
       // 10) PWA Install
@@ -934,23 +1042,22 @@
         installBtn.style.display = 'none';
       }
 
-      window.addEventListener('beforeinstallprompt', (e) => {
+      window.addEventListener('beforeinstallprompt', function (e) {
         e.preventDefault();
         deferredPrompt = e;
         installBtn.classList.add('show');
       });
 
       if (isIOS && !isStandalone) {
-        setTimeout(() => {
+        setTimeout(function () {
           installBtn.classList.add('show');
         }, 2000);
       }
 
-      installBtn.addEventListener('click', async () => {
+      installBtn.addEventListener('click', async function () {
         if (deferredPrompt) {
           deferredPrompt.prompt();
-          const { outcome } = await deferredPrompt.userChoice;
-          console.log('[PWA] Install outcome:', outcome);
+          const outcome = (await deferredPrompt.userChoice).outcome;
           if (outcome === 'accepted') {
             try { Refad.toast.success('✅ تم تثبيت التطبيق'); } catch (e) {}
             installBtn.style.display = 'none';
@@ -967,53 +1074,58 @@
 
         if (isIOS) {
           instructionEl.textContent = 'لتثبيت التطبيق على iPhone/iPad:';
-          stepsEl.innerHTML = `
-            <div><strong>1.</strong> اضغط على زر <strong>المشاركة</strong> في Safari</div>
-            <div><strong>2.</strong> اختر <strong>"إضافة إلى الشاشة الرئيسية"</strong></div>
-            <div><strong>3.</strong> اضغط <strong>"إضافة"</strong></div>
-          `;
+          stepsEl.innerHTML =
+            '<div><strong>1.</strong> اضغط على زر <strong>المشاركة</strong> في Safari</div>' +
+            '<div><strong>2.</strong> اختر <strong>"إضافة إلى الشاشة الرئيسية"</strong></div>' +
+            '<div><strong>3.</strong> اضغط <strong>"إضافة"</strong></div>';
         } else if (isAndroid) {
           instructionEl.textContent = 'لتثبيت التطبيق على Android:';
-          stepsEl.innerHTML = `
-            <div><strong>1.</strong> افتح القائمة <strong>(⋮)</strong> في المتصفح</div>
-            <div><strong>2.</strong> اختر <strong>"تثبيت التطبيق"</strong> أو <strong>"إضافة إلى الشاشة الرئيسية"</strong></div>
-            <div><strong>3.</strong> اضغط <strong>"تثبيت"</strong></div>
-          `;
+          stepsEl.innerHTML =
+            '<div><strong>1.</strong> افتح القائمة <strong>(⋮)</strong> في المتصفح</div>' +
+            '<div><strong>2.</strong> اختر <strong>"تثبيت التطبيق"</strong></div>' +
+            '<div><strong>3.</strong> اضغط <strong>"تثبيت"</strong></div>';
         } else {
           instructionEl.textContent = 'لتثبيت التطبيق على الكمبيوتر:';
-          stepsEl.innerHTML = `
-            <div><strong>1.</strong> في Chrome/Edge: ابحث عن أيقونة <strong>تثبيت</strong> في شريط العنوان</div>
-            <div><strong>2.</strong> أو افتح قائمة المتصفح <strong>(⋮)</strong></div>
-            <div><strong>3.</strong> اختر <strong>"تثبيت رفاد"</strong></div>
-          `;
+          stepsEl.innerHTML =
+            '<div><strong>1.</strong> في Chrome/Edge: ابحث عن أيقونة <strong>تثبيت</strong> في شريط العنوان</div>' +
+            '<div><strong>2.</strong> أو افتح قائمة المتصفح <strong>(⋮)</strong></div>' +
+            '<div><strong>3.</strong> اختر <strong>"تثبيت رفاد"</strong></div>';
         }
 
         installHelper.classList.add('show');
         if (window.lucide) lucide.createIcons();
       }
 
-      window.addEventListener('appinstalled', () => {
+      window.addEventListener('appinstalled', function () {
         installBtn.style.display = 'none';
         try { Refad.toast.success('✅ تم تثبيت التطبيق بنجاح'); } catch (e) {}
       });
 
       // ============================================================
-      // 11) Session Check
+      // 11) Session Check — مع فحص expiry
       // ============================================================
       (function checkExistingSession() {
         try {
           const s = Refad.Session.get();
-          if (s) {
-            Refad.db.selectOne('users', { eq: { id: s.user_id } })
-              .then(user => {
-                if (user && user.is_active) {
-                  window.location.replace(s.is_superadmin ? 'admin.html' : 'dashboard.html');
-                } else {
-                  Refad.Session.clear();
-                }
-              })
-              .catch(() => {});
+          if (!s) return;
+
+          // ✨ فحص session expiry أول
+          if (Refad.Auth && Refad.Auth.isSessionExpired && Refad.Auth.isSessionExpired()) {
+            Refad.Session.clear();
+            if (Refad.Auth.clearSessionExpiry) Refad.Auth.clearSessionExpiry();
+            return;
           }
+
+          Refad.db.selectOne('users', { eq: { id: s.user_id } })
+            .then(function (user) {
+              if (user && user.is_active) {
+                window.location.replace(s.is_superadmin ? 'admin.html' : 'dashboard.html');
+              } else {
+                Refad.Session.clear();
+                if (Refad.Auth && Refad.Auth.clearSessionExpiry) Refad.Auth.clearSessionExpiry();
+              }
+            })
+            .catch(function () {});
         } catch (e) {
           console.warn('[Login] Session check failed:', e);
         }
@@ -1034,7 +1146,7 @@
       // ============================================================
       // 13) Toggle Password
       // ============================================================
-      togglePwd.addEventListener('click', () => {
+      togglePwd.addEventListener('click', function () {
         const isPwd = passwordInput.type === 'password';
         passwordInput.type = isPwd ? 'text' : 'password';
         eyeIcon.setAttribute('data-lucide', isPwd ? 'eye-off' : 'eye');
@@ -1069,7 +1181,7 @@
       // ============================================================
       // 16) Forgot Password
       // ============================================================
-      document.getElementById('forgotLink').addEventListener('click', (e) => {
+      document.getElementById('forgotLink').addEventListener('click', function (e) {
         e.preventDefault();
         try {
           Refad.alert.info(
@@ -1082,52 +1194,86 @@
       });
 
       // ============================================================
-      // 17) Company Validation
+      // 17) 2FA Handler
       // ============================================================
-      async function validateCompanyAccess(companyId) {
-        if (!companyId) return { valid: true, reason: null };
+      let pendingSession = null;
+
+      function open2FAModal(session, username) {
+        pendingSession = { session: session, username: username };
+        twofaCode.value = '';
+        twofaModal.classList.add('show');
+        setTimeout(function () { twofaCode.focus(); }, 100);
+        if (window.lucide) lucide.createIcons();
+      }
+
+      function close2FAModal() {
+        twofaModal.classList.remove('show');
+        pendingSession = null;
+      }
+
+      function completeLogin(session) {
+        // Save remember me
+        if (rememberMe.checked) {
+          localStorage.setItem('refad_last_user', session.username);
+        } else {
+          localStorage.removeItem('refad_last_user');
+        }
 
         try {
-          const company = await Refad.db.selectOne('companies', {
-            columns: 'id, name, is_active, subscription_end',
-            eq: { id: companyId }
-          });
+          Refad.toast.success('✅ أهلاً بك، ' + session.full_name);
+        } catch (e) {}
 
-          if (!company) {
-            return {
-              valid: false,
-              reason: 'الشركة المرتبطة بحسابك غير موجودة. تواصل مع مدير النظام.'
-            };
-          }
-
-          if (company.is_active === false) {
-            return {
-              valid: false,
-              reason: `⚠️ تم إيقاف شركة "${company.name}" من قِبل الإدارة.\n\nتواصل مع مدير النظام لتفعيل الحساب.`
-            };
-          }
-
-          if (company.subscription_end) {
-            const days = Refad.date.diffDays(company.subscription_end);
-            if (days < 0) {
-              return {
-                valid: false,
-                reason: `⚠️ انتهى اشتراك شركة "${company.name}" منذ ${Math.abs(days)} يوم.\n\nتواصل مع مدير النظام لتجديد الاشتراك.`
-              };
-            }
-          }
-
-          return { valid: true, reason: null, company };
-        } catch (e) {
-          console.warn('[Login] Company validation failed:', e);
-          return { valid: true, reason: null };
-        }
+        setTimeout(function () {
+          window.location.href = session.is_superadmin ? 'admin.html' : 'dashboard.html';
+        }, 500);
       }
+
+      twofaVerifyBtn.addEventListener('click', async function () {
+        // ⏭️ placeholder — الميزة قيد التطوير
+        if (!pendingSession) return;
+
+        // في المستقبل: التحقق من الكود الفعلي
+        // حالياً: نقبل أي كود 6 أرقام
+
+        if (twofaCode.value.length !== 6) {
+          Refad.toast.warning('أدخل 6 أرقام');
+          twofaCode.focus();
+          return;
+        }
+
+        const session = pendingSession.session;
+        close2FAModal();
+        completeLogin(session);
+      });
+
+      twofaCancelBtn.addEventListener('click', async function () {
+        close2FAModal();
+        try {
+          await Refad.Auth.logout(true);
+        } catch (e) {}
+        Refad.Session.clear();
+        if (Refad.Auth && Refad.Auth.clearSessionExpiry) {
+          Refad.Auth.clearSessionExpiry();
+        }
+        setLoading(false);
+        showAlert('تم إلغاء الدخول', 'warning');
+      });
+
+      twofaCode.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          twofaVerifyBtn.click();
+        }
+      });
+
+      twofaCode.addEventListener('input', function (e) {
+        e.target.value = e.target.value.replace(/[^0-9]/g, '');
+      });
 
       // ============================================================
       // 18) Submit Handler
       // ============================================================
-      form.addEventListener('submit', async (e) => {
+      form.addEventListener('submit', async function (e) {
         e.preventDefault();
         hideAlert();
 
@@ -1147,43 +1293,27 @@
         setLoading(true);
 
         try {
-          // 1) تسجيل الدخول
+          // 1) ✨ تحميل إعدادات الأمان قبل login
+          try {
+            if (window.RefadSettings && typeof RefadSettings.ensure === 'function') {
+              await RefadSettings.ensure('security');
+            }
+          } catch (settingsErr) {
+            console.warn('[Login] Settings load failed:', settingsErr.message);
+          }
+
+          // 2) تسجيل الدخول (يعمل فحص الشركة + انتهاء الجلسة الآن)
           const session = await Refad.Auth.login(username, password, rememberMe.checked);
 
-          // 2) فحص حالة الشركة (لغير superadmin)
-          if (!session.is_superadmin && session.company_id) {
-            const companyCheck = await validateCompanyAccess(session.company_id);
-
-            if (!companyCheck.valid) {
-              Refad.Session.clear();
-              setLoading(false);
-              showAlert(companyCheck.reason, 'error');
-
-              try {
-                await Refad.logActivity('login_blocked', 'auth',
-                  `محاولة دخول مرفوضة - ${companyCheck.reason}`, session.user_id);
-              } catch (logErr) {}
-
-              return;
-            }
+          // 3) ✨ فحص المصادقة الثنائية
+          if (session.requires_2fa) {
+            setLoading(false);
+            open2FAModal(session, username);
+            return;
           }
 
-          // 3) حفظ "تذكرني"
-          if (rememberMe.checked) {
-            localStorage.setItem('refad_last_user', username);
-          } else {
-            localStorage.removeItem('refad_last_user');
-          }
-
-          // 4) Success Toast
-          try {
-            Refad.toast.success(`✅ أهلاً بك، ${session.full_name}`);
-          } catch (e) {}
-
-          // 5) ✨ Auto-detect superadmin & redirect
-          setTimeout(() => {
-            window.location.href = session.is_superadmin ? 'admin.html' : 'dashboard.html';
-          }, 500);
+          // 4) إكمال الدخول
+          completeLogin(session);
 
         } catch (err) {
           setLoading(false);
@@ -1196,9 +1326,14 @@
       // ============================================================
       // 19) Keyboard Shortcuts
       // ============================================================
-      document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && installHelper.classList.contains('show')) {
-          installHelper.classList.remove('show');
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+          if (installHelper.classList.contains('show')) {
+            installHelper.classList.remove('show');
+          }
+          if (twofaModal.classList.contains('show')) {
+            twofaCancelBtn.click();
+          }
         }
       });
 
@@ -1206,12 +1341,12 @@
       // 20) PWA Service Worker
       // ============================================================
       if ('serviceWorker' in navigator && location.protocol === 'https:') {
-        navigator.serviceWorker.register('sw.js').catch(err => {
+        navigator.serviceWorker.register('sw.js').catch(function (err) {
           console.log('[PWA] SW registration skipped:', err.message);
         });
       }
 
-      console.log('%c[Refad] Login v3 ready (Theme Sync + Settings + Caps Lock + PWA)', 'color:#14B8A6;font-weight:bold;font-size:14px');
+      console.log('%c[Refad] Login v4 — Security Settings + 2FA Ready', 'color:#14B8A6;font-weight:bold;font-size:14px');
 
     })();
   </script>

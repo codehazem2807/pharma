@@ -18,7 +18,6 @@
   <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
 
   <style>
@@ -45,6 +44,7 @@
       --shadow-lg: 0 10px 40px rgba(11, 44, 77, 0.12);
       --radius: 14px;
       --radius-sm: 10px;
+      --topbar-h: 64px;
     }
 
     [data-theme="dark"] {
@@ -55,164 +55,166 @@
       --border: #1e3a5f;
     }
 
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
     html, body {
-      min-height: 100vh;
+      height: 100%;
       font-family: 'Cairo', sans-serif;
       background: var(--bg);
       color: var(--text);
       transition: background 0.3s, color 0.3s;
     }
 
-    body {
-      display: flex;
-      flex-direction: column;
-      padding: 20px;
-      position: relative;
-    }
+    body { min-height: 100vh; overflow-x: hidden; }
 
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      z-index: -1;
-      background:
-        radial-gradient(circle at 10% 10%, rgba(20, 184, 166, 0.08), transparent 40%),
-        radial-gradient(circle at 90% 90%, rgba(11, 44, 77, 0.08), transparent 40%);
-    }
-
-    /* ============ Header ============ */
-    .shared-header {
+    /* Header */
+    .header {
       background: linear-gradient(135deg, var(--primary), var(--primary-light));
       color: white;
-      border-radius: var(--radius);
-      padding: 22px 26px;
-      margin-bottom: 18px;
+      padding: 24px 20px;
+      box-shadow: var(--shadow-lg);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .header-inner {
+      max-width: 1100px;
+      margin: 0 auto;
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 16px;
       flex-wrap: wrap;
-      box-shadow: var(--shadow);
-      position: relative;
-      overflow: hidden;
     }
-    .shared-header::before {
-      content: '';
-      position: absolute;
-      top: -40px; left: -40px;
-      width: 180px; height: 180px;
-      background: radial-gradient(circle, rgba(20,184,166,0.4), transparent 70%);
-      border-radius: 50%;
-    }
-    .header-left {
+    .header-brand {
       display: flex;
       align-items: center;
-      gap: 16px;
-      position: relative;
-      z-index: 1;
+      gap: 14px;
     }
     .header-logo {
-      width: 60px; height: 60px;
+      width: 48px; height: 48px;
+      border-radius: 12px;
       background: linear-gradient(135deg, var(--accent), var(--accent-dark));
-      border-radius: 16px;
       display: flex; align-items: center; justify-content: center;
-      font-size: 26px;
-      font-weight: 800;
-      color: white;
+      font-weight: 800; font-size: 20px;
       flex-shrink: 0;
-      box-shadow: 0 8px 24px rgba(20,184,166,0.4);
+      box-shadow: 0 4px 12px rgba(20,184,166,0.4);
       overflow: hidden;
     }
     .header-logo img { width: 70%; height: 70%; object-fit: contain; }
-    .header-info h1 {
+    .header-brand-text h1 {
       font-size: 20px;
       font-weight: 800;
-      margin-bottom: 4px;
-      letter-spacing: -0.5px;
+      line-height: 1.2;
+      margin-bottom: 3px;
     }
-    .header-info p {
-      font-size: 13px;
+    .header-brand-text p {
+      font-size: 12px;
       opacity: 0.85;
     }
-    .header-actions {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      position: relative;
-      z-index: 1;
-    }
-    .header-actions .btn {
-      background: rgba(255,255,255,0.15);
-      color: white;
-      border: 1px solid rgba(255,255,255,0.25);
-      backdrop-filter: blur(4px);
-      padding: 8px 14px;
-      font-size: 13px;
-    }
-    .header-actions .btn:hover { background: rgba(255,255,255,0.25); transform: translateY(-2px); }
 
-    /* ============ Summary Cards ============ */
-    .summary-cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-    .summary-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 14px 16px;
+    .header-info {
       display: flex;
       align-items: center;
       gap: 12px;
-      transition: all 0.2s;
+      flex-wrap: wrap;
+    }
+    .header-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      background: rgba(255,255,255,0.15);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .header-badge i { width: 14px; height: 14px; }
+
+    /* Container */
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 24px 20px 60px;
+    }
+
+    /* Info Card */
+    .info-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 20px;
       box-shadow: var(--shadow-sm);
     }
-    .summary-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
-    .summary-icon {
-      width: 44px; height: 44px;
-      border-radius: 12px;
-      display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0;
-      color: white;
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
     }
-    .summary-icon i { width: 20px; height: 20px; }
-    .summary-icon.blue   { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
-    .summary-icon.green  { background: linear-gradient(135deg, #10b981, #047857); }
-    .summary-icon.gold   { background: linear-gradient(135deg, #F59E0B, #d97706); }
-    .summary-icon.purple { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
-    .summary-icon.red    { background: linear-gradient(135deg, #ef4444, #b91c1c); }
-    .summary-icon.teal   { background: linear-gradient(135deg, #14B8A6, #0d9488); }
-    .summary-body { flex: 1; min-width: 0; }
-    .summary-body .label {
-      font-size: 10px;
+    .info-item .lbl {
+      font-size: 11px;
       color: var(--text-muted);
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.4px;
-      margin-bottom: 3px;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
     }
-    .summary-body .value {
-      font-size: 18px;
+    .info-item .lbl i { width: 12px; height: 12px; }
+    .info-item .val {
+      font-size: 15px;
       font-weight: 800;
       color: var(--text);
-      line-height: 1;
-      overflow-wrap: anywhere;
-    }
-    .summary-body .sub {
-      font-size: 10px;
-      color: var(--text-muted);
-      margin-top: 3px;
     }
 
-    /* ============ Progress Bar ============ */
+    /* Notice */
+    .notice {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 14px 18px;
+      border-radius: var(--radius);
+      margin-bottom: 20px;
+      font-size: 13px;
+      line-height: 1.7;
+      font-weight: 600;
+    }
+    .notice.info {
+      background: rgba(59,130,246,0.08);
+      border: 1.5px solid rgba(59,130,246,0.25);
+      color: var(--info);
+    }
+    .notice.warning {
+      background: rgba(245,158,11,0.08);
+      border: 1.5px solid rgba(245,158,11,0.25);
+      color: var(--gold);
+    }
+    .notice.success {
+      background: rgba(16,185,129,0.08);
+      border: 1.5px solid rgba(16,185,129,0.25);
+      color: var(--success);
+    }
+    .notice i { width: 20px; height: 20px; flex-shrink: 0; margin-top: 2px; }
+    .notice strong { font-weight: 800; }
+
+    /* Progress Bar */
     .progress-card {
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 14px 18px;
-      margin-bottom: 16px;
+      padding: 16px 20px;
+      margin-bottom: 20px;
       box-shadow: var(--shadow-sm);
     }
     .progress-header {
@@ -220,48 +222,65 @@
       align-items: center;
       justify-content: space-between;
       gap: 12px;
-      margin-bottom: 8px;
+      margin-bottom: 12px;
       flex-wrap: wrap;
     }
-    .progress-header h4 {
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--text);
+    .progress-header h3 {
+      font-size: 14px;
+      font-weight: 800;
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
     }
-    .progress-header h4 i { width: 16px; height: 16px; color: var(--accent); }
-    .progress-header .pct {
-      font-size: 15px;
-      font-weight: 800;
-      color: var(--accent);
+    .progress-header h3 i { width: 18px; height: 18px; color: var(--accent); }
+    .progress-stats {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      font-size: 12px;
+      font-weight: 700;
     }
-    .progress-track {
-      height: 8px;
-      background: var(--border);
-      border-radius: 4px;
+    .progress-stats .stat {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .progress-stats .stat.green { color: var(--success); }
+    .progress-stats .stat.gold { color: var(--gold); }
+    .progress-stats .stat.red { color: var(--danger); }
+    .progress-stats .stat.gray { color: var(--text-muted); }
+    .progress-stats .stat i { width: 14px; height: 14px; }
+
+    .progress-bar-bg {
+      height: 12px;
+      background: var(--bg);
+      border-radius: 6px;
       overflow: hidden;
+      margin-bottom: 8px;
     }
-    .progress-fill {
+    .progress-bar-fill {
       height: 100%;
       background: linear-gradient(90deg, var(--accent), var(--success));
-      border-radius: 4px;
-      transition: width 0.4s;
-      min-width: 0;
+      border-radius: 6px;
+      transition: width 0.4s ease;
+    }
+    .progress-text {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 600;
     }
 
-    /* ============ Card ============ */
-    .card {
+    /* Items */
+    .items-container {
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: var(--radius);
       box-shadow: var(--shadow-sm);
       overflow: hidden;
-      margin-bottom: 16px;
+      margin-bottom: 20px;
     }
-    .card-header {
-      padding: 14px 20px;
+    .items-header {
+      padding: 14px 18px;
       border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
@@ -269,285 +288,245 @@
       gap: 12px;
       flex-wrap: wrap;
     }
-    .card-header h3 {
+    .items-header h3 {
       font-size: 15px;
-      font-weight: 700;
-      color: var(--text);
+      font-weight: 800;
       display: flex;
       align-items: center;
       gap: 8px;
     }
-    .card-header h3 i { width: 18px; height: 18px; color: var(--accent); }
-    .card-header .hint {
-      font-size: 12px;
-      color: var(--text-muted);
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-    .card-body { padding: 20px; }
-
-    /* ============ Info grid ============ */
-    .info-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 14px;
-    }
-    .info-item {
+    .items-header h3 i { width: 18px; height: 18px; color: var(--accent); }
+    .items-header .count {
       background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      padding: 12px 14px;
-    }
-    .info-item .label {
-      font-size: 11px;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 700;
       color: var(--text-muted);
-      font-weight: 700;
-      margin-bottom: 4px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    .info-item .value {
-      font-size: 14px;
-      color: var(--text);
-      font-weight: 700;
-      word-break: break-word;
-    }
-    .info-item .value .warehouse-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      padding: 3px 10px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 700;
-      background: rgba(20,184,166,0.12);
-      color: var(--accent);
-    }
-    .info-item .value .warehouse-pill i { width: 12px; height: 12px; }
-
-    /* ============ Quick Actions ============ */
-    .quick-actions-row {
-      display: flex;
-      gap: 8px;
-      padding: 10px 16px;
-      background: linear-gradient(135deg, rgba(20,184,166,0.05), rgba(11,44,77,0.03));
-      border-bottom: 1px solid var(--border);
-      flex-wrap: wrap;
-      align-items: center;
-    }
-    .quick-action-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 7px 12px;
-      font-family: inherit;
-      font-size: 12px;
-      font-weight: 700;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      background: var(--card);
-      color: var(--text);
-      cursor: pointer;
-      transition: all 0.2s;
-      white-space: nowrap;
-    }
-    .quick-action-btn:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
-    .quick-action-btn i { width: 14px; height: 14px; }
-    .quick-action-btn.primary {
-      background: linear-gradient(135deg, var(--primary), var(--accent));
-      color: white;
-      border: none;
-    }
-    .quick-action-btn.primary:hover { box-shadow: 0 4px 12px rgba(20,184,166,0.35); color: white; }
-    .quick-action-btn.success {
-      background: rgba(16,185,129,0.1);
-      color: var(--success);
-      border-color: rgba(16,185,129,0.3);
-    }
-    .quick-action-btn.success:hover { background: var(--success); color: white; border-color: var(--success); }
-    .quick-action-btn.danger {
-      background: rgba(239,68,68,0.08);
-      color: var(--danger);
-      border-color: rgba(239,68,68,0.25);
-    }
-    .quick-action-btn.danger:hover { background: var(--danger); color: white; border-color: var(--danger); }
-    .quick-action-btn.warning {
-      background: rgba(245,158,11,0.08);
-      color: var(--warning);
-      border-color: rgba(245,158,11,0.25);
-    }
-    .quick-action-btn.warning:hover { background: var(--warning); color: white; border-color: var(--warning); }
-    .quick-action-btn input[type="number"] {
-      width: 60px;
-      padding: 3px 6px;
-      font-family: inherit;
-      font-size: 12px;
-      font-weight: 700;
-      text-align: center;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 5px;
-      color: var(--text);
-      outline: none;
     }
 
-    /* ============ Table ============ */
-    .table-wrap { overflow-x: auto; }
-    table {
+    .items-table-wrap {
+      overflow-x: auto;
+    }
+    table.items-table {
       width: 100%;
       border-collapse: collapse;
       font-size: 13px;
-      min-width: 1250px;
+      min-width: 1200px;
     }
-    thead { background: var(--bg); border-bottom: 1px solid var(--border); }
-    th {
+    table.items-table thead {
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+    }
+    table.items-table th {
       text-align: right;
       padding: 12px 10px;
       font-size: 11px;
       font-weight: 700;
       color: var(--text-muted);
       text-transform: uppercase;
-      letter-spacing: 0.4px;
       white-space: nowrap;
     }
-    tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
-    tbody tr:hover { background: var(--bg); }
-    tbody tr.row-available    { background: rgba(16,185,129,0.05); }
-    tbody tr.row-partial      { background: rgba(245,158,11,0.05); }
-    tbody tr.row-unavailable  { background: rgba(239,68,68,0.06); opacity: 0.85; }
-    tbody tr.row-error        { background: rgba(239,68,68,0.1) !important; }
-    td { padding: 10px; color: var(--text); vertical-align: middle; }
+    table.items-table tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+    }
+    table.items-table tbody tr:hover { background: var(--bg); }
+    table.items-table tbody tr.row-available { background: rgba(16,185,129,0.04); }
+    table.items-table tbody tr.row-partial { background: rgba(245,158,11,0.04); }
+    table.items-table tbody tr.row-unavailable { background: rgba(239,68,68,0.05); }
+    table.items-table td {
+      padding: 12px 10px;
+      vertical-align: middle;
+    }
 
-    .product-cell { font-weight: 700; color: var(--text); }
-    .product-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .product-name-cell {
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--text);
+    }
+    .product-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
 
-    .num-cell { font-weight: 700; text-align: center; }
+    .req-qty-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      background: rgba(59,130,246,0.12);
+      color: var(--info);
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 800;
+    }
 
-    input.price-input,
-    input.discount-input,
-    input.qty-input,
-    input.bonus-input {
+    .supplier-input {
       width: 100%;
-      min-width: 90px;
+      max-width: 110px;
       padding: 8px 10px;
       font-family: inherit;
       font-size: 14px;
       font-weight: 700;
       text-align: center;
-      background: var(--bg);
+      background: var(--card);
       border: 1.5px solid var(--border);
       border-radius: 8px;
       color: var(--text);
       outline: none;
       transition: all 0.2s;
     }
-    input.price-input:focus,
-    input.discount-input:focus,
-    input.qty-input:focus,
-    input.bonus-input:focus {
+    .supplier-input:focus {
       border-color: var(--accent);
-      background: var(--card);
       box-shadow: 0 0 0 3px rgba(20,184,166,0.1);
     }
-    input.price-input {
-      background: rgba(20,184,166,0.06);
-      border-color: rgba(20,184,166,0.3);
-    }
-    input.qty-input {
-      background: rgba(245,158,11,0.06);
-      border-color: rgba(245,158,11,0.3);
-    }
-    input.bonus-input {
-      background: rgba(139,92,246,0.06);
-      border-color: rgba(139,92,246,0.3);
-    }
-    input:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-      background: var(--border);
-    }
-    input::placeholder { color: var(--text-muted); font-weight: 500; }
+    .supplier-input.qty { max-width: 100px; }
+    .supplier-input.price { max-width: 120px; }
+    .supplier-input.discount { max-width: 90px; }
+    .supplier-input.bonus { max-width: 90px; background: rgba(139,92,246,0.04); border-color: rgba(139,92,246,0.25); }
+    .supplier-input.bonus:focus { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(139,92,246,0.15); }
 
-    .total-cell {
-      font-weight: 800;
-      color: var(--accent);
-      font-family: 'Courier New', monospace;
-      text-align: left;
-      white-space: nowrap;
-    }
-
-    /* ============ Availability Buttons (Segmented) ============ */
-    .avail-group {
-      display: inline-flex;
-      background: var(--bg);
-      border: 1.5px solid var(--border);
-      border-radius: 10px;
-      padding: 3px;
-      gap: 2px;
+    /* Availability Picker */
+    .availability-picker {
+      display: flex;
+      gap: 4px;
     }
     .avail-btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 4px;
-      padding: 6px 10px;
+      flex: 1;
+      padding: 6px 8px;
       font-family: inherit;
+      font-size: 10px;
+      font-weight: 700;
+      border: 1.5px solid var(--border);
+      background: var(--card);
+      color: var(--text-muted);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .avail-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .avail-btn.selected.available {
+      background: rgba(16,185,129,0.15);
+      color: var(--success);
+      border-color: var(--success);
+    }
+    .avail-btn.selected.partial {
+      background: rgba(245,158,11,0.15);
+      color: var(--warning);
+      border-color: var(--warning);
+    }
+    .avail-btn.selected.unavailable {
+      background: rgba(239,68,68,0.15);
+      color: var(--danger);
+      border-color: var(--danger);
+    }
+
+    .item-total {
+      font-weight: 800;
+      font-size: 13px;
+      color: var(--accent);
+    }
+    .item-total.muted { color: var(--text-muted); font-weight: 500; }
+
+    /* Notes cell */
+    .notes-input {
+      width: 100%;
+      min-width: 150px;
+      padding: 8px 10px;
+      font-family: inherit;
+      font-size: 12px;
+      background: var(--card);
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      outline: none;
+      transition: all 0.2s;
+      resize: vertical;
+      min-height: 60px;
+    }
+    .notes-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(20,184,166,0.1);
+    }
+
+    /* Summary */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      padding: 16px 18px;
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+    }
+    .summary-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .summary-item .label {
       font-size: 11px;
       font-weight: 700;
-      border-radius: 7px;
-      border: none;
-      background: transparent;
       color: var(--text-muted);
-      cursor: pointer;
-      transition: all 0.15s;
-      white-space: nowrap;
+      text-transform: uppercase;
     }
-    .avail-btn i { width: 13px; height: 13px; }
-    .avail-btn:hover { color: var(--text); }
-    .avail-btn.active[data-status="available"] { background: var(--success); color: white; box-shadow: 0 2px 6px rgba(16,185,129,0.35); }
-    .avail-btn.active[data-status="partial"]   { background: var(--warning); color: white; box-shadow: 0 2px 6px rgba(245,158,11,0.35); }
-    .avail-btn.active[data-status="unavailable"] { background: var(--danger); color: white; box-shadow: 0 2px 6px rgba(239,68,68,0.35); }
+    .summary-item .value {
+      font-size: 20px;
+      font-weight: 800;
+    }
+    .summary-item .value.accent { color: var(--accent); }
+    .summary-item .value.success { color: var(--success); }
+    .summary-item .value.purple { color: var(--purple); }
+    .summary-item .value.gold { color: var(--gold); }
 
-    /* ============ Status Badges ============ */
-    .status-badge {
-      display: inline-flex;
+    /* Actions */
+    .actions-bar {
+      display: flex;
+      gap: 12px;
+      padding: 20px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      position: sticky;
+      bottom: 16px;
+      flex-wrap: wrap;
       align-items: center;
-      gap: 6px;
-      padding: 6px 14px;
-      font-size: 12px;
-      font-weight: 700;
-      border-radius: 20px;
-      white-space: nowrap;
+      margin-top: 20px;
     }
-    .status-badge.draft     { background: rgba(148,163,184,0.15); color: var(--text-muted); }
-    .status-badge.sent      { background: rgba(59,130,246,0.12); color: var(--info); }
-    .status-badge.partial   { background: rgba(245,158,11,0.12); color: var(--warning); }
-    .status-badge.received  { background: rgba(16,185,129,0.12); color: var(--success); }
-    .status-badge.cancelled { background: rgba(239,68,68,0.12); color: var(--danger); }
-    .status-badge i { width: 14px; height: 14px; }
-
-    /* ============ Empty / Loading ============ */
-    .empty-state {
-      padding: 60px 20px;
-      text-align: center;
+    .actions-bar .summary-mini {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      flex: 1;
+      min-width: 200px;
+    }
+    .actions-bar .summary-mini .item {
+      display: flex;
+      flex-direction: column;
+    }
+    .actions-bar .summary-mini .item .lbl {
+      font-size: 10px;
       color: var(--text-muted);
+      font-weight: 700;
+      text-transform: uppercase;
     }
-    .empty-state i { width: 48px; height: 48px; opacity: 0.4; margin-bottom: 12px; }
-    .empty-state h2 { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
-    .empty-state p { font-size: 14px; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .spinner { animation: spin 1s linear infinite; }
+    .actions-bar .summary-mini .item .val {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--accent);
+    }
 
-    /* ============ Buttons ============ */
     .btn {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      padding: 10px 18px;
+      padding: 12px 22px;
       font-family: inherit;
       font-size: 14px;
-      font-weight: 600;
+      font-weight: 700;
       border-radius: var(--radius-sm);
       border: none;
       cursor: pointer;
@@ -560,1316 +539,1032 @@
     .btn-primary { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; }
     .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(20,184,166,0.35); }
     .btn-success { background: var(--success); color: white; }
-    .btn-success:hover:not(:disabled) { background: #047857; }
-    .btn-outline { background: var(--card); color: var(--text); border: 1px solid var(--border); }
+    .btn-success:hover:not(:disabled) { background: #047857; transform: translateY(-2px); }
+    .btn-outline { background: var(--card); color: var(--text); border: 1.5px solid var(--border); }
     .btn-outline:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
-    .btn-sm { padding: 6px 12px; font-size: 12px; }
+    .btn-lg { padding: 14px 28px; font-size: 15px; }
 
-    /* ============ Floating actions ============ */
-    .floating-actions {
-      position: sticky;
-      bottom: 12px;
+    /* Full width button for save */
+    .save-btn-wrap {
+      display: flex;
+      gap: 12px;
+      flex: 1;
+      justify-content: flex-end;
+    }
+
+    /* Loading */
+    .loader {
+      text-align: center;
+      padding: 80px 20px;
+      color: var(--text-muted);
+    }
+    .loader i {
+      width: 48px;
+      height: 48px;
+      animation: spin 1s linear infinite;
+      color: var(--accent);
+      margin-bottom: 16px;
+    }
+    .loader p { font-size: 14px; font-weight: 600; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Error / Success State */
+    .state-card {
+      max-width: 480px;
+      margin: 80px auto;
+      text-align: center;
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 12px 16px;
-      margin-top: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
+      padding: 40px 30px;
       box-shadow: var(--shadow-lg);
-      flex-wrap: wrap;
-      z-index: 10;
     }
-    .floating-info {
-      font-size: 13px;
-      color: var(--text-muted);
-      font-weight: 600;
+    .state-icon {
+      width: 80px;
+      height: 80px;
+      border-radius: 20px;
+      margin: 0 auto 20px;
       display: flex;
       align-items: center;
-      gap: 6px;
+      justify-content: center;
     }
-    .floating-info i { width: 14px; height: 14px; }
-    .floating-info strong { color: var(--text); }
-
-    /* ============ Footer ============ */
-    .shared-footer {
-      text-align: center;
-      margin-top: 20px;
-      font-size: 12px;
+    .state-icon.error { background: rgba(239,68,68,0.12); color: var(--danger); }
+    .state-icon.success { background: rgba(16,185,129,0.12); color: var(--success); }
+    .state-icon.warning { background: rgba(245,158,11,0.12); color: var(--gold); }
+    .state-icon i { width: 40px; height: 40px; }
+    .state-card h2 {
+      font-size: 22px;
+      font-weight: 800;
+      margin-bottom: 10px;
+      color: var(--text);
+    }
+    .state-card p {
+      font-size: 14px;
       color: var(--text-muted);
+      line-height: 1.7;
+      margin-bottom: 20px;
+    }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      padding: 20px;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .footer strong { color: var(--accent); font-weight: 800; }
+
+    /* Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(11, 44, 77, 0.5);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
       padding: 20px;
     }
-    .shared-footer strong { color: var(--accent); }
-
-    /* ============ Notice ============ */
-    .notice-banner {
-      padding: 12px 16px;
-      border-radius: var(--radius-sm);
-      margin-bottom: 16px;
-      font-size: 12.5px;
-      line-height: 1.7;
+    .modal-backdrop.show { display: flex; }
+    .modal {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-lg);
+      width: 100%;
+      max-width: 500px;
+      max-height: 90vh;
       display: flex;
-      align-items: flex-start;
-      gap: 10px;
-      background: rgba(59,130,246,0.08);
-      color: var(--info);
-      border: 1px solid rgba(59,130,246,0.2);
+      flex-direction: column;
+      overflow: hidden;
     }
-    .notice-banner i { width: 18px; height: 18px; flex-shrink: 0; margin-top: 2px; }
-    .notice-banner strong { color: var(--info); font-weight: 800; }
-    .notice-banner .steps {
+    .modal-body { padding: 30px 24px; text-align: center; }
+    .modal-body .modal-icon {
+      width: 70px;
+      height: 70px;
+      border-radius: 18px;
+      margin: 0 auto 16px;
       display: flex;
-      gap: 14px;
-      flex-wrap: wrap;
-      margin-top: 8px;
-      font-size: 12px;
-    }
-    .notice-banner .steps span {
-      display: inline-flex;
       align-items: center;
-      gap: 5px;
-      background: rgba(59,130,246,0.12);
-      padding: 3px 10px;
-      border-radius: 12px;
-      font-weight: 700;
+      justify-content: center;
     }
-    .notice-banner .steps span i { width: 12px; height: 12px; margin: 0; }
+    .modal-body .modal-icon.success { background: rgba(16,185,129,0.12); color: var(--success); }
+    .modal-body .modal-icon i { width: 34px; height: 34px; }
+    .modal-body h3 {
+      font-size: 20px;
+      font-weight: 800;
+      margin-bottom: 10px;
+      color: var(--text);
+    }
+    .modal-body p {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.7;
+      margin-bottom: 20px;
+    }
 
-    /* ============ Responsive ============ */
+    /* Responsive */
     @media (max-width: 768px) {
-      body { padding: 12px; }
-      .shared-header { padding: 18px; }
-      .header-logo { width: 48px; height: 48px; font-size: 20px; }
-      .header-info h1 { font-size: 17px; }
-      .card-body { padding: 14px; }
-      .summary-cards { grid-template-columns: repeat(2, 1fr); }
-      .floating-actions { flex-direction: column; align-items: stretch; }
-      .floating-actions .btn { width: 100%; justify-content: center; }
-      .avail-btn { padding: 5px 8px; font-size: 10px; }
-      .avail-btn i { width: 11px; height: 11px; }
+      .header { padding: 16px 14px; }
+      .header-brand-text h1 { font-size: 16px; }
+      .header-brand-text p { font-size: 11px; }
+      .header-badge { padding: 4px 10px; font-size: 11px; }
+      .container { padding: 16px 12px 60px; }
+      .actions-bar {
+        flex-direction: column;
+        position: static;
+        margin-top: 12px;
+      }
+      .save-btn-wrap {
+        width: 100%;
+        flex-direction: column;
+      }
+      .save-btn-wrap .btn { width: 100%; justify-content: center; }
+      table.items-table { font-size: 12px; }
+      table.items-table th { padding: 10px 8px; font-size: 10px; }
+      table.items-table td { padding: 10px 8px; }
     }
-    @media (max-width: 480px) {
-      .summary-cards { grid-template-columns: 1fr; }
-      .quick-action-btn { font-size: 11px; padding: 6px 10px; }
+
+    /* Print */
+    @media print {
+      .header, .actions-bar, .footer { display: none !important; }
+      .container { padding: 0; max-width: 100%; }
+      .info-card, .items-container { box-shadow: none; border: 1px solid #e2e8f0; }
     }
   </style>
 </head>
 <body>
 
-  <!-- ============ Header ============ -->
-  <div class="shared-header">
-    <div class="header-left">
-      <div class="header-logo" id="headerLogo">
-        <img src="logo.png" alt="رفاد" onerror="this.style.display='none';this.parentElement.textContent='R';">
+  <header class="header">
+    <div class="header-inner">
+      <div class="header-brand">
+        <div class="header-logo" id="headerLogo">
+          <img src="logo.png" alt="رفاد" id="headerLogoImg" onerror="this.style.display='none';this.parentElement.innerHTML='R';">
+        </div>
+        <div class="header-brand-text">
+          <h1 id="headerBrandName">رفاد</h1>
+          <p>طلب شراء - عرض للمورد</p>
+        </div>
       </div>
       <div class="header-info">
-        <h1 id="headerTitle">جارٍ التحميل...</h1>
-        <p id="headerSub">—</p>
-      </div>
-    </div>
-    <div class="header-actions">
-      <button class="btn" id="printBtn" style="display:none;">
-        <i data-lucide="printer"></i> طباعة
-      </button>
-      <button class="btn" id="exportBtn" style="display:none;">
-        <i data-lucide="download"></i> Excel
-      </button>
-    </div>
-  </div>
-
-  <!-- ============ Loading ============ -->
-  <div id="loadingState" class="card">
-    <div class="card-body" style="text-align:center;padding:60px 20px;">
-      <i data-lucide="loader-2" class="spinner" style="width:48px;height:48px;color:var(--accent);"></i>
-      <p style="margin-top:12px;color:var(--text-muted);">جارٍ تحميل الطلب...</p>
-    </div>
-  </div>
-
-  <!-- ============ Error ============ -->
-  <div id="errorState" class="card" style="display:none;">
-    <div class="empty-state">
-      <i data-lucide="alert-triangle" style="color:var(--danger);opacity:0.8;"></i>
-      <h2 id="errorTitle">الرابط غير صالح</h2>
-      <p id="errorMessage">هذا الرابط منتهي الصلاحية أو غير موجود.</p>
-    </div>
-  </div>
-
-  <!-- ============ Main Content ============ -->
-  <div id="contentWrap" style="display:none;">
-
-    <!-- Notice -->
-    <div class="notice-banner">
-      <i data-lucide="info"></i>
-      <div style="flex:1;">
-        <strong>مرحباً 👋</strong>
-        راجع الأصناف المطلوبة وحدّد <strong>حالة كل صنف</strong> وأدخل أسعارك وخصوماتك.
-        <div class="steps">
-          <span><i data-lucide="check-circle-2"></i> متوفر = عندي بالكامل</span>
-          <span><i data-lucide="alert-triangle"></i> جزئي = عندي كمية أقل</span>
-          <span><i data-lucide="x-circle"></i> غير متوفر = مش عندي</span>
-          <span><i data-lucide="gift"></i> بونص = هدية مع الطلب</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Summary Cards -->
-    <div class="summary-cards" id="summaryCards">
-      <div class="summary-card">
-        <div class="summary-icon blue"><i data-lucide="package"></i></div>
-        <div class="summary-body">
-          <div class="label">عدد الأصناف</div>
-          <div class="value" id="sumItems">—</div>
-          <div class="sub" id="sumItemsSub">في الطلب</div>
-        </div>
-      </div>
-      <div class="summary-card">
-        <div class="summary-icon green"><i data-lucide="check-circle-2"></i></div>
-        <div class="summary-body">
-          <div class="label">متوفر</div>
-          <div class="value" id="sumAvailable">—</div>
-          <div class="sub" id="sumAvailableSub">صنف</div>
-        </div>
-      </div>
-      <div class="summary-card">
-        <div class="summary-icon gold"><i data-lucide="alert-triangle"></i></div>
-        <div class="summary-body">
-          <div class="label">جزئي</div>
-          <div class="value" id="sumPartial">—</div>
-          <div class="sub" id="sumPartialSub">صنف</div>
-        </div>
-      </div>
-      <div class="summary-card">
-        <div class="summary-icon red"><i data-lucide="x-circle"></i></div>
-        <div class="summary-body">
-          <div class="label">غير متوفر</div>
-          <div class="value" id="sumUnavailable">—</div>
-          <div class="sub" id="sumUnavailableSub">صنف</div>
-        </div>
-      </div>
-      <div class="summary-card">
-        <div class="summary-icon purple"><i data-lucide="gift"></i></div>
-        <div class="summary-body">
-          <div class="label">البونص</div>
-          <div class="value" id="sumBonus">—</div>
-          <div class="sub">وحدة مجانية</div>
-        </div>
-      </div>
-      <div class="summary-card">
-        <div class="summary-icon teal"><i data-lucide="banknote"></i></div>
-        <div class="summary-body">
-          <div class="label">القيمة الإجمالية</div>
-          <div class="value" id="sumValue">—</div>
-          <div class="sub">سعر × كمية متاحة</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Progress -->
-    <div class="progress-card">
-      <div class="progress-header">
-        <h4><i data-lucide="activity"></i> نسبة اكتمال الرد</h4>
-        <div class="pct" id="progressPct">0%</div>
-      </div>
-      <div class="progress-track">
-        <div class="progress-fill" id="progressFill" style="width:0%;"></div>
-      </div>
-    </div>
-
-    <!-- Order info -->
-    <div class="card">
-      <div class="card-header">
-        <h3><i data-lucide="info"></i> بيانات الطلب</h3>
-        <span id="statusBadge" class="status-badge draft">
-          <i data-lucide="file-edit"></i>
-          <span id="statusText">مسودة</span>
+        <span class="header-badge">
+          <i data-lucide="file-text"></i>
+          <span id="headerRequestNumber">—</span>
+        </span>
+        <span class="header-badge">
+          <i data-lucide="calendar"></i>
+          <span id="headerDate">—</span>
         </span>
       </div>
-      <div class="card-body">
+    </div>
+  </header>
+
+  <div class="container" id="mainContainer">
+    <!-- Loading -->
+    <div class="loader" id="loaderState">
+      <i data-lucide="loader-2"></i>
+      <p>جارٍ تحميل الطلب...</p>
+    </div>
+
+    <!-- Content (hidden initially) -->
+    <div id="contentArea" style="display:none;">
+
+      <!-- Error states rendered here -->
+      <div id="errorArea"></div>
+
+      <!-- Info Card -->
+      <div class="info-card" id="infoCard">
         <div class="info-grid">
           <div class="info-item">
-            <div class="label">رقم الطلب</div>
-            <div class="value" id="infoReqNumber">—</div>
+            <div class="lbl"><i data-lucide="user"></i> المورد</div>
+            <div class="val" id="infoSupplierName">—</div>
           </div>
           <div class="info-item">
-            <div class="label">التاريخ</div>
-            <div class="value" id="infoDate">—</div>
+            <div class="lbl"><i data-lucide="building-2"></i> الشركة الطالبة</div>
+            <div class="val" id="infoCompanyName">—</div>
           </div>
           <div class="info-item">
-            <div class="label">المورد</div>
-            <div class="value" id="infoSupplier">—</div>
+            <div class="lbl"><i data-lucide="phone"></i> للتواصل</div>
+            <div class="val" id="infoCompanyContact">—</div>
           </div>
           <div class="info-item">
-            <div class="label">المخزن المستهدف</div>
-            <div class="value" id="infoWarehouse">—</div>
+            <div class="lbl"><i data-lucide="clock"></i> التغطية المطلوبة</div>
+            <div class="val" id="infoCoverage">—</div>
           </div>
-          <div class="info-item">
-            <div class="label">عدد الأصناف</div>
-            <div class="value" id="infoItemCount">—</div>
-          </div>
-        </div>
-        <div id="notesBox" style="margin-top:14px;padding:12px 14px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);display:none;">
-          <div style="font-size:11px;color:var(--text-muted);font-weight:700;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px;">ملاحظات الشركة</div>
-          <div id="notesText" style="font-size:13px;color:var(--text);line-height:1.7;"></div>
         </div>
       </div>
+
+      <!-- Notice -->
+      <div class="notice info" id="infoNotice">
+        <i data-lucide="info"></i>
+        <div>
+          <strong>مرحباً بك في نظام رفاد.</strong>
+          يرجى تعبئة الأعمدة الخاصة بك (الكمية المتاحة، البونص، السعر، الخصم) لكل صنف، ثم اضغط حفظ في الأسفل.
+        </div>
+      </div>
+
+      <!-- Progress Card -->
+      <div class="progress-card" id="progressCard">
+        <div class="progress-header">
+          <h3>
+            <i data-lucide="clipboard-list"></i>
+            حالة إدخال الرد
+          </h3>
+          <div class="progress-stats">
+            <span class="stat gray" id="statPending">
+              <i data-lucide="circle-dashed"></i>
+              لم يرد: <strong id="countPending">0</strong>
+            </span>
+            <span class="stat green" id="statAvailable">
+              <i data-lucide="check-circle-2"></i>
+              متوفر: <strong id="countAvailable">0</strong>
+            </span>
+            <span class="stat gold" id="statPartial">
+              <i data-lucide="alert-triangle"></i>
+              جزئي: <strong id="countPartial">0</strong>
+            </span>
+            <span class="stat red" id="statUnavailable">
+              <i data-lucide="x-circle"></i>
+              غير متوفر: <strong id="countUnavailable">0</strong>
+            </span>
+          </div>
+        </div>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" id="progressBarFill" style="width:0%;"></div>
+        </div>
+        <div class="progress-text" id="progressText">لم تبدأ بعد</div>
+      </div>
+
+      <!-- Items -->
+      <div class="items-container">
+        <div class="items-header">
+          <h3><i data-lucide="package"></i> الأصناف المطلوبة</h3>
+          <span class="count" id="itemsCount">0 صنف</span>
+        </div>
+
+        <div class="items-table-wrap">
+          <table class="items-table">
+            <thead>
+              <tr>
+                <th style="width:40px;">#</th>
+                <th>الصنف</th>
+                <th>الكمية المطلوبة</th>
+                <th style="background:rgba(139,92,246,0.06);">حالة التوفير</th>
+                <th style="background:rgba(245,158,11,0.06);">الكمية المتاحة</th>
+                <th style="background:rgba(139,92,246,0.06);">البونص</th>
+                <th style="background:rgba(20,184,166,0.06);">السعر</th>
+                <th style="background:rgba(20,184,166,0.06);">الخصم %</th>
+                <th style="background:rgba(20,184,166,0.06);">الإجمالي</th>
+                <th>ملاحظات</th>
+              </tr>
+            </thead>
+            <tbody id="itemsBody"></tbody>
+          </table>
+        </div>
+
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="label">إجمالي الأصناف</div>
+            <div class="value" id="sumItems">0</div>
+          </div>
+          <div class="summary-item">
+            <div class="label">إجمالي الكميات</div>
+            <div class="value success" id="sumQty">0</div>
+          </div>
+          <div class="summary-item">
+            <div class="label">إجمالي البونص</div>
+            <div class="value purple" id="sumBonus">0</div>
+          </div>
+          <div class="summary-item">
+            <div class="label">إجمالي القيمة</div>
+            <div class="value accent" id="sumValue">0.00</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="actions-bar">
+        <div class="summary-mini">
+          <div class="item">
+            <div class="lbl">القيمة الإجمالية</div>
+            <div class="val" id="miniTotal">0.00</div>
+          </div>
+          <div class="item">
+            <div class="lbl">الأصناف المردود عليها</div>
+            <div class="val" id="miniCount">0 / 0</div>
+          </div>
+        </div>
+        <div class="save-btn-wrap">
+          <button type="button" class="btn btn-outline btn-lg" id="fillAllAvailableBtn" title="تعبئة الكمية المطلوبة لكل الأصناف كمتوفرة">
+            <i data-lucide="wand-2"></i>
+            تعبئة سريعة
+          </button>
+          <button type="button" class="btn btn-success btn-lg" id="saveResponseBtn">
+            <i data-lucide="save"></i>
+            حفظ الرد وإرسال
+          </button>
+        </div>
+      </div>
+
     </div>
-
-    <!-- Items -->
-    <div class="card">
-      <div class="card-header">
-        <h3><i data-lucide="package"></i> الأصناف المطلوبة</h3>
-        <div class="hint">
-          <i data-lucide="edit-3"></i>
-          حدّد الحالة وأدخل الأسعار
-        </div>
-      </div>
-
-      <!-- Bulk Quick Actions -->
-      <div class="quick-actions-row">
-        <button type="button" class="quick-action-btn success" id="markAllAvailableBtn">
-          <i data-lucide="check-circle-2"></i> الكل متوفر
-        </button>
-        <button type="button" class="quick-action-btn danger" id="markAllUnavailableBtn">
-          <i data-lucide="x-circle"></i> الكل غير متوفر
-        </button>
-        <div style="width:1px;height:24px;background:var(--border);margin:0 4px;"></div>
-        <button type="button" class="quick-action-btn" id="applyDefaultPriceBtn">
-          <i data-lucide="tags"></i> السعر الافتراضي
-        </button>
-        <div class="quick-action-btn">
-          <i data-lucide="percent"></i>
-          خصم موحّد:
-          <input type="number" id="bulkDiscountInput" min="0" max="100" step="0.1" placeholder="0">
-          <button type="button" id="applyBulkDiscountBtn" style="background:transparent;border:none;color:var(--accent);font-weight:800;cursor:pointer;padding:0 4px;">تطبيق</button>
-        </div>
-        <button type="button" class="quick-action-btn warning" id="clearAllBtn">
-          <i data-lucide="eraser"></i> مسح الكل
-        </button>
-      </div>
-
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th style="width:40px;">#</th>
-              <th>الصنف</th>
-              <th>الوحدة</th>
-              <th>الكمية المطلوبة</th>
-              <th>آخر خصم</th>
-              <th>الخصم المطلوب</th>
-              <th>الحالة</th>
-              <th>الكمية المتاحة</th>
-              <th>البونص</th>
-              <th>سعرك للوحدة</th>
-              <th>خصمك %</th>
-              <th>الإجمالي</th>
-            </tr>
-          </thead>
-          <tbody id="itemsBody"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Floating actions -->
-    <div class="floating-actions">
-      <div class="floating-info">
-        <i data-lucide="edit-3"></i>
-        راجع ردك ثم اضغط حفظ
-      </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <button class="btn btn-outline btn-sm" id="clearBtn">
-          <i data-lucide="x-circle"></i> مسح الكل
-        </button>
-        <button class="btn btn-success" id="saveBtn">
-          <i data-lucide="save"></i> <span id="saveBtnText">حفظ الرد</span>
-        </button>
-      </div>
-    </div>
-
   </div>
 
-  <!-- Footer -->
-  <div class="shared-footer">
-    <div>هذه الصفحة مُنشأة من نظام <strong>رفاد</strong></div>
-    <div style="margin-top:6px;">© <span id="footerYear"></span> جميع الحقوق محفوظة</div>
+  <footer class="footer">
+    صُنع بواسطة <strong>رفاد</strong> — نظام إدارة الأدوية
+  </footer>
+
+  <!-- Success Modal -->
+  <div class="modal-backdrop" id="successModal">
+    <div class="modal">
+      <div class="modal-body">
+        <div class="modal-icon success">
+          <i data-lucide="check-circle-2"></i>
+        </div>
+        <h3>تم إرسال الرد بنجاح</h3>
+        <p>
+          شكراً لك. تم استلام ردك على طلب الشراء وسيتم التواصل معك قريباً.
+        </p>
+        <button type="button" class="btn btn-primary btn-lg" onclick="window.location.reload()">
+          <i data-lucide="refresh-cw"></i>
+          تحديث الصفحة
+        </button>
+      </div>
+    </div>
   </div>
 
   <script src="refad-core.js"></script>
+  <script src="refad-settings.js"></script>
 
-  <script>
-    (function () {
-      'use strict';
+  <!-- ⏭️ الجزء 2 (JavaScript) هيتحط هنا -->
 
-      // ============================================================
-      // 1) State
-      // ============================================================
-      const state = {
-        token: null,
-        request: null,
-        company: null,
-        supplier: null,
-        warehouse: null,
-        items: []
-      };
+<<script>
+  (function () {
+    'use strict';
 
-      const AUTO_SAVE_KEY = 'refad_shared_request_draft_v3';
-
-      // ============================================================
-      // 2) Helpers
-      // ============================================================
-      function esc(s) { return Refad.escapeHtml(s); }
-      function fmtMoney(v) { return Refad.format.money(v); }
-      function fmtNumber(v, d) { return Refad.format.number(v, d); }
-      function toNum(v) { return Number(v) || 0; }
-
-      function showError(title, message) {
-        document.getElementById('loadingState').style.display = 'none';
-        document.getElementById('contentWrap').style.display = 'none';
-        document.getElementById('errorState').style.display = 'block';
-        document.getElementById('errorTitle').textContent = title;
-        document.getElementById('errorMessage').textContent = message;
-        if (window.lucide) lucide.createIcons();
+    // ═══════════════════════════════════════════════════════════
+    // 0) Safe Settings Wrapper
+    // ═══════════════════════════════════════════════════════════
+    const SafeSettings = {
+      locale: {
+        formatMoney: function (v) {
+          try {
+            if (window.RefadSettings?.locale?.formatMoney) return RefadSettings.locale.formatMoney(v);
+          } catch (e) {}
+          return Refad.format.money(v);
+        }
+      },
+      identity: {
+        getSystemName: function () {
+          try { if (window.RefadSettings?.identity?.getSystemName) return RefadSettings.identity.getSystemName(); } catch (e) {}
+          return 'رفاد';
+        },
+        getTagline: function () {
+          try { if (window.RefadSettings?.identity?.getTagline) return RefadSettings.identity.getTagline(); } catch (e) {}
+          return 'نظام إدارة الأدوية';
+        },
+        getLogoUrl: function () {
+          try { if (window.RefadSettings?.identity?.getLogoUrl) return RefadSettings.identity.getLogoUrl(); } catch (e) {}
+          return null;
+        }
       }
+    };
 
-      function showContent() {
-        document.getElementById('loadingState').style.display = 'none';
-        document.getElementById('errorState').style.display = 'none';
-        document.getElementById('contentWrap').style.display = 'block';
-        document.getElementById('printBtn').style.display = 'inline-flex';
-        document.getElementById('exportBtn').style.display = 'inline-flex';
-        if (window.lucide) lucide.createIcons();
+    // ═══════════════════════════════════════════════════════════
+    // 1) Helpers
+    // ═══════════════════════════════════════════════════════════
+    function esc(s) {
+      if (typeof Refad.escapeHtml === 'function') return Refad.escapeHtml(s);
+      if (s === null || s === undefined) return '';
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+    function fmtMoney(v) { return SafeSettings.locale.formatMoney(v); }
+    function fmtNumber(v) {
+      if (typeof Refad.format?.number === 'function') return Refad.format.number(v);
+      return String(v || 0);
+    }
+    function toNum(v) { return Number(v) || 0; }
+    function getToday() { return Refad.date.today(); }
+
+    // ═══════════════════════════════════════════════════════════
+    // 2) State
+    // ═══════════════════════════════════════════════════════════
+    const state = {
+      token: null,
+      request: null,
+      company: null,
+      supplier: null,
+      items: [],
+      isSubmitting: false,
+      isReadOnly: false
+    };
+
+    // ═══════════════════════════════════════════════════════════
+    // 3) Apply Identity
+    // ═══════════════════════════════════════════════════════════
+    function applyIdentity() {
+      const name = SafeSettings.identity.getSystemName();
+      const logoUrl = SafeSettings.identity.getLogoUrl();
+      const brandName = document.getElementById('headerBrandName');
+      const logoImg = document.getElementById('headerLogoImg');
+      const logoWrap = document.getElementById('headerLogo');
+
+      if (brandName) brandName.textContent = name;
+
+      if (logoImg && logoUrl) {
+        logoImg.src = logoUrl;
+        logoImg.onerror = function () {
+          this.style.display = 'none';
+          if (logoWrap) logoWrap.innerHTML = (name.charAt(0) || 'R');
+        };
       }
+    }
 
-      // ============================================================
-      // 3) Token from URL
-      // ============================================================
+    // ═══════════════════════════════════════════════════════════
+    // 4) Show Error State
+    // ═══════════════════════════════════════════════════════════
+    function showErrorState(icon, title, message) {
+      document.getElementById('loaderState').style.display = 'none';
+      document.getElementById('contentArea').style.display = 'block';
+
+      const errorArea = document.getElementById('errorArea');
+      errorArea.innerHTML =
+        '<div class="state-card">' +
+          '<div class="state-icon error"><i data-lucide="' + icon + '"></i></div>' +
+          '<h2>' + esc(title) + '</h2>' +
+          '<p>' + esc(message) + '</p>' +
+        '</div>';
+
+      document.getElementById('infoCard').style.display = 'none';
+      document.getElementById('infoNotice').style.display = 'none';
+      document.getElementById('progressCard').style.display = 'none';
+      document.querySelector('.items-container').style.display = 'none';
+      document.querySelector('.actions-bar').style.display = 'none';
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // 5) Load Request by Token
+    // ═══════════════════════════════════════════════════════════
+    async function loadRequestByToken() {
       const token = Refad.getParam('token');
       if (!token || token.length < 20) {
-        showError('رابط غير صالح', 'الرابط الذي فتحته غير صحيح أو ناقص.');
+        showErrorState('shield-alert', 'رابط غير صحيح', 'هذا الرابط غير صحيح أو منتهي الصلاحية. تواصل مع الشركة للحصول على رابط جديد.');
         return;
       }
       state.token = token;
 
-      // ============================================================
-      // 4) Load Request
-      // ============================================================
-      async function loadRequest() {
-        try {
-          const req = await Refad.db.selectOne('purchase_requests', {
-            eq: { share_token: token }
-          });
+      try {
+        // جلب الطلب
+        const request = await Refad.db.selectOne('purchase_requests', {
+          columns: 'id, company_id, supplier_id, warehouse_id, request_number, status, notes, created_at',
+          eq: { share_token: token }
+        }).catch(function () { return null; });
 
-          if (!req) {
-            showError('الطلب غير موجود', 'قد يكون الرابط منتهي الصلاحية أو تم حذف الطلب.');
-            return;
-          }
+        if (!request) {
+          showErrorState('link-off', 'الرابط غير موجود', 'هذا الرابط غير صحيح أو تم إلغاؤه. تواصل مع الشركة للحصول على رابط جديد.');
+          return;
+        }
 
-          state.request = req;
+        state.request = request;
 
-          // Company
-          const company = await Refad.db.selectOne('companies', {
-            columns: 'id, name, logo_url, phone, email, address',
-            eq: { id: req.company_id }
-          }).catch(function () { return null; });
-          state.company = company;
+        // جلب الشركة + المورد + الأصناف
+        const [company, supplier, items] = await Promise.all([
+          Refad.db.selectOne('companies', {
+            columns: 'id, name, phone, email, address',
+            eq: { id: request.company_id }
+          }).catch(function () { return null; }),
 
-          // Supplier
-          if (req.supplier_id) {
-            const supplier = await Refad.db.selectOne('suppliers', {
-              columns: 'id, name, phone',
-              eq: { id: req.supplier_id }
-            }).catch(function () { return null; });
-            state.supplier = supplier;
-          }
+          request.supplier_id ? Refad.db.selectOne('suppliers', {
+            columns: 'id, name, phone',
+            eq: { id: request.supplier_id }
+          }).catch(function () { return null; }) : null,
 
-          // Warehouse
-          if (req.warehouse_id) {
-            const warehouse = await Refad.db.selectOne('warehouses', {
-              columns: 'id, name, address, is_default',
-              eq: { id: req.warehouse_id }
-            }).catch(function () { return null; });
-            state.warehouse = warehouse;
-          }
-
-          // Items — include new columns
-          const items = await Refad.db.select('purchase_request_items', {
-            columns: 'id, product_id, requested_qty, received_qty, avg_sale_rate, last_discount, requested_discount, supplier_price, supplier_discount, supplier_qty, supplier_bonus_qty, supplier_availability, supplier_notes, supplier_response_at, notes, products(id, name, name_en, form, unit, default_price)',
-            eq: { request_id: req.id },
+          Refad.db.select('purchase_request_items', {
+            columns: 'id, product_id, requested_qty, requested_discount, supplier_price, supplier_discount, supplier_qty, supplier_bonus_qty, supplier_availability, supplier_notes, supplier_response_at, products(id, name, name_en, form, unit)',
+            eq: { request_id: request.id },
             order: { column: 'id', ascending: true }
-          }).catch(function () { return []; });
+          }).catch(function () { return []; })
+        ]);
 
-          state.items = items.filter(function (it) { return it.products; });
-
-          renderHeader();
-          renderInfo();
-          renderItems();
-
-          // Restore local draft AFTER render
-          restoreLocalDraft();
-
-          updateSummaryAndProgress();
-          showContent();
-
-          // Views counter
-          if (req.share_token) {
-            Refad.db.selectOne('share_links', { eq: { token: req.share_token } })
-              .then(function (sl) {
-                if (sl) {
-                  Refad.db.update('share_links', sl.id, { views: (sl.views || 0) + 1 }).catch(function () {});
-                }
-              })
-              .catch(function () {});
-          }
-        } catch (e) {
-          console.error('[Shared] load failed:', e);
-          showError('خطأ في التحميل', e.message || 'تعذّر الاتصال بالخادم.');
-        }
-      }
-
-      // ============================================================
-      // 5) Render
-      // ============================================================
-      function renderHeader() {
-        const co = state.company;
-        const logo = document.getElementById('headerLogo');
-
-        if (co && co.logo_url) {
-          logo.innerHTML = '<img src="' + esc(co.logo_url) + '" alt="">';
-        } else if (co && co.name) {
-          logo.textContent = co.name.charAt(0);
-        } else {
-          logo.textContent = 'R';
-        }
-
-        document.getElementById('headerTitle').textContent = (co && co.name) || 'طلب شراء';
-        document.getElementById('headerSub').textContent = 'طلب شراء رقم ' + state.request.request_number;
-        document.title = 'طلب ' + state.request.request_number + ' - ' + ((co && co.name) || 'رفاد');
-
-        const labels = { draft: 'مسودة', sent: 'مُرسل', partial: 'جزئي', received: 'مستلم', cancelled: 'ملغي' };
-        const icons = { draft: 'file-edit', sent: 'send', partial: 'clock', received: 'check-circle', cancelled: 'x-circle' };
-
-        const badge = document.getElementById('statusBadge');
-        badge.className = 'status-badge ' + (state.request.status || 'draft');
-        document.getElementById('statusText').textContent = labels[state.request.status] || state.request.status;
-        badge.querySelector('i').setAttribute('data-lucide', icons[state.request.status] || 'file-edit');
-      }
-
-      function renderInfo() {
-        const r = state.request;
-
-        document.getElementById('infoReqNumber').textContent = r.request_number;
-        document.getElementById('infoDate').textContent = Refad.format.date(r.created_at);
-        document.getElementById('infoSupplier').textContent = (state.supplier && state.supplier.name) || '—';
-
-        const whEl = document.getElementById('infoWarehouse');
-        if (state.warehouse) {
-          whEl.innerHTML = '<span class="warehouse-pill"><i data-lucide="warehouse"></i>' + esc(state.warehouse.name) + '</span>';
-        } else {
-          whEl.textContent = 'غير محدد';
-        }
-
-        document.getElementById('infoItemCount').textContent = fmtNumber(state.items.length);
-
-        if (r.notes) {
-          document.getElementById('notesBox').style.display = 'block';
-          document.getElementById('notesText').textContent = r.notes;
-        }
-        if (window.lucide) lucide.createIcons();
-      }
-
-      function renderItems() {
-        const tbody = document.getElementById('itemsBody');
-        if (!state.items.length) {
-          tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;padding:40px;color:var(--text-muted);">لا توجد أصناف في هذا الطلب</td></tr>';
-          return;
-        }
-
-        tbody.innerHTML = state.items.map(function (it, i) {
-          const legacyOffer = parseLegacyOffer(it.notes);
-          const defaultPrice = (it.products && it.products.default_price) || it.supplier_price || legacyOffer.supplier_price || '';
-          const supplierPrice = it.supplier_price != null ? it.supplier_price : defaultPrice;
-          const supplierDiscount = it.supplier_discount != null ? it.supplier_discount : (legacyOffer.supplier_discount != null ? legacyOffer.supplier_discount : (it.requested_discount || ''));
-
-          // Availability: default 'pending' → treat as 'available' for UX (unless explicitly set)
-          let availability = it.supplier_availability;
-          if (!availability || availability === 'pending') {
-            availability = (it.supplier_response_at && it.supplier_price != null) ? 'available' : 'available';
-          }
-
-          const supplierQty = it.supplier_qty != null
-            ? it.supplier_qty
-            : (availability === 'available' ? it.requested_qty : (availability === 'unavailable' ? 0 : ''));
-          const supplierBonus = it.supplier_bonus_qty != null ? it.supplier_bonus_qty : 0;
-
-          const rowClass =
-            availability === 'available'   ? 'row-available'   :
-            availability === 'partial'     ? 'row-partial'     :
-            availability === 'unavailable' ? 'row-unavailable' : '';
-
-          const isUnavailable = availability === 'unavailable';
-          const isPartial = availability === 'partial';
-
-          return '<tr data-idx="' + i + '" data-item-id="' + it.id + '" class="' + rowClass + '">' +
-            '<td style="color:var(--text-muted);font-weight:700;text-align:center;">' + (i + 1) + '</td>' +
-            '<td>' +
-              '<div class="product-cell">' + esc(it.products.name) + '</div>' +
-              (it.products.name_en ? '<div class="product-sub">' + esc(it.products.name_en) + '</div>' : '') +
-            '</td>' +
-            '<td>' + esc(it.products.unit || '—') + '</td>' +
-            '<td class="num-cell">' + fmtNumber(it.requested_qty) + '</td>' +
-            '<td class="num-cell" style="color:var(--info);">' + fmtNumber(it.last_discount || 0, 1) + '%</td>' +
-            '<td class="num-cell" style="color:var(--success);font-weight:700;">' + fmtNumber(it.requested_discount || 0, 1) + '%</td>' +
-            '<td>' +
-              '<div class="avail-group">' +
-                '<button type="button" class="avail-btn ' + (availability === 'available' ? 'active' : '') + '" data-status="available" data-idx="' + i + '" title="عندي بالكامل">' +
-                  '<i data-lucide="check"></i>' +
-                '</button>' +
-                '<button type="button" class="avail-btn ' + (availability === 'partial' ? 'active' : '') + '" data-status="partial" data-idx="' + i + '" title="عندي كمية أقل">' +
-                  '<i data-lucide="alert-triangle"></i>' +
-                '</button>' +
-                '<button type="button" class="avail-btn ' + (availability === 'unavailable' ? 'active' : '') + '" data-status="unavailable" data-idx="' + i + '" title="مش عندي">' +
-                  '<i data-lucide="x"></i>' +
-                '</button>' +
-              '</div>' +
-            '</td>' +
-            '<td><input type="number" class="qty-input" min="0" step="1" placeholder="' + (availability === 'available' ? it.requested_qty : (availability === 'unavailable' ? '0' : '')) + '" value="' + (supplierQty !== '' && supplierQty != null ? supplierQty : '') + '" data-idx="' + i + '" data-field="qty" ' + (availability === 'available' || isUnavailable ? '' : '') + '></td>' +
-            '<td><input type="number" class="bonus-input" min="0" step="1" placeholder="0" value="' + (supplierBonus || '') + '" data-idx="' + i + '" data-field="bonus" ' + (isUnavailable ? 'disabled' : '') + '></td>' +
-            '<td><input type="number" class="price-input" min="0" step="0.01" placeholder="0.00" value="' + (supplierPrice || '') + '" data-idx="' + i + '" data-field="price" ' + (isUnavailable ? 'disabled' : '') + '></td>' +
-            '<td><input type="number" class="discount-input" min="0" max="100" step="0.1" placeholder="0" value="' + (supplierDiscount || '') + '" data-idx="' + i + '" data-field="discount" ' + (isUnavailable ? 'disabled' : '') + '></td>' +
-            '<td class="total-cell" data-total="' + i + '">—</td>' +
-          '</tr>';
-        }).join('');
-
-        if (window.lucide) lucide.createIcons();
-        attachItemEvents();
-        applyUnavailableVisuals();
-        updateAllRowTotals();
-      }
-
-      function parseLegacyOffer(notes) {
-        try {
-          const parsed = JSON.parse(notes || '{}');
+        state.company = company;
+        state.supplier = supplier;
+        state.items = (items || []).filter(function (it) { return it.products; }).map(function (it) {
           return {
-            supplier_price: Number.isFinite(Number(parsed.supplier_price)) ? Number(parsed.supplier_price) : null,
-            supplier_discount: Number.isFinite(Number(parsed.supplier_discount)) ? Number(parsed.supplier_discount) : null
-          };
-        } catch (e) {
-          return { supplier_price: null, supplier_discount: null };
-        }
-      }
-
-      // ============================================================
-      // 6) Availability handlers
-      // ============================================================
-      function getItemAvailability(i) {
-        const active = document.querySelector('.avail-btn.active[data-idx="' + i + '"]');
-        return active ? active.dataset.status : 'available';
-      }
-
-      function setAvailability(i, status) {
-        document.querySelectorAll('.avail-btn[data-idx="' + i + '"]').forEach(function (b) {
-          b.classList.toggle('active', b.dataset.status === status);
-        });
-
-        const row = document.querySelector('tr[data-idx="' + i + '"]');
-        if (!row) return;
-
-        row.classList.remove('row-available', 'row-partial', 'row-unavailable');
-        if (status === 'available') row.classList.add('row-available');
-        else if (status === 'partial') row.classList.add('row-partial');
-        else if (status === 'unavailable') row.classList.add('row-unavailable');
-
-        const qtyInput = row.querySelector('.qty-input');
-        const bonusInput = row.querySelector('.bonus-input');
-        const priceInput = row.querySelector('.price-input');
-        const discInput = row.querySelector('.discount-input');
-
-        const reqQty = toNum(state.items[i].requested_qty);
-
-        if (status === 'available') {
-          if (qtyInput) {
-            qtyInput.disabled = false;
-            qtyInput.value = reqQty;
-            qtyInput.placeholder = reqQty;
-          }
-          if (bonusInput) bonusInput.disabled = false;
-          if (priceInput) priceInput.disabled = false;
-          if (discInput) discInput.disabled = false;
-        } else if (status === 'partial') {
-          if (qtyInput) {
-            qtyInput.disabled = false;
-            if (!qtyInput.value || toNum(qtyInput.value) >= reqQty) {
-              qtyInput.value = '';
-            }
-            qtyInput.placeholder = 'أقل من ' + reqQty;
-          }
-          if (bonusInput) bonusInput.disabled = false;
-          if (priceInput) priceInput.disabled = false;
-          if (discInput) discInput.disabled = false;
-        } else if (status === 'unavailable') {
-          if (qtyInput) { qtyInput.disabled = true; qtyInput.value = 0; }
-          if (bonusInput) { bonusInput.disabled = true; bonusInput.value = 0; }
-          if (priceInput) { priceInput.disabled = true; priceInput.value = ''; }
-          if (discInput) { discInput.disabled = true; discInput.value = ''; }
-        }
-
-        applyUnavailableVisuals();
-        updateAllRowTotals();
-        updateSummaryAndProgress();
-        saveLocalDraft();
-      }
-
-      function applyUnavailableVisuals() {
-        state.items.forEach(function (it, i) {
-          const status = getItemAvailability(i);
-          const row = document.querySelector('tr[data-idx="' + i + '"]');
-          if (!row) return;
-
-          const qtyInput = row.querySelector('.qty-input');
-          const bonusInput = row.querySelector('.bonus-input');
-          const priceInput = row.querySelector('.price-input');
-          const discInput = row.querySelector('.discount-input');
-
-          // Adjust placeholders dynamically
-          if (status === 'available' && qtyInput) {
-            qtyInput.placeholder = toNum(it.requested_qty);
-          } else if (status === 'partial' && qtyInput) {
-            qtyInput.placeholder = 'أقل من ' + toNum(it.requested_qty);
-          }
-          if (status === 'unavailable') {
-            if (qtyInput) qtyInput.placeholder = '0';
-            if (bonusInput) bonusInput.placeholder = '0';
-          } else {
-            if (bonusInput) bonusInput.placeholder = '0';
-          }
-        });
-      }
-
-      // ============================================================
-      // 7) Item Events & Totals
-      // ============================================================
-      function attachItemEvents() {
-        // Availability buttons
-        document.querySelectorAll('.avail-btn').forEach(function (btn) {
-          btn.addEventListener('click', function () {
-            const idx = parseInt(btn.dataset.idx, 10);
-            setAvailability(idx, btn.dataset.status);
-          });
-        });
-
-        // Inputs
-        document.querySelectorAll('.price-input, .discount-input, .qty-input, .bonus-input').forEach(function (inp) {
-          inp.addEventListener('input', function () {
-            updateAllRowTotals();
-            updateSummaryAndProgress();
-            saveLocalDraft();
-          });
-          inp.addEventListener('keydown', function (e) {
-            if (e.key === 'Enter') {
-              e.preventDefault();
-              const inputs = Array.from(document.querySelectorAll('.price-input, .discount-input, .qty-input, .bonus-input')).filter(function (i) { return !i.disabled; });
-              const idx = inputs.indexOf(inp);
-              if (idx >= 0 && idx < inputs.length - 1) {
-                inputs[idx + 1].focus();
-              } else {
-                saveChanges();
-              }
-            }
-          });
-          inp.addEventListener('focus', function () { inp.select(); });
-        });
-      }
-
-      function updateAllRowTotals() {
-        state.items.forEach(function (it, i) {
-          const row = document.querySelector('tr[data-idx="' + i + '"]');
-          if (!row) return;
-
-          const priceInput = row.querySelector('.price-input');
-          const discInput = row.querySelector('.discount-input');
-          const qtyInput = row.querySelector('.qty-input');
-
-          const status = getItemAvailability(i);
-          const price = priceInput && priceInput.value.trim() !== '' ? toNum(priceInput.value) : 0;
-          const discount = discInput && discInput.value.trim() !== '' ? toNum(discInput.value) : 0;
-
-          let qty = 0;
-          if (status === 'available') {
-            qty = toNum(it.requested_qty);
-          } else if (status === 'partial') {
-            qty = qtyInput && qtyInput.value.trim() !== '' ? toNum(qtyInput.value) : 0;
-          } else if (status === 'unavailable') {
-            qty = 0;
-          }
-
-          const total = price * qty * (1 - discount / 100);
-          const totalEl = row.querySelector('[data-total="' + i + '"]');
-          if (totalEl) {
-            totalEl.textContent = total > 0 ? fmtMoney(total) : '—';
-          }
-        });
-      }
-
-      function updateSummaryAndProgress() {
-        let available = 0, partial = 0, unavailable = 0;
-        let totalValue = 0;
-        let totalBonus = 0;
-
-        state.items.forEach(function (it, i) {
-          const row = document.querySelector('tr[data-idx="' + i + '"]');
-          if (!row) return;
-
-          const status = getItemAvailability(i);
-          if (status === 'available') available++;
-          else if (status === 'partial') partial++;
-          else if (status === 'unavailable') unavailable++;
-
-          const priceInput = row.querySelector('.price-input');
-          const discInput = row.querySelector('.discount-input');
-          const qtyInput = row.querySelector('.qty-input');
-          const bonusInput = row.querySelector('.bonus-input');
-
-          const price = priceInput && priceInput.value.trim() !== '' ? toNum(priceInput.value) : 0;
-          const discount = discInput && discInput.value.trim() !== '' ? toNum(discInput.value) : 0;
-          const bonus = bonusInput && bonusInput.value.trim() !== '' ? toNum(bonusInput.value) : 0;
-
-          let qty = 0;
-          if (status === 'available') qty = toNum(it.requested_qty);
-          else if (status === 'partial') qty = qtyInput && qtyInput.value.trim() !== '' ? toNum(qtyInput.value) : 0;
-
-          totalValue += price * qty * (1 - discount / 100);
-          totalBonus += bonus;
-        });
-
-        const responded = available + partial + unavailable;
-        const pct = state.items.length ? Math.round((responded / state.items.length) * 100) : 0;
-
-        document.getElementById('sumItems').textContent = fmtNumber(state.items.length);
-        document.getElementById('sumAvailable').textContent = fmtNumber(available);
-        document.getElementById('sumPartial').textContent = fmtNumber(partial);
-        document.getElementById('sumUnavailable').textContent = fmtNumber(unavailable);
-        document.getElementById('sumBonus').textContent = fmtNumber(totalBonus);
-        document.getElementById('sumValue').textContent = totalValue > 0 ? fmtMoney(totalValue) : '—';
-        document.getElementById('sumAvailableSub').textContent = pct > 0 ? Math.round((available / state.items.length) * 100) + '%' : 'صنف';
-        document.getElementById('sumPartialSub').textContent = pct > 0 ? Math.round((partial / state.items.length) * 100) + '%' : 'صنف';
-        document.getElementById('sumUnavailableSub').textContent = pct > 0 ? Math.round((unavailable / state.items.length) * 100) + '%' : 'صنف';
-        document.getElementById('progressPct').textContent = pct + '%';
-        document.getElementById('progressFill').style.width = pct + '%';
-      }
-
-      // ============================================================
-      // 8) Quick Actions
-      // ============================================================
-      function applyDefaultPrice() {
-        let count = 0;
-        state.items.forEach(function (it, i) {
-          const row = document.querySelector('tr[data-idx="' + i + '"]');
-          if (!row) return;
-          const priceInput = row.querySelector('.price-input');
-          if (priceInput && !priceInput.disabled && !priceInput.value.trim()) {
-            const defaultPrice = (it.products && it.products.default_price) || it.supplier_price || 0;
-            if (defaultPrice > 0) {
-              priceInput.value = defaultPrice;
-              count++;
-            }
-          }
-        });
-        updateAllRowTotals();
-        updateSummaryAndProgress();
-        saveLocalDraft();
-        if (count > 0) Refad.toast.success('تم تطبيق السعر الافتراضي على ' + count + ' صنف');
-        else Refad.toast.info('كل الأصناف لديها أسعار');
-      }
-
-      function applyBulkDiscount() {
-        const input = document.getElementById('bulkDiscountInput');
-        const value = toNum(input.value);
-        if (value < 0 || value > 100) {
-          Refad.toast.warning('الخصم يجب أن يكون من 0 إلى 100');
-          return;
-        }
-        if (!state.items.length) return;
-
-        let count = 0;
-        state.items.forEach(function (it, i) {
-          const row = document.querySelector('tr[data-idx="' + i + '"]');
-          if (!row) return;
-          const discInput = row.querySelector('.discount-input');
-          if (discInput && !discInput.disabled) {
-            discInput.value = value;
-            count++;
-          }
-        });
-        updateAllRowTotals();
-        updateSummaryAndProgress();
-        saveLocalDraft();
-        Refad.toast.success('تم تطبيق خصم ' + value + '% على ' + count + ' صنف');
-      }
-
-      function markAllAvailable() {
-        if (!state.items.length) return;
-        state.items.forEach(function (it, i) { setAvailability(i, 'available'); });
-        Refad.toast.success('تم تعليم كل الأصناف كمتوفرة');
-      }
-
-      function markAllUnavailable() {
-        if (!state.items.length) return;
-        Refad.alert.confirm('تعليم الكل كغير متوفر', 'هل أنت متأكد أنك لا تملك أي من هذه الأصناف؟', 'تأكيد').then(function (ok) {
-          if (!ok) return;
-          state.items.forEach(function (it, i) { setAvailability(i, 'unavailable'); });
-          Refad.toast.success('تم تعليم كل الأصناف كغير متوفرة');
-        });
-      }
-
-      function clearAllInputs() {
-        if (!state.items.length) return;
-        state.items.forEach(function (it, i) {
-          setAvailability(i, 'available');
-          const row = document.querySelector('tr[data-idx="' + i + '"]');
-          if (!row) return;
-          const qtyInput = row.querySelector('.qty-input');
-          const bonusInput = row.querySelector('.bonus-input');
-          const priceInput = row.querySelector('.price-input');
-          const discInput = row.querySelector('.discount-input');
-          if (qtyInput) qtyInput.value = toNum(it.requested_qty);
-          if (bonusInput) bonusInput.value = '';
-          if (priceInput) priceInput.value = '';
-          if (discInput) discInput.value = '';
-        });
-        document.getElementById('bulkDiscountInput').value = '';
-        updateAllRowTotals();
-        updateSummaryAndProgress();
-        clearLocalDraft();
-        Refad.toast.info('تم المسح');
-      }
-
-      // ============================================================
-      // 9) Local Draft (Auto Save)
-      // ============================================================
-      function saveLocalDraft() {
-        try {
-          const data = state.items.map(function (it, i) {
-            const row = document.querySelector('tr[data-idx="' + i + '"]');
-            if (!row) return { id: it.id, status: 'available', qty: '', bonus: '', price: '', discount: '' };
-            return {
-              id: it.id,
-              status: getItemAvailability(i),
-              qty: (row.querySelector('.qty-input') || {}).value || '',
-              bonus: (row.querySelector('.bonus-input') || {}).value || '',
-              price: (row.querySelector('.price-input') || {}).value || '',
-              discount: (row.querySelector('.discount-input') || {}).value || ''
-            };
-          });
-          localStorage.setItem(AUTO_SAVE_KEY + '_' + state.token, JSON.stringify({
-            at: Date.now(),
-            data: data
-          }));
-        } catch (e) {
-          console.warn('Local save failed:', e);
-        }
-      }
-
-      function restoreLocalDraft() {
-        try {
-          const raw = localStorage.getItem(AUTO_SAVE_KEY + '_' + state.token);
-          if (!raw) return;
-          const parsed = JSON.parse(raw);
-          if (!parsed || !Array.isArray(parsed.data)) return;
-          if (Date.now() - parsed.at > 7 * 24 * 60 * 60 * 1000) return;
-
-          parsed.data.forEach(function (d) {
-            const idx = state.items.findIndex(function (x) { return x.id === d.id; });
-            if (idx < 0) return;
-            const row = document.querySelector('tr[data-idx="' + idx + '"]');
-            if (!row) return;
-
-            if (d.status) setAvailability(idx, d.status);
-
-            const qtyInput = row.querySelector('.qty-input');
-            const bonusInput = row.querySelector('.bonus-input');
-            const priceInput = row.querySelector('.price-input');
-            const discInput = row.querySelector('.discount-input');
-
-            if (qtyInput && d.qty) qtyInput.value = d.qty;
-            if (bonusInput && d.bonus) bonusInput.value = d.bonus;
-            if (priceInput && d.price) priceInput.value = d.price;
-            if (discInput && d.discount) discInput.value = d.discount;
-          });
-
-          updateAllRowTotals();
-          updateSummaryAndProgress();
-          console.log('[Shared] Local draft restored');
-        } catch (e) {
-          console.warn('Local restore failed:', e);
-        }
-      }
-
-      function clearLocalDraft() {
-        try {
-          localStorage.removeItem(AUTO_SAVE_KEY + '_' + state.token);
-        } catch (e) {}
-      }
-
-      // ============================================================
-      // 10) Save Changes
-      // ============================================================
-      async function saveChanges() {
-        const updates = [];
-        let invalidInput = false;
-
-        state.items.forEach(function (it, i) {
-          const row = document.querySelector('tr[data-idx="' + i + '"]');
-          if (!row) return;
-
-          const status = getItemAvailability(i);
-          const priceInput = row.querySelector('.price-input');
-          const discInput = row.querySelector('.discount-input');
-          const qtyInput = row.querySelector('.qty-input');
-          const bonusInput = row.querySelector('.bonus-input');
-
-          const price = priceInput && priceInput.value.trim() !== '' ? toNum(priceInput.value) : null;
-          const discount = discInput && discInput.value.trim() !== '' ? toNum(discInput.value) : null;
-          const bonus = bonusInput && bonusInput.value.trim() !== '' ? toNum(bonusInput.value) : 0;
-
-          let qty = null;
-          if (status === 'available') qty = toNum(it.requested_qty);
-          else if (status === 'partial') qty = qtyInput && qtyInput.value.trim() !== '' ? toNum(qtyInput.value) : null;
-          else if (status === 'unavailable') qty = 0;
-
-          // Validation
-          if (price !== null && (price < 0 || !Number.isFinite(price))) { invalidInput = true; row.classList.add('row-error'); return; }
-          if (discount !== null && (discount < 0 || discount > 100 || !Number.isFinite(discount))) { invalidInput = true; row.classList.add('row-error'); return; }
-          if (status === 'partial' && (qty === null || qty < 0 || qty >= toNum(it.requested_qty))) {
-            // Allow partial to be < requested_qty
-            if (qty === null) { invalidInput = true; row.classList.add('row-error'); return; }
-          }
-          row.classList.remove('row-error');
-
-          updates.push({
             id: it.id,
             product_id: it.product_id,
-            status: status,
-            qty: qty,
-            bonus: bonus,
-            price: price,
-            discount: discount
-          });
-        });
-
-        if (invalidInput) {
-          Refad.toast.warning('راجع القيم؛ الخصم 0-100، الكمية الجزئية أقل من المطلوبة');
-          return;
-        }
-
-        if (!updates.length) {
-          Refad.toast.warning('لم تقم بإدخال أي تعديلات');
-          return;
-        }
-
-        const btn = document.getElementById('saveBtn');
-        const originalText = document.getElementById('saveBtnText').textContent;
-        btn.disabled = true;
-        document.getElementById('saveBtnText').textContent = 'جارٍ الحفظ...';
-
-        try {
-          const submittedAt = new Date().toISOString();
-          const historyRows = [];
-
-          for (const u of updates) {
-            const item = state.items.find(function (x) { return x.id === u.id; });
-            if (!item) continue;
-
-            const updatePayload = {
-              supplier_price: u.price,
-              supplier_discount: u.discount,
-              supplier_qty: u.qty,
-              supplier_bonus_qty: u.bonus || 0,
-              supplier_availability: u.status,
-              supplier_response_at: submittedAt
-            };
-
-            await Refad.db.update('purchase_request_items', u.id, updatePayload);
-
-            Object.assign(item, updatePayload);
-
-            historyRows.push({
-              request_id: state.request.id,
-              product_id: u.product_id,
-              supplier_id: state.request.supplier_id || null,
-              supplier_price: u.price,
-              supplier_discount: u.discount,
-              supplier_qty: u.qty,
-              supplier_bonus_qty: u.bonus || 0,
-              availability: u.status,
-              submitted_at: submittedAt
-            });
-          }
-
-          if (historyRows.length) {
-            try {
-              if (Refad.db.insertMany) {
-                await Refad.db.insertMany('purchase_request_responses', historyRows);
-              } else {
-                for (const row of historyRows) {
-                  await Refad.db.insert('purchase_request_responses', row).catch(function (err) {
-                    console.warn('History insert failed:', err);
-                  });
-                }
-              }
-            } catch (e) {
-              console.warn('History batch insert failed:', e);
-            }
-          }
-
-          // Notification
-          try {
-            const stats = buildResponseStats(updates);
-            const summary = 'متوفر: ' + stats.available + ' • جزئي: ' + stats.partial + ' • غير متوفر: ' + stats.unavailable + ' • بونص: ' + stats.bonus + ' وحدة';
-
-            await Refad.notifyCompany(
-              state.request.company_id,
-              'وصل رد المورد على طلب شراء',
-              summary + ' — طلب ' + state.request.request_number,
-              'purchase',
-              state.request.id
-            );
-          } catch (notificationError) {
-            console.error('[Shared] Notification failed:', notificationError);
-            Refad.toast.warning('تم حفظ ردك، لكن تعذّر إرسال إشعار للشركة');
-          }
-
-          clearLocalDraft();
-          renderItems();
-          updateSummaryAndProgress();
-
-          Refad.toast.success('تم حفظ ردك بنجاح');
-
-          btn.disabled = false;
-          document.getElementById('saveBtnText').textContent = originalText;
-
-          setTimeout(function () {
-            Refad.alert.success(
-              'شكراً لك 🙏',
-              'تم استلام ردك على الطلب. سيتواصل معك فريق الشركة قريباً.'
-            );
-          }, 400);
-
-        } catch (err) {
-          console.error('[Shared] save failed:', err);
-          Refad.toast.error('فشل الحفظ: ' + err.message);
-          btn.disabled = false;
-          document.getElementById('saveBtnText').textContent = originalText;
-        }
-      }
-
-      function buildResponseStats(updates) {
-        let available = 0, partial = 0, unavailable = 0, bonus = 0;
-        updates.forEach(function (u) {
-          if (u.status === 'available') available++;
-          else if (u.status === 'partial') partial++;
-          else if (u.status === 'unavailable') unavailable++;
-          bonus += toNum(u.bonus);
-        });
-        return { available: available, partial: partial, unavailable: unavailable, bonus: bonus };
-      }
-
-      // ============================================================
-      // 11) Export Excel
-      // ============================================================
-      function exportExcel() {
-        if (!state.items.length) return;
-        const rows = state.items.map(function (it, i) {
-          const row = document.querySelector('tr[data-idx="' + i + '"]');
-          if (!row) return null;
-
-          const status = getItemAvailability(i);
-          const priceInput = row.querySelector('.price-input');
-          const discInput = row.querySelector('.discount-input');
-          const qtyInput = row.querySelector('.qty-input');
-          const bonusInput = row.querySelector('.bonus-input');
-
-          const price = priceInput && priceInput.value.trim() !== '' ? toNum(priceInput.value) : 0;
-          const discount = discInput && discInput.value.trim() !== '' ? toNum(discInput.value) : 0;
-          const bonus = bonusInput && bonusInput.value.trim() !== '' ? toNum(bonusInput.value) : 0;
-
-          let qty = 0;
-          if (status === 'available') qty = toNum(it.requested_qty);
-          else if (status === 'partial') qty = qtyInput && qtyInput.value.trim() !== '' ? toNum(qtyInput.value) : 0;
-
-          const total = price * qty * (1 - discount / 100);
-          const statusLabels = { available: 'متوفر', partial: 'جزئي', unavailable: 'غير متوفر' };
-
-          return {
-            '#': i + 1,
-            'الصنف': it.products.name,
-            'الوحدة': it.products.unit || '',
-            'الكمية المطلوبة': it.requested_qty,
-            'آخر خصم %': it.last_discount || 0,
-            'الخصم المطلوب %': it.requested_discount || 0,
-            'الحالة': statusLabels[status] || status,
-            'الكمية المتاحة': qty,
-            'البونص': bonus,
-            'سعر الوحدة': price,
-            'الخصم %': discount,
-            'الإجمالي': total
+            product: it.products,
+            requested_qty: toNum(it.requested_qty),
+            requested_discount: toNum(it.requested_discount),
+            supplier_price: it.supplier_price,
+            supplier_discount: it.supplier_discount,
+            supplier_qty: it.supplier_qty,
+            supplier_bonus_qty: toNum(it.supplier_bonus_qty),
+            supplier_availability: it.supplier_availability || 'pending',
+            supplier_notes: it.supplier_notes || '',
+            supplier_response_at: it.supplier_response_at
           };
-        }).filter(Boolean);
-
-        const ws = XLSX.utils.json_to_sheet(rows);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'Request');
-        XLSX.writeFile(wb, 'رد-مورد-' + state.request.request_number + '.xlsx');
-        Refad.toast.success('تم التصدير');
-      }
-
-      // ============================================================
-      // 12) Print
-      // ============================================================
-      function printRequest() {
-        if (!state.items.length) return;
-        const co = state.company;
-        const r = state.request;
-
-        const statusLabels = { available: 'متوفر', partial: 'جزئي', unavailable: 'غير متوفر' };
-
-        const w = window.open('', '_blank');
-        w.document.write(
-          '<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8">' +
-          '<title>رد مورد - طلب ' + esc(r.request_number) + '</title>' +
-          '<style>' +
-            'body { font-family: Cairo, Arial; padding: 30px; color: #0f172a; }' +
-            'h1 { color: #0B2C4D; margin-bottom: 4px; font-size: 22px; }' +
-            '.sub { color: #64748b; font-size: 13px; margin-bottom: 20px; }' +
-            '.info { display: flex; gap: 30px; margin-bottom: 20px; flex-wrap: wrap; }' +
-            '.info div { font-size: 13px; }' +
-            '.info strong { color: #0B2C4D; }' +
-            'table { width: 100%; border-collapse: collapse; font-size: 11px; }' +
-            'th, td { border: 1px solid #cbd5e1; padding: 6px 8px; text-align: right; }' +
-            'th { background: #F1F5F9; font-weight: 700; font-size: 10px; }' +
-            '.ok { color: #10b981; font-weight: 700; }' +
-            '.warn { color: #f59e0b; font-weight: 700; }' +
-            '.bad { color: #ef4444; font-weight: 700; }' +
-            '.bonus { color: #8b5cf6; font-weight: 700; }' +
-            '.footer { margin-top: 30px; text-align: center; font-size: 11px; color: #94a3b8; }' +
-          '</style></head><body>' +
-          '<h1>' + esc((co && co.name) || 'طلب شراء') + '</h1>' +
-          '<div class="sub">رد المورد على طلب شراء رقم ' + esc(r.request_number) + ' - ' + Refad.format.date(new Date()) + '</div>' +
-          '<div class="info">' +
-            '<div><strong>المورد:</strong> ' + esc((state.supplier && state.supplier.name) || '—') + '</div>' +
-            '<div><strong>الهاتف:</strong> ' + esc((state.supplier && state.supplier.phone) || '—') + '</div>' +
-            (state.warehouse ? '<div><strong>المخزن:</strong> ' + esc(state.warehouse.name) + '</div>' : '') +
-          '</div>' +
-          '<table><thead><tr>' +
-            '<th>#</th><th>الصنف</th><th>الوحدة</th><th>مطلوب</th><th>آخر خصم</th><th>خصم مطلوب</th><th>الحالة</th><th>متاح</th><th>بونص</th><th>سعر</th><th>خصم</th><th>الإجمالي</th>' +
-          '</tr></thead><tbody>' +
-            state.items.map(function (it, i) {
-              const row = document.querySelector('tr[data-idx="' + i + '"]');
-              if (!row) return '';
-              const status = getItemAvailability(i);
-              const priceInput = row.querySelector('.price-input');
-              const discInput = row.querySelector('.discount-input');
-              const qtyInput = row.querySelector('.qty-input');
-              const bonusInput = row.querySelector('.bonus-input');
-
-              const price = priceInput && priceInput.value.trim() !== '' ? toNum(priceInput.value) : 0;
-              const discount = discInput && discInput.value.trim() !== '' ? toNum(discInput.value) : 0;
-              const bonus = bonusInput && bonusInput.value.trim() !== '' ? toNum(bonusInput.value) : 0;
-
-              let qty = 0;
-              if (status === 'available') qty = toNum(it.requested_qty);
-              else if (status === 'partial') qty = qtyInput && qtyInput.value.trim() !== '' ? toNum(qtyInput.value) : 0;
-
-              const total = price * qty * (1 - discount / 100);
-
-              const statusCls = status === 'available' ? 'ok' : status === 'partial' ? 'warn' : 'bad';
-
-              return '<tr>' +
-                '<td>' + (i + 1) + '</td>' +
-                '<td>' + esc(it.products.name) + '</td>' +
-                '<td>' + esc(it.products.unit || '—') + '</td>' +
-                '<td>' + it.requested_qty + '</td>' +
-                '<td>' + Refad.format.number(it.last_discount || 0, 1) + '%</td>' +
-                '<td>' + Refad.format.number(it.requested_discount || 0, 1) + '%</td>' +
-                '<td class="' + statusCls + '">' + (statusLabels[status] || status) + '</td>' +
-                '<td>' + qty + '</td>' +
-                '<td class="bonus">' + (bonus > 0 ? bonus : '—') + '</td>' +
-                '<td>' + (price > 0 ? Refad.format.money(price) : '—') + '</td>' +
-                '<td>' + (discount > 0 ? Refad.format.number(discount, 1) + '%' : '—') + '</td>' +
-                '<td>' + (total > 0 ? Refad.format.money(total) : '—') + '</td>' +
-              '</tr>';
-            }).join('') +
-          '</tbody></table>' +
-          '<div class="footer">تم إنشاء الرد من نظام رفاد</div>' +
-          '<script>window.onload = function(){ setTimeout(function(){ window.print(); }, 300); };<\/script>' +
-          '</body></html>'
-        );
-        w.document.close();
-      }
-
-      // ============================================================
-      // 13) Events
-      // ============================================================
-      function bindEvents() {
-        document.getElementById('saveBtn').addEventListener('click', saveChanges);
-        document.getElementById('clearBtn').addEventListener('click', async function () {
-          const ok = await Refad.alert.confirm('مسح الكل', 'هل تريد مسح كل الأسعار والخصومات والردود؟', 'مسح');
-          if (ok) clearAllInputs();
-        });
-        document.getElementById('exportBtn').addEventListener('click', exportExcel);
-        document.getElementById('printBtn').addEventListener('click', printRequest);
-
-        document.getElementById('applyDefaultPriceBtn').addEventListener('click', applyDefaultPrice);
-        document.getElementById('applyBulkDiscountBtn').addEventListener('click', applyBulkDiscount);
-        document.getElementById('markAllAvailableBtn').addEventListener('click', markAllAvailable);
-        document.getElementById('markAllUnavailableBtn').addEventListener('click', markAllUnavailable);
-        document.getElementById('clearAllBtn').addEventListener('click', async function () {
-          const ok = await Refad.alert.confirm('مسح الكل', 'هل تريد مسح كل الأسعار والخصومات والردود؟', 'مسح');
-          if (ok) clearAllInputs();
         });
 
-        // Auto-save every 3s
-        setInterval(saveLocalDraft, 3000);
+        if (!state.items.length) {
+          showErrorState('package-x', 'لا توجد أصناف', 'هذا الطلب لا يحتوي على أصناف بعد. تواصل مع الشركة.');
+          return;
+        }
 
-        // Warn on leave if unsaved
-        window.addEventListener('beforeunload', function (e) {
-          const hasInput = state.items.some(function (it, i) {
-            const row = document.querySelector('tr[data-idx="' + i + '"]');
-            if (!row) return false;
-            const priceInput = row.querySelector('.price-input');
-            return priceInput && priceInput.value.trim() !== '';
-          });
-          if (hasInput) {
-            e.preventDefault();
-            e.returnValue = '';
+        renderRequestData();
+
+        document.getElementById('loaderState').style.display = 'none';
+        document.getElementById('contentArea').style.display = 'block';
+
+        if (window.lucide) lucide.createIcons();
+
+        console.log('[SharedRequest] Loaded request:', state.request.request_number, '-', state.items.length, 'items');
+
+      } catch (e) {
+        console.error('[SharedRequest] Load failed:', e);
+        showErrorState('alert-circle', 'فشل التحميل', 'تعذّر تحميل بيانات الطلب. حاول مرة أخرى.');
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // 6) Render Request Data
+    // ═══════════════════════════════════════════════════════════
+    function renderRequestData() {
+      const req = state.request;
+      const comp = state.company;
+      const supp = state.supplier;
+
+      document.getElementById('headerRequestNumber').textContent = req.request_number || '—';
+      document.getElementById('headerDate').textContent = req.created_at ? Refad.format.date(req.created_at) : Refad.format.date(getToday());
+
+      document.title = 'طلب ' + (req.request_number || '') + ' - رفاد';
+
+      document.getElementById('infoSupplierName').textContent = supp ? supp.name : '—';
+      document.getElementById('infoCompanyName').textContent = comp ? comp.name : '—';
+      document.getElementById('infoCompanyContact').textContent = comp ? (comp.phone || comp.email || '—') : '—';
+
+      // حساب التغطية من الأصناف (تقريبي - لو مش موجودة في الطلب)
+      const coverage = 30;
+      document.getElementById('infoCoverage').textContent = coverage + ' يوم';
+
+      document.getElementById('itemsCount').textContent = state.items.length + ' صنف';
+
+      renderItems();
+      updateProgress();
+      updateSummary();
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // 7) Render Items
+    // ═══════════════════════════════════════════════════════════
+    function renderItems() {
+      const tbody = document.getElementById('itemsBody');
+      if (!tbody) return;
+
+      tbody.innerHTML = state.items.map(function (it, idx) {
+        const total = calculateItemTotal(it);
+        const isAnswered = it.supplier_availability && it.supplier_availability !== 'pending';
+        let rowClass = '';
+        if (it.supplier_availability === 'available') rowClass = 'row-available';
+        else if (it.supplier_availability === 'partial') rowClass = 'row-partial';
+        else if (it.supplier_availability === 'unavailable') rowClass = 'row-unavailable';
+
+        return '<tr data-idx="' + idx + '" class="' + rowClass + '">' +
+          '<td style="color:var(--text-muted);font-weight:700;">' + (idx + 1) + '</td>' +
+
+          '<td>' +
+            '<div class="product-name-cell">' + esc(it.product.name) + '</div>' +
+            '<div class="product-sub">' + esc([it.product.form, it.product.unit].filter(Boolean).join(' • ') || '—') + '</div>' +
+          '</td>' +
+
+          '<td>' +
+            '<span class="req-qty-chip">' +
+              '<i data-lucide="package" style="width:11px;height:11px;"></i>' +
+              fmtNumber(it.requested_qty) +
+            '</span>' +
+          '</td>' +
+
+          '<td style="background:rgba(139,92,246,0.03);">' +
+            '<div class="availability-picker" data-idx="' + idx + '">' +
+              '<button type="button" class="avail-btn available ' + (it.supplier_availability === 'available' ? 'selected' : '') + '" data-avail="available" data-idx="' + idx + '">متوفر</button>' +
+              '<button type="button" class="avail-btn partial ' + (it.supplier_availability === 'partial' ? 'selected' : '') + '" data-avail="partial" data-idx="' + idx + '">جزئي</button>' +
+              '<button type="button" class="avail-btn unavailable ' + (it.supplier_availability === 'unavailable' ? 'selected' : '') + '" data-avail="unavailable" data-idx="' + idx + '">غير متوفر</button>' +
+            '</div>' +
+          '</td>' +
+
+          '<td style="background:rgba(245,158,11,0.03);">' +
+            '<input type="number" class="supplier-input qty" data-idx="' + idx + '" data-field="supplier_qty" value="' + (it.supplier_qty != null ? it.supplier_qty : '') + '" min="0" step="1" placeholder="—">' +
+          '</td>' +
+
+          '<td style="background:rgba(139,92,246,0.03);">' +
+            '<input type="number" class="supplier-input bonus" data-idx="' + idx + '" data-field="supplier_bonus_qty" value="' + (it.supplier_bonus_qty > 0 ? it.supplier_bonus_qty : '') + '" min="0" step="1" placeholder="0">' +
+          '</td>' +
+
+          '<td style="background:rgba(20,184,166,0.03);">' +
+            '<input type="number" class="supplier-input price" data-idx="' + idx + '" data-field="supplier_price" value="' + (it.supplier_price != null ? it.supplier_price : '') + '" min="0" step="0.01" placeholder="0.00">' +
+          '</td>' +
+
+          '<td style="background:rgba(20,184,166,0.03);">' +
+            '<input type="number" class="supplier-input discount" data-idx="' + idx + '" data-field="supplier_discount" value="' + (it.supplier_discount != null ? it.supplier_discount : '') + '" min="0" max="100" step="0.1" placeholder="0">' +
+          '</td>' +
+
+          '<td style="background:rgba(20,184,166,0.03);">' +
+            '<span class="item-total ' + (total > 0 ? '' : 'muted') + '" data-total-idx="' + idx + '">' +
+              (total > 0 ? fmtMoney(total) : '—') +
+            '</span>' +
+          '</td>' +
+
+          '<td>' +
+            '<textarea class="notes-input" data-idx="' + idx + '" data-field="supplier_notes" placeholder="ملاحظات (اختياري)">' + esc(it.supplier_notes || '') + '</textarea>' +
+          '</td>' +
+        '</tr>';
+      }).join('');
+
+      if (window.lucide) lucide.createIcons();
+      attachItemEvents();
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // 8) Attach Item Events
+    // ═══════════════════════════════════════════════════════════
+    function attachItemEvents() {
+      const tbody = document.getElementById('itemsBody');
+      if (!tbody) return;
+
+      // Availability buttons
+      tbody.querySelectorAll('.avail-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          const idx = parseInt(btn.dataset.idx, 10);
+          const avail = btn.dataset.avail;
+          setAvailability(idx, avail);
+        });
+      });
+
+      // Input fields
+      tbody.querySelectorAll('.supplier-input, .notes-input').forEach(function (inp) {
+        inp.addEventListener('input', function (e) {
+          const idx = parseInt(e.target.dataset.idx, 10);
+          const field = e.target.dataset.field;
+          const item = state.items[idx];
+          if (!item) return;
+
+          if (field === 'supplier_qty') {
+            const v = e.target.value.trim();
+            item.supplier_qty = v === '' ? null : Math.max(0, parseInt(v, 10) || 0);
+            // auto availability
+            autoSetAvailability(idx);
+          } else if (field === 'supplier_bonus_qty') {
+            const v = e.target.value.trim();
+            item.supplier_bonus_qty = v === '' ? 0 : Math.max(0, parseInt(v, 10) || 0);
+          } else if (field === 'supplier_price') {
+            const v = e.target.value.trim();
+            item.supplier_price = v === '' ? null : Math.max(0, toNum(v));
+          } else if (field === 'supplier_discount') {
+            const v = e.target.value.trim();
+            item.supplier_discount = v === '' ? null : Math.max(0, Math.min(100, toNum(v)));
+          } else if (field === 'supplier_notes') {
+            item.supplier_notes = e.target.value;
           }
+
+          updateItemTotal(idx);
+          updateProgress();
+          updateSummary();
         });
+      });
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // 9) Set Availability
+    // ═══════════════════════════════════════════════════════════
+    function setAvailability(idx, avail) {
+      const item = state.items[idx];
+      if (!item) return;
+      item.supplier_availability = avail;
+
+      // إذا كان "متوفر" → اقترح الكمية المطلوبة
+      if (avail === 'available') {
+        if (item.supplier_qty == null || item.supplier_qty === 0) {
+          item.supplier_qty = item.requested_qty;
+        }
+      } else if (avail === 'unavailable') {
+        item.supplier_qty = 0;
+      }
+      // "partial" → المستخدم يحدد بنفسه
+
+      // Re-render row UI
+      updateItemRowUI(idx);
+      updateProgress();
+      updateSummary();
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // 10) Auto Availability من الكمية
+    // ═══════════════════════════════════════════════════════════
+    function autoSetAvailability(idx) {
+      const item = state.items[idx];
+      if (!item) return;
+
+      const qty = item.supplier_qty;
+      if (qty == null) {
+        item.supplier_availability = 'pending';
+      } else if (qty === 0) {
+        item.supplier_availability = 'unavailable';
+      } else if (qty >= item.requested_qty) {
+        item.supplier_availability = 'available';
+      } else {
+        item.supplier_availability = 'partial';
       }
 
-      // ============================================================
-      // 14) Init
-      // ============================================================
-      async function init() {
-        document.getElementById('footerYear').textContent = new Date().getFullYear();
+      updateItemRowUI(idx);
+    }
 
-        await loadRequest();
-        bindEvents();
+    // ═══════════════════════════════════════════════════════════
+    // 11) Update Item Row UI
+    // ═══════════════════════════════════════════════════════════
+    function updateItemRowUI(idx) {
+      const item = state.items[idx];
+      const row = document.querySelector('tr[data-idx="' + idx + '"]');
+      if (!row || !item) return;
 
-        if (Refad.theme && Refad.theme.init) {
-          try { Refad.theme.init(); } catch (e) {}
+      // Update availability buttons
+      row.querySelectorAll('.avail-btn').forEach(function (btn) {
+        btn.classList.toggle('selected', btn.dataset.avail === item.supplier_availability);
+      });
+
+      // Update row class
+      row.classList.remove('row-available', 'row-partial', 'row-unavailable');
+      if (item.supplier_availability === 'available') row.classList.add('row-available');
+      else if (item.supplier_availability === 'partial') row.classList.add('row-partial');
+      else if (item.supplier_availability === 'unavailable') row.classList.add('row-unavailable');
+
+      // Update qty input if set by availability button
+      const qtyInput = row.querySelector('.supplier-input.qty');
+      if (qtyInput && item.supplier_qty != null) {
+        const currentVal = qtyInput.value.trim();
+        if (currentVal !== String(item.supplier_qty)) {
+          qtyInput.value = item.supplier_qty;
         }
       }
 
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
-      } else {
-        init();
+      updateItemTotal(idx);
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // 12) Calculate Item Total
+    // ═══════════════════════════════════════════════════════════
+    function calculateItemTotal(item) {
+      const qty = toNum(item.supplier_qty);
+      const price = toNum(item.supplier_price);
+      const discount = toNum(item.supplier_discount);
+      if (qty <= 0 || price <= 0) return 0;
+      return price * qty * (1 - discount / 100);
+    }
+
+    function updateItemTotal(idx) {
+      const item = state.items[idx];
+      if (!item) return;
+      const total = calculateItemTotal(item);
+      const el = document.querySelector('[data-total-idx="' + idx + '"]');
+      if (el) {
+        el.textContent = total > 0 ? fmtMoney(total) : '—';
+        el.classList.toggle('muted', total <= 0);
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // 13) Update Progress
+    // ═══════════════════════════════════════════════════════════
+    function updateProgress() {
+      const items = state.items;
+      const total = items.length;
+      let answered = 0;
+      let available = 0;
+      let partial = 0;
+      let unavailable = 0;
+      let pending = 0;
+
+      items.forEach(function (it) {
+        if (it.supplier_availability === 'available') { available++; answered++; }
+        else if (it.supplier_availability === 'partial') { partial++; answered++; }
+        else if (it.supplier_availability === 'unavailable') { unavailable++; answered++; }
+        else pending++;
+      });
+
+      document.getElementById('countPending').textContent = pending;
+      document.getElementById('countAvailable').textContent = available;
+      document.getElementById('countPartial').textContent = partial;
+      document.getElementById('countUnavailable').textContent = unavailable;
+
+      const pct = total > 0 ? Math.round((answered / total) * 100) : 0;
+      document.getElementById('progressBarFill').style.width = pct + '%';
+
+      let text = '';
+      if (answered === 0) text = 'لم تبدأ بعد — يرجى الرد على الأصناف';
+      else if (answered === total) text = 'اكتمل — جاهز للإرسال ✅';
+      else text = 'تم الرد على ' + answered + ' من ' + total + ' صنف (' + pct + '%)';
+
+      document.getElementById('progressText').textContent = text;
+
+      document.getElementById('miniCount').textContent = answered + ' / ' + total;
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // 14) Update Summary
+    // ═══════════════════════════════════════════════════════════
+    function updateSummary() {
+      const items = state.items;
+      const totalQty = items.reduce(function (s, it) { return s + toNum(it.supplier_qty); }, 0);
+      const totalBonus = items.reduce(function (s, it) { return s + toNum(it.supplier_bonus_qty); }, 0);
+      const totalValue = items.reduce(function (s, it) { return s + calculateItemTotal(it); }, 0);
+
+      document.getElementById('sumItems').textContent = fmtNumber(items.length);
+      document.getElementById('sumQty').textContent = fmtNumber(totalQty);
+      document.getElementById('sumBonus').textContent = fmtNumber(totalBonus);
+      document.getElementById('sumValue').textContent = fmtMoney(totalValue);
+      document.getElementById('miniTotal').textContent = fmtMoney(totalValue);
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // 15) Fill All Available (Quick Fill)
+    // ═══════════════════════════════════════════════════════════
+    async function fillAllAvailable() {
+      const ok = await Refad.alert.confirm(
+        'تعبئة سريعة',
+        'سيتم تعبئة كل الأصناف بالكمية المطلوبة كـ "متوفر". يمكنك تعديل أي صنف بعد ذلك.\n\nمتابعة؟',
+        'تعبئة'
+      );
+      if (!ok) return;
+
+      state.items.forEach(function (it, idx) {
+        it.supplier_availability = 'available';
+        it.supplier_qty = it.requested_qty;
+        updateItemRowUI(idx);
+      });
+
+      // Update qty input values
+      document.querySelectorAll('.supplier-input.qty').forEach(function (inp) {
+        const idx = parseInt(inp.dataset.idx, 10);
+        inp.value = state.items[idx].supplier_qty;
+      });
+
+      updateProgress();
+      updateSummary();
+      Refad.toast.success('تم التعبئة السريعة — عدّل الأسعار والخصومات');
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // 16) Save Response
+    // ═══════════════════════════════════════════════════════════
+    async function saveResponse() {
+      if (state.isSubmitting) return;
+      if (state.isReadOnly) { Refad.toast.warning('تم إرسال الرد مسبقاً'); return; }
+
+      // Validation: لازم كل صنف يكون مردود عليه
+      const pendingItems = state.items.filter(function (it) {
+        return !it.supplier_availability || it.supplier_availability === 'pending';
+      });
+
+      if (pendingItems.length > 0) {
+        const ok = await Refad.alert.confirm(
+          'تأكيد',
+          'هناك ' + pendingItems.length + ' صنف لم يتم الرد عليه. سيتم حفظ الأصناف المُجابة فقط.\n\nمتابعة؟',
+          'متابعة'
+        );
+        if (!ok) return;
       }
 
-      console.log('%c[Refad] Shared Request v3 ready (Availability + Bonus + Partial Qty)', 'color:#14B8A6;font-weight:bold');
-    })();
-  </script>
+      // Validation: على الأقل صنف واحد مردود عليه
+      const answeredItems = state.items.filter(function (it) {
+        return it.supplier_availability && it.supplier_availability !== 'pending';
+      });
+
+      if (answeredItems.length === 0) {
+        Refad.toast.warning('يجب الرد على صنف واحد على الأقل');
+        return;
+      }
+
+      // Validation: السعر لازم يكون موجود للأصناف المتوفرة/الجزئية
+      const missingPrices = answeredItems.filter(function (it) {
+        return (it.supplier_availability === 'available' || it.supplier_availability === 'partial') &&
+               (!it.supplier_price || toNum(it.supplier_price) <= 0);
+      });
+
+      if (missingPrices.length > 0) {
+        Refad.toast.warning('يجب تحديد سعر لـ ' + missingPrices.length + ' صنف متوفر/جزئي');
+        return;
+      }
+
+      state.isSubmitting = true;
+      const btn = document.getElementById('saveResponseBtn');
+      const originalHTML = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<i data-lucide="loader-2" class="spinner"></i> جارٍ الحفظ...';
+      if (window.lucide) lucide.createIcons();
+
+      try {
+        const now = new Date().toISOString();
+
+        // ✅ حفظ كل الأصناف المُجابة
+        for (const item of answeredItems) {
+          const payload = {
+            supplier_qty: item.supplier_qty != null ? item.supplier_qty : 0,
+            supplier_bonus_qty: toNum(item.supplier_bonus_qty),
+            supplier_price: item.supplier_price != null ? toNum(item.supplier_price) : null,
+            supplier_discount: item.supplier_discount != null ? toNum(item.supplier_discount) : null,
+            supplier_availability: item.supplier_availability,
+            supplier_notes: (item.supplier_notes || '').trim() || null,
+            supplier_response_at: now
+          };
+
+          await Refad.db.update('purchase_request_items', item.id, payload);
+        }
+
+        // ✅ تحديث حالة الطلب
+        await Refad.db.update('purchase_requests', state.request.id, {
+          status: 'partial'
+        });
+
+        // ✅ تسجيل النشاط (اختياري - بدون user_id)
+        try {
+          await Refad.logActivity(
+            'supplier_response_submitted',
+            'purchases',
+            'المورد رد على طلب ' + state.request.request_number + ' بـ ' + answeredItems.length + ' صنف',
+            state.request.id
+          );
+        } catch (logErr) {
+          console.warn('Activity log failed:', logErr);
+        }
+
+        state.isReadOnly = true;
+
+        // إظهار Modal النجاح
+        document.getElementById('successModal').classList.add('show');
+        if (window.lucide) lucide.createIcons();
+
+        // منع أي تعديل
+        document.querySelectorAll('.supplier-input, .avail-btn, .notes-input').forEach(function (el) {
+          el.disabled = true;
+        });
+        btn.innerHTML = '<i data-lucide="check-circle-2"></i> تم الإرسال';
+        if (window.lucide) lucide.createIcons();
+
+      } catch (err) {
+        console.error('[SharedRequest] Save failed:', err);
+        Refad.toast.error('فشل الحفظ: ' + (err.message || 'خطأ غير معروف'));
+        btn.disabled = false;
+        btn.innerHTML = originalHTML;
+        if (window.lucide) lucide.createIcons();
+      } finally {
+        state.isSubmitting = false;
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // 17) Bind Global Events
+    // ═══════════════════════════════════════════════════════════
+    function bindEvents() {
+      document.getElementById('saveResponseBtn').addEventListener('click', saveResponse);
+      document.getElementById('fillAllAvailableBtn').addEventListener('click', fillAllAvailable);
+
+      // Before unload warning
+      window.addEventListener('beforeunload', function (e) {
+        if (state.isReadOnly) return;
+        const hasData = state.items.some(function (it) {
+          return it.supplier_availability && it.supplier_availability !== 'pending';
+        });
+        if (hasData) {
+          e.preventDefault();
+          e.returnValue = '';
+        }
+      });
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // 18) Init
+    // ═══════════════════════════════════════════════════════════
+    async function init() {
+      applyIdentity();
+      bindEvents();
+      await loadRequestByToken();
+
+      if (Refad.registerServiceWorker) {
+        try { Refad.registerServiceWorker(); } catch (e) {}
+      }
+
+      console.log('%c[Refad] Shared Request v2 — Supplier Response', 'color:#14B8A6;font-weight:bold;font-size:14px');
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+
+  })();
+</script>
 
 </body>
 </html>
