@@ -23,6 +23,9 @@
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <style>
+    /* ============================================================
+       DASHBOARD CORE STYLES
+       ============================================================ */
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     :root {
@@ -147,18 +150,12 @@
     .topbar-title span { color: var(--text-muted); font-weight: 500; font-size: 14px; margin-right: 8px; }
 
     /* ============ Search ============ */
-    .search-wrapper {
-      flex: 1;
-      max-width: 420px;
-      margin-right: auto;
-      position: relative;
-    }
+    .search-wrapper { flex: 1; max-width: 420px; margin-right: auto; position: relative; }
     .search-box { position: relative; }
     .search-box input {
       width: 100%;
       padding: 10px 42px 10px 16px;
-      font-family: inherit;
-      font-size: 14px;
+      font-family: inherit; font-size: 14px;
       background: var(--bg);
       border: 1px solid var(--border);
       border-radius: 10px;
@@ -172,30 +169,19 @@
       box-shadow: 0 0 0 3px rgba(20,184,166,0.1);
     }
     .search-box > i {
-      position: absolute;
-      right: 14px;
-      top: 50%;
+      position: absolute; right: 14px; top: 50%;
       transform: translateY(-50%);
-      width: 18px;
-      height: 18px;
+      width: 18px; height: 18px;
       color: var(--text-muted);
       pointer-events: none;
     }
-    .search-shortcut {
-      position: absolute;
-      left: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      display: flex;
-      gap: 3px;
-    }
+    .search-shortcut { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); display: flex; gap: 3px; }
     .search-shortcut .kbd {
       padding: 2px 6px;
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: 5px;
-      font-size: 10px;
-      font-weight: 700;
+      font-size: 10px; font-weight: 700;
       color: var(--text-muted);
       font-family: 'Courier New', monospace;
     }
@@ -203,86 +189,262 @@
     .search-results {
       position: absolute;
       top: calc(100% + 8px);
-      right: 0;
-      left: 0;
+      right: 0; left: 0;
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: 12px;
       box-shadow: var(--shadow-lg);
       max-height: 480px;
       overflow-y: auto;
-      opacity: 0;
-      visibility: hidden;
+      opacity: 0; visibility: hidden;
       transform: translateY(-8px);
       transition: all 0.2s;
       z-index: 100;
     }
-    .search-results.show {
-      opacity: 1;
-      visibility: visible;
-      transform: translateY(0);
-    }
+    .search-results.show { opacity: 1; visibility: visible; transform: translateY(0); }
     .search-results::-webkit-scrollbar { width: 6px; }
     .search-results::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+/* ============================================================
+   AI Agent v4 — Additions
+   ============================================================ */
 
+/* Tool Indicators */
+.ai-tool-indicator {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background: linear-gradient(135deg, rgba(20, 184, 166, 0.06), rgba(139, 92, 246, 0.04));
+  border: 1px solid var(--ai-border);
+  border-radius: 10px;
+  font-size: 13px;
+  color: var(--ai-text);
+  margin-bottom: 8px;
+}
+
+.ai-tool-spinner {
+  display: inline-block;
+  animation: ai-spin 1s linear infinite;
+}
+
+@keyframes ai-spin {
+  to { transform: rotate(360deg); }
+}
+
+.ai-tool-names {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.ai-tool-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: rgba(20, 184, 166, 0.12);
+  color: var(--ai-accent);
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: 'Courier New', monospace;
+}
+
+.ai-tool-result {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.ai-tool-result.success {
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--ai-success);
+}
+
+.ai-tool-result.error {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--ai-danger);
+}
+
+.ai-tool-result-name {
+  font-family: 'Courier New', monospace;
+  font-weight: 700;
+}
+
+.ai-tool-result-status {
+  margin-right: auto;
+  font-size: 10px;
+  opacity: 0.8;
+}
+
+/* Fullscreen Mode */
+.ai-panel.ai-panel-fullscreen {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100vh !important;
+  max-width: none !important;
+  max-height: none !important;
+  border-radius: 0 !important;
+  transform-origin: center !important;
+  z-index: 9999 !important;
+}
+
+.ai-panel.ai-panel-fullscreen .ai-messages {
+  padding: 24px;
+  max-width: 900px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.ai-panel.ai-panel-fullscreen .ai-input-area {
+  padding: 16px 24px;
+  max-width: 900px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.ai-panel.ai-panel-fullscreen .ai-input-area textarea {
+  font-size: 15px;
+  min-height: 48px;
+}
+
+.ai-panel.ai-panel-fullscreen .ai-msg-content {
+  font-size: 14px;
+  padding: 14px 18px;
+  line-height: 1.8;
+}
+
+.ai-panel.ai-panel-fullscreen .ai-personas {
+  padding: 12px 24px;
+  justify-content: center;
+}
+
+.ai-panel.ai-panel-fullscreen .ai-suggestions {
+  padding: 12px 24px;
+  justify-content: center;
+}
+
+.ai-panel.ai-panel-fullscreen .ai-msg-avatar {
+  width: 40px;
+  height: 40px;
+  font-size: 18px;
+}
+
+.ai-panel.ai-panel-fullscreen .ai-msg-body {
+  max-width: calc(100% - 56px);
+}
+
+body.ai-fullscreen-active {
+  overflow: hidden;
+}
+
+/* Welcome Features */
+.ai-welcome-features {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  margin-bottom: 20px;
+  text-align: right;
+}
+
+.ai-welcome-feature {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: linear-gradient(135deg, rgba(20, 184, 166, 0.06), transparent);
+  border: 1px solid var(--ai-border);
+  border-radius: 12px;
+  font-size: 12px;
+}
+
+.ai-welcome-feature > span {
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.ai-welcome-feature strong {
+  display: block;
+  color: var(--ai-text);
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+
+.ai-welcome-feature small {
+  color: var(--ai-text-muted);
+  font-size: 11px;
+}
+
+/* Fullscreen Button — Visual State */
+#aiFullscreenBtn {
+  transition: all 0.2s;
+}
+
+.ai-panel-fullscreen #aiFullscreenBtn {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Mobile Fullscreen */
+@media (max-width: 640px) {
+  .ai-panel.ai-panel-fullscreen .ai-messages {
+    padding: 16px;
+  }
+  .ai-panel.ai-panel-fullscreen .ai-input-area {
+    padding: 12px 16px;
+  }
+  .ai-panel.ai-panel-fullscreen .ai-msg-content {
+    font-size: 13px;
+    padding: 11px 14px;
+  }
+}
     .search-results-header {
       padding: 10px 14px;
       border-bottom: 1px solid var(--border);
-      font-size: 11px;
-      font-weight: 700;
+      font-size: 11px; font-weight: 700;
       color: var(--text-muted);
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      display: flex; align-items: center; justify-content: space-between;
     }
     .search-results-header .count {
-      background: var(--accent);
-      color: white;
-      padding: 2px 8px;
-      border-radius: 10px;
-      font-size: 10px;
+      background: var(--accent); color: white;
+      padding: 2px 8px; border-radius: 10px; font-size: 10px;
     }
 
     .search-section { padding: 8px 0; }
     .search-section-title {
       padding: 6px 14px;
-      font-size: 10px;
-      font-weight: 800;
+      font-size: 10px; font-weight: 800;
       color: var(--accent);
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
+      display: flex; align-items: center; gap: 6px;
     }
     .search-section-title i { width: 12px; height: 12px; }
 
     .search-result-item {
-      display: flex;
-      align-items: center;
-      gap: 10px;
+      display: flex; align-items: center; gap: 10px;
       padding: 8px 14px;
       cursor: pointer;
       transition: background 0.15s;
-      text-decoration: none;
-      color: inherit;
+      text-decoration: none; color: inherit;
       font-size: 13px;
     }
     .search-result-item:hover,
-    .search-result-item.highlighted {
-      background: var(--bg);
-    }
+    .search-result-item.highlighted { background: var(--bg); }
     .search-result-item .result-icon {
-      width: 32px;
-      height: 32px;
+      width: 32px; height: 32px;
       border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      color: white;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; color: white;
     }
     .search-result-item .result-icon i { width: 16px; height: 16px; }
     .search-result-item .result-icon.product { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
@@ -307,8 +469,7 @@
       border-top: 1px solid var(--border);
       font-size: 10px;
       color: var(--text-muted);
-      display: flex;
-      justify-content: space-between;
+      display: flex; justify-content: space-between;
       background: var(--bg);
       border-radius: 0 0 12px 12px;
     }
@@ -318,8 +479,7 @@
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: 4px;
-      font-size: 9px;
-      font-weight: 700;
+      font-size: 9px; font-weight: 700;
       font-family: 'Courier New', monospace;
     }
 
@@ -341,18 +501,12 @@
     .icon-btn:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
     .icon-btn i, .icon-btn svg { width: 18px; height: 18px; }
     .icon-btn .notif-count {
-      position: absolute;
-      top: -4px;
-      left: -4px;
-      background: var(--danger);
-      color: white;
-      font-size: 10px;
-      font-weight: 800;
-      padding: 2px 6px;
-      border-radius: 10px;
+      position: absolute; top: -4px; left: -4px;
+      background: var(--danger); color: white;
+      font-size: 10px; font-weight: 800;
+      padding: 2px 6px; border-radius: 10px;
       border: 2px solid var(--card);
-      min-width: 20px;
-      text-align: center;
+      min-width: 20px; text-align: center;
     }
     .user-menu {
       display: flex; align-items: center; gap: 10px;
@@ -427,9 +581,7 @@
       border: 1px solid var(--border);
       border-radius: var(--radius);
       padding: 20px;
-      display: flex;
-      align-items: center;
-      gap: 16px;
+      display: flex; align-items: center; gap: 16px;
       box-shadow: var(--shadow-sm);
       transition: all 0.3s;
       position: relative;
@@ -493,10 +645,8 @@
       margin-bottom: 24px;
     }
     .quick-action {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
       gap: 8px;
       padding: 16px 12px;
       background: var(--card);
@@ -542,22 +692,15 @@
     .card-header {
       padding: 16px 20px;
       border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      flex-wrap: wrap;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; flex-wrap: wrap;
     }
     .card-header h3 { font-size: 15px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px; }
     .card-header h3 i { width: 18px; height: 18px; color: var(--accent); }
     .card-header .link {
-      font-size: 12px;
-      color: var(--accent);
-      font-weight: 600;
-      text-decoration: none;
-      display: flex;
-      align-items: center;
-      gap: 4px;
+      font-size: 12px; color: var(--accent);
+      font-weight: 600; text-decoration: none;
+      display: flex; align-items: center; gap: 4px;
       transition: gap 0.2s;
     }
     .card-header .link:hover { gap: 8px; }
@@ -566,18 +709,15 @@
 
     /* ============ Chart Controls ============ */
     .chart-controls {
-      display: flex;
-      gap: 4px;
+      display: flex; gap: 4px;
       background: var(--bg);
-      padding: 3px;
-      border-radius: 8px;
+      padding: 3px; border-radius: 8px;
       border: 1px solid var(--border);
     }
     .chart-range-btn {
       padding: 5px 12px;
       font-family: inherit;
-      font-size: 11px;
-      font-weight: 700;
+      font-size: 11px; font-weight: 700;
       background: transparent;
       border: none;
       border-radius: 6px;
@@ -594,11 +734,8 @@
     .alert-list::-webkit-scrollbar { width: 5px; }
     .alert-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
     .alert-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 12px;
-      border-radius: var(--radius-sm);
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px; border-radius: var(--radius-sm);
       background: var(--bg);
       border: 1px solid var(--border);
       transition: all 0.2s;
@@ -630,9 +767,7 @@
     .activity-list::-webkit-scrollbar { width: 5px; }
     .activity-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
     .activity-item {
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
+      display: flex; align-items: flex-start; gap: 12px;
       padding: 12px 0;
       border-bottom: 1px solid var(--border);
     }
@@ -680,11 +815,619 @@
       .page-header h1 { font-size: 20px; }
       .quick-actions { grid-template-columns: repeat(2, 1fr); }
     }
-  </style>
-</head>
-<body>
 
-  <!-- Sidebar -->
+    /* ============================================================
+       AI AGENT STYLES
+       ============================================================ */
+    :root {
+      --ai-primary: var(--primary, #0B2C4D);
+      --ai-accent: var(--accent, #14B8A6);
+      --ai-accent-dark: var(--accent-dark, #0d9488);
+      --ai-gold: var(--gold, #F59E0B);
+      --ai-bg: var(--bg, #F1F5F9);
+      --ai-card: var(--card, #ffffff);
+      --ai-text: var(--text, #0f172a);
+      --ai-text-muted: var(--text-muted, #64748b);
+      --ai-border: var(--border, #e2e8f0);
+      --ai-danger: var(--danger, #ef4444);
+      --ai-success: var(--success, #10b981);
+      --ai-info: var(--info, #3b82f6);
+      --ai-purple: var(--purple, #8b5cf6);
+      --ai-shadow: var(--shadow, 0 4px 20px rgba(11, 44, 77, 0.08));
+      --ai-shadow-lg: var(--shadow-lg, 0 10px 40px rgba(11, 44, 77, 0.12));
+      --ai-radius: var(--radius, 14px);
+      --ai-radius-sm: var(--radius-sm, 10px);
+    }
+
+    /* FAB */
+    .ai-fab {
+      position: fixed;
+      bottom: 24px;
+      left: 24px;
+      width: 64px; height: 64px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      background: linear-gradient(135deg, var(--ai-primary), var(--ai-accent));
+      color: white;
+      font-size: 30px;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 8px 32px rgba(20, 184, 166, 0.45),
+                  0 4px 12px rgba(11, 44, 77, 0.3);
+      z-index: 9000;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      animation: ai-fab-pulse 3s ease-in-out infinite;
+    }
+    @keyframes ai-fab-pulse {
+      0%, 100% {
+        box-shadow: 0 8px 32px rgba(20, 184, 166, 0.45),
+                    0 4px 12px rgba(11, 44, 77, 0.3);
+      }
+      50% {
+        box-shadow: 0 8px 40px rgba(20, 184, 166, 0.7),
+                    0 4px 16px rgba(11, 44, 77, 0.4);
+      }
+    }
+    .ai-fab:hover {
+      transform: translateY(-4px) scale(1.05);
+      box-shadow: 0 12px 40px rgba(20, 184, 166, 0.6),
+                  0 6px 16px rgba(11, 44, 77, 0.4);
+    }
+    .ai-fab:active { transform: translateY(-2px) scale(0.98); }
+    .ai-fab.hidden {
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(0);
+    }
+    .ai-fab-icon {
+      position: relative;
+      z-index: 2;
+      animation: ai-fab-bounce 2s ease-in-out infinite;
+    }
+    @keyframes ai-fab-bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-3px); }
+    }
+    .ai-fab-badge {
+      position: absolute;
+      top: -4px; right: -4px;
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: white;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 12px;
+      border: 2px solid white;
+      letter-spacing: 0.5px;
+      box-shadow: 0 2px 8px rgba(245, 158, 11, 0.5);
+      z-index: 3;
+    }
+
+    /* Chat Panel */
+    .ai-panel {
+      position: fixed;
+      bottom: 100px;
+      left: 24px;
+      width: 440px;
+      max-width: calc(100vw - 48px);
+      height: 680px;
+      max-height: calc(100vh - 140px);
+      background: var(--ai-card);
+      border: 1px solid var(--ai-border);
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(11, 44, 77, 0.25),
+                  0 8px 24px rgba(11, 44, 77, 0.15);
+      display: flex; flex-direction: column;
+      overflow: hidden;
+      z-index: 9001;
+      opacity: 0; visibility: hidden;
+      transform: translateY(20px) scale(0.95);
+      transform-origin: bottom left;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .ai-panel.open {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0) scale(1);
+    }
+
+    /* Header */
+    .ai-header {
+      padding: 14px 16px;
+      background: linear-gradient(135deg, var(--ai-primary), var(--ai-accent-dark));
+      color: white;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px;
+      flex-shrink: 0;
+      position: relative;
+      overflow: hidden;
+    }
+    .ai-header::before {
+      content: '';
+      position: absolute;
+      top: -50%; left: -30%;
+      width: 60%; height: 200%;
+      background: radial-gradient(circle, rgba(255,255,255,0.15), transparent 70%);
+      pointer-events: none;
+    }
+    .ai-header > * { position: relative; z-index: 1; }
+    .ai-header-info { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .ai-header-icon {
+      width: 40px; height: 40px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(10px);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+    .ai-header-text { min-width: 0; }
+    .ai-header-title { font-size: 15px; font-weight: 800; line-height: 1.2; }
+    .ai-header-sub { font-size: 11px; opacity: 0.85; margin-top: 2px; font-weight: 500; }
+    .ai-header-actions { display: flex; gap: 4px; flex-shrink: 0; }
+    .ai-header-btn {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      border: none;
+      background: rgba(255, 255, 255, 0.15);
+      color: white;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px;
+      transition: all 0.2s;
+    }
+    .ai-header-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: scale(1.05);
+    }
+
+    /* Personas Bar */
+    .ai-personas {
+      display: flex; gap: 6px;
+      padding: 10px 12px;
+      overflow-x: auto;
+      background: var(--ai-bg);
+      border-bottom: 1px solid var(--ai-border);
+      flex-shrink: 0;
+      scrollbar-width: thin;
+      scrollbar-color: var(--ai-border) transparent;
+    }
+    .ai-personas::-webkit-scrollbar { height: 4px; }
+    .ai-personas::-webkit-scrollbar-thumb {
+      background: var(--ai-border);
+      border-radius: 10px;
+    }
+    .ai-persona-btn {
+      display: flex; align-items: center; gap: 6px;
+      padding: 7px 12px;
+      background: var(--ai-card);
+      border: 1.5px solid var(--ai-border);
+      border-radius: 20px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--ai-text-muted);
+      white-space: nowrap;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+    .ai-persona-btn:hover {
+      border-color: var(--ai-accent);
+      color: var(--ai-accent);
+      transform: translateY(-1px);
+    }
+    .ai-persona-btn.active {
+      background: linear-gradient(135deg, var(--ai-primary), var(--ai-accent));
+      color: white;
+      border-color: transparent;
+      box-shadow: 0 4px 12px rgba(20, 184, 166, 0.3);
+    }
+    .ai-persona-emoji { font-size: 15px; }
+    .ai-persona-name { font-size: 12px; }
+
+    /* Messages */
+    .ai-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex; flex-direction: column;
+      gap: 12px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--ai-border) transparent;
+      background: var(--ai-bg);
+    }
+    .ai-messages::-webkit-scrollbar { width: 6px; }
+    .ai-messages::-webkit-scrollbar-thumb {
+      background: var(--ai-border);
+      border-radius: 10px;
+    }
+
+    /* Welcome */
+    .ai-welcome { text-align: center; padding: 20px 12px; color: var(--ai-text); }
+    .ai-welcome-icon {
+      font-size: 56px;
+      margin-bottom: 12px;
+      animation: ai-welcome-bounce 2s ease-in-out infinite;
+    }
+    @keyframes ai-welcome-bounce {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-8px) rotate(-5deg); }
+    }
+    .ai-welcome h3 { font-size: 17px; font-weight: 800; margin-bottom: 6px; color: var(--ai-text); }
+    .ai-welcome > p { font-size: 12px; color: var(--ai-text-muted); margin-bottom: 20px; line-height: 1.6; }
+    .ai-welcome-personas {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+      text-align: right;
+    }
+    .ai-welcome-card {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px;
+      background: var(--ai-card);
+      border: 1px solid var(--ai-border);
+      border-radius: 12px;
+      transition: all 0.2s;
+    }
+    .ai-welcome-card:hover {
+      border-color: var(--ai-accent);
+      transform: translateX(-3px);
+      box-shadow: var(--ai-shadow);
+    }
+    .ai-welcome-emoji { font-size: 22px; flex-shrink: 0; }
+    .ai-welcome-info { flex: 1; min-width: 0; }
+    .ai-welcome-name { font-size: 13px; font-weight: 700; color: var(--ai-text); margin-bottom: 2px; }
+    .ai-welcome-desc { font-size: 11px; color: var(--ai-text-muted); line-height: 1.4; }
+
+    /* Bubbles */
+    .ai-msg {
+      display: flex; gap: 10px;
+      animation: ai-msg-in 0.3s ease-out;
+    }
+    @keyframes ai-msg-in {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .ai-msg-user { flex-direction: row-reverse; }
+    .ai-msg-avatar {
+      width: 34px; height: 34px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+      background: linear-gradient(135deg, var(--ai-primary), var(--primary-light, #1e4a73));
+      color: white;
+      box-shadow: 0 3px 8px rgba(11, 44, 77, 0.2);
+    }
+    .ai-msg-user .ai-msg-avatar {
+      background: linear-gradient(135deg, #64748b, #475569);
+    }
+    .ai-msg-body { flex: 1; min-width: 0; max-width: calc(100% - 50px); }
+    .ai-msg-user .ai-msg-body {
+      display: flex; flex-direction: column; align-items: flex-end;
+    }
+    .ai-msg-persona {
+      font-size: 11px;
+      font-weight: 800;
+      margin-bottom: 4px;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .ai-msg-content {
+      padding: 10px 14px;
+      border-radius: 14px;
+      font-size: 13px;
+      line-height: 1.7;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      color: var(--ai-text);
+    }
+    .ai-msg-assistant .ai-msg-content {
+      background: var(--ai-card);
+      border: 1px solid var(--ai-border);
+      border-top-right-radius: 4px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    }
+    .ai-msg-user .ai-msg-content {
+      background: linear-gradient(135deg, var(--ai-primary), var(--ai-accent-dark));
+      color: white;
+      border-top-left-radius: 4px;
+      box-shadow: 0 2px 8px rgba(20, 184, 166, 0.25);
+    }
+
+    /* Markdown */
+    .ai-msg-content strong { font-weight: 800; color: var(--ai-accent); }
+    .ai-msg-user .ai-msg-content strong {
+      color: white;
+      text-decoration: underline;
+      text-decoration-color: rgba(255,255,255,0.4);
+    }
+    .ai-msg-content em { font-style: italic; opacity: 0.9; }
+    .ai-msg-content h2,
+    .ai-msg-content h3,
+    .ai-msg-content h4 { margin: 10px 0 6px; font-weight: 800; line-height: 1.3; }
+    .ai-msg-content h2 { font-size: 15px; color: var(--ai-primary); }
+    .ai-msg-content h3 { font-size: 14px; color: var(--ai-primary); }
+    .ai-msg-content h4 { font-size: 13px; color: var(--ai-text); }
+    .ai-msg-content h2:first-child,
+    .ai-msg-content h3:first-child,
+    .ai-msg-content h4:first-child { margin-top: 0; }
+    .ai-msg-content ul.ai-ul { list-style: none; padding: 0; margin: 6px 0; }
+    .ai-msg-content ul.ai-ul li {
+      padding: 3px 0 3px 20px;
+      position: relative;
+      line-height: 1.6;
+    }
+    .ai-msg-content ul.ai-ul li::before {
+      content: '•';
+      position: absolute;
+      right: 6px;
+      color: var(--ai-accent);
+      font-weight: 900;
+    }
+    .ai-msg-content .ai-code {
+      background: #1e293b;
+      color: #e2e8f0;
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      overflow-x: auto;
+      margin: 8px 0;
+      direction: ltr;
+      text-align: left;
+      line-height: 1.5;
+    }
+    .ai-msg-content .ai-inline-code {
+      background: rgba(20, 184, 166, 0.1);
+      color: var(--ai-accent-dark);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    /* Meta */
+    .ai-msg-meta {
+      display: flex; align-items: center; gap: 8px;
+      margin-top: 6px;
+      font-size: 10px;
+      color: var(--ai-text-muted);
+      opacity: 0.7;
+      flex-wrap: wrap;
+    }
+    .ai-msg-model {
+      background: rgba(139, 92, 246, 0.1);
+      color: var(--ai-purple);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      font-size: 9px;
+      font-weight: 700;
+    }
+    .ai-copy-btn,
+    .ai-speak-btn {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      font-size: 12px;
+      padding: 2px 4px;
+      border-radius: 4px;
+      opacity: 0.6;
+      transition: all 0.15s;
+    }
+    .ai-copy-btn:hover,
+    .ai-speak-btn:hover { opacity: 1; background: var(--ai-bg); }
+
+    /* Suggestions */
+    .ai-suggestions {
+      display: flex; gap: 6px;
+      padding: 10px 12px;
+      overflow-x: auto;
+      background: var(--ai-card);
+      border-top: 1px solid var(--ai-border);
+      flex-shrink: 0;
+      scrollbar-width: none;
+    }
+    .ai-suggestions::-webkit-scrollbar { display: none; }
+    .ai-suggestions:empty { display: none; }
+    .ai-suggestion-btn {
+      padding: 6px 12px;
+      background: var(--ai-bg);
+      border: 1px solid var(--ai-border);
+      border-radius: 16px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--ai-text-muted);
+      white-space: nowrap;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+    .ai-suggestion-btn:hover {
+      border-color: var(--ai-accent);
+      color: var(--ai-accent);
+      background: rgba(20, 184, 166, 0.05);
+      transform: translateY(-1px);
+    }
+
+    /* Input Area */
+    .ai-input-area {
+      display: flex; align-items: flex-end;
+      gap: 8px;
+      padding: 12px;
+      background: var(--ai-card);
+      border-top: 1px solid var(--ai-border);
+      flex-shrink: 0;
+    }
+    .ai-input-area textarea {
+      flex: 1;
+      min-height: 42px;
+      max-height: 120px;
+      padding: 11px 14px;
+      font-family: inherit;
+      font-size: 13px;
+      line-height: 1.5;
+      background: var(--ai-bg);
+      border: 1.5px solid var(--ai-border);
+      border-radius: 12px;
+      color: var(--ai-text);
+      outline: none;
+      resize: none;
+      transition: all 0.2s;
+    }
+    .ai-input-area textarea:focus {
+      border-color: var(--ai-accent);
+      background: var(--ai-card);
+      box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.1);
+    }
+    .ai-input-area textarea::placeholder { color: var(--ai-text-muted); }
+    .ai-mic-btn,
+    .ai-send-btn {
+      width: 42px; height: 42px;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 17px;
+      flex-shrink: 0;
+      transition: all 0.2s;
+    }
+    .ai-mic-btn {
+      background: var(--ai-bg);
+      border: 1.5px solid var(--ai-border);
+      color: var(--ai-text-muted);
+    }
+    .ai-mic-btn:hover {
+      border-color: var(--ai-accent);
+      color: var(--ai-accent);
+    }
+    .ai-mic-btn.recording {
+      background: linear-gradient(135deg, var(--ai-danger), #b91c1c);
+      color: white;
+      border-color: transparent;
+      animation: ai-rec-pulse 1s ease-in-out infinite;
+    }
+    @keyframes ai-rec-pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+      50% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+    }
+    .ai-send-btn {
+      background: linear-gradient(135deg, var(--ai-primary), var(--ai-accent));
+      color: white;
+      box-shadow: 0 4px 12px rgba(20, 184, 166, 0.3);
+    }
+    .ai-send-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(20, 184, 166, 0.4);
+    }
+    .ai-send-btn:active:not(:disabled) { transform: translateY(0); }
+    .ai-send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .ai-send-btn.loading { animation: ai-send-spin 1s linear infinite; }
+    @keyframes ai-send-spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    .ai-send-icon { font-size: 15px; transform: translateX(-1px); }
+
+    /* Footer */
+    .ai-footer {
+      padding: 8px 14px;
+      background: var(--ai-bg);
+      border-top: 1px solid var(--ai-border);
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 10px;
+      color: var(--ai-text-muted);
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+    .ai-footer strong { color: var(--ai-accent); font-weight: 800; }
+    #aiRoleBadge {
+      padding: 2px 8px;
+      background: rgba(139, 92, 246, 0.1);
+      color: var(--ai-purple);
+      border-radius: 10px;
+      font-weight: 700;
+    }
+
+    /* AI Responsive */
+    @media (max-width: 640px) {
+      .ai-fab {
+        width: 56px; height: 56px;
+        font-size: 26px;
+        bottom: 16px; left: 16px;
+      }
+      .ai-fab-badge { font-size: 9px; padding: 2px 6px; }
+      .ai-panel {
+        bottom: 0; left: 0; right: 0;
+        width: 100%; max-width: 100%;
+        height: 100vh; max-height: 100vh;
+        border-radius: 0;
+        transform-origin: bottom center;
+      }
+      .ai-panel.open { transform: translateY(0) scale(1); }
+      .ai-header { padding: 12px 14px; }
+      .ai-header-icon { width: 36px; height: 36px; font-size: 19px; }
+      .ai-header-title { font-size: 14px; }
+      .ai-messages { padding: 12px; gap: 10px; }
+      .ai-msg-content { font-size: 13px; padding: 9px 12px; }
+      .ai-msg-avatar { width: 30px; height: 30px; font-size: 14px; }
+      .ai-msg-body { max-width: calc(100% - 42px); }
+      .ai-input-area { padding: 10px; }
+      .ai-personas { padding: 8px 10px; }
+      .ai-persona-btn { padding: 6px 10px; font-size: 11px; }
+      .ai-suggestions { padding: 8px 10px; }
+      .ai-suggestion-btn { font-size: 10px; padding: 5px 10px; }
+    }
+    @media (max-width: 380px) {
+      .ai-persona-name { display: none; }
+      .ai-persona-btn { padding: 8px; }
+      .ai-persona-emoji { font-size: 16px; }
+    }
+
+    /* Print */
+    @media print {
+      .ai-fab,
+      .ai-panel { display: none !important; }
+    }
+
+    /* Dark mode AI */
+    [data-theme="dark"] .ai-fab {
+      box-shadow: 0 8px 32px rgba(20, 184, 166, 0.5),
+                  0 4px 12px rgba(0, 0, 0, 0.4);
+    }
+    [data-theme="dark"] .ai-fab-badge { border-color: var(--ai-card); }
+    [data-theme="dark"] .ai-msg-assistant .ai-msg-content {
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+    }
+    [data-theme="dark"] .ai-msg-content .ai-code {
+      background: #0a0f1a;
+      border: 1px solid var(--ai-border);
+    }
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      .ai-fab,
+      .ai-fab-icon,
+      .ai-fab-badge,
+      .ai-panel,
+      .ai-msg,
+      .ai-welcome-icon,
+      .ai-mic-btn.recording,
+      .ai-send-btn.loading {
+        animation: none !important;
+        transition: none !important;
+      }
+    }
+  </style>
+</head><body>
+
+  <!-- ============================================================
+       SIDEBAR
+       ============================================================ -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo" id="sidebarLogo">
@@ -700,17 +1443,30 @@
 
   <div class="overlay" id="overlay"></div>
 
-  <!-- Main -->
+  <!-- ============================================================
+       MAIN
+       ============================================================ -->
   <div class="main">
+
+    <!-- Topbar -->
     <header class="topbar">
-      <button class="menu-toggle" id="menuToggle"><i data-lucide="menu"></i></button>
+      <button class="menu-toggle" id="menuToggle">
+        <i data-lucide="menu"></i>
+      </button>
+
       <div class="topbar-title">
         الرئيسية <span id="greeting"></span>
       </div>
 
+      <!-- Search -->
       <div class="search-wrapper">
         <div class="search-box">
-          <input type="text" placeholder="ابحث في النظام..." id="globalSearch" autocomplete="off">
+          <input
+            type="text"
+            placeholder="ابحث في النظام..."
+            id="globalSearch"
+            autocomplete="off"
+          >
           <i data-lucide="search"></i>
           <div class="search-shortcut">
             <span class="kbd">Ctrl</span>
@@ -720,14 +1476,31 @@
         <div class="search-results" id="searchResults"></div>
       </div>
 
+      <!-- Actions -->
       <div class="topbar-actions">
+
+        <!-- AI Agent Button (زر سريع للـ AI) -->
+        <button
+          class="icon-btn"
+          id="aiTopbarBtn"
+          title="مساعد رفاد الذكي (Ctrl+I)"
+          style="display:none;"
+        >
+          <i data-lucide="sparkles"></i>
+        </button>
+
+        <!-- Theme Toggle -->
         <button class="icon-btn" id="themeToggle" title="الوضع الليلي/النهاري">
           <i data-lucide="moon" id="themeIcon"></i>
         </button>
-        <button class="icon-btn" id="notifBtn" title="الإشعارات" style="position:relative;">
+
+        <!-- Notifications -->
+        <button class="icon-btn" id="notifBtn" title="الإشعارات">
           <i data-lucide="bell"></i>
           <span class="notif-count" id="notifCount" style="display:none;">0</span>
         </button>
+
+        <!-- User Menu -->
         <div style="position:relative;">
           <div class="user-menu" id="userMenu">
             <div class="user-avatar" id="userAvatar">م</div>
@@ -738,43 +1511,74 @@
             <i data-lucide="chevron-down" style="width:14px;height:14px;opacity:0.5;"></i>
           </div>
           <div class="dropdown" id="userDropdown">
-            <a href="company-settings.html" class="dropdown-item"><i data-lucide="settings"></i> الإعدادات</a>
-            <a href="employees.html" class="dropdown-item"><i data-lucide="user-cog"></i> الملف الشخصي</a>
+            <a href="company-settings.html" class="dropdown-item">
+              <i data-lucide="settings"></i> الإعدادات
+            </a>
+            <a href="employees.html" class="dropdown-item">
+              <i data-lucide="user-cog"></i> الملف الشخصي
+            </a>
             <div class="dropdown-divider"></div>
-            <div class="dropdown-item danger" id="logoutBtn"><i data-lucide="log-out"></i> تسجيل الخروج</div>
+            <div class="dropdown-item danger" id="logoutBtn">
+              <i data-lucide="log-out"></i> تسجيل الخروج
+            </div>
           </div>
         </div>
+
       </div>
     </header>
 
+    <!-- Content -->
     <main class="content">
 
+      <!-- Page Header -->
       <div class="page-header">
         <div>
           <h1 id="pageTitle">لوحة التحكم</h1>
           <p id="pageSubtitle">نظرة عامة شاملة على أداء الشركة</p>
         </div>
         <div class="page-header-actions">
+
+          <!-- AI Report Button -->
+          <button
+            class="btn-sm"
+            id="aiReportBtn"
+            title="تحليل ذكي شامل"
+            style="display:none; border-color: var(--purple); color: var(--purple);"
+          >
+            <i data-lucide="sparkles"></i> تحليل ذكي
+          </button>
+
           <button class="btn-sm" id="refreshBtn">
             <i data-lucide="refresh-cw"></i> تحديث
           </button>
+
           <button class="btn-sm" id="exportBtn">
             <i data-lucide="download"></i> تصدير
           </button>
+
           <button class="btn-sm primary" id="newSaleBtn">
             <i data-lucide="plus"></i> فاتورة جديدة
           </button>
+
         </div>
       </div>
 
+      <!-- Stats Grid -->
       <div class="stats-grid" id="statsGrid"></div>
 
+      <!-- Quick Actions -->
       <div class="quick-actions" id="quickActions"></div>
 
+      <!-- Grid 2: Chart + Alerts -->
       <div class="grid-2">
+
+        <!-- Sales Chart -->
         <div class="card" id="salesChartCard">
           <div class="card-header">
-            <h3><i data-lucide="bar-chart-3"></i> حركة المبيعات والمشتريات</h3>
+            <h3>
+              <i data-lucide="bar-chart-3"></i>
+              حركة المبيعات والمشتريات
+            </h3>
             <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
               <div class="chart-controls">
                 <button class="chart-range-btn" data-range="7">7 أيام</button>
@@ -793,10 +1597,18 @@
           </div>
         </div>
 
+        <!-- Smart Alerts -->
         <div class="card" id="alertsCard">
           <div class="card-header">
-            <h3><i data-lucide="alert-triangle"></i> تنبيهات ذكية</h3>
-            <span class="link" id="alertsCountBadge" style="background:rgba(239,68,68,0.1);color:var(--danger);padding:4px 10px;border-radius:20px;font-size:11px;">0</span>
+            <h3>
+              <i data-lucide="alert-triangle"></i>
+              تنبيهات ذكية
+            </h3>
+            <span
+              class="link"
+              id="alertsCountBadge"
+              style="background:rgba(239,68,68,0.1);color:var(--danger);padding:4px 10px;border-radius:20px;font-size:11px;"
+            >0</span>
           </div>
           <div class="card-body" style="padding:14px;">
             <div class="alert-list" id="alertsList">
@@ -807,11 +1619,16 @@
             </div>
           </div>
         </div>
+
       </div>
 
+      <!-- Activity -->
       <div class="card" id="activityCard">
         <div class="card-header">
-          <h3><i data-lucide="activity"></i> آخر الحركات</h3>
+          <h3>
+            <i data-lucide="activity"></i>
+            آخر الحركات
+          </h3>
           <a href="reports.html" class="link">
             عرض الكل <i data-lucide="arrow-left" style="width:14px;height:14px;"></i>
           </a>
@@ -830,13 +1647,23 @@
   </div>
 
   <!-- ============================================================
-       SCRIPTS — الترتيب مهم
+       AI AGENT PLACEHOLDER (يتم بناؤه بالـ JS)
+       ============================================================ -->
+  <div id="ai-agent-container"></div>
+
+  <!-- ============================================================
+       SCRIPTS — الترتيب مهم جداً
        ============================================================ -->
   <script src="refad-core.js"></script>
   <script src="refad-auth.js"></script>
   <script src="refad-theme-sync.js"></script>
   <script src="refad-settings.js"></script>
 
+  <!-- AI Agent Scripts -->
+  <script src="ai-config.js"></script>
+  <script src="ai-agent.js"></script>
+
+  <!-- ⏭️ الجزء 3 (JavaScript — Dashboard Logic) هيتحط هنا -->
   <script>
     (function () {
       'use strict';
@@ -911,6 +1738,7 @@
       const canViewInventory = Refad.Session.has('inventory.view');
       const canViewSales = Refad.Session.has('sales.view');
       const canViewPayments = Refad.Session.has('company.owner');
+      const canUseAI = isOwner || Refad.Session.has('admin.full');
 
       // ============================================================
       // 2) State
@@ -931,61 +1759,18 @@
       };
 
       // ============================================================
-      // 3) MENU
+      // 3) Sidebar Builder (via Refad)
       // ============================================================
-      const MENU = [
-        { section: 'الرئيسية', items: [
-          { label: 'لوحة التحكم', icon: 'layout-dashboard', href: 'dashboard.html' },
-          { label: 'الشات', icon: 'message-circle', href: 'chat.html', permission: 'chat.use' },
-          { label: 'الإشعارات', icon: 'bell', href: 'notifications.html', id: 'notifNavItem', permission: 'notifications.view' }
-        ]},
-        { section: 'العمليات', items: [
-          { label: 'الأصناف', icon: 'package', href: 'products.html', permission: 'products.view' },
-          { label: 'المخزون', icon: 'warehouse', href: 'inventory.html', permission: 'inventory.view' },
-          { label: 'طلبات الشراء', icon: 'clipboard-list', href: 'purchase-requests.html', permission: 'purchases.view' },
-          { label: 'الاستلامات', icon: 'package-check', href: 'receipts.html', permission: 'purchases.receive' },
-          { label: 'طلبات البيع', icon: 'shopping-cart', href: 'sales-orders.html', permission: 'sales.view' },
-          { label: 'نقطة البيع', icon: 'scan-barcode', href: 'pos.html', permission: 'sales.pos', badge: 'POS', badgeClass: 'teal' },
-          { label: 'الفواتير', icon: 'receipt', href: 'invoices.html', permission: 'sales.view' },
-          { label: 'المرتجعات', icon: 'undo-2', href: 'returns.html' }
-        ]},
-        { section: 'الأطراف', items: [
-          { label: 'الموردين', icon: 'truck', href: 'suppliers.html', permission: 'suppliers.view' },
-          { label: 'العملاء', icon: 'users', href: 'customers.html', permission: 'customers.view' },
-          { label: 'المندوبين', icon: 'user-check', href: 'sales-reps.html', permission: 'company.owner', badge: 'جديد', badgeClass: 'new' }
-        ]},
-        { section: 'المخزون', items: [
-          { label: 'المخازن', icon: 'building-2', href: 'warehouses.html', permission: 'inventory.view' },
-          { label: 'الجرد', icon: 'clipboard-check', href: 'stocktake.html', permission: 'inventory.stocktake' },
-          { label: 'التسويات', icon: 'sliders-horizontal', href: 'adjustments.html', permission: 'inventory.adjust' },
-          { label: 'التحويلات', icon: 'arrow-right-left', href: 'transfers.html', permission: 'inventory.transfer', badge: 'جديد', badgeClass: 'new' }
-        ]},
-        { section: 'الموارد البشرية', items: [
-          { label: 'الموظفين', icon: 'user-cog', href: 'employees.html', permission: 'employees.view' },
-          { label: 'الصلاحيات', icon: 'shield-check', href: 'permissions.html', permission: 'permissions.manage' },
-          { label: 'الحضور', icon: 'calendar-check', href: 'attendance.html', permission: 'attendance.view' },
-          { label: 'الرواتب', icon: 'wallet', href: 'payroll.html', permission: 'payroll.view' }
-        ]},
-        { section: 'المالية', items: [
-          { label: 'الحسابات', icon: 'landmark', href: 'accounts.html', permission: 'company.owner' },
-          { label: 'الشيكات', icon: 'file-check-2', href: 'cheques.html', permission: 'company.owner', badge: 'جديد', badgeClass: 'new' },
-          { label: 'الإشعارات', icon: 'file-text', href: 'credit-notes.html', permission: 'company.owner' },
-          { label: 'المدفوعات', icon: 'banknote', href: 'payments.html', permission: 'company.owner' },
-          { label: 'المصاريف', icon: 'receipt-text', href: 'expenses.html', permission: 'expenses.view' },
-          { label: 'التقارير', icon: 'bar-chart-3', href: 'reports.html', permission: 'reports.view' }
-        ]},
-        { section: 'النظام', items: [
-          { label: 'إعدادات الشركة', icon: 'settings', href: 'company-settings.html', permission: 'settings.view' },
-          { label: 'شاشة الأدمن', icon: 'shield', href: 'admin.html', permission: 'admin.full', badge: 'Admin', badgeClass: 'gold' }
-        ]}
-      ];
-
       function buildSidebar() {
-  Refad.buildMenu('dashboard.html');
-}
+        try {
+          Refad.buildMenu('dashboard.html');
+        } catch (e) {
+          console.warn('[Dashboard] buildMenu failed:', e);
+        }
+      }
 
       // ============================================================
-      // 4) Quick Actions (ديناميكية حسب الصلاحيات)
+      // 4) Quick Actions
       // ============================================================
       function buildQuickActions() {
         const container = document.getElementById('quickActions');
@@ -1050,7 +1835,7 @@
       }
 
       // ============================================================
-      // 6) Apply Identity (اسم النظام + الشعار)
+      // 6) Apply Identity
       // ============================================================
       function applyIdentity() {
         const name = SafeSettings.identity.getSystemName();
@@ -1079,6 +1864,7 @@
       async function loadStats() {
         const grid = document.getElementById('statsGrid');
         if (!grid) return;
+
         const companyId = session.company_id;
         const today = Refad.date.today();
         const monthStart = Refad.date.startOfMonth();
@@ -1234,7 +2020,7 @@
       }
 
       // ============================================================
-      // 8) Main Chart
+      // 8) Chart
       // ============================================================
       async function loadChart() {
         try {
@@ -1287,7 +2073,6 @@
           const gridColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
           const textColor = isDark ? '#94a3b8' : '#64748b';
 
-          // ✅ قراءة الألوان من CSS variables
           const styles = getComputedStyle(document.documentElement);
           const accentColor = styles.getPropertyValue('--accent').trim() || '#14B8A6';
           const goldColor = styles.getPropertyValue('--gold').trim() || '#F59E0B';
@@ -1388,7 +2173,7 @@
       }
 
       // ============================================================
-      // 9) Load Alerts
+      // 9) Alerts
       // ============================================================
       async function loadAlerts() {
         const list = document.getElementById('alertsList');
@@ -1528,7 +2313,7 @@
       }
 
       // ============================================================
-      // 10) Load Activity
+      // 10) Activity
       // ============================================================
       async function loadActivity() {
         if (!isOwner) {
@@ -1613,7 +2398,7 @@
       }
 
       // ============================================================
-      // 11) Search (نفس اللي كان)
+      // 11) Search
       // ============================================================
       async function preloadSearchData() {
         if (state.searchData.loaded) return;
@@ -2086,7 +2871,7 @@
       }
 
       // ============================================================
-      // 16) Realtime Theme Listener
+      // 16) Realtime Theme
       // ============================================================
       function setupRealtimeTheme() {
         window.addEventListener('refad:theme-changed', () => {
@@ -2107,9 +2892,9 @@
       }
 
       // ============================================================
-      // 18) Init
+      // 18) Init Dashboard
       // ============================================================
-      async function init() {
+      async function initDashboard() {
         loadSettings();
         buildSidebar();
         buildQuickActions();
@@ -2139,13 +2924,383 @@
         console.log('%c[Refad] Dashboard v4 ready (Theme Sync + Settings)', 'color:#14B8A6;font-weight:bold');
       }
 
+      // ============================================================
+      // 19) Public API للجزء 4
+      // ============================================================
+      window.__DASHBOARD = {
+        session: session,
+        isOwner: isOwner,
+        canUseAI: canUseAI,
+        state: state,
+        reload: async function () {
+          state.searchData.loaded = false;
+          await Promise.all([
+            loadStats(),
+            loadChart(),
+            loadAlerts(),
+            loadActivity(),
+            checkNotifications(),
+            preloadSearchData()
+          ]);
+        }
+      };
+
+      // ============================================================
+      // 20) Start
+      // ============================================================
       if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
+        document.addEventListener('DOMContentLoaded', initDashboard);
       } else {
-        init();
+        initDashboard();
       }
+
+    })();
+
+  </script>
+    <!-- ============================================================
+       AI AGENT INTEGRATION
+       ============================================================ -->
+  <script>
+    (function () {
+      'use strict';
+
+      // ============================================================
+      // 0) انتظر Dashboard + AI جاهزين
+      // ============================================================
+      const Dashboard = window.__DASHBOARD;
+      if (!Dashboard) {
+        console.error('[AI-Integration] Dashboard not ready!');
+        return;
+      }
+
+      const { session, isOwner, canUseAI } = Dashboard;
+
+      // ============================================================
+      // 1) فحص الصلاحيات — المالك والمدير فقط
+      // ============================================================
+      function checkAIAccess() {
+        if (!canUseAI) {
+          console.log('[AI-Integration] ⚠️ AI متاح للمالك والمدير فقط');
+          return false;
+        }
+        return true;
+      }
+
+      // ============================================================
+      // 2) إظهار أزرار AI
+      // ============================================================
+      function showAIButtons() {
+        const topbarBtn = document.getElementById('aiTopbarBtn');
+        const reportBtn = document.getElementById('aiReportBtn');
+
+        if (topbarBtn) {
+          topbarBtn.style.display = 'flex';
+          topbarBtn.addEventListener('click', function () {
+            if (window.AIAgent && window.AIAgent.toggle) {
+              window.AIAgent.toggle();
+            }
+          });
+        }
+
+        if (reportBtn) {
+          reportBtn.style.display = 'inline-flex';
+          reportBtn.addEventListener('click', runSmartReport);
+        }
+
+        // زر "تحليل ذكي" في كارت التنبيهات
+        injectAlertsAIAction();
+      }
+
+      // ============================================================
+      // 3) زر تحليل ذكي في كارت التنبيهات
+      // ============================================================
+      function injectAlertsAIAction() {
+        const alertsHeader = document.querySelector('#alertsCard .card-header');
+        if (!alertsHeader) return;
+        if (alertsHeader.querySelector('.ai-alerts-btn')) return;
+
+        const btn = document.createElement('button');
+        btn.className = 'ai-alerts-btn';
+        btn.type = 'button';
+        btn.title = 'تحليل ذكي للتنبيهات';
+        btn.innerHTML = '✨';
+        btn.style.cssText = [
+          'width: 28px',
+          'height: 28px',
+          'border-radius: 8px',
+          'border: 1px solid var(--border)',
+          'background: linear-gradient(135deg, var(--purple), #6d28d9)',
+          'color: white',
+          'cursor: pointer',
+          'display: flex',
+          'align-items: center',
+          'justify-content: center',
+          'font-size: 14px',
+          'margin-right: auto',
+          'transition: all 0.2s'
+        ].join(';');
+
+        btn.addEventListener('mouseenter', function () {
+          this.style.transform = 'scale(1.1)';
+        });
+        btn.addEventListener('mouseleave', function () {
+          this.style.transform = 'scale(1)';
+        });
+
+        btn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          analyzeAlerts();
+        });
+
+        alertsHeader.appendChild(btn);
+      }
+
+      // ============================================================
+      // 4) تحليل ذكي شامل (Smart Report)
+      // ============================================================
+      function runSmartReport() {
+        if (!window.AIAgent || !window.AIAgent.send) {
+          if (window.Refad && Refad.toast) {
+            Refad.toast.error('AI Agent مش جاهز');
+          }
+          return;
+        }
+
+        // فتح الشات
+        if (window.AIAgent.open) window.AIAgent.open();
+
+        // اختيار شخصية المحلل المالي
+        if (window.AIAgent.setPersona) {
+          window.AIAgent.setPersona('financial');
+        }
+
+        // إرسال طلب التقرير
+        const reportPrompt = buildSmartReportPrompt();
+
+        setTimeout(function () {
+          window.AIAgent.send(reportPrompt);
+        }, 400);
+      }
+
+      function buildSmartReportPrompt() {
+        const today = new Date().toLocaleDateString('ar-EG', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
+
+        return [
+          '🎯 مطلوب تقرير ذكي شامل عن الشركة',
+          '',
+          '📅 التاريخ: ' + today,
+          '',
+          'المطلوب:',
+          '1️⃣ ملخص شامل لأداء الشركة (مبيعات، أرباح، اتجاهات)',
+          '2️⃣ أهم 3 تنبيهات حرجة تحتاج تصرف فوري',
+          '3️⃣ تحليل المخاطر الحالية (ائتمان، سيولة، مخزون)',
+          '4️⃣ 5 توصيات عملية قابلة للتنفيذ',
+          '5️⃣ توقعات للأسبوع الجاي',
+          '',
+          '🎯 كن دقيق، استخدم الأرقام، واذكر النسب المئوية'
+        ].join('\n');
+      }
+
+      // ============================================================
+      // 5) تحليل التنبيهات
+      // ============================================================
+      function analyzeAlerts() {
+        if (!window.AIAgent || !window.AIAgent.send) {
+          if (window.Refad && Refad.toast) {
+            Refad.toast.error('AI Agent مش جاهز');
+          }
+          return;
+        }
+
+        // فتح الشات
+        if (window.AIAgent.open) window.AIAgent.open();
+
+        // اختيار شخصية مدقق المخاطر (إذا كان مالك)
+        if (isOwner && window.AIAgent.setPersona) {
+          window.AIAgent.setPersona('risk');
+        } else if (window.AIAgent.setPersona) {
+          window.AIAgent.setPersona('inventory');
+        }
+
+        // جمع التنبيهات الظاهرة حالياً
+        const alerts = collectVisibleAlerts();
+
+        let prompt = '';
+        if (alerts.length === 0) {
+          prompt = [
+            '🤔 لاحظت إن مفيش تنبيهات حالياً.',
+            '',
+            'من فضلك:',
+            '1️⃣ اعمل مسح شامل للشركة واكتشف أي مشاكل مخفية',
+            '2️⃣ راجع المخزون، الائتمان، السيولة',
+            '3️⃣ قولي فيه إيه ممكن يحصل خلال الأسبوع الجاي'
+          ].join('\n');
+        } else {
+          prompt = [
+            '🚨 عندي ' + alerts.length + ' تنبيه في الداشبورد:',
+            '',
+            alerts.map(function (a, i) {
+              return (i + 1) + '. ' + a.title + ' — ' + a.sub;
+            }).join('\n'),
+            '',
+            'المطلوب:',
+            '1️⃣ رتّبهم حسب الأولوية (عاجل / مهم / عادي)',
+            '2️⃣ قولي لكل واحد: إجراء محدد + المسؤول',
+            '3️⃣ اكتشف لو فيه تنبيهات تانية مخفية مش ظاهرة',
+            '4️⃣ توقّع المشاكل اللي ممكن تحصل لو مفيش تصرف'
+          ].join('\n');
+        }
+
+        setTimeout(function () {
+          window.AIAgent.send(prompt);
+        }, 400);
+      }
+
+      function collectVisibleAlerts() {
+        const alerts = [];
+        const items = document.querySelectorAll('#alertsList .alert-item');
+        items.forEach(function (item) {
+          const title = item.querySelector('.title');
+          const sub = item.querySelector('.sub');
+          if (title) {
+            alerts.push({
+              title: title.textContent.trim(),
+              sub: sub ? sub.textContent.trim() : ''
+            });
+          }
+        });
+        return alerts;
+      }
+
+      // ============================================================
+      // 6) اختصارات كيبورد
+      // ============================================================
+      function setupKeyboardShortcuts() {
+        document.addEventListener('keydown', function (e) {
+          // Ctrl + I → فتح/قفل AI
+          if ((e.ctrlKey || e.metaKey) && e.key === 'i') {
+            e.preventDefault();
+            if (window.AIAgent && window.AIAgent.toggle) {
+              window.AIAgent.toggle();
+            }
+          }
+
+          // Ctrl + Shift + R → تقرير ذكي
+          if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'R') {
+            e.preventDefault();
+            runSmartReport();
+          }
+        });
+      }
+
+      // ============================================================
+      // 7) اقتراحات ذكية تلقائية (اختياري)
+      // ============================================================
+      function setupAutoSuggestions() {
+        // نشوف لو المستخدم فاتح الداشبورد وفيه تنبيهات حرجة
+        // نقترح عليه يفتح AI (بس مش تلقائياً — بس نضيف badge)
+        setTimeout(function () {
+          const criticalAlerts = document.querySelectorAll('#alertsList .alert-icon.danger');
+          if (criticalAlerts.length > 0 && window.AIAgent) {
+            const fab = document.querySelector('#aiFab');
+            if (fab && !fab.querySelector('.ai-critical-badge')) {
+              const badge = document.createElement('span');
+              badge.className = 'ai-critical-badge';
+              badge.textContent = '!';
+              badge.style.cssText = [
+                'position: absolute',
+                'top: -6px',
+                'left: -6px',
+                'width: 22px',
+                'height: 22px',
+                'border-radius: 50%',
+                'background: var(--danger)',
+                'color: white',
+                'font-size: 14px',
+                'font-weight: 800',
+                'display: flex',
+                'align-items: center',
+                'justify-content: center',
+                'border: 2px solid white',
+                'animation: ai-rec-pulse 1.5s ease-in-out infinite',
+                'z-index: 4'
+              ].join(';');
+              fab.appendChild(badge);
+            }
+          }
+        }, 3000);
+      }
+
+      // ============================================================
+      // 8) Init
+      // ============================================================
+      function init() {
+        if (!checkAIAccess()) {
+          return;
+        }
+
+        // انتظر AI Agent يجهّز (بحد أقصى 5 ثواني)
+        let attempts = 0;
+        const waitForAI = setInterval(function () {
+          attempts++;
+          if (window.AIAgent && window.AIAgent.init) {
+            clearInterval(waitForAI);
+            bootAI();
+          } else if (attempts > 50) {
+            clearInterval(waitForAI);
+            console.warn('[AI-Integration] ⚠️ AI Agent مش جاهز بعد 5 ثواني');
+            // نعرض الأزرار على أي حال
+            showAIButtons();
+          }
+        }, 100);
+      }
+
+      function bootAI() {
+        try {
+          // Init AI Agent بالـ session
+          window.AIAgent.init(session);
+
+          // إظهار الأزرار
+          showAIButtons();
+
+          // اختصارات كيبورد
+          setupKeyboardShortcuts();
+
+          // اقتراحات ذكية
+          setTimeout(setupAutoSuggestions, 3000);
+
+          console.log('%c[AI-Integration] ✅ Ready — AI for owner/manager', 'color:#8b5cf6;font-weight:bold');
+        } catch (e) {
+          console.error('[AI-Integration] ❌ bootAI failed:', e);
+        }
+      }
+
+      // ============================================================
+      // 9) Start
+      // ============================================================
+      // ننتظر Dashboard يخلص أولاً
+      setTimeout(init, 500);
+
+      // ============================================================
+      // 10) Public API (اختياري)
+      // ============================================================
+      window.AIDashboard = {
+        report: runSmartReport,
+        analyzeAlerts: analyzeAlerts,
+        open: function () {
+          if (window.AIAgent && window.AIAgent.open) window.AIAgent.open();
+        },
+        close: function () {
+          if (window.AIAgent && window.AIAgent.close) window.AIAgent.close();
+        }
+      };
+
     })();
   </script>
-
 </body>
 </html>
