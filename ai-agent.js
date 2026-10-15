@@ -1,56 +1,47 @@
 /* ============================================================
    ai-agent.js
    محرك AI Agent — Function Calling + SQL + Rate Limiting
-   الإصدار: 4.1.0 — Rate-Limit Optimized
+   الإصدار: 4.2.0 — Ultra-Light Edition
    ============================================================ */
 
 window.AIAgent = (function () {
   'use strict';
 
-  // ============================================================
-  // 🔍 فحص المتطلبات
-  // ============================================================
   const Config = window.AI_CONFIG;
   if (!Config) {
     console.error('[AIAgent] ❌ ai-config.js مش محمّل!');
     return null;
   }
 
-  const VERSION = '4.1.0';
+  const VERSION = '4.2.0';
 
   // ============================================================
   // 🔧 الحالة الداخلية
   // ============================================================
   const state = {
-    // الواجهة
     isOpen: false,
     isReady: false,
     isGenerating: false,
     isFullscreen: false,
 
-    // المستخدم
     session: null,
     companyId: null,
     userId: null,
     userName: null,
     userRole: 'employee',
 
-    // المحادثة
     currentPersona: 'general',
     messages: [],
 
-    // الصوت
     isRecording: false,
     mediaRecorder: null,
     audioChunks: [],
     currentAudio: null,
 
-    // التحكم
     abortController: null,
     lastRequestTime: 0,
     requestCount: 0,
 
-    // عناصر DOM
     container: null,
     panelEl: null,
     messagesEl: null,
@@ -63,10 +54,8 @@ window.AIAgent = (function () {
     roleBadge: null,
     fullscreenBtn: null,
 
-    // Supabase client
     sb: null,
 
-    // التخزين
     storageKey: Config.SETTINGS.storage.historyKey
   };
 
@@ -74,7 +63,6 @@ window.AIAgent = (function () {
   // ⏱️ RATE LIMIT TRACKER
   // ============================================================
   const rateLimiter = {
-    // نافذة الـ tokens
     tokens: {
       used: 0,
       windowStart: Date.now(),
@@ -82,11 +70,9 @@ window.AIAgent = (function () {
       limit: Config.SETTINGS.rateLimitGuard.maxTokensPerMinute
     },
 
-    // آخر استدعاء
     lastCall: 0,
     minInterval: Config.SETTINGS.rateLimitGuard.minIntervalMs,
 
-    // إحصائيات
     stats: {
       totalCalls: 0,
       totalTokens: 0,
@@ -94,9 +80,6 @@ window.AIAgent = (function () {
       blocked: 0
     },
 
-    /**
-     * إعادة ضبط النافذة لو انتهت
-     */
     resetWindowIfNeeded: function () {
       const now = Date.now();
       if (now - this.tokens.windowStart >= this.tokens.windowMs) {
@@ -106,28 +89,19 @@ window.AIAgent = (function () {
       }
     },
 
-    /**
-     * تقدير tokens من نص
-     */
     estimateTokens: function (text) {
       return Math.ceil(String(text || '').length / 3.5);
     },
 
-    /**
-     * حساب حجم الـ payload
-     */
     estimatePayloadTokens: function (payload) {
       try {
         const json = JSON.stringify(payload);
         return this.estimateTokens(json);
       } catch (e) {
-        return 1000; // default
+        return 1000;
       }
     },
 
-    /**
-     * التحقق لو ممكن ننفذ الطلب
-     */
     canProceed: function (estimatedTokens) {
       this.resetWindowIfNeeded();
 
@@ -143,13 +117,9 @@ window.AIAgent = (function () {
       };
     },
 
-    /**
-     * انتظار قبل الطلب
-     */
     waitIfNeeded: async function (estimatedTokens) {
       const self = this;
 
-      // 1) انتظر الحد الأدنى بين الطلبات
       const now = Date.now();
       const timeSinceLast = now - self.lastCall;
       if (timeSinceLast < self.minInterval) {
@@ -158,7 +128,6 @@ window.AIAgent = (function () {
         await sleep(waitMs);
       }
 
-      // 2) فحص الـ tokens
       let check = self.canProceed(estimatedTokens);
 
       while (!check.ok) {
@@ -176,7 +145,6 @@ window.AIAgent = (function () {
         check = self.canProceed(estimatedTokens);
       }
 
-      // 3) تحذير لو قربنا
       const usage = check.wouldUse / check.limit;
       if (usage >= Config.SETTINGS.rateLimitGuard.warningThreshold) {
         console.warn(
@@ -187,9 +155,6 @@ window.AIAgent = (function () {
       }
     },
 
-    /**
-     * سجّل الاستدعاء
-     */
     recordCall: function (estimatedTokens) {
       this.lastCall = Date.now();
       this.tokens.used += estimatedTokens;
@@ -203,9 +168,6 @@ window.AIAgent = (function () {
       );
     },
 
-    /**
-     * الحصول على حالة
-     */
     getStatus: function () {
       this.resetWindowIfNeeded();
       return {
@@ -219,7 +181,7 @@ window.AIAgent = (function () {
   };
 
   // ============================================================
-  // 🛠️ Helpers عامة
+  // 🛠️ Helpers
   // ============================================================
   function esc(s) {
     if (s === null || s === undefined) return '';
@@ -360,9 +322,6 @@ window.AIAgent = (function () {
     console.log('[AIAgent] History cleared');
   }
 
-  // ============================================================
-  // 💾 Fullscreen localStorage
-  // ============================================================
   function loadFullscreenPref() {
     try {
       return localStorage.getItem(Config.SETTINGS.storage.fullscreenKey) === 'true';
@@ -486,7 +445,7 @@ window.AIAgent = (function () {
   }
 
   // ============================================================
-  // 🛠️ Tool Executor
+  // 🛠️ Tool Executor — أداة واحدة فقط
   // ============================================================
   async function executeTool(toolName, args) {
     console.log('[AIAgent] 🔧 Tool called:', toolName, args);
@@ -494,8 +453,6 @@ window.AIAgent = (function () {
     switch (toolName) {
       case 'query_database':
         return await toolQueryDatabase(args);
-      case 'count_records':
-        return await toolCountRecords(args);
       default:
         return { success: false, error: 'Unknown tool: ' + toolName };
     }
@@ -506,34 +463,6 @@ window.AIAgent = (function () {
       return { success: false, error: 'Missing query parameter' };
     }
     return await executeSQL(args.query, args.reason);
-  }
-
-  async function toolCountRecords(args) {
-    const table = String(args.table || '').trim();
-    const filters = args.filters || {};
-
-    if (!table) {
-      return { success: false, error: 'Missing table parameter' };
-    }
-
-    const conditions = [];
-    Object.keys(filters).forEach(function (key) {
-      const val = filters[key];
-      if (typeof val === 'number') {
-        conditions.push(key + ' = ' + val);
-      } else if (typeof val === 'string') {
-        conditions.push(key + " = '" + val.replace(/'/g, "''") + "'");
-      } else if (typeof val === 'boolean') {
-        conditions.push(key + ' = ' + (val ? 'true' : 'false'));
-      }
-    });
-
-    conditions.push('company_id = ' + state.companyId);
-
-    const whereClause = conditions.length ? 'WHERE ' + conditions.join(' AND ') : '';
-    const sql = 'SELECT COUNT(*) as count FROM ' + table + ' ' + whereClause;
-
-    return await executeSQL(sql, 'Count records in ' + table);
   }
 
   // ============================================================
@@ -572,16 +501,14 @@ window.AIAgent = (function () {
     }
   }
 
-  // ⏭️ الجزء 4 (Streaming + Function Calling + UI) هيتحط هنا
-
-    // ============================================================
-  // 🌊 Streaming مع Function Calling + Rate Limiting
+  // ============================================================
+  // 🌊 Streaming مع Function Calling
   // ============================================================
   async function streamCompletionWithTools(userText, assistantIdx) {
     const persona = Config.PERSONAS[state.currentPersona] || Config.PERSONAS.general;
     const model = Config.selectModel(userText, persona);
 
-    console.log('[AIAgent] → Model:', model, '| Persona:', persona.name, '| Tools:', Config.modelSupportsTools(model));
+    console.log('[AIAgent] → Model:', model, '| Persona:', persona.name);
 
     const contextMessages = buildContextMessages(userText, persona);
 
@@ -615,7 +542,7 @@ window.AIAgent = (function () {
   }
 
   // ============================================================
-  // 🔄 Function Calling Loop — مع Retry + Rate Limiting
+  // 🔄 Function Calling Loop — مُحسّن (2 دورات فقط)
   // ============================================================
   async function runFunctionCallingLoop(model, initialMessages, assistantIdx) {
     const messages = [...initialMessages];
@@ -624,7 +551,6 @@ window.AIAgent = (function () {
     const supportsTools = Config.modelSupportsTools(model);
     const maxRetries = Config.GROQ_CONFIG.RETRY.maxAttempts;
 
-    console.log('[AIAgent] Tool support:', supportsTools);
     console.log('[AIAgent] Max iterations:', maxIterations);
 
     while (iteration < maxIterations) {
@@ -637,7 +563,7 @@ window.AIAgent = (function () {
         messages: messages,
         stream: false,
         temperature: 0.3,
-        max_tokens: Config.SETTINGS.functionCalling.maxTokensPerCall, // ← 1000
+        max_tokens: Config.SETTINGS.functionCalling.maxTokensPerCall,
         top_p: 0.9
       };
 
@@ -646,14 +572,14 @@ window.AIAgent = (function () {
         payload.tool_choice = Config.SETTINGS.functionCalling.toolChoice;
       }
 
-      // ⏱️ Rate Limiting Guard
+      // ⏱️ Rate Limiting
       const estimatedTokens = rateLimiter.estimatePayloadTokens(payload);
       console.log('[AIAgent] 📊 Estimated tokens: ' + estimatedTokens);
 
       await rateLimiter.waitIfNeeded(estimatedTokens);
       rateLimiter.recordCall(estimatedTokens);
 
-      // 🔄 Retry Loop على 429
+      // 🔄 Retry Loop
       let response = null;
       let lastError = null;
 
@@ -671,22 +597,17 @@ window.AIAgent = (function () {
             signal: state.abortController.signal
           });
 
-          // ✅ نجح
           if (response.ok) break;
 
           // ❌ 429 — Rate Limit
           if (response.status === 429) {
-            const errText = await response.text();
             console.warn('[AIAgent] ⚠️ 429 Rate Limit (attempt ' + attempt + '/' + maxRetries + ')');
 
-            // احسب وقت الانتظار من الـ header لو موجود
             let waitMs = Config.GROQ_CONFIG.RETRY.baseDelayMs;
-
             const retryAfter = response.headers.get('retry-after');
             if (retryAfter) {
               waitMs = parseInt(retryAfter, 10) * 1000;
             } else {
-              // Exponential backoff
               waitMs = Config.GROQ_CONFIG.RETRY.baseDelayMs *
                        Math.pow(Config.GROQ_CONFIG.RETRY.backoffMultiplier, attempt - 1);
             }
@@ -705,24 +626,22 @@ window.AIAgent = (function () {
             break;
           }
 
-          // ❌ أخطاء تانية
+          // ❌ 400 — tool_use_failed
           const errText = await response.text();
 
-          // 400 — tool_use_failed
           if (response.status === 400 && errText.includes('tool_use_failed')) {
             console.warn('[AIAgent] ⚠️ tool_use_failed — retrying WITHOUT tools');
-            delete payload.tools;
-            delete payload.tool_choice;
+            const fallbackPayload = { ...payload };
+            delete fallbackPayload.tools;
+            delete fallbackPayload.tool_choice;
 
-            // إعادة المحاولة مرة واحدة بدون tools
-            const retryUrl = Config.GROQ_CONFIG.BASE_URL + Config.GROQ_CONFIG.CHAT_ENDPOINT;
-            const retryRes = await fetch(retryUrl, {
+            const retryRes = await fetch(Config.GROQ_CONFIG.BASE_URL + Config.GROQ_CONFIG.CHAT_ENDPOINT, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
                 'Authorization': 'Bearer ' + Config.GROQ_CONFIG.API_KEY
               },
-              body: JSON.stringify(payload),
+              body: JSON.stringify(fallbackPayload),
               signal: state.abortController.signal
             });
 
@@ -735,7 +654,6 @@ window.AIAgent = (function () {
             break;
           }
 
-          // أخطاء تانية
           throw new Error('Groq API: ' + response.status + ' — ' + errText.slice(0, 200));
 
         } catch (e) {
@@ -753,7 +671,6 @@ window.AIAgent = (function () {
         }
       }
 
-      // فحص النتيجة النهائية
       if (!response || !response.ok) {
         throw lastError || new Error('Request failed after retries');
       }
@@ -761,9 +678,7 @@ window.AIAgent = (function () {
       // قراءة الرد
       const data = await response.json();
       const choice = data.choices && data.choices[0];
-      if (!choice) {
-        throw new Error('No response from Groq');
-      }
+      if (!choice) throw new Error('No response from Groq');
 
       const assistantMessage = choice.message;
       console.log('[AIAgent] ← finish_reason:', choice.finish_reason);
@@ -801,6 +716,15 @@ window.AIAgent = (function () {
           showToolResult(assistantIdx, toolName, result);
         }
 
+        // 🔔 لو دي آخر دورة، اطلب من الـ AI يكتب الرد فوراً
+        if (iteration >= maxIterations - 1) {
+          console.log('[AIAgent] 🚨 Last iteration — forcing final response');
+          messages.push({
+            role: 'user',
+            content: '⚠️ مهم: اكتب الرد النهائي الآن بناءً على البيانات. لا تستدعي query_database مرة أخرى.'
+          });
+        }
+
         continue;
       }
 
@@ -819,7 +743,7 @@ window.AIAgent = (function () {
   }
 
   // ============================================================
-  // 📝 Typewriter Effect
+  // 📝 Typewriter
   // ============================================================
   async function typewriterEffect(idx, fullText) {
     if (!state.messagesEl) return;
@@ -851,15 +775,12 @@ window.AIAgent = (function () {
   // ============================================================
   function showToolCallIndicator(idx, toolCalls) {
     if (!state.messagesEl) return;
-
     const msgEl = state.messagesEl.querySelector('.ai-msg[data-idx="' + idx + '"] .ai-msg-content');
     if (!msgEl) return;
 
-    const toolNames = toolCalls.map(function (tc) {
-      return tc.function.name;
-    });
+    const toolNames = toolCalls.map(function (tc) { return tc.function.name; });
 
-    const html =
+    msgEl.innerHTML =
       '<div class="ai-tool-indicator">' +
         '<span class="ai-tool-spinner">⏳</span>' +
         '<span>جاري البحث في البيانات...</span>' +
@@ -869,14 +790,11 @@ window.AIAgent = (function () {
           }).join('') +
         '</div>' +
       '</div>';
-
-    msgEl.innerHTML = html;
     scrollToBottom();
   }
 
   function showToolResult(idx, toolName, result) {
     if (!state.messagesEl) return;
-
     const msgEl = state.messagesEl.querySelector('.ai-msg[data-idx="' + idx + '"] .ai-msg-content');
     if (!msgEl) return;
 
@@ -896,10 +814,7 @@ window.AIAgent = (function () {
       '<span class="ai-tool-result-name">' + esc(toolName) + '</span>' +
       '<span class="ai-tool-result-status">' + esc(status) + duration + '</span>';
 
-    if (indicator) {
-      indicator.appendChild(chip);
-    }
-
+    if (indicator) indicator.appendChild(chip);
     scrollToBottom();
   }
 
@@ -940,10 +855,7 @@ window.AIAgent = (function () {
       const chars = m.content.length;
       if (totalChars + chars > Config.SETTINGS.context.maxHistoryChars) break;
       totalChars += chars;
-      ctxMessages.unshift({
-        role: m.role,
-        content: m.content
-      });
+      ctxMessages.unshift({ role: m.role, content: m.content });
     }
 
     ctxMessages.forEach(function (m) { messages.push(m); });
@@ -1037,25 +949,19 @@ window.AIAgent = (function () {
     const msg = (err && err.message) ? err.message : 'خطأ غير معروف';
 
     if (msg.includes('401') || msg.includes('Unauthorized')) {
-      return '🔑 **مشكلة في API Key**\n\nالـ API key بتاع Groq مش شغال. تأكد من:\n- إنه صحيح\n- إنه مفعّل';
+      return '🔑 **مشكلة في API Key**\n\nالـ API key مش شغال.';
     }
     if (msg.includes('429') || msg.includes('rate limit') || msg.includes('Rate limit')) {
-      return '⏱️ **حد الاستخدام**\n\nوصلت للحد. **استنى دقيقة** وجرّب تاني.\n\n💡 نصيحة: اسأل سؤال واحد في المرة.';
+      return '⏱️ **حد الاستخدام**\n\nوصلت للحد. **استنى دقيقة** وجرّب تاني.';
     }
     if (msg.includes('network') || msg.includes('fetch')) {
-      return '🌐 **مشكلة اتصال**\n\nتأكد من الإنترنت وحاول تاني.';
-    }
-    if (msg.includes('500') || msg.includes('502') || msg.includes('503')) {
-      return '🔧 **مشكلة في السيرفر**\n\nGroq بيواجه مشكلة. حاول بعد دقيقة.';
+      return '🌐 **مشكلة اتصال**\n\nتأكد من الإنترنت.';
     }
     if (msg.includes('Max iterations')) {
-      return '🔄 **التحليل معقّد**\n\nالسؤال محتاج خطوات كتير. جرّب تقسّمه لأسئلة أصغر.';
+      return '🔄 **السؤال معقد**\n\nجرّب تقسّمه لأسئلة أبسط.';
     }
-    if (msg.includes('timeout') || msg.includes('وقت طويل')) {
-      return '⏱️ **الرد اتأخر**\n\nالتحليل خد وقت طويل. جرّب سؤال أبسط.';
-    }
-    if (msg.includes('ai_execute_query') || msg.includes('function')) {
-      return '🗄️ **مشكلة في قاعدة البيانات**\n\nتأكد من تشغيل دالة `ai_execute_query` في Supabase.\n\n' + msg;
+    if (msg.includes('ai_execute_query')) {
+      return '🗄️ **مشكلة في قاعدة البيانات**\n\nتأكد من تشغيل دالة `ai_execute_query` في Supabase.';
     }
 
     return '❌ **خطأ**\n\n' + msg;
@@ -1077,9 +983,7 @@ window.AIAgent = (function () {
     }).join('');
 
     state.personasBar.querySelectorAll('.ai-persona-btn').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        setPersona(btn.dataset.persona);
-      });
+      btn.addEventListener('click', function () { setPersona(btn.dataset.persona); });
     });
   }
 
@@ -1092,9 +996,7 @@ window.AIAgent = (function () {
     }).join('');
 
     state.suggestionsEl.querySelectorAll('.ai-suggestion-btn').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        sendMessage(btn.dataset.q);
-      });
+      btn.addEventListener('click', function () { sendMessage(btn.dataset.q); });
     });
   }
 
@@ -1121,20 +1023,6 @@ window.AIAgent = (function () {
       '<div class="ai-welcome-icon">🤖</div>' +
       '<h3>أهلاً ' + esc((state.userName || '').split(' ')[0]) + ' 👋</h3>' +
       '<p>مساعد رفاد الذكي — متاح للـ <strong>' + roleLabel + '</strong> فقط</p>' +
-      '<div class="ai-welcome-features">' +
-        '<div class="ai-welcome-feature">' +
-          '<span>🔍</span>' +
-          '<div><strong>يشوف كل البيانات</strong><small>مبيعات، مخزون، عملاء، شيكات</small></div>' +
-        '</div>' +
-        '<div class="ai-welcome-feature">' +
-          '<span>📊</span>' +
-          '<div><strong>تحليل ذكي</strong><small>أرقام حقيقية من قواعد بياناتك</small></div>' +
-        '</div>' +
-        '<div class="ai-welcome-feature">' +
-          '<span>⚡</span>' +
-          '<div><strong>ردود فورية</strong><small>بدون الحاجة لفتح صفحات</small></div>' +
-        '</div>' +
-      '</div>' +
       '<div class="ai-welcome-personas">' +
         personas.map(function (p) {
           return '<div class="ai-welcome-card">' +
@@ -1390,7 +1278,7 @@ window.AIAgent = (function () {
     }
     if (state.fullscreenBtn) {
       state.fullscreenBtn.textContent = '⛶';
-      state.fullscreenBtn.title = state.isFullscreen ? 'خروج من Fullscreen' : 'Fullscreen';
+      state.fullscreenBtn.title = state.isFullscreen ? 'خروج' : 'Fullscreen';
     }
     setTimeout(scrollToBottom, 300);
   }
@@ -1405,19 +1293,18 @@ window.AIAgent = (function () {
     const wrapper = document.createElement('div');
     wrapper.id = 'ai-agent-wrapper';
     wrapper.innerHTML =
-      '<button type="button" class="ai-fab" id="aiFab" title="مساعد رفاد الذكي (Ctrl+I)">' +
+      '<button type="button" class="ai-fab" id="aiFab" title="مساعد رفاد (Ctrl+I)">' +
         '<span class="ai-fab-icon">🤖</span>' +
         '<span class="ai-fab-badge">AI</span>' +
       '</button>' +
 
       '<div class="ai-panel" id="aiPanel" role="dialog">' +
-
         '<div class="ai-header">' +
           '<div class="ai-header-info">' +
             '<div class="ai-header-icon">🤖</div>' +
             '<div class="ai-header-text">' +
               '<div class="ai-header-title">مساعد رفاد الذكي</div>' +
-              '<div class="ai-header-sub" id="aiHeaderSub">جاهز للمساعدة</div>' +
+              '<div class="ai-header-sub" id="aiHeaderSub">جاهز</div>' +
             '</div>' +
           '</div>' +
           '<div class="ai-header-actions">' +
@@ -1426,24 +1313,20 @@ window.AIAgent = (function () {
             '<button type="button" class="ai-header-btn" id="aiCloseBtn" title="إغلاق">✕</button>' +
           '</div>' +
         '</div>' +
-
         '<div class="ai-personas" id="aiPersonasBar"></div>' +
         '<div class="ai-messages" id="aiMessages"></div>' +
         '<div class="ai-suggestions" id="aiSuggestions"></div>' +
-
         '<div class="ai-input-area">' +
-          '<button type="button" class="ai-mic-btn" id="aiMicBtn" title="تسجيل صوتي">🎤</button>' +
+          '<button type="button" class="ai-mic-btn" id="aiMicBtn" title="تسجيل">🎤</button>' +
           '<textarea id="aiInput" placeholder="اكتب سؤالك..." rows="1"></textarea>' +
           '<button type="button" class="ai-send-btn" id="aiSendBtn" title="إرسال">' +
             '<span class="ai-send-icon">➤</span>' +
           '</button>' +
         '</div>' +
-
         '<div class="ai-footer">' +
           '<span>مدعوم بـ <strong>Groq</strong> ⚡</span>' +
           '<span id="aiRoleBadge"></span>' +
         '</div>' +
-
       '</div>';
 
     const placeholder = document.getElementById('ai-agent-container');
@@ -1541,7 +1424,6 @@ window.AIAgent = (function () {
     if (fab) fab.classList.add('hidden');
 
     applyFullscreen();
-
     renderPersonasBar();
     renderSuggestions();
     renderMessages();
@@ -1577,10 +1459,7 @@ window.AIAgent = (function () {
   // 🎬 Init
   // ============================================================
   function init(session) {
-    if (state.isReady) {
-      console.log('[AIAgent] Already initialized');
-      return;
-    }
+    if (state.isReady) return;
 
     state.session = session ||
       (window.Refad && Refad.Auth && Refad.Auth.getSession ? Refad.Auth.getSession() : null);
@@ -1619,22 +1498,15 @@ window.AIAgent = (function () {
         togglePanel();
       }
       if (e.key === 'Escape' && state.isOpen) {
-        if (state.isFullscreen) {
-          toggleFullscreen();
-        } else {
-          closePanel();
-        }
-      }
-      if (e.key === 'F11' && state.isOpen) {
-        e.preventDefault();
-        toggleFullscreen();
+        if (state.isFullscreen) toggleFullscreen();
+        else closePanel();
       }
     });
 
     state.isReady = true;
 
     console.log(
-      '%c[AIAgent] ✅ v' + VERSION + ' Ready — Role: ' + state.userRole + ' — Fullscreen: ' + state.isFullscreen,
+      '%c[AIAgent] ✅ v' + VERSION + ' Ultra-Light Ready — Role: ' + state.userRole,
       'color:#14B8A6;font-weight:bold;font-size:13px'
     );
   }
@@ -1663,11 +1535,9 @@ window.AIAgent = (function () {
     getMessages: function () { return state.messages.slice(); },
     getState: function () { return state; },
 
-    // Testing helpers
     executeSQL: executeSQL,
     executeTool: executeTool,
 
-    // ✨ Rate Limit helpers
     getRateStatus: function () { return rateLimiter.getStatus(); },
     resetRateLimit: function () {
       rateLimiter.tokens.used = 0;
@@ -1678,6 +1548,6 @@ window.AIAgent = (function () {
 })();
 
 console.log(
-  '%c[AI Agent] ✅ v' + (window.AIAgent ? window.AIAgent.VERSION : '?') + ' Fully Loaded — Rate-Limit Optimized',
+  '%c[AI Agent] ✅ v' + (window.AIAgent ? window.AIAgent.VERSION : '?') + ' Ultra-Light Loaded',
   'color:#14B8A6;font-weight:bold;font-size:13px'
 );
