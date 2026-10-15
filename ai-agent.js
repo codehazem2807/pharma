@@ -1,7 +1,7 @@
 /* ============================================================
    ai-agent.js
-   محرك AI Agent — Function Calling + SQL + Streaming + UI
-   الإصدار: 4.0.0
+   محرك AI Agent — Function Calling + SQL + Rate Limiting
+   الإصدار: 4.1.0 — Rate-Limit Optimized
    ============================================================ */
 
 window.AIAgent = (function () {
@@ -16,7 +16,7 @@ window.AIAgent = (function () {
     return null;
   }
 
-  const VERSION = '4.0.0';
+  const VERSION = '4.1.0';
 
   // ============================================================
   // 🔧 الحالة الداخلية
@@ -68,6 +68,154 @@ window.AIAgent = (function () {
 
     // التخزين
     storageKey: Config.SETTINGS.storage.historyKey
+  };
+
+  // ============================================================
+  // ⏱️ RATE LIMIT TRACKER
+  // ============================================================
+  const rateLimiter = {
+    // نافذة الـ tokens
+    tokens: {
+      used: 0,
+      windowStart: Date.now(),
+      windowMs: Config.SETTINGS.rateLimitGuard.windowMs,
+      limit: Config.SETTINGS.rateLimitGuard.maxTokensPerMinute
+    },
+
+    // آخر استدعاء
+    lastCall: 0,
+    minInterval: Config.SETTINGS.rateLimitGuard.minIntervalMs,
+
+    // إحصائيات
+    stats: {
+      totalCalls: 0,
+      totalTokens: 0,
+      retries: 0,
+      blocked: 0
+    },
+
+    /**
+     * إعادة ضبط النافذة لو انتهت
+     */
+    resetWindowIfNeeded: function () {
+      const now = Date.now();
+      if (now - this.tokens.windowStart >= this.tokens.windowMs) {
+        console.log('[AIAgent] ⏱️ Token window reset. Previous: ' + this.tokens.used);
+        this.tokens.used = 0;
+        this.tokens.windowStart = now;
+      }
+    },
+
+    /**
+     * تقدير tokens من نص
+     */
+    estimateTokens: function (text) {
+      return Math.ceil(String(text || '').length / 3.5);
+    },
+
+    /**
+     * حساب حجم الـ payload
+     */
+    estimatePayloadTokens: function (payload) {
+      try {
+        const json = JSON.stringify(payload);
+        return this.estimateTokens(json);
+      } catch (e) {
+        return 1000; // default
+      }
+    },
+
+    /**
+     * التحقق لو ممكن ننفذ الطلب
+     */
+    canProceed: function (estimatedTokens) {
+      this.resetWindowIfNeeded();
+
+      const wouldUse = this.tokens.used + estimatedTokens;
+      return {
+        ok: wouldUse <= this.tokens.limit,
+        used: this.tokens.used,
+        wouldUse: wouldUse,
+        limit: this.tokens.limit,
+        waitMs: wouldUse > this.tokens.limit
+          ? this.tokens.windowMs - (Date.now() - this.tokens.windowStart)
+          : 0
+      };
+    },
+
+    /**
+     * انتظار قبل الطلب
+     */
+    waitIfNeeded: async function (estimatedTokens) {
+      const self = this;
+
+      // 1) انتظر الحد الأدنى بين الطلبات
+      const now = Date.now();
+      const timeSinceLast = now - self.lastCall;
+      if (timeSinceLast < self.minInterval) {
+        const waitMs = self.minInterval - timeSinceLast;
+        console.log('[AIAgent] ⏱️ Waiting ' + waitMs + 'ms between calls');
+        await sleep(waitMs);
+      }
+
+      // 2) فحص الـ tokens
+      let check = self.canProceed(estimatedTokens);
+
+      while (!check.ok) {
+        const waitMs = Math.max(check.waitMs, 1000);
+        console.log(
+          '[AIAgent] ⏱️ Token budget exceeded (' +
+          check.wouldUse + ' > ' + check.limit + '). Waiting ' +
+          Math.round(waitMs / 1000) + 's...'
+        );
+
+        toast('⏳ الحمل عالي، استنى ' + Math.round(waitMs / 1000) + ' ثانية...', 'warning');
+        await sleep(waitMs);
+
+        self.resetWindowIfNeeded();
+        check = self.canProceed(estimatedTokens);
+      }
+
+      // 3) تحذير لو قربنا
+      const usage = check.wouldUse / check.limit;
+      if (usage >= Config.SETTINGS.rateLimitGuard.warningThreshold) {
+        console.warn(
+          '[AIAgent] ⚠️ Token usage high: ' +
+          Math.round(usage * 100) + '% (' +
+          check.wouldUse + '/' + check.limit + ')'
+        );
+      }
+    },
+
+    /**
+     * سجّل الاستدعاء
+     */
+    recordCall: function (estimatedTokens) {
+      this.lastCall = Date.now();
+      this.tokens.used += estimatedTokens;
+      this.stats.totalCalls++;
+      this.stats.totalTokens += estimatedTokens;
+
+      const usage = (this.tokens.used / this.tokens.limit * 100).toFixed(0);
+      console.log(
+        '[AIAgent] 📊 Tokens: ' + this.tokens.used + '/' + this.tokens.limit +
+        ' (' + usage + '%)'
+      );
+    },
+
+    /**
+     * الحصول على حالة
+     */
+    getStatus: function () {
+      this.resetWindowIfNeeded();
+      return {
+        used: this.tokens.used,
+        limit: this.tokens.limit,
+        remaining: this.tokens.limit - this.tokens.used,
+        percent: Math.round(this.tokens.used / this.tokens.limit * 100),
+        stats: { ...this.stats }
+      };
+    }
   };
 
   // ============================================================
@@ -129,27 +277,19 @@ window.AIAgent = (function () {
 
     let html = esc(text);
 
-    // Code blocks
     html = html.replace(/```([\s\S]*?)```/g, function (m, code) {
       return '<pre class="ai-code">' + code.trim() + '</pre>';
     });
 
-    // Inline code
     html = html.replace(/`([^`]+)`/g, '<code class="ai-inline-code">$1</code>');
-
-    // Bold
     html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-
-    // Italic
     html = html.replace(/(^|\s)\*([^*\n]+)\*(\s|$)/g, '$1<em>$2</em>$3');
 
-    // Headers
     html = html.replace(/^#### (.*)$/gm, '<h4 class="ai-h4">$1</h4>');
     html = html.replace(/^### (.*)$/gm, '<h4 class="ai-h4">$1</h4>');
     html = html.replace(/^## (.*)$/gm, '<h3 class="ai-h3">$1</h3>');
     html = html.replace(/^# (.*)$/gm, '<h2 class="ai-h2">$1</h2>');
 
-    // Lists
     html = html.replace(/^[\-\*] (.*)$/gm, '<li>$1</li>');
     html = html.replace(/(<li>[\s\S]*?<\/li>)/g, function (m) {
       if (m.indexOf('<ul') === -1) {
@@ -158,13 +298,9 @@ window.AIAgent = (function () {
       return m;
     });
 
-    // Numbered
     html = html.replace(/^\d+\. (.*)$/gm, '<li>$1</li>');
-
-    // Line breaks
     html = html.replace(/\n/g, '<br>');
 
-    // Cleanup
     html = html.replace(/<\/li><br>/g, '</li>');
     html = html.replace(/<br><li>/g, '<li>');
     html = html.replace(/<\/ul><br>/g, '</ul>');
@@ -358,8 +494,6 @@ window.AIAgent = (function () {
     switch (toolName) {
       case 'query_database':
         return await toolQueryDatabase(args);
-      case 'get_schema_info':
-        return await toolGetSchemaInfo(args);
       case 'count_records':
         return await toolCountRecords(args);
       default:
@@ -372,45 +506,6 @@ window.AIAgent = (function () {
       return { success: false, error: 'Missing query parameter' };
     }
     return await executeSQL(args.query, args.reason);
-  }
-
-  async function toolGetSchemaInfo(args) {
-    const table = String(args.table_name || '').trim();
-
-    const ALLOWED = [
-      'sales_invoices', 'sales_invoice_items', 'sales_orders', 'sales_order_items',
-      'customers', 'suppliers', 'products', 'batches', 'product_barcodes',
-      'payments', 'accounts', 'cheques', 'receipts', 'receipt_items',
-      'expenses', 'credit_notes', 'inventory_returns', 'inventory_return_items',
-      'inventory_movements', 'warehouses', 'bonus_schemes', 'product_discounts',
-      'sales_rep_targets', 'sales_rep_commissions', 'stock_adjustments',
-      'stock_adjustment_items', 'warehouse_transfers', 'warehouse_transfer_items',
-      'journal_entries', 'journal_entry_lines', 'batch_blacklist', 'companies'
-    ];
-
-    if (ALLOWED.indexOf(table) === -1) {
-      return {
-        success: false,
-        error: 'Table not allowed or not found: ' + table,
-        allowed_tables: ALLOWED
-      };
-    }
-
-    const sql = `
-      SELECT column_name, data_type, is_nullable, column_default
-      FROM information_schema.columns
-      WHERE table_schema = 'public' AND table_name = '${table}'
-      ORDER BY ordinal_position
-    `;
-
-    const result = await executeSQL(sql, 'Schema lookup for ' + table);
-    if (!result.success) return result;
-
-    return {
-      success: true,
-      table: table,
-      columns: result.data || []
-    };
   }
 
   async function toolCountRecords(args) {
@@ -477,8 +572,10 @@ window.AIAgent = (function () {
     }
   }
 
-  // ============================================================
-  // 🌊 Streaming مع Function Calling
+  // ⏭️ الجزء 4 (Streaming + Function Calling + UI) هيتحط هنا
+
+    // ============================================================
+  // 🌊 Streaming مع Function Calling + Rate Limiting
   // ============================================================
   async function streamCompletionWithTools(userText, assistantIdx) {
     const persona = Config.PERSONAS[state.currentPersona] || Config.PERSONAS.general;
@@ -518,53 +615,150 @@ window.AIAgent = (function () {
   }
 
   // ============================================================
-  // 🔄 Function Calling Loop
+  // 🔄 Function Calling Loop — مع Retry + Rate Limiting
   // ============================================================
   async function runFunctionCallingLoop(model, initialMessages, assistantIdx) {
     const messages = [...initialMessages];
     let iteration = 0;
     const maxIterations = Config.SETTINGS.functionCalling.maxIterations;
     const supportsTools = Config.modelSupportsTools(model);
+    const maxRetries = Config.GROQ_CONFIG.RETRY.maxAttempts;
 
     console.log('[AIAgent] Tool support:', supportsTools);
+    console.log('[AIAgent] Max iterations:', maxIterations);
 
     while (iteration < maxIterations) {
       iteration++;
       console.log('[AIAgent] 🔄 Iteration', iteration, '/', maxIterations);
 
+      // بناء الـ payload
       const payload = {
         model: model,
         messages: messages,
         stream: false,
         temperature: 0.3,
-        max_tokens: 2000,
+        max_tokens: Config.SETTINGS.functionCalling.maxTokensPerCall, // ← 1000
         top_p: 0.9
       };
 
       if (supportsTools && Config.SETTINGS.functionCalling.enabled) {
         payload.tools = Config.TOOLS;
         payload.tool_choice = Config.SETTINGS.functionCalling.toolChoice;
-        if (Config.SETTINGS.functionCalling.parallelToolCalls) {
-          payload.parallel_tool_calls = true;
+      }
+
+      // ⏱️ Rate Limiting Guard
+      const estimatedTokens = rateLimiter.estimatePayloadTokens(payload);
+      console.log('[AIAgent] 📊 Estimated tokens: ' + estimatedTokens);
+
+      await rateLimiter.waitIfNeeded(estimatedTokens);
+      rateLimiter.recordCall(estimatedTokens);
+
+      // 🔄 Retry Loop على 429
+      let response = null;
+      let lastError = null;
+
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          const url = Config.GROQ_CONFIG.BASE_URL + Config.GROQ_CONFIG.CHAT_ENDPOINT;
+
+          response = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + Config.GROQ_CONFIG.API_KEY
+            },
+            body: JSON.stringify(payload),
+            signal: state.abortController.signal
+          });
+
+          // ✅ نجح
+          if (response.ok) break;
+
+          // ❌ 429 — Rate Limit
+          if (response.status === 429) {
+            const errText = await response.text();
+            console.warn('[AIAgent] ⚠️ 429 Rate Limit (attempt ' + attempt + '/' + maxRetries + ')');
+
+            // احسب وقت الانتظار من الـ header لو موجود
+            let waitMs = Config.GROQ_CONFIG.RETRY.baseDelayMs;
+
+            const retryAfter = response.headers.get('retry-after');
+            if (retryAfter) {
+              waitMs = parseInt(retryAfter, 10) * 1000;
+            } else {
+              // Exponential backoff
+              waitMs = Config.GROQ_CONFIG.RETRY.baseDelayMs *
+                       Math.pow(Config.GROQ_CONFIG.RETRY.backoffMultiplier, attempt - 1);
+            }
+
+            waitMs = Math.min(waitMs, Config.GROQ_CONFIG.RETRY.maxDelayMs);
+
+            if (attempt < maxRetries) {
+              rateLimiter.stats.retries++;
+              console.log('[AIAgent] ⏱️ Waiting ' + Math.round(waitMs / 1000) + 's before retry...');
+              toast('⏳ الحمل عالي، جاري إعادة المحاولة...', 'warning');
+              await sleep(waitMs);
+              continue;
+            }
+
+            lastError = new Error('Rate limit reached after ' + maxRetries + ' attempts');
+            break;
+          }
+
+          // ❌ أخطاء تانية
+          const errText = await response.text();
+
+          // 400 — tool_use_failed
+          if (response.status === 400 && errText.includes('tool_use_failed')) {
+            console.warn('[AIAgent] ⚠️ tool_use_failed — retrying WITHOUT tools');
+            delete payload.tools;
+            delete payload.tool_choice;
+
+            // إعادة المحاولة مرة واحدة بدون tools
+            const retryUrl = Config.GROQ_CONFIG.BASE_URL + Config.GROQ_CONFIG.CHAT_ENDPOINT;
+            const retryRes = await fetch(retryUrl, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + Config.GROQ_CONFIG.API_KEY
+              },
+              body: JSON.stringify(payload),
+              signal: state.abortController.signal
+            });
+
+            if (retryRes.ok) {
+              response = retryRes;
+              break;
+            }
+
+            lastError = new Error('tool_use_failed retry failed');
+            break;
+          }
+
+          // أخطاء تانية
+          throw new Error('Groq API: ' + response.status + ' — ' + errText.slice(0, 200));
+
+        } catch (e) {
+          if (e.name === 'AbortError') throw e;
+
+          console.error('[AIAgent] ❌ Attempt ' + attempt + ' failed:', e.message);
+          lastError = e;
+
+          if (attempt < maxRetries) {
+            const waitMs = Config.GROQ_CONFIG.RETRY.baseDelayMs *
+                          Math.pow(Config.GROQ_CONFIG.RETRY.backoffMultiplier, attempt - 1);
+            await sleep(Math.min(waitMs, Config.GROQ_CONFIG.RETRY.maxDelayMs));
+            continue;
+          }
         }
       }
 
-      const url = Config.GROQ_CONFIG.BASE_URL + Config.GROQ_CONFIG.CHAT_ENDPOINT;
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + Config.GROQ_CONFIG.API_KEY
-        },
-        body: JSON.stringify(payload),
-        signal: state.abortController.signal
-      });
-
-      if (!response.ok) {
-        const errText = await response.text();
-        throw new Error('Groq API: ' + response.status + ' — ' + errText.slice(0, 200));
+      // فحص النتيجة النهائية
+      if (!response || !response.ok) {
+        throw lastError || new Error('Request failed after retries');
       }
 
+      // قراءة الرد
       const data = await response.json();
       const choice = data.choices && data.choices[0];
       if (!choice) {
@@ -572,7 +766,7 @@ window.AIAgent = (function () {
       }
 
       const assistantMessage = choice.message;
-      console.log('[AIAgent] ← Response finish_reason:', choice.finish_reason);
+      console.log('[AIAgent] ← finish_reason:', choice.finish_reason);
 
       // 1) tool_calls
       if (assistantMessage.tool_calls && assistantMessage.tool_calls.length > 0) {
@@ -621,7 +815,7 @@ window.AIAgent = (function () {
       throw new Error('Empty response from AI');
     }
 
-    throw new Error('Max tool iterations reached — AI مش قادر يخلّص');
+    throw new Error('Max iterations reached — AI مش قادر يخلّص');
   }
 
   // ============================================================
@@ -845,8 +1039,8 @@ window.AIAgent = (function () {
     if (msg.includes('401') || msg.includes('Unauthorized')) {
       return '🔑 **مشكلة في API Key**\n\nالـ API key بتاع Groq مش شغال. تأكد من:\n- إنه صحيح\n- إنه مفعّل';
     }
-    if (msg.includes('429') || msg.includes('rate limit')) {
-      return '⏱️ **حد الاستخدام**\n\nوصلت للحد. استنى شوية وجرّب تاني.';
+    if (msg.includes('429') || msg.includes('rate limit') || msg.includes('Rate limit')) {
+      return '⏱️ **حد الاستخدام**\n\nوصلت للحد. **استنى دقيقة** وجرّب تاني.\n\n💡 نصيحة: اسأل سؤال واحد في المرة.';
     }
     if (msg.includes('network') || msg.includes('fetch')) {
       return '🌐 **مشكلة اتصال**\n\nتأكد من الإنترنت وحاول تاني.';
@@ -854,7 +1048,7 @@ window.AIAgent = (function () {
     if (msg.includes('500') || msg.includes('502') || msg.includes('503')) {
       return '🔧 **مشكلة في السيرفر**\n\nGroq بيواجه مشكلة. حاول بعد دقيقة.';
     }
-    if (msg.includes('Max tool iterations')) {
+    if (msg.includes('Max iterations')) {
       return '🔄 **التحليل معقّد**\n\nالسؤال محتاج خطوات كتير. جرّب تقسّمه لأسئلة أصغر.';
     }
     if (msg.includes('timeout') || msg.includes('وقت طويل')) {
@@ -1469,12 +1663,21 @@ window.AIAgent = (function () {
     getMessages: function () { return state.messages.slice(); },
     getState: function () { return state; },
 
+    // Testing helpers
     executeSQL: executeSQL,
-    executeTool: executeTool
+    executeTool: executeTool,
+
+    // ✨ Rate Limit helpers
+    getRateStatus: function () { return rateLimiter.getStatus(); },
+    resetRateLimit: function () {
+      rateLimiter.tokens.used = 0;
+      rateLimiter.tokens.windowStart = Date.now();
+      console.log('[AIAgent] ✅ Rate limit reset');
+    }
   };
 })();
 
 console.log(
-  '%c[AI Agent] ✅ v' + (window.AIAgent ? window.AIAgent.VERSION : '?') + ' Fully Loaded — Function Calling Active',
+  '%c[AI Agent] ✅ v' + (window.AIAgent ? window.AIAgent.VERSION : '?') + ' Fully Loaded — Rate-Limit Optimized',
   'color:#14B8A6;font-weight:bold;font-size:13px'
 );
